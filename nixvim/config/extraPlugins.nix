@@ -10,6 +10,15 @@ let
         hash = "sha256-9dGcOFmbkBwVvPdqP30V3IzDZ5BKLdFLuYtXXXCPz7E=";
       };
     };
+    yazi-nvim = pkgs.vimUtils.buildVimPlugin {
+      name = "yazi-nvim";
+      src = pkgs.fetchFromGitHub {
+        owner = "mikavilpas";
+        repo = "yazi.nvim";
+        rev = "65bff77e59e0b5c8587266580c24d658913b825e";
+        hash = "sha256-NTblfvfw1i8SsqCNxMRwRsesYlrckfYnSpWW1E3pj1I=";
+      };
+    };
     textobj-user = pkgs.vimUtils.buildVimPlugin {
       name = "textobj-user";
       src = pkgs.fetchFromGitHub {
@@ -63,6 +72,15 @@ let
         repo = "vim-highlightedyank";
         rev = "afb0f262b490706c23e94012c2ab9fa67c0481ce";
         hash = "sha256-WcSxpXYErKyr/9LaAmFw6WfpcKq2YlbLag6HVVhwyFQ=";
+      };
+    };
+    plenary-nvim = pkgs.vimUtils.buildVimPlugin {
+      name = "plenary-nvim";
+      src = pkgs.fetchFromGitHub {
+        owner = "nvim-lua";
+        repo = "plenary.nvim";
+        rev = "a3e3bc82a3f95c5ed0d7201546d5d2c19b20d683";
+        hash = "sha256-5Jf2mWFVDofXBcXLbMa417mqlEPWLA+cQIZH/vNEV1g=";
       };
     };
   };

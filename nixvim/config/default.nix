@@ -19,7 +19,7 @@
     };
 
     plugins = {
-      airline.enable = true;
+      lualine.enable = true;
       nvim-colorizer.enable = true;
       commentary.enable = true;
       surround.enable = true;

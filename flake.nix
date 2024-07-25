@@ -1,4 +1,14 @@
 {
+	nixConfig = {
+		extra-substituters = [
+			"https://nix-community.cachix.org/"
+			"https://hyprland.cachix.org"
+		];
+		extra-trusted-public-keys = [
+			"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+			"hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+		];
+	};
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -8,23 +18,30 @@
     };
 
     nixvim.url = "github:nix-community/nixvim";
+    stylix.url = "github:danth/stylix";
+    hyprland = {
+      url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { nixpkgs, home-manager, nixvim, ... }: {
-    homeConfigurations."beau@nixos" = home-manager.lib.homeManager.Configuration {
+  outputs = { nixpkgs, ... }@inputs: {
+    homeConfigurations."beau@nix-laptop" = inputs.home-manager.lib.homeManager.Configuration {
       modules = [ ];
     };
 
     nixpkgs.overlays = [
     ];
 
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.nix-laptop = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
+      specialArgs = { inherit inputs; };
       modules = [
         ./configuration.nix
-        nixvim.nixosModules.nixvim
+        inputs.nixvim.nixosModules.nixvim
+        inputs.stylix.nixosModules.stylix
 
-        home-manager.nixosModules.home-manager
+        inputs.home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;

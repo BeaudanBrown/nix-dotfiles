@@ -12,7 +12,7 @@ in
     plugins = with plugins; [
       catppuccin
       extrakto
-      select-pane-no-wrap
+      yank
     ];
     extraConfig = ''
 set-option -g prefix C-b
@@ -34,12 +34,62 @@ set -g mouse on
 bind-key -n C-Space resize-pane -Z # C-space to zoom pane
 
 is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
-    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
+bind-key -n 'M-h' if-shell "$is_vim" { send-keys M-h } { if-shell -F '#{pane_at_left}'   {} { select-pane -L } }
+bind-key -n 'M-j' if-shell "$is_vim" { send-keys M-j } { if-shell -F '#{pane_at_bottom}' {} { select-pane -D } }
+bind-key -n 'M-k' if-shell "$is_vim" { send-keys M-k } { if-shell -F '#{pane_at_top}'    {} { select-pane -U } }
+bind-key -n 'M-l' if-shell "$is_vim" { send-keys M-l } { if-shell -F '#{pane_at_right}'  {} { select-pane -R } }
 
-bind -n M-h if-shell "$is_vim" "send-keys M-h" "run '#{select_pane_no_wrap} L'"
-bind -n M-j if-shell "$is_vim" "send-keys M-j" "run '#{select_pane_no_wrap} D'"
-bind -n M-k if-shell "$is_vim" "send-keys M-k" "run '#{select_pane_no_wrap} U'"
-bind -n M-l if-shell "$is_vim" "send-keys M-l" "run '#{select_pane_no_wrap} R'"
+bind-key -T copy-mode-vi 'M-h' if-shell -F '#{pane_at_left}'   {} { select-pane -L }
+bind-key -T copy-mode-vi 'M-j' if-shell -F '#{pane_at_bottom}' {} { select-pane -D }
+bind-key -T copy-mode-vi 'M-k' if-shell -F '#{pane_at_top}'    {} { select-pane -U }
+bind-key -T copy-mode-vi 'M-l' if-shell -F '#{pane_at_right}'  {} { select-pane -R }
+
+
+# Toggle scratchpad terminal
+
+set -gF '@last_scratch_name' scratch
+
+bind-key -n M-Enter if-shell -F '#{==:#{session_name},scratch}' {
+	set -gF '@last_scratch_name' scratch
+	detach-client
+} {
+	set -gF '@last_scratch_name' scratch
+	if-shell -F '#{!=:#{session_name},default}' {
+		detach-client
+	}
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s scratch -c #{pane_current_path}"'
+}
+
+bind-key -n M-b if-shell -F '#{==:#{session_name},build}' {
+	set -gF '@last_scratch_name' build
+	detach-client
+} {
+	set -gF '@last_scratch_name' build
+	if-shell -F '#{!=:#{session_name},default}' {
+		detach-client
+	}
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s build -c #{pane_current_path}"'
+}
+
+bind-key -n M-m if-shell -F '#{==:#{session_name},gpt}' {
+	set -gF '@last_scratch_name' gpt
+	detach-client
+} {
+	set -gF '@last_scratch_name' gpt
+	if-shell -F '#{!=:#{session_name},default}' {
+		detach-client
+	}
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s gpt \"new_gpt_chat -p gpt4\""'
+}
+
+bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
+	run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'
+	detach-client
+} {
+	run-shell 'tmux break-pane -t "#{@last_scratch_name}"'
+	run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
+}
     '';
   };
 

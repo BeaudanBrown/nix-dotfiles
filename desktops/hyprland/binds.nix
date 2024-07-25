@@ -18,18 +18,6 @@
           "7"
           "8"
           "9"
-          "F1"
-          "F2"
-          "F3"
-          "F4"
-          "F5"
-          "F6"
-          "F7"
-          "F8"
-          "F9"
-          "F10"
-          "F11"
-          "F12"
         ];
         # Map keys (arrows and hjkl) to hyprland directions (l, r, u, d)
         directions = rec {
@@ -42,49 +30,33 @@
           k = up;
           j = down;
         };
-
-        #swaylock = "${config.programs.swaylock.package}/bin/swaylock";
-        #playerctl = "${config.services.playerctld.package}/bin/playerctl";
-        #playerctld = "${config.services.playerctld.package}/bin/playerctld";
-        #makoctl = "${config.services.mako.package}/bin/makoctl";
-        #wofi = "${config.programs.wofi.package}/bin/wofi";
-        #pass-wofi = "${pkgs.pass-wofi.override {
-        #pass = config.programs.password-store.package;
-        #}}/bin/pass-wofi";
-
-        #grimblast = "${pkgs.inputs.hyprwm-contrib.grimblast}/bin/grimblast";
-        #pactl = "${pkgs.pulseaudio}/bin/pactl";
-        #tly = "${pkgs.tly}/bin/tly";
-        #gtk-play = "${pkgs.libcanberra-gtk3}/bin/canberra-gtk-play";
-        #notify-send = "${pkgs.libnotify}/bin/notify-send";
-
-        #gtk-launch = "${pkgs.gtk3}/bin/gtk-launch";
-        #xdg-mime = "${pkgs.xdg-utils}/bin/xdg-mime";
-        #defaultApp = type: "${gtk-launch} $(${xdg-mime} query default ${type})";
-
-        #terminal = config.home.sessionVariables.TERM;
-        #browser = defaultApp "x-scheme-handler/https";
-        #editor = defaultApp "text/plain";
       in
       [
         #################### Program Launch ####################
-        "SUPER,Return,exec,kitty"
-        "SUPER,w,exec,brave"
+        "SUPER, space, exec, wofi --show drun"
+
+        "SUPER, Return, exec, hyprland_show_app -a $TERMINAL"
+        "SUPERSHIFT, Return, exec, hyprland_show_app -a $TERMINAL -p"
+
+        "SUPER, s, exec, hyprland_show_app -a slack -c Slack"
+        "SUPERSHIFT, s, exec, hyprland_show_app -a slack -c Slack -p"
+
+        "SUPER, c, exec, hyprland_show_app -a signal-desktop"
+        "SUPERSHIFT, c, exec, hyprland_show_app -a signal-desktop -p"
+
+        "SUPER, w, exec, hyprland_show_app -a brave -c brave-browser"
+        "SUPERSHIFT, w, exec, hyprland_show_app -a brave -c brave-browser -p"
+
+        "SUPER, m, exec, hyprland_show_app -a spotify"
+        "SUPERSHIFT, m, exec, hyprland_show_app -a spotify -p"
 
         #################### Basic Bindings ####################
         "SUPER,q,killactive"
         "SUPERSHIFT,e,exit"
 
-        "SUPER,s,togglesplit"
         "SUPER,f,fullscreen,1"
         "SUPERSHIFT,f,fullscreen,0"
         "SUPERSHIFT,space,togglefloating"
-
-        "SUPER,minus,splitratio,-0.25"
-        "SUPERSHIFT,minus,splitratio,-0.3333333"
-
-        "SUPER,equal,splitratio,0.25"
-        "SUPERSHIFT,equal,splitratio,0.3333333"
 
         "SUPER,g,togglegroup"
         "SUPER,t,lockactivegroup,toggle"
@@ -93,6 +65,11 @@
 
         "SUPER,u,togglespecialworkspace"
         "SUPERSHIFT,u,movetoworkspacesilent,special"
+        "SUPER,TAB,workspace,previous"
+
+        "SUPER,equal, exec, wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%+"
+        "SUPER,minus, exec, wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%-"
+        "SUPERSHIFT,minus, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
       ] ++
       # Change workspace
       (map
