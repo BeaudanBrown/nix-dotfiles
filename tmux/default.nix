@@ -15,8 +15,10 @@ in
       yank
     ];
     extraConfig = ''
-set-option -g prefix C-b
-bind-key C-b send-prefix
+set-option -g prefix C-Space
+bind-key C-Space send-prefix
+unbind C-r
+bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux.conf reloaded"
 bind-key -n M-n select-window -n
 bind-key -n M-p select-window -p
 
@@ -31,7 +33,7 @@ set -g pane-base-index 1
 set-window-option -g pane-base-index 1
 set-option -g renumber-windows on
 set -g mouse on
-bind-key -n C-Space resize-pane -Z # C-space to zoom pane
+bind-key C-Space resize-pane -Z # C-space to zoom pane
 
 is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
     | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
@@ -72,6 +74,31 @@ bind-key -n M-b if-shell -F '#{==:#{session_name},build}' {
 	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s build -c #{pane_current_path}"'
 }
 
+bind-key -n M-R if-shell -F '#{==:#{session_name},rebuild}' {
+	set -gF '@last_scratch_name' rebuild
+  send-keys -t rebuild: 'sudo nixos-rebuild switch' C-m
+} {
+	set -gF '@last_scratch_name' rebuild
+	if-shell -F '#{!=:#{session_name},default}' {
+		detach-client
+	}
+	if-shell 'tmux has-session -t rebuild' {
+    send-keys -t rebuild: 'sudo nixos-rebuild switch' C-m
+	}
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"sudo nixos-rebuild switch; exec zsh \\\"\""'
+}
+
+bind-key -n M-r if-shell -F '#{==:#{session_name},rebuild}' {
+	set -gF '@last_scratch_name' rebuild
+	detach-client
+} {
+	set -gF '@last_scratch_name' rebuild
+	if-shell -F '#{!=:#{session_name},default}' {
+		detach-client
+	}
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"sudo nixos-rebuild switch; exec zsh \\\"\""'
+}
+
 bind-key -n M-m if-shell -F '#{==:#{session_name},gpt}' {
 	set -gF '@last_scratch_name' gpt
 	detach-client
@@ -87,7 +114,23 @@ bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
 	run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'
 	detach-client
 } {
+  if-shell '! tmux has-session -t "#{@last_scratch_name}"' {
+    run-shell 'tmux new-session -d -s #{@last_scratch_name}'
+  }
 	run-shell 'tmux break-pane -t "#{@last_scratch_name}"'
+	run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
+}
+
+bind -n M-| if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
+	run-shell 'tmux join-pane -h -s "#{@last_scratch_name}" -t default:$(tmux display-message -p -t default "#{l:#{window_index}}")'
+  if-shell 'tmux has-session -t "#{@last_scratch_name}"' {
+    detach-client
+  }
+} {
+  if-shell '! tmux has-session -t "#{@last_scratch_name}"' {
+    run-shell 'tmux new-session -d -s #{@last_scratch_name}'
+  }
+	run-shell 'tmux break-pane -s "#S:#I.#P" -t "#{@last_scratch_name}"'
 	run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
 }
     '';
