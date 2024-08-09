@@ -31,6 +31,11 @@
       fzf-lua = {
         enable = true;
         iconsEnabled = true;
+        settings = {
+          files = {
+            cmd = "rg --files";
+          };
+        };
       };
       vim-slime = {
         enable = true;
@@ -113,9 +118,10 @@
             '';
           };
           sources = [
-            { name = "luasnip"; }
             { name = "nvim_lsp"; }
+            { name = "luasnip"; }
             { name = "path"; }
+            { name = "buffer"; }
           ];
         };
       };

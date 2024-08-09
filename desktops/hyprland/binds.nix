@@ -41,8 +41,8 @@
         "SUPER, s, exec, hyprland_show_app -a slack -c Slack"
         "SUPERSHIFT, s, exec, hyprland_show_app -a slack -c Slack -p"
 
-        "SUPER, c, exec, hyprland_show_app -a signal-desktop"
-        "SUPERSHIFT, c, exec, hyprland_show_app -a signal-desktop -p"
+        "SUPER, c, exec, hyprland_show_app -a signal-desktop -c signal"
+        "SUPERSHIFT, c, exec, hyprland_show_app -a signal-desktop -c signal -p"
 
         "SUPER, w, exec, hyprland_show_app -a brave -c brave-browser"
         "SUPERSHIFT, w, exec, hyprland_show_app -a brave -c brave-browser -p"

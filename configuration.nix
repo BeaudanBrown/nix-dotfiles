@@ -228,6 +228,7 @@
     variables = {
     };
     systemPackages = with pkgs; [
+      ripgrep
       yazi
       acpi
       bind

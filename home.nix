@@ -109,11 +109,6 @@
     };
   };
 
-  programs.eww = {
-    enable = true;
-    configDir = ./extraConfig/eww;
-  };
-
   dconf.settings = {
     "org/gnome/shell" = {
       disable-user-extensions = false;
