@@ -103,11 +103,14 @@
         allow_workspace_cycles = true;
         workspace_back_and_forth = true;
       };
-        decoration = {
-          inactive_opacity = 0.90;
-          fullscreen_opacity = 1.0;
-          rounding = 7;
-        };
+      decoration = {
+        inactive_opacity = 0.90;
+        fullscreen_opacity = 1.0;
+        rounding = 7;
+      };
     };
+    extraConfig = ''
+    exec-once = ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator &
+    '';
   };
 }

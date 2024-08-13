@@ -127,6 +127,23 @@
     gnomeExtensions.dash-to-panel
   ];
 
+  programs.waybar = {
+    enable = true;
+    settings = {
+      mainBar = {
+        layer = "top";
+        position = "bottom";
+        height = 30;
+        output = [
+          "eDP-1"
+        ];
+        modules-left = [ "hyprland/workspaces" ];
+        modules-center = [ ];
+        modules-right = [ "tray" ];
+      };
+    };
+  };
+
   programs.zsh = {
     enable = true;
     syntaxHighlighting.enable = true;

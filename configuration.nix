@@ -83,6 +83,10 @@
     LC_TIME = "en_AU.UTF-8";
   };
 
+  services.samba = {
+    enable = true;
+  };
+
   services.xserver = {
     enable = true;
     xkb.layout = "au";
@@ -96,15 +100,15 @@
       };
     };
     desktopManager.gnome = {
-      enable = true;
+      enable = false;
     };
-    windowManager.bspwm.enable = true;
     xkb.options = "caps:escape";
   };
   services.displayManager.defaultSession = "hyprland";
   programs.hyprland = {
     enable = true;
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    xwayland.enable = true;
   };
 
   services.lvm.enable = true;
@@ -228,6 +232,11 @@
     variables = {
     };
     systemPackages = with pkgs; [
+      # samba stuff
+      cifs-utils
+      keyutils
+
+      networkmanager-openconnect
       ripgrep
       yazi
       acpi
@@ -269,6 +278,9 @@
     terminal = "kitty";
   };
 
+  programs.waybar = {
+    enable = true;
+  };
 
   programs.git = {
     enable = true;
@@ -321,6 +333,36 @@
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 8384 22000 ];
   networking.firewall.allowedUDPPorts = [ 22000 21027 ];
+
+  # Required to mount cifs
+  # https://github.com/NixOS/nixpkgs/issues/34638
+  system.activationScripts.symlink-requestkey = ''
+  if [ ! -d /sbin ]; then
+    mkdir /sbin
+  fi
+  ln -sfn /run/current-system/sw/bin/request-key /sbin/request-key
+  '';
+  environment.etc."request-key.conf" = {
+    text = let
+      upcall = "${pkgs.cifs-utils}/bin/cifs.upcall";
+      keyctl = "${pkgs.keyutils}/bin/keyctl";
+    in ''
+        #OP     TYPE          DESCRIPTION  CALLOUT_INFO  PROGRAM
+        # -t is required for DFS share servers...
+        create  cifs.spnego   *            *             ${upcall} -t %k
+        create  dns_resolver  *            *             ${upcall} %k
+        # Everything below this point is essentially the default configuration,
+        # modified minimally to work under NixOS. Notably, it provides debug
+        # logging.
+        create  user          debug:*      negate        ${keyctl} negate %k 30 %S
+        create  user          debug:*      rejected      ${keyctl} reject %k 30 %c %S
+        create  user          debug:*      expired       ${keyctl} reject %k 30 %c %S
+        create  user          debug:*      revoked       ${keyctl} reject %k 30 %c %S
+        create  user          debug:loop:* *             |${pkgs.coreutils}/bin/cat
+        create  user          debug:*      *             ${pkgs.keyutils}/share/keyutils/request-key-debug.sh %k %d %c %S
+        negate  *             *            *             ${keyctl} negate %k 30 %S
+        '';
+      };
 
   # networking.openconnect.interfaces = {
   #   post = {

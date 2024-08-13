@@ -135,7 +135,7 @@
       hidden = true;
       mouse = "a";
       encoding = "utf-8";
-      expandtab = false;
+      expandtab = true;
       tabstop = 2;
       shiftwidth = 2;
       softtabstop = 2;
