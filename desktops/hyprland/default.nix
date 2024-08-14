@@ -30,8 +30,12 @@
       ];
 
       general = {
-        cursor_inactive_timeout = 2;
         no_focus_fallback = true;
+        gaps_out = 5;
+      };
+
+      cursor = {
+        inactive_timeout = 2;
       };
       # TODO: Make this device specific
       # monitor = [
