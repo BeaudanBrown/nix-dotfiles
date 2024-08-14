@@ -52,7 +52,7 @@
     config = {
       whitelist = {
         prefix = [
-          "${config.home.homeDirectory}/shared"
+          "${config.home.homeDirectory}/documents"
           "${config.home.homeDirectory}/monash"
         ];
       };
@@ -139,7 +139,21 @@
         ];
         modules-left = [ "hyprland/workspaces" ];
         modules-center = [ ];
-        modules-right = [ "tray" ];
+        modules-right = [ "tray" "battery" "clock" ];
+        battery = {
+          states = {
+            # good = 95;
+            warning = 30;
+            critical = 15;
+          };
+          format = "{capacity}% {icon}";
+          format-charging = "{capacity}% ";
+          format-plugged = "{capacity}% ";
+          format-alt = "{time} {icon}";
+          # format-good = ""; # An empty format will hide the module
+          # format-full = "";
+          format-icons = ["░░░░" "█░░░" "██░░" "███░" "████"];
+        };
       };
     };
   };

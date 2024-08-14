@@ -26,6 +26,7 @@
       vimtex.enable = true;
       nix.enable = true;
       treesitter.enable = true;
+      # TODO: add config for escape to close
       lazygit.enable = true;
       friendly-snippets.enable = true;
       fzf-lua = {
@@ -34,6 +35,13 @@
         settings = {
           files = {
             cmd = "rg --files";
+          };
+          winopts = {
+            height = 0.9;
+            width = 0.9;
+            preview = {
+              horizontal = "right:40%";
+            };
           };
         };
       };

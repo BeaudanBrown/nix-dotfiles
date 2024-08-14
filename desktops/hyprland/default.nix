@@ -112,6 +112,7 @@
         fullscreen_opacity = 1.0;
         rounding = 7;
       };
+      windowrulev2 = import ./windowrulev2.nix;
     };
     extraConfig = ''
     exec-once = ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator &

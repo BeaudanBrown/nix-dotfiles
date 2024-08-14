@@ -186,9 +186,9 @@
           autoAcceptFolder = true;
         };
       };
-      folders."shared" = {
+      folders."documents" = {
         id = "txxit-w9cwz";
-        path = "~/shared";
+        path = "~/documents";
         devices = [ "server" "grill" "nix-laptop" ];
       };
       folders."monash" = {
@@ -263,7 +263,7 @@
       xdotool
       devenv
       jq
-      gnome.nautilus
+      nautilus
       sxiv
       spotify
       xorg.xprop

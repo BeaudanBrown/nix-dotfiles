@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixvim = {
-      url = "git+file:/home/beau/shared/nixvim";
+      url = "git+file:/home/beau/documents/nixvim";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
