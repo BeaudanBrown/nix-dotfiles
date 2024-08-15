@@ -6,7 +6,7 @@ let
     "class:(kitty)"
     "class:(signal)"
     "class:(brave-browser)"
-    "class:(spotify)"
+    "title:(Spotify)"
   ];
 in
   defaultRules ++ tilingWindows

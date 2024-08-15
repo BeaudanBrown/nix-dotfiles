@@ -67,9 +67,9 @@
         "SUPERSHIFT,u,movetoworkspacesilent,special"
         "SUPER,TAB,workspace,previous"
 
-        "SUPER,equal, exec, wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%+"
-        "SUPER,minus, exec, wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%-"
-        "SUPERSHIFT,minus, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        "SUPER,equal, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"
+        "SUPER,minus, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-"
+        "SUPERSHIFT,p, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
       ] ++
       # Change workspace
       (map

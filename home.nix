@@ -1,4 +1,40 @@
 { config, pkgs, ... }:
+let
+  progress-bar = [
+    "▏   "
+    "▎   "
+    "▍   "
+    "▌   "
+    "▋   "
+    "▊   "
+    "▉   "
+    "█   "
+    "█▏  "
+    "█▎  "
+    "█▍  "
+    "█▌  "
+    "█▋  "
+    "█▊  "
+    "█▉  "
+    "██  "
+    "██▏ "
+    "██▎ "
+    "██▍ "
+    "██▌ "
+    "██▋ "
+    "██▊ "
+    "██▉ "
+    "███ "
+    "███▏"
+    "███▎"
+    "███▍"
+    "███▌"
+    "███▋"
+    "███▊"
+    "███▉"
+    "████"
+  ];
+in
 {
   programs.home-manager.enable = true;
   home = {
@@ -129,6 +165,11 @@
 
   programs.waybar = {
     enable = true;
+    style = ''
+      * {
+        font-family: JetBrainsMono Nerd Font Mono;
+      }
+    '';
     settings = {
       mainBar = {
         layer = "top";
@@ -137,22 +178,43 @@
         output = [
           "eDP-1"
         ];
-        modules-left = [ "hyprland/workspaces" ];
-        modules-center = [ ];
-        modules-right = [ "tray" "battery" "clock" ];
+        modules-left = [ "wireplumber" "backlight" "battery" ];
+        modules-center = [ "hyprland/workspaces" ];
+        modules-right = [ "tray" "memory" "clock" ];
+        backlight = {
+          device = "intel_backlight";
+          format = "🔆 {icon} {percent:3}%";
+          format-icons = progress-bar;
+        };
+        clock = {
+          interval = 60;
+          tooltip = true;
+          format = "{:%I:%M%p}";
+          tooltip-format = "{:%a %d/%m/%Y}";
+        };
+        memory = {
+          interval = 10;
+          format = "RAM: {used:0.1f}G/{total:0.1f}G";
+        };
+        wireplumber = {
+          format = "🔊 {icon} {volume:3}%";
+          format-muted = "🔇";
+          # on-click = "helvum";
+          format-icons = progress-bar;
+        };
         battery = {
           states = {
             # good = 95;
             warning = 30;
             critical = 15;
           };
-          format = "{capacity}% {icon}";
-          format-charging = "{capacity}% ";
-          format-plugged = "{capacity}% ";
+          format = "🔋 {capacity:3}% {icon}";
+          format-charging = "⚡ {icon} {capacity:3}%";
+          format-plugged = "⚡ {icon} {capacity:3}%";
           format-alt = "{time} {icon}";
           # format-good = ""; # An empty format will hide the module
           # format-full = "";
-          format-icons = ["░░░░" "█░░░" "██░░" "███░" "████"];
+          format-icons = progress-bar;
         };
       };
     };
