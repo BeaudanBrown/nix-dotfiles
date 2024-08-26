@@ -33,22 +33,45 @@
     nixpkgs.overlays = [
     ];
 
-    nixosConfigurations.nix-laptop = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit inputs; };
-      modules = [
-        ./configuration.nix
-        inputs.nixvim.nixosModules.nixvim
-        inputs.stylix.nixosModules.stylix
+    nixosConfigurations = {
+      grill = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./configuration.nix
+          ./hardware-configuration/grill.nix
+          ./modules/nixos/nvidia.nix
+          inputs.nixvim.nixosModules.nixvim
+          inputs.stylix.nixosModules.stylix
 
-        inputs.home-manager.nixosModules.home-manager
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.backupFileExtension = "backup";
-          home-manager.users.beau = import ./home.nix;
-        }
-      ];
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
+            home-manager.users.beau = import ./home.nix;
+          }
+        ];
+      };
+
+      nix-laptop = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./configuration.nix
+          inputs.nixvim.nixosModules.nixvim
+          inputs.stylix.nixosModules.stylix
+
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
+            home-manager.users.beau = import ./home.nix;
+          }
+        ];
+      };
     };
+
   };
 }

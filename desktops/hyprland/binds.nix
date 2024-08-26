@@ -5,6 +5,14 @@
       "SUPER,mouse:273,resizewindow"
     ];
 
+    binde = [
+      "SUPER,equal, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"
+      "SUPER,minus, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-"
+
+      "SUPER,b, exec, light -A 10"
+      "SUPERSHIFT,b, exec, light -U 10"
+    ];
+
     bind =
       let
         workspaces = [
@@ -38,17 +46,21 @@
         "SUPER, Return, exec, hyprland_show_app -a $TERMINAL"
         "SUPERSHIFT, Return, exec, hyprland_show_app -a $TERMINAL -p"
 
-        "SUPER, s, exec, hyprland_show_app -a slack -c Slack"
-        "SUPERSHIFT, s, exec, hyprland_show_app -a slack -c Slack -p"
+        "SUPER, s, exec, hyprland_show_app -a slack -c Slack -w Slack"
+        "SUPERSHIFT, s, exec, hyprland_show_app -a slack -c Slack -w Slack -p"
 
-        "SUPER, c, exec, hyprland_show_app -a signal-desktop -c signal"
-        "SUPERSHIFT, c, exec, hyprland_show_app -a signal-desktop -c signal -p"
+        "SUPER, c, exec, hyprland_show_app -a signal-desktop -c signal -w Signal"
+        "SUPERSHIFT, c, exec, hyprland_show_app -a signal-desktop -c signal -w Signal -p"
 
-        "SUPER, w, exec, hyprland_show_app -a brave -c brave-browser"
-        "SUPERSHIFT, w, exec, hyprland_show_app -a brave -c brave-browser -p"
+        "SUPER, w, exec, hyprland_show_app -a brave -c brave-browser -w Brave"
+        "SUPERSHIFT, w, exec, hyprland_show_app -a brave -c brave-browser -w Brave -p"
 
-        "SUPER, m, exec, hyprland_show_app -a spotify"
-        "SUPERSHIFT, m, exec, hyprland_show_app -a spotify -p"
+        "SUPER, m, exec, hyprland_show_app -a spotify -t \"Spotify Premium\" -w Spotify"
+        "SUPERSHIFT, m, exec, hyprland_show_app -a spotify -t \"Spotify Premium\" -w Spotify -p"
+
+        "SUPER, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows"
+        "SUPERSHIFT, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows -p"
+
 
         #################### Basic Bindings ####################
         "SUPER,q,killactive"
@@ -67,8 +79,6 @@
         "SUPERSHIFT,u,movetoworkspacesilent,special"
         "SUPER,TAB,workspace,previous"
 
-        "SUPER,equal, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"
-        "SUPER,minus, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-"
         "SUPERSHIFT,p, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
       ] ++
       # Change workspace

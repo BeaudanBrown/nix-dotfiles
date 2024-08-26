@@ -38,20 +38,20 @@
         inactive_timeout = 2;
       };
       # TODO: Make this device specific
-      # monitor = [
-      #   "DP-1, 2560x1440@144, 2560x0, 1"
-      #   "DP-2, 2560x1440@144, 0x0, 1"
-      # ];
       monitor = [
-        "eDP-1, 1920x1080@60, 0x0, 1"
+        "DP-1, 2560x1440@144, 0x0, 1"
+        "DP-2, 2560x1440@144, 2560x0, 1"
       ];
+      # monitor = [
+      #   "eDP-1, 1920x1080@60, 0x0, 1"
+      # ];
       input = {
         accel_profile = "flat";
         sensitivity = -0.2;
         repeat_delay = 175;
         repeat_rate = 50;
         kb_options = "caps:escape,fn:escape";
-        natural_scroll = true;
+        natural_scroll = false;
         follow_mouse = 2;
         touchpad = {
           natural_scroll = true;

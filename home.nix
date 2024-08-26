@@ -49,17 +49,30 @@ in
     # };
   };
 
-  xdg.userDirs = {
-    enable = true;
-    createDirectories = true;
-    documents = "${config.home.homeDirectory}/documents";
-    download = "${config.home.homeDirectory}/downloads";
-    desktop = null;
-    pictures = null;
-    music = null;
-    publicShare = null;
-    templates = null;
-    videos = null;
+  xdg = {
+    mimeApps = {
+      enable = true;
+      # to see available desktop files > ls /run/current-system/sw/share/applications/
+      defaultApplications = {
+        "application/pdf" = [
+          "org.pwmt.zathura.desktop"
+          "org.kde.okular.desktop"
+        ];
+        "text/plain" = ["nvim.desktop"];
+      };
+    };
+    userDirs = {
+      enable = true;
+      createDirectories = true;
+      documents = "${config.home.homeDirectory}/documents";
+      download = "${config.home.homeDirectory}/downloads";
+      desktop = null;
+      pictures = null;
+      music = null;
+      publicShare = null;
+      templates = null;
+      videos = null;
+    };
   };
 
   imports = [
@@ -69,9 +82,19 @@ in
     # ./modules/home/sxhkd
   ];
 
+  services.blueman-applet.enable = true;
+
   programs.yazi = {
     enable = true;
     enableZshIntegration = true;
+  };
+
+  programs.zathura = {
+    enable = true;
+    mappings = {
+      "K" = "zoom out";
+      "J" = "zoom in";
+    };
   };
 
   programs.git = {
@@ -176,9 +199,10 @@ in
         position = "bottom";
         height = 30;
         output = [
-          "eDP-1"
+          "DP-1"
+          "DP-2"
         ];
-        modules-left = [ "wireplumber" "backlight" "battery" ];
+        modules-left = [ "battery" "backlight" "wireplumber" ];
         modules-center = [ "hyprland/workspaces" ];
         modules-right = [ "tray" "memory" "clock" ];
         backlight = {
@@ -208,10 +232,9 @@ in
             warning = 30;
             critical = 15;
           };
-          format = "🔋 {capacity:3}% {icon}";
+          format = "🔋 {icon} {capacity:3}%";
           format-charging = "⚡ {icon} {capacity:3}%";
           format-plugged = "⚡ {icon} {capacity:3}%";
-          format-alt = "{time} {icon}";
           # format-good = ""; # An empty format will hide the module
           # format-full = "";
           format-icons = progress-bar;

@@ -30,7 +30,6 @@
     scriptFiles = map (file: "${scriptFolder}/${file}") files;
   in
   [
-    ./hardware-configuration/laptop.nix
   ] ++ scriptFiles;
 
   programs.nixvim = import ./nixvim/config/default.nix;
@@ -40,6 +39,8 @@
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
   ];
 
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelParams = [ "snd-intel-dspcfg.dsp_driver=1" ];
   boot.loader.systemd-boot = {
     configurationLimit = 5;
     enable = true;
@@ -51,7 +52,8 @@
       "1.1.1.1"
       "1.0.0.1"
     ];
-    hostName = "nix-laptop";
+    #TODO: make this device independent
+    hostName = "grill";
   };
 
   # Enable networking
@@ -83,6 +85,8 @@
     LC_TIME = "en_AU.UTF-8";
   };
 
+  services.blueman.enable = true;
+
   services.samba = {
     enable = true;
   };
@@ -111,13 +115,6 @@
     xwayland.enable = true;
   };
 
-  services.lvm.enable = true;
-  services.libinput = {
-    enable = true;
-    touchpad = {
-      naturalScrolling = true;
-    };
-  };
   console.useXkbConfig = true;
 
   services.printing.enable = true;
@@ -127,16 +124,7 @@
     mountOnMedia = true;
   };
 
-  # TODO: Make this device specific
-  services.synergy.client = {
-    enable = true;
-    autoStart = true;
-    serverAddress = "192.168.1.101:24800";
-    screenName = "nix-laptop";
-  };
-
   hardware.bluetooth.enable = true;
-  hardware.pulseaudio.enable = false;
 
   security = {
     polkit.enable = true;
@@ -153,6 +141,7 @@
       }
     ];
   };
+
   services.pipewire = {
     enable = true;
     audio.enable = true;
@@ -182,7 +171,7 @@
           autoAcceptFolder = true;
         };
         "grill" = {
-          id = "SLWG653-VOD4HWD-IEGBITG-JYRJYEI-2TKLROO-B6S4I5W-7DOD4EI-BAKUJA7";
+          id = "B4SXNGB-I6QC6RM-GCPSPXR-JSCTBNJ-RTFDNVW-OPVO3TB-BQ7EDSO-ODJV4AC";
           autoAcceptFolder = true;
         };
       };
@@ -202,16 +191,14 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users = {
     defaultUserShell = pkgs.zsh;
+    extraGroups.vboxusers.members = ["beau"];
     users.beau = {
       isNormalUser = true;
       description = "Beaudan";
-      extraGroups = [ "networkmanager" "wheel" "docker" ];
+      extraGroups = [ "video" "audio" "networkmanager" "wheel" "docker" ];
     };
   };
 
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment = {
     shells = [ pkgs.zsh ];
     shellAliases = {
@@ -236,9 +223,11 @@
       cifs-utils
       keyutils
 
+      okular
+      nh
+
       networkmanager-openconnect
       ripgrep
-      yazi
       acpi
       bind
       libreoffice
@@ -278,6 +267,8 @@
     terminal = "kitty";
   };
 
+  programs.light.enable = true;
+
   programs.waybar = {
     enable = true;
   };
@@ -297,9 +288,26 @@
 
   programs.zsh.enable = true;
 
-  virtualisation.docker = {
-    enable = true;
-    autoPrune = { enable = true; };
+  swapDevices = [ {
+    device = "/var/lib/swapfile";
+    size = 16*1024;
+  } ];
+
+  virtualisation = {
+    virtualbox = {
+      guest = {
+        # Enabling this causes slow rebuild (potentially hanging while waiting for credentials?)
+        enable = false;
+        dragAndDrop = true;
+      };
+      host = {
+        enable = true;
+      };
+    };
+    docker = {
+      enable = true;
+      autoPrune = { enable = true; };
+    };
   };
 
   stylix = {

@@ -6,7 +6,11 @@ let
     "class:(kitty)"
     "class:(signal)"
     "class:(brave-browser)"
+    "class:(Slack)"
     "title:(Spotify)"
   ];
+  fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
+    "class:(VirtualBox Machine)"
+  ];
 in
-  defaultRules ++ tilingWindows
+  defaultRules ++ tilingWindows ++ fullscreenWindows

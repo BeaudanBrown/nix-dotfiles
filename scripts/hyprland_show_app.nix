@@ -2,26 +2,38 @@
 let
   hyprland_show_app = pkgs.writeShellScriptBin "hyprland_show_app" ''
 usage() {
-  echo "Usage: $0 -a APP_NAME [-c CLASS_NAME] [-p]"
+  echo "Usage: $0 -a APP_NAME [-c CLASS_NAME] [-t TITLE] [-w WORKSPACE_NAME] [-p]"
   echo "  APP_NAME         Name of the app to show."
   echo "  CLASS_NAME       Optional class name if the app has a different window pid."
+  echo "  TITLE            Optional title if the app has a different window pid."
+  echo "  WORKSPACE_NAME   Optional workspace if the app has a weird binary."
   echo "  -p               Pull option."
   exit 1
 }
 
+# TODO: use the hyprland tag window feature
+
 # Variables to hold argument values
 APP_NAME=""
+WORKSPACE_NAME=""
 CLASS_NAME=""
+TITLE=""
 PULL=false
 
 # Parse optional flags
-while getopts ":a:c:p" option; do
+while getopts ":a:c:t:w:p" option; do
   case $option in
     a)
       APP_NAME=''${OPTARG}
       ;;
     c)
       CLASS_NAME=''${OPTARG}
+      ;;
+    t)
+      TITLE=''${OPTARG}
+      ;;
+    w)
+      WORKSPACE_NAME=''${OPTARG}
       ;;
     p)
       PULL=true
@@ -33,8 +45,14 @@ while getopts ":a:c:p" option; do
   esac
 done
 
+if [ -z $WORKSPACE_NAME ]; then
+  WORKSPACE_NAME="$APP_NAME"
+fi
+
 echo "APP_NAME = $APP_NAME"
 echo "CLASS_NAME = $CLASS_NAME"
+echo "WORKSPACE_NAME = $WORKSPACE_NAME"
+echo "TITLE = $TITLE"
 echo "PULL = $PULL"
 # Ensure there's at least one positional parameter
 if [ -z $APP_NAME ]; then
@@ -42,7 +60,7 @@ if [ -z $APP_NAME ]; then
   usage
 fi
 
-PID_PATH="/tmp/$APP_NAME"
+PID_PATH="/tmp/$WORKSPACE_NAME"
 
 launch_app() {
 	# TODO: Check if there is a conflicting app already open
@@ -52,9 +70,9 @@ launch_app() {
   echo "$CUR_WORKSPACE_NAME"
   echo "$APP_NAME"
 
-  if [ "$PULL" = false ] && [ "$CUR_WORKSPACE_NAME" != "$APP_NAME" ]; then
+  if [ "$PULL" = false ] && [ "$CUR_WORKSPACE_NAME" != "$WORKSPACE_NAME" ]; then
     echo "Launching on app workspace"
-    hyprctl dispatch exec "[workspace name:$APP_NAME] $APP_NAME"
+    hyprctl dispatch exec "[workspace name:$WORKSPACE_NAME] $APP_NAME"
   else
     echo "Launching app where it is"
     $APP_NAME
@@ -65,9 +83,9 @@ launch_app() {
 if [ -f "$PID_PATH" ]; then
   APP_PID=`cat $PID_PATH`
   echo "File $PID_PATH exists with contents $APP_PID"
+  WINDOW_ID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg pid "$APP_PID" '.[] | select(.pid == ($pid | tonumber)) | .id')
 fi
 
-WINDOW_ID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg pid "$APP_PID" '.[] | select(.pid == ($pid | tonumber)) | .id')
 
 if [[ -z "$WINDOW_ID" ]]; then
 	APP_PID=""
@@ -76,6 +94,9 @@ if [[ -z "$WINDOW_ID" ]]; then
   if [[ ! -z $CLASS_NAME ]]; then
     echo "Searching by classname"
     APP_PID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
+  elif [[ ! -z $TITLE ]]; then
+    echo "Searching by title"
+    APP_PID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .pid' | tail -n1)
   else
     echo "Searching by appname"
     APP_PID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
@@ -102,27 +123,27 @@ echo "App workspace is $APP_WORKSPACE"
 
 if [ "$PULL" = false ]; then
   echo "Sending app to its workspace and toggling the workspace"
-  hyprctl dispatch workspace name:$APP_NAME
-  hyprctl dispatch movetoworkspacesilent name:$APP_NAME,pid:$APP_PID
+  hyprctl dispatch workspace name:$WORKSPACE_NAME
+  hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
   exit 0
 fi
 
 
 echo "Pull enabled"
 
-if [ "$CUR_WORKSPACE_NAME" == "$APP_NAME" ]; then
+if [ "$CUR_WORKSPACE_NAME" == "$WORKSPACE_NAME" ]; then
   echo "We are on the app workspace"
-  if [ "$APP_WORKSPACE" == "$APP_NAME" ]; then
+  if [ "$APP_WORKSPACE" == "$WORKSPACE_NAME" ]; then
     echo "Send all other apps away"
   else
     echo "Bring him home"
-    hyprctl dispatch movetoworkspacesilent name:$APP_NAME,pid:$APP_PID
+    hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
   fi
 else
   echo "We are on some other workspace"
   if [ "$APP_WORKSPACE" == "$CUR_WORKSPACE_NAME" ]; then
     echo "Send him home"
-    hyprctl dispatch movetoworkspacesilent name:$APP_NAME,pid:$APP_PID
+    hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
   else
     echo "Bring him here"
     hyprctl dispatch movetoworkspacesilent e-0,pid:$APP_PID
