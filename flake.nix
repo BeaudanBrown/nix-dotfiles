@@ -25,14 +25,13 @@
     };
   };
 
-  outputs = { nixpkgs, hyprland, home-manager, nixvim, stylix, ... }@inputs:
+  outputs = { nixpkgs, home-manager, nixvim, stylix, ... }@inputs:
     let
       inherit (nixpkgs) lib;
       configLib = import ./lib { inherit lib; };
       specialArgs = {
         inherit
         inputs
-        hyprland
         configLib
         nixpkgs
         ;

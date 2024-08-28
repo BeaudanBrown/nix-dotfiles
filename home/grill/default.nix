@@ -23,7 +23,5 @@
   home.packages = with pkgs; [
     direnv
   ];
-
-  home.file.".local/share/gpt/default.aichat".source = (configLib.relativeToRoot "./extraConfig/default.aichat");
 }
 

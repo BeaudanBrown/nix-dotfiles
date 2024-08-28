@@ -1,8 +1,8 @@
-{ pkgs, configLib, ... }:
+{ pkgs, ... }:
 {
   stylix = {
     enable = true;
-    image = configLib.relativeToRoot "bg.png";
+    image = ./bg.png;
     base16Scheme = "${pkgs.base16-schemes}/share/themes/kanagawa.yaml";
 
     targets = {

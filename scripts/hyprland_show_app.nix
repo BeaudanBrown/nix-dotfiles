@@ -1,6 +1,10 @@
 { pkgs, ... }:
 let
-  hyprland_show_app = pkgs.writeShellScriptBin "hyprland_show_app" ''
+  hyprland_show_app = pkgs.writeShellApplication {
+    name = "hyprland_show_app";
+    runtimeInputs = with pkgs; [ jq ];
+    text = ''
+
 usage() {
   echo "Usage: $0 -a APP_NAME [-c CLASS_NAME] [-t TITLE] [-w WORKSPACE_NAME] [-p]"
   echo "  APP_NAME         Name of the app to show."
@@ -20,7 +24,7 @@ CLASS_NAME=""
 TITLE=""
 PULL=false
 
-CUR_WORKSPACE_NAME=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.name')
+CUR_WORKSPACE_NAME=$(hyprctl activeworkspace -j | jq -r '.name')
 
 # Parse optional flags
 while getopts ":a:c:t:w:p" option; do
@@ -47,7 +51,7 @@ while getopts ":a:c:t:w:p" option; do
   esac
 done
 
-if [ -z $WORKSPACE_NAME ]; then
+if [ -z "$WORKSPACE_NAME" ]; then
   WORKSPACE_NAME="$APP_NAME"
 fi
 
@@ -57,7 +61,7 @@ echo "WORKSPACE_NAME = $WORKSPACE_NAME"
 echo "TITLE = $TITLE"
 echo "PULL = $PULL"
 # Ensure there's at least one positional parameter
-if [ -z $APP_NAME ]; then
+if [ -z "$APP_NAME" ]; then
   echo "Error: APP_NAME is missing."
   usage
 fi
@@ -79,25 +83,25 @@ launch_app() {
 }
 
 if [ -f "$PID_PATH" ]; then
-  APP_PID=`cat $PID_PATH`
+  APP_PID=$(cat "$PID_PATH")
   echo "File $PID_PATH exists with contents $APP_PID"
-  WINDOW_ID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg pid "$APP_PID" '.[] | select(.pid == ($pid | tonumber)) | .id')
+  WINDOW_ID=$(hyprctl clients -j | jq -r --arg pid "$APP_PID" '.[] | select(.pid == ($pid | tonumber)) | .id')
 fi
 
 
 if [[ -z "$WINDOW_ID" ]]; then
 	APP_PID=""
-	rm $PID_PATH
+	rm "$PID_PATH"
   echo "Can't find window with that pid"
-  if [[ ! -z $CLASS_NAME ]]; then
+  if [[ -n $CLASS_NAME ]]; then
     echo "Searching by classname"
-    APP_PID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
-  elif [[ ! -z $TITLE ]]; then
+    APP_PID=$(hyprctl clients -j | jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
+  elif [[ -n $TITLE ]]; then
     echo "Searching by title"
-    APP_PID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .pid' | tail -n1)
+    APP_PID=$(hyprctl clients -j | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .pid' | tail -n1)
   else
     echo "Searching by appname"
-    APP_PID=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
+    APP_PID=$(hyprctl clients -j | jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
   fi
   if [[ -z $APP_PID ]]; then
     echo "Couldn't find window by classname or none provided, launching app"
@@ -111,8 +115,7 @@ fi
 echo "Process exists"
 
 #App is open somewhere
-CUR_WORKSPACE_ID=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
-APP_WORKSPACE=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg APP_PID "$APP_PID" \
+APP_WORKSPACE=$(hyprctl clients -j | jq -r --arg APP_PID "$APP_PID" \
   '.[] | select(.pid == ($APP_PID | tonumber)) | .workspace.name')
 
 echo "Current workspace is $CUR_WORKSPACE_NAME"
@@ -124,14 +127,14 @@ if [ "$CUR_WORKSPACE_NAME" == "$WORKSPACE_NAME" ]; then
     echo "The app is with us"
     if [ "$PULL" = false ]; then
       echo "Go to previous workspace"
-      hyprctl dispatch workspace name:$CUR_WORKSPACE_NAME
+      hyprctl dispatch workspace name:"$CUR_WORKSPACE_NAME"
     else
       echo "TODO send all other apps away"
     fi
   else
     echo "The app is not here, bring it back"
-    hyprctl dispatch movetoworkspace name:$CUR_WORKSPACE_NAME,pid:$APP_PID
-    hyprctl dispatch focuswindow pid:$APP_PID
+    hyprctl dispatch movetoworkspace name:"$CUR_WORKSPACE_NAME",pid:"$APP_PID"
+    hyprctl dispatch focuswindow pid:"$APP_PID"
   fi
 else
   echo "We are not on the apps designated workspace"
@@ -139,26 +142,28 @@ else
     echo "The app is on our current workspace"
     if [ "$PULL" = false ]; then
       echo "Go with it to its workspace"
-      hyprctl dispatch movetoworkspace name:$WORKSPACE_NAME,pid:$APP_PID
-      hyprctl dispatch focuswindow pid:$APP_PID
+      hyprctl dispatch movetoworkspace name:"$WORKSPACE_NAME",pid:"$APP_PID"
+      hyprctl dispatch focuswindow pid:"$APP_PID"
     else
       echo "Send it to its designated workspace"
-      hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
+      hyprctl dispatch movetoworkspacesilent name:"$WORKSPACE_NAME",pid:"$APP_PID"
     fi
   else
     echo "The app is on a different workspace"
     if [ "$PULL" = false ]; then
       echo "Go with it to its workspace"
-      hyprctl dispatch movetoworkspace name:$WORKSPACE_NAME,pid:$APP_PID
-      hyprctl dispatch focuswindow pid:$APP_PID
+      hyprctl dispatch movetoworkspace name:"$WORKSPACE_NAME",pid:"$APP_PID"
+      hyprctl dispatch focuswindow pid:"$APP_PID"
     else
       echo "Bring it here"
-      hyprctl dispatch movetoworkspace name:$CUR_WORKSPACE_NAME,pid:$APP_PID
-      hyprctl dispatch focuswindow pid:$APP_PID
+      hyprctl dispatch movetoworkspace name:"$CUR_WORKSPACE_NAME",pid:"$APP_PID"
+      hyprctl dispatch focuswindow pid:"$APP_PID"
     fi
   fi
 fi
-'';
+
+    '';
+  };
 
 in
 {

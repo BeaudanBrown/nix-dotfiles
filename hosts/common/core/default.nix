@@ -37,7 +37,7 @@
     allowUnfreePredicate = _: true;
   };
 
-  programs.nixvim = import (configLib.relativeToRoot "nixvim/config/default.nix");
+  programs.waybar.enable = true;
 
   fonts.packages = with pkgs; [
     jetbrains-mono

@@ -1,9 +1,11 @@
 { pkgs, ... }:
 let
-  launch_windows = pkgs.writeShellScriptBin "launch_windows" ''
-    VBoxManage startvm "Windows"
-'';
-
+  launch_windows = pkgs.writeShellApplication {
+    name = "launch_windows";
+    text = ''
+      VBoxManage startvm "Windows"
+    '';
+  };
 in
 {
   environment.systemPackages = [

@@ -19,13 +19,19 @@
     };
 
     plugins = {
+      otter.enable = true;
       lualine.enable = true;
       nvim-colorizer.enable = true;
       commentary.enable = true;
       surround.enable = true;
       vimtex.enable = true;
       nix.enable = true;
-      treesitter.enable = true;
+      treesitter = {
+        settings = {
+          highlight.enable = true;
+        };
+        enable = true;
+      };
       # TODO: add config for escape to close
       lazygit.enable = true;
       friendly-snippets.enable = true;
