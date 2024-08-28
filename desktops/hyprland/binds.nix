@@ -79,6 +79,8 @@
         "SUPERSHIFT,u,movetoworkspacesilent,special"
         "SUPER,TAB,workspace,previous"
 
+        "ALT,TAB,focusCurrentOrLast"
+
         "SUPERSHIFT,p, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
       ] ++
       # Change workspace

@@ -25,10 +25,20 @@
     };
   };
 
-  outputs = { nixpkgs, ... }@inputs: {
-    homeConfigurations."beau@nix-laptop" = inputs.home-manager.lib.homeManager.Configuration {
-      modules = [ ];
-    };
+  outputs = { nixpkgs, hyprland, home-manager, nixvim, stylix, ... }@inputs:
+    let
+      inherit (nixpkgs) lib;
+      configLib = import ./lib { inherit lib; };
+      specialArgs = {
+        inherit
+        inputs
+        hyprland
+        configLib
+        nixpkgs
+        ;
+      };
+    in
+    {
 
     nixpkgs.overlays = [
     ];
@@ -36,20 +46,19 @@
     nixosConfigurations = {
       grill = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
+        inherit specialArgs;
         modules = [
-          ./configuration.nix
-          ./hardware-configuration/grill.nix
-          ./modules/nixos/nvidia.nix
-          inputs.nixvim.nixosModules.nixvim
-          inputs.stylix.nixosModules.stylix
+          ./hosts/grill
+          nixvim.nixosModules.nixvim
+          stylix.nixosModules.stylix
 
-          inputs.home-manager.nixosModules.home-manager
+          home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "backup";
             home-manager.users.beau = import ./home.nix;
+            home-manager.extraSpecialArgs = specialArgs;
           }
         ];
       };
@@ -59,10 +68,10 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./configuration.nix
-          inputs.nixvim.nixosModules.nixvim
-          inputs.stylix.nixosModules.stylix
+          nixvim.nixosModules.nixvim
+          stylix.nixosModules.stylix
 
-          inputs.home-manager.nixosModules.home-manager
+          home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;

@@ -1,9 +1,7 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ config, pkgs, inputs, ... }:
+{ inputs, pkgs, configLib, ... }:
 {
+  imports = configLib.scanPaths (configLib.relativeToRoot "scripts");
+
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     trusted-users = [ "root" "@wheel" ];
@@ -17,43 +15,27 @@
       "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
       "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
     ];
-
     cores = 12;
   };
-
+  boot.loader.systemd-boot = {
+    configurationLimit = 10;
+    enable = true;
+  };
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = _: true;
 
-  imports = let
-    scriptFolder = ./scripts;
-    files = builtins.attrNames (builtins.readDir scriptFolder);
-    scriptFiles = map (file: "${scriptFolder}/${file}") files;
-  in
-  [
-  ] ++ scriptFiles;
-
-  programs.nixvim = import ./nixvim/config/default.nix;
+  programs.nixvim = import (configLib.relativeToRoot "nixvim/config/default.nix");
 
   fonts.packages = with pkgs; [
     jetbrains-mono
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "snd-intel-dspcfg.dsp_driver=1" ];
-  boot.loader.systemd-boot = {
-    configurationLimit = 5;
-    enable = true;
-  };
-  boot.loader.efi.canTouchEfiVariables = true;
-
   networking = {
     nameservers = [
       "1.1.1.1"
       "1.0.0.1"
     ];
-    #TODO: make this device independent
-    hostName = "grill";
   };
 
   # Enable networking
@@ -103,17 +85,14 @@
         wayland = true;
       };
     };
-    desktopManager.gnome = {
-      enable = false;
-    };
     xkb.options = "caps:escape";
   };
-  services.displayManager.defaultSession = "hyprland";
+
   programs.hyprland = {
     enable = true;
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-    xwayland.enable = true;
   };
+
 
   console.useXkbConfig = true;
 
@@ -312,12 +291,14 @@
 
   stylix = {
     enable = true;
-    image = ./bg.png;
+    image = configLib.relativeToRoot "bg.png";
     base16Scheme = "${pkgs.base16-schemes}/share/themes/kanagawa.yaml";
 
-    targets.grub.useImage = true;
-    targets.nixvim.enable = false;
-    targets.gnome.enable = false;
+    targets = {
+      grub.useImage = true;
+      nixvim.enable = false;
+      gnome.enable = false;
+    };
 
     polarity = "dark";
 
@@ -371,24 +352,4 @@
         negate  *             *            *             ${keyctl} negate %k 30 %S
         '';
       };
-
-  # networking.openconnect.interfaces = {
-  #   post = {
-  #     user = "beaudan.campbell-brown@monash.edu.au";
-  #     protocol = "anyconnect";
-  #     gateway = "vpn.monash.edu";
-  #     extraOptions = {
-  #       token-mode = "totp";
-  #     };
-  #   };
-  # };
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.05"; # Did you read the comment?
-
 }

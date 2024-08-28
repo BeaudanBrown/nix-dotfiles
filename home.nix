@@ -79,7 +79,6 @@ in
     ./desktops/hyprland
     ./modules/home/bspwm
     ./tmux
-    # ./modules/home/sxhkd
   ];
 
   services.blueman-applet.enable = true;

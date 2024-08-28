@@ -20,6 +20,8 @@ CLASS_NAME=""
 TITLE=""
 PULL=false
 
+CUR_WORKSPACE_NAME=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.name')
+
 # Parse optional flags
 while getopts ":a:c:t:w:p" option; do
   case $option in
@@ -65,10 +67,6 @@ PID_PATH="/tmp/$WORKSPACE_NAME"
 launch_app() {
 	# TODO: Check if there is a conflicting app already open
 	echo "Launching $APP_NAME"
-  CUR_WORKSPACE_NAME=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.name')
-
-  echo "$CUR_WORKSPACE_NAME"
-  echo "$APP_NAME"
 
   if [ "$PULL" = false ] && [ "$CUR_WORKSPACE_NAME" != "$WORKSPACE_NAME" ]; then
     echo "Launching on app workspace"
@@ -113,40 +111,51 @@ fi
 echo "Process exists"
 
 #App is open somewhere
-CUR_WORKSPACE_NAME=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.name')
 CUR_WORKSPACE_ID=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
-APP_WORKSPACE=$(hyprctl clients -j | ${pkgs.jq}/bin/jq --arg APP_PID "$APP_PID" \
+APP_WORKSPACE=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg APP_PID "$APP_PID" \
   '.[] | select(.pid == ($APP_PID | tonumber)) | .workspace.name')
 
 echo "Current workspace is $CUR_WORKSPACE_NAME"
 echo "App workspace is $APP_WORKSPACE"
 
-if [ "$PULL" = false ]; then
-  echo "Sending app to its workspace and toggling the workspace"
-  hyprctl dispatch workspace name:$WORKSPACE_NAME
-  hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
-  exit 0
-fi
-
-
-echo "Pull enabled"
-
 if [ "$CUR_WORKSPACE_NAME" == "$WORKSPACE_NAME" ]; then
-  echo "We are on the app workspace"
-  if [ "$APP_WORKSPACE" == "$WORKSPACE_NAME" ]; then
-    echo "Send all other apps away"
+  echo "We are on the apps designated workspace"
+  if [ "$CUR_WORKSPACE_NAME" == "$APP_WORKSPACE" ]; then
+    echo "The app is with us"
+    if [ "$PULL" = false ]; then
+      echo "Go to previous workspace"
+      hyprctl dispatch workspace name:$CUR_WORKSPACE_NAME
+    else
+      echo "TODO send all other apps away"
+    fi
   else
-    echo "Bring him home"
-    hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
+    echo "The app is not here, bring it back"
+    hyprctl dispatch movetoworkspace name:$CUR_WORKSPACE_NAME,pid:$APP_PID
+    hyprctl dispatch focuswindow pid:$APP_PID
   fi
 else
-  echo "We are on some other workspace"
+  echo "We are not on the apps designated workspace"
   if [ "$APP_WORKSPACE" == "$CUR_WORKSPACE_NAME" ]; then
-    echo "Send him home"
-    hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
+    echo "The app is on our current workspace"
+    if [ "$PULL" = false ]; then
+      echo "Go with it to its workspace"
+      hyprctl dispatch movetoworkspace name:$WORKSPACE_NAME,pid:$APP_PID
+      hyprctl dispatch focuswindow pid:$APP_PID
+    else
+      echo "Send it to its designated workspace"
+      hyprctl dispatch movetoworkspacesilent name:$WORKSPACE_NAME,pid:$APP_PID
+    fi
   else
-    echo "Bring him here"
-    hyprctl dispatch movetoworkspacesilent e-0,pid:$APP_PID
+    echo "The app is on a different workspace"
+    if [ "$PULL" = false ]; then
+      echo "Go with it to its workspace"
+      hyprctl dispatch movetoworkspace name:$WORKSPACE_NAME,pid:$APP_PID
+      hyprctl dispatch focuswindow pid:$APP_PID
+    else
+      echo "Bring it here"
+      hyprctl dispatch movetoworkspace name:$CUR_WORKSPACE_NAME,pid:$APP_PID
+      hyprctl dispatch focuswindow pid:$APP_PID
+    fi
   fi
 fi
 '';
