@@ -57,7 +57,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "backup";
-            home-manager.users.beau = import ./home.nix;
+            home-manager.users.beau = import ./home/grill;
             home-manager.extraSpecialArgs = specialArgs;
           }
         ];
