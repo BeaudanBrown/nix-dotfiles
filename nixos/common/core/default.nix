@@ -1,7 +1,6 @@
 { inputs, pkgs, configLib, ... }:
 {
-  imports = configLib.scanPaths (configLib.relativeToRoot "scripts") ++
-  (configLib.scanPaths ./.);
+  imports = (configLib.scanPaths ./.);
 
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
@@ -16,25 +15,37 @@
       "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
       "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
     ];
-    cores = 12;
+  };
+
+  nixpkgs.config = {
+    allowUnfree = true;
+    allowUnfreePredicate = _: true;
   };
 
   boot.loader = {
     timeout = 1;
     systemd-boot = {
-      configurationLimit = 10;
       enable = true;
+      configurationLimit = 10;
     };
   };
 
-  swapDevices = [ {
-    device = "/var/lib/swapfile";
-    size = 16*1024;
-  } ];
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 16*1024;
+    }
+  ];
 
-  nixpkgs.config = {
-    allowUnfree = true;
-    allowUnfreePredicate = _: true;
+  # Define a user account. Don't forget to set a password with ‘passwd’.
+  users = {
+    defaultUserShell = pkgs.zsh;
+    extraGroups.vboxusers.members = ["beau"];
+    users.beau = {
+      isNormalUser = true;
+      description = "Beaudan";
+      extraGroups = [ "video" "audio" "networkmanager" "wheel" "docker" ];
+    };
   };
 
   programs.waybar.enable = true;
@@ -44,36 +55,12 @@
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
   ];
 
-  services.blueman.enable = true;
-
-  services.xserver = {
-    enable = true;
-    xkb.layout = "au";
-    xkb.variant = "";
-    autoRepeatDelay = 175;
-    autoRepeatInterval = 50;
-    displayManager = {
-      gdm = {
-        enable = true;
-        wayland = true;
-      };
-    };
-    xkb.options = "caps:escape";
-  };
-
   programs.hyprland = {
     enable = true;
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
   };
 
   console.useXkbConfig = true;
-
-  services.printing.enable = true;
-
-  services.udisks2 = {
-    enable = true;
-    mountOnMedia = true;
-  };
 
   hardware.bluetooth.enable = true;
 
@@ -93,27 +80,6 @@
     ];
   };
 
-  services.pipewire = {
-    enable = true;
-    audio.enable = true;
-    pulse.enable = true;
-    alsa = {
-      enable = true;
-      support32Bit = true;
-    };
-  };
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  users = {
-    defaultUserShell = pkgs.zsh;
-    extraGroups.vboxusers.members = ["beau"];
-    users.beau = {
-      isNormalUser = true;
-      description = "Beaudan";
-      extraGroups = [ "video" "audio" "networkmanager" "wheel" "docker" ];
-    };
-  };
-
   environment = {
     shells = [ pkgs.zsh ];
     sessionVariables = {
@@ -128,44 +94,51 @@
       cifs-utils
       keyutils
 
-      okular
-      nh
-
+      # Network
       networkmanager-openconnect
-      ripgrep
-      acpi
-      bind
-      libreoffice
-      duc
-      cryptsetup
-      inkscape
-      slack
-      zoom-us
       networkmanagerapplet
       openconnect
-      wl-clipboard
-      htop
+
+      # Applications
       brave
       vlc
       zathura
       spotify
       qbittorrent
+      nautilus
       calibre
-      pciutils
+      libreoffice
+      inkscape
+      slack
+      zoom-us
+      sxiv
+      signal-desktop
+      okular
+
+      # Utilities
+      ripgrep
+      wl-clipboard
+      htop
       pavucontrol
+      duc
+      nh
+      acpi
+      bind
+      pciutils
       unzip
-      xdotool
       devenv
       jq
-      nautilus
-      sxiv
-      xorg.xprop
       bat
       wofi
-      signal-desktop
       eww
+
+      # TODO: device specific
+      cryptsetup
+      xdotool
+      xorg.xprop
     ];
   };
+
   programs.nautilus-open-any-terminal = {
     enable = true;
     terminal = "kitty";

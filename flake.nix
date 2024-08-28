@@ -47,10 +47,10 @@
         system = "x86_64-linux";
         inherit specialArgs;
         modules = [
-          ./hosts/grill
+          ./nixos/grill
+
           nixvim.nixosModules.nixvim
           stylix.nixosModules.stylix
-
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -66,10 +66,10 @@
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
-          ./configuration.nix
+          ./nixos/laptop
+
           nixvim.nixosModules.nixvim
           stylix.nixosModules.stylix
-
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
