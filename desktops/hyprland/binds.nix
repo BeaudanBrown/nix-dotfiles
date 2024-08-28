@@ -61,6 +61,9 @@
         "SUPER, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows"
         "SUPERSHIFT, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows -p"
 
+        "SUPER, g, exec, hyprland_show_app -a steam -c Steam -w Steam"
+        "SUPERSHIFT, g, exec, hyprland_show_app -a steam -c Steam -w Steam -p"
+
 
         #################### Basic Bindings ####################
         "SUPER,q,killactive"
@@ -69,11 +72,6 @@
         "SUPER,f,fullscreen,1"
         "SUPERSHIFT,f,fullscreen,0"
         "SUPERSHIFT,space,togglefloating"
-
-        "SUPER,g,togglegroup"
-        "SUPER,t,lockactivegroup,toggle"
-        "SUPER,apostrophe,changegroupactive,f"
-        "SUPERSHIFT,apostrophe,changegroupactive,b"
 
         "SUPER,u,togglespecialworkspace"
         "SUPERSHIFT,u,movetoworkspacesilent,special"
@@ -101,24 +99,23 @@
           "SUPER,${key},movefocus,${direction}"
         )
         directions) ++
-      # Swap windows
-      (lib.mapAttrsToList
-        (key: direction:
-          "SUPERALT,${key},swapwindow,${direction}"
-        )
-        directions) ++
       # Move windows
       (lib.mapAttrsToList
         (key: direction:
           "SUPERSHIFT,${key},movewindoworgroup,${direction}"
         )
+        directions) ++
+      # Move workspace to other monitor
+      (lib.mapAttrsToList
+        (key: direction:
+          "SUPERALT,${key},moveworkspacetomonitor,e-0 ${direction}"
+        )
         directions);
-      # # TODO: toggle monitor focus
+      # # Swap windows
       # (lib.mapAttrsToList
       #   (key: direction:
-      #     "SUPERALT,${key},focusmonitor,${direction}"
+      #     "SUPERALT,${key},swapwindow,${direction}"
       #   )
       #   directions) ++
-      # Move workspace to other monitor
   };
 }

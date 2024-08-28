@@ -7,6 +7,7 @@ let
     "class:(signal)"
     "class:(brave-browser)"
     "class:(Slack)"
+    "class:(steam)"
     "title:(Spotify)"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [

@@ -41,8 +41,8 @@
       };
       # TODO: Make this device specific
       monitor = [
-        "DP-1, 2560x1440@144, 0x0, 1"
-        "DP-2, 2560x1440@144, 2560x0, 1"
+        "DP-1, 2560x1440@144, 0x0, 1, vrr, 1"
+        "DP-2, 2560x1440@144, 2560x0, 1, vrr, 1"
       ];
       # monitor = [
       #   "eDP-1, 1920x1080@60, 0x0, 1"
@@ -55,6 +55,7 @@
         kb_options = "caps:escape,fn:escape";
         natural_scroll = false;
         follow_mouse = 2;
+        float_switch_override_focus = 0;
         touchpad = {
           natural_scroll = true;
           scroll_factor = 0.3;
@@ -75,6 +76,7 @@
       misc = {
         disable_hyprland_logo = true;
         disable_splash_rendering = true;
+        mouse_move_focuses_monitor = false;
       };
       gestures = {
         workspace_swipe = true;
@@ -115,6 +117,7 @@
         rounding = 7;
       };
       windowrulev2 = import ./windowrulev2.nix;
+      workspace = import ./workspaceRules.nix;
     };
     extraConfig = ''
     exec-once = ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator &
