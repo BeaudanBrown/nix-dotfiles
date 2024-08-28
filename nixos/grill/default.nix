@@ -1,4 +1,4 @@
-{ pkgs, configLib, ... }:
+{ configLib, ... }:
 {
   imports =
   [
@@ -7,12 +7,7 @@
     "nixos/common/core"
   ]);
 
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [ "snd-intel-dspcfg.dsp_driver=1" ];
-    initrd.kernelModules = [ "amdgpu" ];
-    loader.efi.canTouchEfiVariables = true;
-  };
+  boot.initrd.kernelModules = [ "amdgpu" ];
 
   nix.settings.cores = 12;
 

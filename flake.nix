@@ -39,6 +39,7 @@
     in
     {
 
+
     nixpkgs.overlays = [
     ];
 
@@ -64,7 +65,7 @@
 
       nix-laptop = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
+        inherit specialArgs;
         modules = [
           ./nixos/laptop
 
@@ -75,7 +76,8 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "backup";
-            home-manager.users.beau = import ./home.nix;
+            home-manager.users.beau = import ./home/laptop;
+            home-manager.extraSpecialArgs = specialArgs;
           }
         ];
       };

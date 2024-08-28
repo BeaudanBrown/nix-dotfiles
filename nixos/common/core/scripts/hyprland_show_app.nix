@@ -21,6 +21,7 @@ usage() {
 APP_NAME=""
 WORKSPACE_NAME=""
 CLASS_NAME=""
+WINDOW_ID=""
 TITLE=""
 PULL=false
 
@@ -91,7 +92,6 @@ fi
 
 if [[ -z "$WINDOW_ID" ]]; then
 	APP_PID=""
-	rm "$PID_PATH"
   echo "Can't find window with that pid"
   if [[ -n $CLASS_NAME ]]; then
     echo "Searching by classname"

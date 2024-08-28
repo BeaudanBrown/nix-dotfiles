@@ -1,4 +1,4 @@
-{ pkgs, configLib, ... }:
+{ configLib, ... }:
 {
   imports =
   [
@@ -7,13 +7,7 @@
     "nixos/common/core"
   ]);
 
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [ "snd-intel-dspcfg.dsp_driver=1" ];
-    loader.efi.canTouchEfiVariables = true;
-  };
-
-  nix.settings.cores = 12;
+  nix.settings.cores = 8;
 
   networking.hostName = "nix-laptop";
 

@@ -17,17 +17,22 @@
     ];
   };
 
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
+    kernelParams = [ "snd-intel-dspcfg.dsp_driver=1" ];
+    loader = {
+      timeout = 1;
+      efi.canTouchEfiVariables = true;
+      systemd-boot = {
+        enable = true;
+        configurationLimit = 10;
+      };
+    };
+  };
+
   nixpkgs.config = {
     allowUnfree = true;
     allowUnfreePredicate = _: true;
-  };
-
-  boot.loader = {
-    timeout = 1;
-    systemd-boot = {
-      enable = true;
-      configurationLimit = 10;
-    };
   };
 
   swapDevices = [

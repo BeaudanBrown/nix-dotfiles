@@ -1,4 +1,4 @@
-{ configLib, pkgs, ... }:
+{ config, configLib, pkgs, ... }:
 {
   imports = [
    ] ++ (map configLib.relativeToRoot [
@@ -24,4 +24,5 @@
     direnv
   ];
 }
+
 
