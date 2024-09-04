@@ -1,7 +1,7 @@
 { configLib, pkgs, ... }:
 {
-  imports = [
-   ] ++ (map configLib.relativeToRoot [
+  imports = (configLib.scanPaths ./.) ++
+  (map configLib.relativeToRoot [
     "home/common/core"
   ]);
 

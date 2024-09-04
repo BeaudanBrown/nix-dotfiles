@@ -39,19 +39,21 @@ in
   programs.waybar = {
     enable = true;
     style = ''
-      * {
-        font-family: JetBrainsMono Nerd Font Mono;
+      .mainBar * {
+        font-family: "JetBrainsMono Nerd Font Mono";
+        font-size: 12pt;
+      }
+
+      .modules-right * {
+        margin: 3;
       }
     '';
     settings = {
       mainBar = {
+        name = "mainBar";
         layer = "top";
         position = "bottom";
         height = 30;
-        output = [
-          "DP-1"
-          "DP-2"
-        ];
         modules-left = [ "battery" "backlight" "wireplumber" ];
         modules-center = [ "hyprland/workspaces" ];
         modules-right = [ "tray" "memory" "clock" ];

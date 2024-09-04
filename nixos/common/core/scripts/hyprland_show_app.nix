@@ -98,7 +98,7 @@ if [[ -z "$WINDOW_ID" ]]; then
     APP_PID=$(hyprctl clients -j | jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
   elif [[ -n $TITLE ]]; then
     echo "Searching by title"
-    APP_PID=$(hyprctl clients -j | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .pid' | tail -n1)
+    APP_PID=$(hyprctl clients -j | jq -r --arg title "$TITLE" '.[] | select(.initialTitle == $title) | .pid' | tail -n1)
   else
     echo "Searching by appname"
     APP_PID=$(hyprctl clients -j | jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)

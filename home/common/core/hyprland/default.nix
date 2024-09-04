@@ -39,14 +39,6 @@
       cursor = {
         inactive_timeout = 2;
       };
-      # TODO: Make this device specific
-      monitor = [
-        "DP-1, 2560x1440@144, 0x0, 1, vrr, 1"
-        "DP-2, 2560x1440@144, 2560x0, 1, vrr, 1"
-      ];
-      # monitor = [
-      #   "eDP-1, 1920x1080@60, 0x0, 1"
-      # ];
       input = {
         accel_profile = "flat";
         sensitivity = -0.2;
@@ -121,6 +113,7 @@
     };
     extraConfig = ''
     exec-once = ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator &
+    exec-once = waybar &
     '';
   };
 }
