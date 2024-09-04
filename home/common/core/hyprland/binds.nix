@@ -58,6 +58,9 @@
         "SUPER, m, exec, hyprland_show_app -a spotify -t \"Spotify Premium\" -w Spotify"
         "SUPERSHIFT, m, exec, hyprland_show_app -a spotify -t \"Spotify Premium\" -w Spotify -p"
 
+        "SUPER, n, exec, hyprland_show_app -a caprine -c Caprine -w Caprine"
+        "SUPERSHIFT, n, exec, hyprland_show_app -a caprine -c Caprine -w Caprine -p"
+
         "SUPER, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows"
         "SUPERSHIFT, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows -p"
 

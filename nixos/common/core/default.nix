@@ -103,6 +103,7 @@
       openconnect
 
       # Applications
+      caprine
       brave
       vlc
       zathura

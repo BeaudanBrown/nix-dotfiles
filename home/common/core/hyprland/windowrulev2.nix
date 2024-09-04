@@ -8,6 +8,7 @@ let
     "class:(brave-browser)"
     "class:(Slack)"
     "class:(steam)"
+    "class:(Caprine)"
     "title:(Spotify)"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
