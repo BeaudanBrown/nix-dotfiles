@@ -69,6 +69,8 @@
 
 
         #################### Basic Bindings ####################
+        "SUPER,x,exec,hyprlock"
+
         "SUPER,q,killactive"
         "SUPERSHIFT,e,exit"
 
