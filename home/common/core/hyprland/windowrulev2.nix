@@ -14,5 +14,8 @@ let
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
     "class:(VirtualBox Machine)"
   ];
+  largeWindows = builtins.map (x: "size 30% 60%, " + x) [
+    "class:(nm-openconnect-auth-dialog)"
+  ];
 in
-  defaultRules ++ tilingWindows ++ fullscreenWindows
+  defaultRules ++ tilingWindows ++ fullscreenWindows ++ largeWindows
