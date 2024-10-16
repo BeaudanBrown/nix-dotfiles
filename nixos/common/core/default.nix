@@ -165,4 +165,5 @@
   programs.autojump.enable = true;
 
   programs.zsh.enable = true;
+  programs.kdeconnect.enable = true;
 }

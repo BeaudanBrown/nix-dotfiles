@@ -23,7 +23,7 @@
       lualine.enable = true;
       nvim-colorizer.enable = true;
       commentary.enable = true;
-      surround.enable = true;
+      vim-surround.enable = true;
       vimtex.enable = true;
       nix.enable = true;
       treesitter = {
@@ -37,7 +37,6 @@
       friendly-snippets.enable = true;
       fzf-lua = {
         enable = true;
-        iconsEnabled = true;
         settings = {
           files = {
             cmd = "rg --files";
@@ -54,7 +53,7 @@
       vim-slime = {
         enable = true;
         settings = {
-          dont_ask_default = true;
+          dont_ask_default = 1;
           target = "tmux";
           default_config = {
             socket_name = "default";
@@ -65,7 +64,7 @@
       tmux-navigator = {
         enable = true;
         settings = {
-          no_wrap = true;
+          no_wrap = 1;
         };
       };
       gitgutter = {
@@ -78,10 +77,13 @@
           gopls.enable = true;
           htmx.enable = true;
           jsonls.enable = true;
-          lua-ls.enable = true;
+          lua_ls.enable = true;
           pyright.enable = true;
           nixd.enable = true;
-          r-language-server.enable = true;
+          r_language_server = {
+            enable = true;
+            package = null;
+          };
         };
         keymaps = {
           diagnostic = {
