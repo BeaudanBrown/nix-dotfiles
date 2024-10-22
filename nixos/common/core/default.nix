@@ -136,6 +136,8 @@
       bat
       wofi
       eww
+      grim
+      slurp
 
       # TODO: device specific
       cryptsetup

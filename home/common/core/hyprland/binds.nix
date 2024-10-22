@@ -67,6 +67,7 @@
         "SUPER, g, exec, hyprland_show_app -a steam -c Steam -w Steam"
         "SUPERSHIFT, g, exec, hyprland_show_app -a steam -c Steam -w Steam -p"
 
+        ", Print, exec, grim -g \"$(slurp)\" - | wl-copy"
 
         #################### Basic Bindings ####################
         "SUPER,x,exec,hyprlock"
