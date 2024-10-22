@@ -2,19 +2,26 @@
 {
   imports = (configLib.scanPaths ./.);
 
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "root" "@wheel" ];
-    substituters = [
-      "https://hyprland.cachix.org"
-    ];
-    trusted-substituters = [
-      "https://devenv.cachix.org"
-    ];
-    trusted-public-keys = [
-      "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
-      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
-    ];
+  nix = {
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "-d";
+    };
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      trusted-users = [ "root" "@wheel" ];
+      substituters = [
+        "https://hyprland.cachix.org"
+      ];
+      trusted-substituters = [
+        "https://devenv.cachix.org"
+      ];
+      trusted-public-keys = [
+        "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
+        "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+      ];
+    };
   };
 
   boot = {
