@@ -8,13 +8,14 @@
     dotDir = ".config/zsh";
     plugins = [
       {
-        name = "zsh-vi-mode";
-        src = pkgs.fetchFromGitHub {
-          owner = "jeffreytse";
-          repo = "zsh-vi-mode";
-          rev = "v0.11.0";
-          sha256 = "sha256-xbchXJTFWeABTwq6h4KWLh+EvydDrDzcY9AQVK65RS8=";
-        };
+        name = "vi-mode";
+        src = pkgs.zsh-vi-mode;
+        file = "share/zsh-vi-mode/zsh-vi-mode.plugin.zsh";
+      }
+      {
+        name = "fzf-git-sh";
+        src = pkgs.fzf-git-sh;
+        file = "share/fzf-git-sh/fzf-git.zsh";
       }
     ];
     sessionVariables = {
@@ -43,11 +44,6 @@ if [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]]; then
   tmux new -A -s default &> /dev/null
 fi
 
-zle -N zle-line-init
-
-preexec() {
-    echo -ne '\e[5 q'
-}
 DIRENV_CONFIG="${config.home.homeDirectory}/.config/direnv"
 compdef batman=man
     '';
