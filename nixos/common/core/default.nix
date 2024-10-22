@@ -163,7 +163,6 @@
     };
   };
 
-  programs.fzf.keybindings = true;
   programs.autojump.enable = true;
 
   programs.zsh.enable = true;
