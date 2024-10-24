@@ -20,4 +20,15 @@
         ) (builtins.readDir path)
       )
     );
+
+  concatListsFromPaths = childAttrName: paths: builtins.concatLists (
+    builtins.map (path:
+      let expr = import path;
+      in if builtins.isAttrs expr &&
+            builtins.hasAttr childAttrName expr &&
+            builtins.typeOf (builtins.getAttr childAttrName expr) == "list"
+         then builtins.getAttr childAttrName expr
+         else []
+    ) paths
+  );
 }

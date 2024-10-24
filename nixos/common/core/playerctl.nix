@@ -1,0 +1,4 @@
+{ ... }:
+{
+  services.playerctld.enable = true;
+}

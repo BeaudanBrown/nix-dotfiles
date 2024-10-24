@@ -85,7 +85,10 @@
 
         "ALT,TAB,focusCurrentOrLast"
 
-        "SUPERSHIFT,p, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        "SUPERSHIFT, equal, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        "SUPERSHIFT, p, exec, playerctl play-pause"
+        "SUPER, period, exec, playerctl next"
+        "SUPER, comma, exec, playerctl previous"
       ] ++
       # Change workspace
       (map
