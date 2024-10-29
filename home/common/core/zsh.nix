@@ -32,6 +32,7 @@
 
     initExtraBeforeCompInit = ''
     zmodload zsh/complist
+    zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
     zstyle ':completion:*' menu select
     bindkey -M menuselect 'h' vi-backward-char
     bindkey -M menuselect 'k' vi-up-line-or-history
