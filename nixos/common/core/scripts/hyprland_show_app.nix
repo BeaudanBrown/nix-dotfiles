@@ -1,9 +1,6 @@
 { pkgs, ... }:
 let
-  hyprland_show_app = pkgs.writeShellApplication {
-    name = "hyprland_show_app";
-    runtimeInputs = with pkgs; [ jq ];
-    text = ''
+  script = ''
 
 usage() {
   echo "Usage: $0 -a APP_NAME [-c CLASS_NAME] [-t TITLE] [-w WORKSPACE_NAME] [-p]"
@@ -163,6 +160,11 @@ else
 fi
 
     '';
+
+  hyprland_show_app = pkgs.writeShellApplication {
+    name = "hyprland_show_app";
+    runtimeInputs = with pkgs; [ jq ];
+    text = script;
   };
 
 in
