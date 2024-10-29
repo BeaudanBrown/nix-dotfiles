@@ -1,6 +1,6 @@
 { ... }:
 {
-  programs.wofi = {
+  programs.rofi = {
     enable = true;
   };
 }

@@ -41,7 +41,7 @@
       in
       [
         #################### Program Launch ####################
-        "SUPER, space, exec, wofi --show drun"
+        "SUPER, space, exec, rofi -show drun"
 
         "SUPER, Return, exec, hyprland_show_app -a $TERMINAL"
         "SUPERSHIFT, Return, exec, hyprland_show_app -a $TERMINAL -p"

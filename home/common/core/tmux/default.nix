@@ -52,6 +52,12 @@ bind-key -T copy-mode-vi 'M-l' if-shell -F '#{pane_at_right}'  {} { select-pane 
 
 set -gF '@last_scratch_name' scratch
 
+bind-key -n M-Space if-shell -F '#{==:#{session_name},default}' {
+	run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
+} {
+  detach-client
+}
+
 bind-key -n M-Enter if-shell -F '#{==:#{session_name},scratch}' {
 	set -gF '@last_scratch_name' scratch
 	detach-client
