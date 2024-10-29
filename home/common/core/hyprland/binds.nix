@@ -1,4 +1,4 @@
-{ lib, config, ... }: {
+{ pkgs, lib, config, ... }: {
   wayland.windowManager.hyprland.settings = {
     bindm = [
       "SUPER,mouse:272,movewindow"
@@ -38,10 +38,22 @@
           k = up;
           j = down;
         };
+
+        rofi_launch_dir = pkgs.writeShellApplication {
+          name = "rofi_launch_dir";
+          text = ''
+            if [ $# -ne 0 ]; then
+              coproc nautilus "$1" > /dev/null  2>&1
+              exit 0
+            fi
+            find "$HOME" -maxdepth 5 -type d -not -path '*/\.*' 2>/dev/null | sed "s|^$HOME/||"
+          '';
+        };
       in
       [
         #################### Program Launch ####################
         "SUPER, space, exec, rofi -show drun"
+        "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir'"
 
         "SUPER, Return, exec, hyprland_show_app -a $TERMINAL"
         "SUPERSHIFT, Return, exec, hyprland_show_app -a $TERMINAL -p"

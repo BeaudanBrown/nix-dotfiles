@@ -24,4 +24,9 @@ let
     "class:(Rofi)"
   ];
 in
-  defaultRules ++ tilingWindows ++ fullscreenWindows ++ instantWindows ++ tallWindows ++ largeWindows
+  defaultRules
+  ++ tilingWindows
+  ++ fullscreenWindows
+  ++ instantWindows
+  ++ tallWindows
+  ++ largeWindows

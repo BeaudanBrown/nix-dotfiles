@@ -21,6 +21,7 @@
       sizes = {
         applications = 14;
         terminal = 12;
+        popups = 18;
       };
     };
     cursor = {
