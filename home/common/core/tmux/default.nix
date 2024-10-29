@@ -99,6 +99,17 @@ bind-key -n M-r if-shell -F '#{==:#{session_name},rebuild}' {
 	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"sudo nixos-rebuild switch; exec zsh \\\"\""'
 }
 
+bind-key -n M-M if-shell -F '#{==:#{session_name},gpto1}' {
+	set -gF '@last_scratch_name' gpto1
+	detach-client
+} {
+	set -gF '@last_scratch_name' gpto1
+	if-shell -F '#{!=:#{session_name},default}' {
+		detach-client
+	}
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s gpto1 \"new_gpt_chat -n o1-mini\""'
+}
+
 bind-key -n M-m if-shell -F '#{==:#{session_name},gpt}' {
 	set -gF '@last_scratch_name' gpt
 	detach-client
@@ -107,7 +118,7 @@ bind-key -n M-m if-shell -F '#{==:#{session_name},gpt}' {
 	if-shell -F '#{!=:#{session_name},default}' {
 		detach-client
 	}
-	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s gpt \"new_gpt_chat -p gpt4\""'
+	run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s gpt \"new_gpt_chat\""'
 }
 
 bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
