@@ -3,6 +3,17 @@
   extraPlugins = [
     {
       plugin = pkgs.vimUtils.buildVimPlugin {
+        name = "quarto-nvim";
+        src = pkgs.fetchFromGitHub {
+          owner = "quarto-dev";
+          repo = "quarto-nvim";
+          rev = "23083a0152799ca7263ac9ae53d768d4dd93d24e";
+          hash = "sha256-JeRiyEPpCrFaNhlrS+CH8j2Sv8c9BnL8XoSG9aTnVVU=";
+        };
+      };
+    }
+    {
+      plugin = pkgs.vimUtils.buildVimPlugin {
         name = "replace-with-register";
         src = pkgs.fetchFromGitHub {
           owner = "inkarkat";

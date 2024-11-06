@@ -10,9 +10,14 @@ let
     "class:(steam)"
     "class:(Caprine)"
     "title:(Spotify)"
+    "class:(teams-for-linux)"
+    "class:^(libreoffice.*)$"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
     "class:(VirtualBox Machine)"
+  ];
+  nonFullscreenWindows = builtins.map (x: "suppressevent fullscreen maximize, " + x) [
+    "class:^(libreoffice.*)$"
   ];
   tallWindows = builtins.map (x: "size 30% 60%, " + x) [
     "class:(nm-openconnect-auth-dialog)"
@@ -27,6 +32,7 @@ in
   defaultRules
   ++ tilingWindows
   ++ fullscreenWindows
+  ++ nonFullscreenWindows
   ++ instantWindows
   ++ tallWindows
   ++ largeWindows

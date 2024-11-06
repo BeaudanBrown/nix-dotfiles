@@ -23,15 +23,22 @@
           autoAcceptFolder = true;
         };
       };
-      folders."documents" = {
-        id = "txxit-w9cwz";
-        path = "~/documents";
-        devices = [ "server" "grill" "nix-laptop" ];
-      };
-      folders."monash" = {
-        id = "twjfr-ekoqc";
-        path = "~/monash";
-        devices = [ "server" "grill" "nix-laptop" ];
+      folders = {
+        "documents" = {
+          id = "txxit-w9cwz";
+          path = "~/documents";
+          devices = [ "server" "grill" "nix-laptop" ];
+        };
+        "monash" = {
+          id = "twjfr-ekoqc";
+          path = "~/monash";
+          devices = [ "server" "grill" "nix-laptop" ];
+        };
+        "collab" = {
+          id = "vccfp-s5yfe";
+          path = "~/collab";
+          devices = [ "server" "grill" "nix-laptop" ];
+        };
       };
     };
   };
