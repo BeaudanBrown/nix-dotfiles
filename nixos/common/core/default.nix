@@ -1,6 +1,9 @@
-{ inputs, pkgs, configLib, ... }:
-{
+{ inputs, pkgs, configLib, lib, ... }:
+let
   imports = (configLib.scanPaths ./.);
+in
+{
+  inherit imports;
 
   nix = {
     gc = {
@@ -73,6 +76,7 @@
   console.useXkbConfig = true;
 
   hardware.bluetooth.enable = true;
+  hardware.ledger.enable = true;
 
   security = {
     polkit.enable = true;
@@ -84,6 +88,14 @@
         commands = [
           {
             command =  "/run/current-system/sw/bin/nixos-rebuild";
+            options = [ "NOPASSWD" ];
+          }
+          {
+            command =  "/run/current-system/sw/bin/reboot";
+            options = [ "NOPASSWD" ];
+          }
+          {
+            command =  "/run/current-system/sw/bin/shutdown";
             options = [ "NOPASSWD" ];
           }
         ];
@@ -111,6 +123,7 @@
       openconnect
 
       # Applications
+      audacity
       caprine
       brave
       vlc
@@ -118,7 +131,6 @@
       spotify
       qbittorrent
       nautilus
-      calibre
       libreoffice
       inkscape
       slack
@@ -126,6 +138,11 @@
       sxiv
       signal-desktop
       okular
+      teams-for-linux
+      discord
+      calibre
+      ledger-live-desktop
+      gparted
 
       # Utilities
       ripgrep
@@ -141,10 +158,14 @@
       devenv
       jq
       bat
-      wofi
       eww
       grim
       slurp
+      libnotify
+      imagemagick
+      ghostscript
+      gnumake
+      heimdall-gui
 
       # TODO: device specific
       cryptsetup
