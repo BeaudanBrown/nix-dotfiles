@@ -6,5 +6,8 @@
       "J" = "zoom out";
       "K" = "zoom in";
     };
+    options = {
+      selection-clipboard = "clipboard";
+    };
   };
 }
