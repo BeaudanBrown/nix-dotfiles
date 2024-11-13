@@ -2,7 +2,6 @@
 {
   services.openssh = {
     enable = true;
-    ports = [ 8022 ];
     settings = {
       PasswordAuthentication = false;
       AllowUsers = null;

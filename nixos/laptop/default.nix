@@ -1,11 +1,8 @@
 { configLib, ... }:
 {
-  imports =
-  [
-    ./hardware-configuration.nix
-  ] ++ (map configLib.relativeToRoot [
+  imports = (map configLib.relativeToRoot [
     "nixos/common/core"
-  ]);
+  ]) ++ (configLib.scanPaths ./.);
 
   nix.settings.cores = 8;
 

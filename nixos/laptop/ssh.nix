@@ -1,6 +1,4 @@
 { ... }:
 {
-  services.openssh = {
-    ports = [ 8023 ];
-  };
+  services.openssh.ports = [ 8023 ];
 }
