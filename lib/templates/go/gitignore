@@ -1,0 +1,58 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+.devenv/
+.direnv/
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (vendor directories are often omitted in projects)
+vendor/
+
+# Go workspace file
+go.work
+
+# Go module files or directories associated with vendoring
+go.sum
+go.mod
+
+# IDE files and directories
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+
+# Environment variable files
+.env
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Case-insensitive IDE config
+.git/
+*.iml
+
+# Go build cache
+tmp/
+
+# Local configuration files
+*.local
+
+# Unwanted executables or builds
+bin/
+dist/
+
+# For MacOS, include this to ignore the resource forks and other unnecessary files
+._*
