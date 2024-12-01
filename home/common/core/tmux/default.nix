@@ -21,6 +21,7 @@ unbind C-r
 bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux.conf reloaded"
 bind-key -n M-n select-window -n
 bind-key -n M-p select-window -p
+bind C-u copy-mode -u
 
 bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
 bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane

@@ -28,6 +28,9 @@ let
   instantWindows = builtins.map (x: "noanim, " + x) [
     "class:(Rofi)"
   ];
+  extraRules = [
+    "size 40% 80%, class:(org.pwmt.zathura)"
+  ];
 in
   defaultRules
   ++ tilingWindows
@@ -36,3 +39,4 @@ in
   ++ instantWindows
   ++ tallWindows
   ++ largeWindows
+  ++ extraRules

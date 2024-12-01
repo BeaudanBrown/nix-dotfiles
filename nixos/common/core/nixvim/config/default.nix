@@ -216,11 +216,11 @@
         callback = {
           __raw = ''
           function()
-          local buf = vim.api.nvim_get_current_buf()
-          if vim.b[buf].last_cursor_pos then
-          vim.api.nvim_win_set_cursor(0, vim.b[buf].last_cursor_pos)
-          pcall(vim.fn.winrestview, vim.b[buf].last_window_view)
-          end
+            local buf = vim.api.nvim_get_current_buf()
+            if vim.b[buf].last_cursor_pos then
+              vim.api.nvim_win_set_cursor(0, vim.b[buf].last_cursor_pos)
+              pcall(vim.fn.winrestview, vim.b[buf].last_window_view)
+            end
           end'';
         };
       }

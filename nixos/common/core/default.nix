@@ -111,6 +111,7 @@ in
       TERMINAL = "kitty";
     };
     variables = {
+      EDITOR = "neovim";
     };
     systemPackages = with pkgs; [
       # samba stuff
