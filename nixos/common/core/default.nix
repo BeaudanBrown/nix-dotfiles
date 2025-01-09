@@ -111,7 +111,7 @@ in
       TERMINAL = "kitty";
     };
     variables = {
-      EDITOR = "neovim";
+      EDITOR = "nvim";
     };
     systemPackages = with pkgs; [
       # samba stuff
@@ -124,6 +124,7 @@ in
       openconnect
 
       # Applications
+      tor-browser
       audacity
       caprine
       brave

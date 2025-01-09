@@ -73,12 +73,9 @@
         src = pkgs.fetchFromGitHub {
           owner = "madox2";
           repo = "vim-ai";
-          rev = "af4ec9cde483eb68f4b48b41a6c70a02235051bb";
-          hash = "sha256-o0710Mb+SIOJtsTbog+JzgeW8rveISTUn3vk4mHmVGg=";
+          rev = "380d5cdd9538c2522dfc8d03a8a261760bb0439a";
+          hash = "sha256-ywnBM2YBysrs5EF0lpxKH0cYXJZvFgL+F9f+kCuiFJ8=";
         };
-      # TODO: Figure out how to set my config option
-      # or at the very least just make it so that when you use o1 models it
-      # doesn't use a system prompt
       };
     }
     {
