@@ -1,5 +1,6 @@
 {...}:
 {
+  plugins.yazi.enable = true;
   keymaps = [
     {
       key = "<Leader>e";

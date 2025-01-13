@@ -1,17 +1,6 @@
-{ pkgs, lib, ...}:
+{ pkgs, ...}:
 {
   extraPlugins = [
-    {
-      plugin = pkgs.vimUtils.buildVimPlugin {
-        name = "quarto-nvim";
-        src = pkgs.fetchFromGitHub {
-          owner = "quarto-dev";
-          repo = "quarto-nvim";
-          rev = "23083a0152799ca7263ac9ae53d768d4dd93d24e";
-          hash = "sha256-JeRiyEPpCrFaNhlrS+CH8j2Sv8c9BnL8XoSG9aTnVVU=";
-        };
-      };
-    }
     {
       plugin = pkgs.vimUtils.buildVimPlugin {
         name = "replace-with-register";
@@ -20,17 +9,6 @@
           repo = "vim-ReplaceWithRegister";
           rev = "aad1e8fa31cb4722f20fe40679caa56e25120032";
           hash = "sha256-9dGcOFmbkBwVvPdqP30V3IzDZ5BKLdFLuYtXXXCPz7E=";
-        };
-      };
-    }
-    {
-      plugin = pkgs.vimUtils.buildVimPlugin {
-        name = "yazi-nvim";
-        src = pkgs.fetchFromGitHub {
-          owner = "mikavilpas";
-          repo = "yazi.nvim";
-          rev = "65bff77e59e0b5c8587266580c24d658913b825e";
-          hash = "sha256-NTblfvfw1i8SsqCNxMRwRsesYlrckfYnSpWW1E3pj1I=";
         };
       };
     }
@@ -53,17 +31,6 @@
           repo = "vim-textobj-entire";
           rev = "64a856c9dff3425ed8a863b9ec0a21dbaee6fb3a";
           hash = "sha256-te7ljHY7lzu+fmbakTkPKxF312+Q0LozTLazxQvSYE8=";
-        };
-      };
-    }
-    {
-      plugin = pkgs.vimUtils.buildVimPlugin {
-        name = "cmp-r";
-        src = pkgs.fetchFromGitHub {
-          owner = "R-nvim";
-          repo = "cmp-r";
-          rev = "efa34e762dea378cae27a9e47bdd95afb0bc8dfc";
-          hash = "sha256-XVs/1Z96amWrT7us0hgzBmEXoofBUBqm+TYUX3aqLmI=";
         };
       };
     }
@@ -97,17 +64,6 @@
           repo = "vim-highlightedyank";
           rev = "afb0f262b490706c23e94012c2ab9fa67c0481ce";
           hash = "sha256-WcSxpXYErKyr/9LaAmFw6WfpcKq2YlbLag6HVVhwyFQ=";
-        };
-      };
-    }
-    {
-      plugin = pkgs.vimUtils.buildVimPlugin {
-        name = "plenary-nvim";
-        src = pkgs.fetchFromGitHub {
-          owner = "nvim-lua";
-          repo = "plenary.nvim";
-          rev = "a3e3bc82a3f95c5ed0d7201546d5d2c19b20d683";
-          hash = "sha256-5Jf2mWFVDofXBcXLbMa417mqlEPWLA+cQIZH/vNEV1g=";
         };
       };
     }

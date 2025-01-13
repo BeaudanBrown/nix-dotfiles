@@ -1,4 +1,4 @@
-{ inputs, pkgs, configLib, lib, ... }:
+{ inputs, pkgs, configLib, ... }:
 let
   imports = (configLib.scanPaths ./.);
 in
@@ -59,13 +59,13 @@ in
     users.beau = {
       isNormalUser = true;
       description = "Beaudan";
-      extraGroups = [ "video" "audio" "networkmanager" "wheel" "docker" ];
+      extraGroups = [ "video" "input" "audio" "networkmanager" "wheel" "docker" ];
     };
   };
 
   fonts.packages = with pkgs; [
     jetbrains-mono
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    nerd-fonts.jetbrains-mono
   ];
 
   programs.hyprland = {

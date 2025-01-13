@@ -24,6 +24,7 @@ let
   ];
   largeWindows = builtins.map (x: "size 60% 60%, " + x) [
     "class:(org.gnome.Nautilus)"
+    "class:(org.pulseaudio.pavucontrol)"
   ];
   instantWindows = builtins.map (x: "noanim, " + x) [
     "class:(Rofi)"

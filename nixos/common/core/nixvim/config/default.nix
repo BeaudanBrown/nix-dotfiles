@@ -21,7 +21,7 @@
     plugins = {
       otter.enable = true;
       lualine.enable = true;
-      nvim-colorizer.enable = true;
+      colorizer.enable = true;
       commentary.enable = true;
       vim-surround.enable = true;
       markdown-preview.enable = true;
@@ -32,6 +32,7 @@
         };
         enable = true;
       };
+      quarto.enable = true;
       # TODO: add config for escape to close
       lazygit.enable = true;
       friendly-snippets.enable = true;
@@ -69,7 +70,9 @@
       };
       gitgutter = {
         enable = true;
-        terminalReportFocus = true;
+        settings = {
+          terminal_report_focus = true;
+        };
       };
       lsp = {
         enable = true;
