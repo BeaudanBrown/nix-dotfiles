@@ -24,7 +24,7 @@
       nvim-colorizer.enable = true;
       commentary.enable = true;
       vim-surround.enable = true;
-      vimtex.enable = true;
+      markdown-preview.enable = true;
       nix.enable = true;
       treesitter = {
         settings = {
@@ -136,6 +136,7 @@
           sources = [
             { name = "nvim_lsp"; }
             { name = "luasnip"; }
+            { name = "spell"; }
             { name = "path"; }
             { name = "buffer"; }
           ];

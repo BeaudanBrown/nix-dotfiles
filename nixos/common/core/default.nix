@@ -147,6 +147,15 @@ in
       gparted
 
       # Utilities
+      (texlive.combine {
+        inherit
+          (texlive)
+          scheme-full
+          xetex
+          ;
+      })
+      wkhtmltopdf
+      pandoc
       ripgrep
       wl-clipboard
       htop
