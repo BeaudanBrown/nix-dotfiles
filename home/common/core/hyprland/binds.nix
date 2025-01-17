@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }: {
+{ pkgs, lib, ... }: {
   wayland.windowManager.hyprland.settings = {
     bindm = [
       "SUPER,mouse:272,movewindow"
@@ -49,35 +49,34 @@
             find "$HOME" -maxdepth 5 -type d -not -path '*/\.*' 2>/dev/null | sed "s|^$HOME/||"
           '';
         };
+
+        launchProgram = { key, app, workspace, class ? null, title ? null }:
+          let
+            appCmd = "hyprland_show_app -a ${app}" +
+              (if class != null then " -c ${class}" else "") +
+              (if workspace != null then " -w ${workspace}" else "") +
+              (if title != null then " -t \"${title}\"" else "");
+          in [
+            ''SUPER, ${key}, exec, ${appCmd}''
+            ''SUPERALT, ${key}, exec, ${appCmd} -p''
+            ''SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}''
+          ];
+
       in
+      lib.concatMap launchProgram [
+        { key = "Return"; app = "$TERMINAL";      workspace = "$TERMINAL"; }
+        { key = "s";      app = "slack";          workspace = "Slack";   class = "Slack"; }
+        { key = "c";      app = "signal-desktop"; workspace = "Signal";  class = "signal"; }
+        { key = "w";      app = "brave";          workspace = "Brave";   class = "brave-browser"; }
+        { key = "m";      app = "spotify";        workspace = "Spotify"; title = "Spotify Premium"; }
+        { key = "n";      app = "caprine";        workspace = "Caprine"; class = "Caprine"; }
+        { key = "v";      app = "launch_windows"; workspace = "Windows"; class = "VirtualBox Machine"; }
+        { key = "g";      app = "steam";          workspace = "Steam";   class = "Steam"; }
+      ] ++
       [
         #################### Program Launch ####################
         "SUPER, space, exec, rofi -show drun"
         "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir'"
-
-        "SUPER, Return, exec, hyprland_show_app -a $TERMINAL"
-        "SUPERSHIFT, Return, exec, hyprland_show_app -a $TERMINAL -p"
-
-        "SUPER, s, exec, hyprland_show_app -a slack -c Slack -w Slack"
-        "SUPERSHIFT, s, exec, hyprland_show_app -a slack -c Slack -w Slack -p"
-
-        "SUPER, c, exec, hyprland_show_app -a signal-desktop -c signal -w Signal"
-        "SUPERSHIFT, c, exec, hyprland_show_app -a signal-desktop -c signal -w Signal -p"
-
-        "SUPER, w, exec, hyprland_show_app -a brave -c brave-browser -w Brave"
-        "SUPERSHIFT, w, exec, hyprland_show_app -a brave -c brave-browser -w Brave -p"
-
-        "SUPER, m, exec, hyprland_show_app -a spotify -t \"Spotify Premium\" -w Spotify"
-        "SUPERSHIFT, m, exec, hyprland_show_app -a spotify -t \"Spotify Premium\" -w Spotify -p"
-
-        "SUPER, n, exec, hyprland_show_app -a caprine -c Caprine -w Caprine"
-        "SUPERSHIFT, n, exec, hyprland_show_app -a caprine -c Caprine -w Caprine -p"
-
-        "SUPER, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows"
-        "SUPERSHIFT, v, exec, hyprland_show_app -a launch_windows -c \"VirtualBox Machine\" -w Windows -p"
-
-        "SUPER, g, exec, hyprland_show_app -a steam -c Steam -w Steam"
-        "SUPERSHIFT, g, exec, hyprland_show_app -a steam -c Steam -w Steam -p"
 
         ", Print, exec, grim -g \"$(slurp)\" - | wl-copy"
 

@@ -9,7 +9,7 @@ let
     "class:(Slack)"
     "class:(steam)"
     "class:(Caprine)"
-    "title:(Spotify)"
+    "title:^(Spotify.*)"
     "class:(teams-for-linux)"
     "class:^(libreoffice.*)$"
   ];
@@ -25,6 +25,8 @@ let
   largeWindows = builtins.map (x: "size 60% 60%, " + x) [
     "class:(org.gnome.Nautilus)"
     "class:(org.pulseaudio.pavucontrol)"
+    "title:^(Connect to VPN .*)"
+    "class:(zoom)"
   ];
   instantWindows = builtins.map (x: "noanim, " + x) [
     "class:(Rofi)"
