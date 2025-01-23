@@ -1,5 +1,6 @@
 { pkgs, configLib, ... }:
 {
+  users.extraGroups.vboxusers.members = ["beau"];
   virtualisation = {
     virtualbox = {
       guest = {

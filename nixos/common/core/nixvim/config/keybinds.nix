@@ -375,29 +375,5 @@ in
         noremap = true;
       };
     }
-    {
-      key = "<Leader>gk";
-      action = ''<cmd>GitGutterPrevHunk<cr>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader>gj";
-      action = ''<cmd>GitGutterNextHunk<cr>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader>gj";
-      action = ''<cmd>GitGutterNextHunk<cr>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
   ] ++ pluginKeymaps;
 }

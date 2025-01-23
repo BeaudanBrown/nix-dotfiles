@@ -12,6 +12,7 @@ let
     "title:^(Spotify.*)"
     "class:(teams-for-linux)"
     "class:^(libreoffice.*)$"
+    "class:(VirtualBox Manager)"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
     "class:(VirtualBox Machine)"

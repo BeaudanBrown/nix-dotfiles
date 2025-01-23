@@ -1,4 +1,4 @@
-{ self, ...}:
+{ pkgs, ...}:
   {
     imports = let
       pluginFolder = ./plugins;
@@ -33,8 +33,15 @@
         enable = true;
       };
       quarto.enable = true;
+      diffview.enable = true;
+      mini = {
+        enable = true;
+        mockDevIcons = true;
+        modules = {
+          icons = { };
+        };
+      };
       # TODO: add config for escape to close
-      lazygit.enable = true;
       friendly-snippets.enable = true;
       fzf-lua = {
         enable = true;

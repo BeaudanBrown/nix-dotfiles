@@ -67,5 +67,16 @@
         };
       };
     }
+    {
+      plugin = pkgs.vimUtils.buildVimPlugin {
+        name = "tinykeymap";
+        src = pkgs.fetchFromGitHub {
+          owner = "tomtom";
+          repo = "tinykeymap_vim";
+          rev = "7217ce656069d82cd71872ede09152b232ecaf1b";
+          hash = "sha256-HKCSJAhBJD8MsFAkn0lVy4135WkiBVJycWEKQFa1Gvg=";
+        };
+      };
+    }
   ];
 }

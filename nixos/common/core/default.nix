@@ -28,8 +28,12 @@ in
   };
 
   boot = {
+    supportedFilesystems = [ "ntfs" ];
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [ "snd-intel-dspcfg.dsp_driver=1" ];
+    kernelParams = [
+      "snd-intel-dspcfg.dsp_driver=1"
+      "kvm.enable_virt_at_load=0"
+    ];
     loader = {
       timeout = 1;
       efi.canTouchEfiVariables = true;
@@ -55,7 +59,6 @@ in
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users = {
     defaultUserShell = pkgs.zsh;
-    extraGroups.vboxusers.members = ["beau"];
     users.beau = {
       isNormalUser = true;
       description = "Beaudan";
@@ -124,6 +127,7 @@ in
       openconnect
 
       # Applications
+      scrcpy
       tor-browser
       audacity
       caprine
