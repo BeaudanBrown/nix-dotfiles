@@ -2,11 +2,9 @@
 	nixConfig = {
 		extra-substituters = [
 			"https://nix-community.cachix.org/"
-			"https://hyprland.cachix.org"
 		];
 		extra-trusted-public-keys = [
 			"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-			"hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
 		];
 	};
   inputs = {
@@ -18,70 +16,99 @@
     };
 
     nixvim.url = "github:nix-community/nixvim";
+
     stylix.url = "github:danth/stylix";
-    hyprland = {
-      url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
+
+    snowfall-lib = {
+      url = "github:snowfallorg/lib";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, home-manager, nixvim, stylix, ... }@inputs:
+  outputs = { nixpkgs, ... }@inputs:
     let
-      inherit (nixpkgs) lib;
-      configLib = import ./lib { inherit lib; };
-      specialArgs = {
-        inherit
-        inputs
-        configLib
-        nixpkgs
-        ;
+      lib = inputs.snowfall-lib.mkLib {
+        inherit inputs;
+        src = ./.;
+
+        snowfall = {
+          meta = {
+            name = "dotfiles";
+            title = "Dotfiles";
+          };
+
+          namespace = "dotfiles";
+        };
       };
     in
+    lib.mkFlake
     {
-
-
-    nixpkgs.overlays = [
-    ];
-
-    nixosConfigurations = {
-      grill = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        inherit specialArgs;
-        modules = [
-          ./nixos/grill
-
-          nixvim.nixosModules.nixvim
-          stylix.nixosModules.stylix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.users.beau = import ./home/grill;
-            home-manager.extraSpecialArgs = specialArgs;
-          }
-        ];
+      channels-config = {
+        allowUnfree = true;
       };
 
-      nix-laptop = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        inherit specialArgs;
-        modules = [
-          ./nixos/laptop
-
-          nixvim.nixosModules.nixvim
-          stylix.nixosModules.stylix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.users.beau = import ./home/laptop;
-            home-manager.extraSpecialArgs = specialArgs;
-          }
-        ];
-      };
+      systems.modules.nixos = with inputs; [
+        nixvim.nixosModules.nixvim
+        stylix.nixosModules.stylix
+        home-manager.nixosModules.home-manager
+      ];
     };
 
-  };
+    # let
+    #   inherit (nixpkgs) lib;
+    #   configLib = import ./lib { inherit lib; };
+    #   specialArgs = {
+    #     inherit
+    #     inputs
+    #     configLib
+    #     nixpkgs
+    #     ;
+    #   };
+    # in
+    # {
+
+
+    # nixpkgs.overlays = [
+    # ];
+
+    # nixosConfigurations = {
+    #   grill = nixpkgs.lib.nixosSystem {
+    #     system = "x86_64-linux";
+    #     inherit specialArgs;
+    #     modules = [
+    #       ./nixos/grill
+
+    #       nixvim.nixosModules.nixvim
+    #       stylix.nixosModules.stylix
+    #       home-manager.nixosModules.home-manager
+    #       {
+    #         home-manager.useGlobalPkgs = true;
+    #         home-manager.useUserPackages = true;
+    #         home-manager.backupFileExtension = "backup";
+    #         home-manager.users.beau = import ./home/grill;
+    #         home-manager.extraSpecialArgs = specialArgs;
+    #       }
+    #     ];
+    #   };
+
+    #   nix-laptop = nixpkgs.lib.nixosSystem {
+    #     system = "x86_64-linux";
+    #     inherit specialArgs;
+    #     modules = [
+    #       ./nixos/laptop
+
+    #       nixvim.nixosModules.nixvim
+    #       stylix.nixosModules.stylix
+    #       home-manager.nixosModules.home-manager
+    #       {
+    #         home-manager.useGlobalPkgs = true;
+    #         home-manager.useUserPackages = true;
+    #         home-manager.backupFileExtension = "backup";
+    #         home-manager.users.beau = import ./home/laptop;
+    #         home-manager.extraSpecialArgs = specialArgs;
+    #       }
+    #     ];
+    #   };
+    # };
+  # };
 }
