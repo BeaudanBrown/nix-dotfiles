@@ -95,16 +95,16 @@ in {
 
   bind-key -n M-R if-shell -F '#{==:#{session_name},rebuild}' {
     set -gF '@last_scratch_name' rebuild
-    send-keys -t rebuild: 'sudo nixos-rebuild switch' C-m
+    send-keys -t rebuild: 'sudo nh os switch "$(readlink -f /etc/nixos)"' C-m
   } {
     set -gF '@last_scratch_name' rebuild
     if-shell -F '#{!=:#{session_name},default}' {
       detach-client
     }
     if-shell 'tmux has-session -t rebuild' {
-      send-keys -t rebuild: 'sudo nixos-rebuild switch' C-m
+      send-keys -t rebuild: 'nh os switch "$(readlink -f /etc/nixos)"' C-m
     }
-    run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"sudo nixos-rebuild switch; exec zsh \\\"\""'
+    run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"nh os switch "$(readlink -f /etc/nixos)"; exec zsh \\\"\""'
   }
 
   bind-key -n M-r if-shell -F '#{==:#{session_name},rebuild}' {
@@ -115,7 +115,7 @@ in {
     if-shell -F '#{!=:#{session_name},default}' {
       detach-client
     }
-    run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"sudo nixos-rebuild switch; exec zsh \\\"\""'
+    run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"nh os switch "$(readlink -f /etc/nixos)"; exec zsh \\\"\""'
   }
 
   bind-key -n M-m if-shell -F '#{==:#{session_name},gpt}' {

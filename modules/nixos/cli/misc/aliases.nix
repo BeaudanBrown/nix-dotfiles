@@ -5,7 +5,7 @@
 {
   sudo = "sudo ";
   nc = "vim ~/documents/nix-dotfiles";
-  nr = "sudo nixos-rebuild switch";
+  nr = "sudo ${pkgs.nh}/bin/nh os switch";
   ls = "${pkgs.eza}/bin/eza -lh --group-directories-first";
   cat = "${pkgs.bat}/bin/bat";
 }

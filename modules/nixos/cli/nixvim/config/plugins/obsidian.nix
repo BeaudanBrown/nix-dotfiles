@@ -60,6 +60,16 @@
         silent = true;
       };
     }
+    {
+      key = "<cr>";
+      action = ''require("obsidian").util.smart_action()'';
+      mode = [ "n" ];
+      options = {
+        noremap = true;
+        silent = true;
+        buffer = true;
+      };
+    }
   ];
 }
 

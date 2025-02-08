@@ -33,8 +33,10 @@ in
         git = enabled;
         sops = enabled;
         zsh = enabled;
+        weechat = enabled;
         nixvim = enabled;
         misc = enabled;
+        nh = enabled;
       };
       desktop = {
         hyprland = enabled;

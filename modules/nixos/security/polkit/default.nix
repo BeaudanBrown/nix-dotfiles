@@ -20,6 +20,10 @@ in
         groups = [ "wheel" ];
         commands = [
           {
+            command =  "/run/current-system/sw/bin/nh";
+            options = [ "NOPASSWD" ];
+          }
+          {
             command =  "/run/current-system/sw/bin/nixos-rebuild";
             options = [ "NOPASSWD" ];
           }
