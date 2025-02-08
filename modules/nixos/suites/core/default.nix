@@ -25,6 +25,7 @@ in
         kitty = enabled;
         ledger_live = enabled;
         brave = enabled;
+        obsidian = enabled;
         misc = enabled;
         teams = enabled;
       };

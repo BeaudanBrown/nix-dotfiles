@@ -129,6 +129,17 @@ in {
     run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s gpt \"${pkgs.dotfiles.new_gpt_chat}/bin/new_gpt_chat\""'
   }
 
+  bind-key -n M-o if-shell -F '#{==:#{session_name},obsidian}' {
+    set -gF '@last_scratch_name' obsidian
+    detach-client
+  } {
+    set -gF '@last_scratch_name' obsidian
+    if-shell -F '#{!=:#{session_name},default}' {
+      detach-client
+    }
+    run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s obsidian \"cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""'
+  }
+
   bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
     run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'
     detach-client

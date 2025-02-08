@@ -3,7 +3,6 @@ let
   pluginFolder = ./plugins;
   files = builtins.attrNames (builtins.readDir pluginFolder);
   pluginFiles = map (file: (import "${pluginFolder}/${file}"){}) files;
-  pluginKeymaps = builtins.concatMap (file: file.keymaps) pluginFiles;
 in
 {
   keymaps = [
@@ -116,15 +115,6 @@ in
     {
       key = "<Leader>p";
       action = '':pu<CR>==$'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<Leader>t";
-      action = '':vs term://zsh<CR>'';
       mode = [ "n" ];
       options = {
         noremap = true;
