@@ -78,7 +78,7 @@
       "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir'"
       "SUPER, i, exec, ${pkgs.rofi-rbw-wayland}/bin/rofi-rbw"
 
-      ", Print, exec, grim -g \"$(slurp)\" - | wl-copy"
+      ", Print, exec, ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | wl-copy"
 
       #################### Basic Bindings ####################
       "SUPER,x,exec,hyprlock"

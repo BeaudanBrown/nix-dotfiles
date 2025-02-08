@@ -31,6 +31,7 @@ in
       };
       cli = {
         git = enabled;
+        sops = enabled;
         zsh = enabled;
         nixvim = enabled;
         misc = enabled;

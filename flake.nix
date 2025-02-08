@@ -19,6 +19,12 @@
 
     stylix.url = "github:danth/stylix";
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+
     snowfall-lib = {
       url = "github:snowfallorg/lib";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -50,6 +56,7 @@
       systems.modules.nixos = with inputs; [
         nixvim.nixosModules.nixvim
         stylix.nixosModules.stylix
+        sops-nix.nixosModules.sops
         home-manager.nixosModules.home-manager
       ];
     };

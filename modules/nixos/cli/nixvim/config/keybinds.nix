@@ -3,6 +3,7 @@ let
   pluginFolder = ./plugins;
   files = builtins.attrNames (builtins.readDir pluginFolder);
   pluginFiles = map (file: (import "${pluginFolder}/${file}"){}) files;
+  pluginKeymaps = builtins.concatMap (file: if file ? keymaps then file.keymaps else []) pluginFiles;
 in
 {
   keymaps = [
@@ -336,14 +337,6 @@ in
     {
       key = "<Leader>b";
       action = '':FzfLua buffers<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<leader>gg";
-      action = ''<cmd>LazyGit<cr>'';
       mode = [ "n" ];
       options = {
         noremap = true;
