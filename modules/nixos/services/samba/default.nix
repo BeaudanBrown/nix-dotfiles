@@ -17,6 +17,12 @@ in {
     services.samba = {
       enable = true;
     };
+    environment = {
+      systemPackages = [
+        pkgs.cifs-utils
+        pkgs.keyutils
+      ];
+    };
 
     # Required to mount cifs
     # https://github.com/NixOS/nixpkgs/issues/34638
