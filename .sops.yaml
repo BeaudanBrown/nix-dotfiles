@@ -1,10 +1,13 @@
 keys:
   - &master age1rundnwzcmw8wltfxdlrhelrkh5m8t80mej4jhfq6prr9k99uxg8qgqvjfw
+  - &users:
+    - &beau age1dm5qhrgyaeyykqep0t7cyzdhmk8uqrj0u4kwlptpxa570w0l3drs80tscr
   - &hosts:
-    - &nix-laptop age1k4jxqxcwzl388cmq9s2te0dkddk7ua0gfldrj0p469kvcdmtqfhqng2z2f
+    - &nix-laptop age1uh6p7659gdlnevxzryhe4mx39xkhr856q8v4ergzjcfl2atm2asq0ejrpx
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:
       - age:
         - *master
         - *nix-laptop
+        - *beau

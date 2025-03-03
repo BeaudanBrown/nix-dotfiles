@@ -14,6 +14,6 @@ in {
 
   config = mkIf cfg.enable {
     dotfiles.home.file.".local/share/gpt/default.aichat".source = ./default.aichat;
-    dotfiles.home.file.".local/share/gpt/o1-mini.aichat".source = ./o1-mini.aichat;
+    dotfiles.home.file.".local/share/gpt/o3-mini.aichat".source = ./o3-mini.aichat;
   };
 }

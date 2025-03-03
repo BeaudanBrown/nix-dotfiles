@@ -95,7 +95,7 @@ in {
 
   bind-key -n M-R if-shell -F '#{==:#{session_name},rebuild}' {
     set -gF '@last_scratch_name' rebuild
-    send-keys -t rebuild: 'sudo nh os switch "$(readlink -f /etc/nixos)"' C-m
+    send-keys -t rebuild: 'nh os switch "$(readlink -f /etc/nixos)"' C-m
   } {
     set -gF '@last_scratch_name' rebuild
     if-shell -F '#{!=:#{session_name},default}' {
