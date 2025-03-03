@@ -2,6 +2,7 @@ keys:
   - &master age1rundnwzcmw8wltfxdlrhelrkh5m8t80mej4jhfq6prr9k99uxg8qgqvjfw
   - &users:
     - &beau age1dm5qhrgyaeyykqep0t7cyzdhmk8uqrj0u4kwlptpxa570w0l3drs80tscr
+    - &grill-beau age1mc7cezz4q4vqah839d6pgtmd9rxmff5n6mcjlv60lc57ajtzafes8uxs7p
   - &hosts:
     - &nix-laptop age1uh6p7659gdlnevxzryhe4mx39xkhr856q8v4ergzjcfl2atm2asq0ejrpx
     - &grill age15vwp98mpg304xfrzed6m9q9c65mdnfatdn8pvmlg4juc8u0uzc9qzmxluj
@@ -13,3 +14,4 @@ creation_rules:
         - *nix-laptop
         - *grill
         - *beau
+        - *grill-beau

@@ -34,6 +34,12 @@
             buffer = true;
           };
         };
+        "<cr>" = {
+          action = "require('obsidian').util.smart_action()";
+          opts = {
+            buffer = true;
+          };
+        };
       };
       note_id_func = ''
       function(title)
@@ -49,7 +55,7 @@
       end'';
     };
   };
-  opts.conceallevel = 2;
+  opts.conceallevel = 1;
   keymaps = [
     {
       key = "<Leader>on";
@@ -58,16 +64,6 @@
       options = {
         noremap = true;
         silent = true;
-      };
-    }
-    {
-      key = "<cr>";
-      action = ''require("obsidian").util.smart_action()'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-        buffer = true;
       };
     }
   ];
