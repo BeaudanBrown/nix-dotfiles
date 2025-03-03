@@ -4,10 +4,12 @@ keys:
     - &beau age1dm5qhrgyaeyykqep0t7cyzdhmk8uqrj0u4kwlptpxa570w0l3drs80tscr
   - &hosts:
     - &nix-laptop age1uh6p7659gdlnevxzryhe4mx39xkhr856q8v4ergzjcfl2atm2asq0ejrpx
+    - &grill age15vwp98mpg304xfrzed6m9q9c65mdnfatdn8pvmlg4juc8u0uzc9qzmxluj
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:
       - age:
         - *master
         - *nix-laptop
+        - *grill
         - *beau
