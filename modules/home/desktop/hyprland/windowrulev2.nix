@@ -9,6 +9,7 @@ let
     "class:(Slack)"
     "class:(steam)"
     "class:(Caprine)"
+    "class:(discord)"
     "title:^(Spotify.*)"
     "class:(teams-for-linux)"
     "class:^(libreoffice.*)$"

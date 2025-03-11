@@ -71,6 +71,7 @@
       { key = "n";      app = "caprine";        workspace = "Caprine"; class = "Caprine"; }
       { key = "v";      app = "launch_windows"; workspace = "Windows"; class = "VirtualBox Machine"; }
       { key = "g";      app = "steam";          workspace = "Steam";   class = "Steam"; }
+      { key = "d";      app = "discord";        workspace = "Discord"; class = "discord"; }
     ] ++
     [
       #################### Program Launch ####################
