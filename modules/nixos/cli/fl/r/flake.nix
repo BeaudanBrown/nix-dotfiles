@@ -28,9 +28,13 @@
             rPkgs = (with pkgs.rPackages; [
               languageserver
               dotenv
+              quarto
             ]);
             my-r = pkgs.rWrapper.override {
               packages = rPkgs;
+            };
+            my-quarto = pkgs.quarto.override {
+              extraRPackages = rPkgs;
             };
           in
           {
@@ -40,6 +44,7 @@
                 {
                   packages = with pkgs; [
                     my-r
+                    my-quarto
                     icu.dev
                     glibcLocales
                   ];
