@@ -24,6 +24,7 @@ in
       apps = {
         kitty = enabled;
         ledger_live = enabled;
+        libreoffice = enabled;
         brave = enabled;
         obsidian = enabled;
         misc = enabled;

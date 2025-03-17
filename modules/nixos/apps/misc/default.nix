@@ -22,7 +22,6 @@ in
       caprine
       discord
       gparted
-      libreoffice
       nautilus
       qbittorrent
       signal-desktop

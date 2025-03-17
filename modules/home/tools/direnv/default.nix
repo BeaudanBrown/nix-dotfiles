@@ -24,6 +24,7 @@ in
           prefix = [
             "${config.home.homeDirectory}/documents"
             "${config.home.homeDirectory}/monash"
+            "${config.home.homeDirectory}/collab"
           ];
         };
       };
