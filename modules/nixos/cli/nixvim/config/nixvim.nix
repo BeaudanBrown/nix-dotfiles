@@ -12,6 +12,15 @@
 
   enable = true;
 
+  # Use tabs for go files
+  files = {
+    "ftplugin/go.lua" = {
+      opts = {
+        expandtab = false;
+      };
+    };
+  };
+
   clipboard.register = [ "unnamed" "unnamedplus" ];
   colorschemes.kanagawa = {
     enable = true;
