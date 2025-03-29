@@ -24,6 +24,10 @@ in
             options = [ "NOPASSWD" ];
           }
           {
+            command =  "/etc/profiles/per-user/beau/bin/shutdown";
+            options = [ "NOPASSWD" ];
+          }
+          {
             command =  "/run/current-system/sw/bin/nixos-rebuild";
             options = [ "NOPASSWD" ];
           }

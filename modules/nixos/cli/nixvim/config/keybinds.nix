@@ -186,24 +186,6 @@ in
       };
     }
     {
-      key = "<C-o>";
-      action = ''<C-o>zz'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<C-i>";
-      action = ''<C-i>zz'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
       key = "j";
       action = ''gj'';
       mode = [ "n" ];
@@ -222,8 +204,17 @@ in
       };
     }
     {
-      key = "<C-d>";
-      action = ''<C-d>zz'';
+      key = "<C-i>";
+      action = "<Cmd>lua vim.cmd('normal! <C-i>'); MiniAnimate.execute_after('scroll', 'normal! M')<CR>";
+      mode = [ "n" ];
+      options = {
+        noremap = true;
+        silent = true;
+      };
+    }
+    {
+      key = "<C-o>";
+      action = "<Cmd>lua vim.cmd('normal! <C-o>'); MiniAnimate.execute_after('scroll', 'normal! M')<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -232,7 +223,16 @@ in
     }
     {
       key = "<C-u>";
-      action = ''<C-u>zz'';
+      action = "<Cmd>lua vim.cmd('normal! <C-u>'); MiniAnimate.execute_after('scroll', 'normal! M')<CR>";
+      mode = [ "n" ];
+      options = {
+        noremap = true;
+        silent = true;
+      };
+    }
+    {
+      key = "<C-d>";
+      action = "<Cmd>lua vim.cmd('normal! <C-d>'); MiniAnimate.execute_after('scroll', 'normal! M')<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
