@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   security.sudo.extraRules = [
     {
@@ -21,7 +21,15 @@
           options = [ "NOPASSWD" ];
         }
         {
+          command =  "/home/${config.hostSpec.username}/.nix-profile/bin/reboot";
+          options = [ "NOPASSWD" ];
+        }
+        {
           command =  "/run/current-system/sw/bin/shutdown";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command =  "/home/${config.hostSpec.username}/.nix-profile/bin/shutdown";
           options = [ "NOPASSWD" ];
         }
       ];
