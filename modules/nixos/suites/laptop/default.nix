@@ -16,6 +16,7 @@ in
 
   config = mkIf cfg.enable {
     services.openssh.ports = [ 8023 ];
+    services.xserver.videoDrivers = [ "displaylink" ];
     dotfiles = {
       home.extraOptions = {
         wayland.windowManager.hyprland.settings.monitor = [
