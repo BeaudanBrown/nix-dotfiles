@@ -1,5 +1,6 @@
 { ... }:
 {
+  imports = [ ./files ];
   environment = {
     shellAliases.vim = "nvim";
     variables = {

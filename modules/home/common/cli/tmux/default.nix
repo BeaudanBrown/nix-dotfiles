@@ -1,7 +1,7 @@
 { pkgs, ... }:
 let
   plugins = pkgs.tmuxPlugins // pkgs.callPackage ./custom-plugins.nix { };
-  new_gpt_chat = (import ./new_gpt_chat.nix {inherit pkgs;});
+  new_gpt_chat = import ./new_gpt_chat.nix { inherit pkgs; };
 in
   {
   programs.tmux = {

@@ -205,7 +205,7 @@ in
     }
     {
       key = "<C-i>";
-      action = "<Cmd>lua vim.cmd('normal! <C-i>'); MiniAnimate.execute_after('scroll', 'normal! M')<CR>";
+      action = "M<Cmd>lua vim.cmd('normal! <C-i>')";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -214,7 +214,7 @@ in
     }
     {
       key = "<C-o>";
-      action = "<Cmd>lua vim.cmd('normal! <C-o>'); MiniAnimate.execute_after('scroll', 'normal! M')<CR>";
+      action = "M<Cmd>lua vim.cmd('normal! <C-o>')";
       mode = [ "n" ];
       options = {
         noremap = true;

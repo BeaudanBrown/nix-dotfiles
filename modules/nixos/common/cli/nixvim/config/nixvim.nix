@@ -72,7 +72,6 @@
         };
       };
     };
-    # TODO: add config for escape to close
     friendly-snippets.enable = true;
     fzf-lua = {
       enable = true;
