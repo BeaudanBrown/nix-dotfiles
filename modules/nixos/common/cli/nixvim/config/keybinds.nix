@@ -205,7 +205,7 @@ in
     }
     {
       key = "<C-i>";
-      action = "M<Cmd>lua vim.cmd('normal! <C-i>')";
+      action = "M<Cmd>lua vim.cmd('normal! <C-i>')<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -214,7 +214,7 @@ in
     }
     {
       key = "<C-o>";
-      action = "M<Cmd>lua vim.cmd('normal! <C-o>')";
+      action = "M<Cmd>lua vim.cmd('normal! <C-o>')<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
