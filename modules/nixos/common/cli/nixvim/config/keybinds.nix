@@ -204,24 +204,6 @@ in
       };
     }
     {
-      key = "<C-i>";
-      action = "M<Cmd>lua vim.cmd('normal! <C-i>')<CR>";
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<C-o>";
-      action = "M<Cmd>lua vim.cmd('normal! <C-o>')<CR>";
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
       key = "<C-u>";
       action = "M<Cmd>lua vim.cmd('normal! <C-u>')<CR>";
       mode = [ "n" ];
