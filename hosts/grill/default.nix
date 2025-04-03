@@ -1,13 +1,15 @@
 { lib, inputs, ... }:
 {
-  imports = [
-    ./hardware.nix
+  imports =
+    [
+      ./hardware.nix
 
-    inputs.sops-nix.nixosModules.sops
-    inputs.nixvim.nixosModules.nixvim
-    inputs.stylix.nixosModules.stylix
-    inputs.home-manager.nixosModules.home-manager
-  ] ++ (map lib.custom.relativeToRoot [
+      inputs.sops-nix.nixosModules.sops
+      inputs.nixvim.nixosModules.nixvim
+      inputs.stylix.nixosModules.stylix
+      inputs.home-manager.nixosModules.home-manager
+    ]
+    ++ (map lib.custom.relativeToRoot [
       "modules/nixos/common"
       "modules/nixos/grill"
     ]);
@@ -23,10 +25,12 @@
 
   home-manager = {
     backupFileExtension = "backup";
-    users.beau.imports = (map lib.custom.relativeToRoot [
-      "modules/home/common"
-      "modules/home/grill"
-    ]);
+    users.beau.imports = (
+      map lib.custom.relativeToRoot [
+        "modules/home/common"
+        "modules/home/grill"
+      ]
+    );
   };
 
   boot.initrd.kernelModules = [ "amdgpu" ];
