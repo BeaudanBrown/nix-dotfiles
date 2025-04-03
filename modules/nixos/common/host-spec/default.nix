@@ -16,6 +16,10 @@
       type = lib.types.str;
       description = "The hostname of the host";
     };
+    sshPort = lib.mkOption {
+      type = lib.types.int;
+      description = "The port to run sshd service on";
+    };
     email = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       description = "The email of the user";

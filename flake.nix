@@ -6,6 +6,7 @@
       # NOTE: This approach allows lib.custom to propagate into hm
       # see: https://github.com/nix-community/home-manager/pull/3454
       lib = nixpkgs.lib.extend (self: super: { custom = import ./lib { inherit (nixpkgs) lib; }; });
+      forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
     in
       {
       nixosConfigurations = builtins.listToAttrs (
@@ -18,6 +19,14 @@
             modules = [ ./hosts/${host} ];
           };
         }) (builtins.attrNames (builtins.readDir ./hosts))
+      );
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
+      checks = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        import ./checks.nix { inherit inputs system pkgs; }
       );
     };
 
@@ -44,6 +53,11 @@
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    pre-commit-hooks = {
+      url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
