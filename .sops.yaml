@@ -1,17 +1,20 @@
 keys:
   - &master age1rundnwzcmw8wltfxdlrhelrkh5m8t80mej4jhfq6prr9k99uxg8qgqvjfw
-  - &users:
-    - &beau age1dm5qhrgyaeyykqep0t7cyzdhmk8uqrj0u4kwlptpxa570w0l3drs80tscr
-    - &grill-beau age1mc7cezz4q4vqah839d6pgtmd9rxmff5n6mcjlv60lc57ajtzafes8uxs7p
-  - &hosts:
-    - &nix-laptop age1uh6p7659gdlnevxzryhe4mx39xkhr856q8v4ergzjcfl2atm2asq0ejrpx
-    - &grill age15vwp98mpg304xfrzed6m9q9c65mdnfatdn8pvmlg4juc8u0uzc9qzmxluj
+  - &grill_user age1mc7cezz4q4vqah839d6pgtmd9rxmff5n6mcjlv60lc57ajtzafes8uxs7p
+  - &grill_host age15vwp98mpg304xfrzed6m9q9c65mdnfatdn8pvmlg4juc8u0uzc9qzmxluj
+  - &laptop_user age1dm5qhrgyaeyykqep0t7cyzdhmk8uqrj0u4kwlptpxa570w0l3drs80tscr
+  - &laptop_host age1uh6p7659gdlnevxzryhe4mx39xkhr856q8v4ergzjcfl2atm2asq0ejrpx
+  - &pi4_user age170a0x33mdeghu5mzse59yxdlk4tw3m829fptahxn0gau29kcgd6qr72dlv
+  - &pi4_host age193l9m3xmzpn3zqe97fqjkv4dfxqth4d72rzf98ksuc5ctgeal3yst786rk
+
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:
       - age:
         - *master
-        - *nix-laptop
-        - *grill
-        - *beau
-        - *grill-beau
+        - *grill_user
+        - *grill_host
+        - *laptop_user
+        - *laptop_host
+        - *pi4_user
+        - *pi4_host
