@@ -9,7 +9,8 @@
       forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
     in
       {
-      nixosConfigurations = builtins.listToAttrs (
+      nixosConfigurations = builtins.readDir ./hosts |>
+        builtins.attrNames |>
         map (host: {
           name = host;
           value = nixpkgs.lib.nixosSystem {
@@ -18,8 +19,8 @@
             };
             modules = [ ./hosts/${host} ];
           };
-        }) (builtins.attrNames (builtins.readDir ./hosts))
-      );
+        }) |>
+        builtins.listToAttrs;
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
       checks = forAllSystems (
         system:
