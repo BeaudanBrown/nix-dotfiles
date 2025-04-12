@@ -4,21 +4,31 @@
 with lib;
 {
   relativeToRoot = lib.path.append ../.;
-  # Create a list of all directories and nix files in a given folder excluding default.nix
-  scanPaths =
-    path:
-    builtins.map (subPath: (path + "/${subPath}")) (
-      builtins.attrNames (
-        lib.attrsets.filterAttrs (
-          path: _type:
-          (_type == "directory") # include directories
-          || (
-            (path != "default.nix") # ignore default.nix
-            && (lib.strings.hasSuffix ".nix" path) # include .nix files
-          )
-        ) (builtins.readDir path)
-      )
-    );
+
+  importRecursive = path:
+    let
+      _scanPathsRec = _path:
+        if (builtins.pathExists (_path + "/default.nix")) then
+          [ _path ]
+        else
+          builtins.readDir _path |>
+          lib.attrsets.filterAttrs (name: type: type == "directory") |>
+          lib.mapAttrsToList (name: _: _path + "/${name}") |>
+          builtins.concatMap _scanPathsRec;
+    in
+      builtins.readDir path |>
+      lib.attrsets.filterAttrs (name: type: type == "directory") |>
+      lib.mapAttrsToList (name: _: path + "/${name}") |>
+      builtins.concatMap _scanPathsRec;
+
+  scanPaths = path:
+    builtins.readDir path |>
+    lib.attrsets.filterAttrs (child: _type:
+      ((_type == "directory") && (builtins.pathExists (path + "/${child}/default.nix"))) ||
+      ((lib.strings.hasSuffix ".nix" child) && (child != "default.nix"))
+    ) |>
+    builtins.attrNames |>
+    builtins.map (subPath: (path + "/${subPath}"));
 
   concatListsFromPaths = childAttrName: paths: builtins.concatLists (
     builtins.map (path:

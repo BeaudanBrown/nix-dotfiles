@@ -1,6 +1,6 @@
 { lib, config, ... }:
 {
-  imports = lib.custom.scanPaths ./.;
+  imports = lib.custom.importRecursive ./.;
 
   # TODO: Break this out into files
   services.openssh.ports = [ config.hostSpec.sshPort ];

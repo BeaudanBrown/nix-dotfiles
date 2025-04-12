@@ -9,6 +9,7 @@
     inputs.home-manager.nixosModules.home-manager
   ] ++ (map lib.custom.relativeToRoot [
       "modules/nixos/common"
+      "modules/nixos/work"
       "modules/nixos/nix-laptop"
     ]);
 
@@ -25,6 +26,7 @@
     backupFileExtension = "backup";
     users.beau.imports = (map lib.custom.relativeToRoot [
       "modules/home/common"
+      "modules/home/work"
       "modules/home/nix-laptop"
     ]);
   };

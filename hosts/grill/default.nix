@@ -11,6 +11,7 @@
     ]
     ++ (map lib.custom.relativeToRoot [
       "modules/nixos/common"
+      "modules/nixos/work"
       "modules/nixos/grill"
     ]);
 
@@ -28,6 +29,7 @@
     users.beau.imports = (
       map lib.custom.relativeToRoot [
         "modules/home/common"
+        "modules/home/work"
         "modules/home/grill"
       ]
     );

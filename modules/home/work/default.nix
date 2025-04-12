@@ -5,7 +5,7 @@
   ...
 }:
 {
-  imports = lib.custom.scanPaths ./.;
+  imports = lib.custom.importRecursive ./.;
 
   xdg = {
     userDirs = {
