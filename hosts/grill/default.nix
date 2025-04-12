@@ -1,4 +1,4 @@
-{ lib, inputs, ... }:
+{ lib, inputs, config, ... }:
 {
   imports =
     [
@@ -26,7 +26,7 @@
 
   home-manager = {
     backupFileExtension = "backup";
-    users.beau.imports = (
+    users.${config.hostSpec.username}.imports = (
       map lib.custom.relativeToRoot [
         "modules/home/common"
         "modules/home/work"
@@ -37,6 +37,5 @@
 
   boot.initrd.kernelModules = [ "amdgpu" ];
   nix.settings.cores = 12;
-  networking.hostName = "grill";
   system.stateVersion = "23.05";
 }

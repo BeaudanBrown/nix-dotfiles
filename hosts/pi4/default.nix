@@ -1,4 +1,4 @@
-{ lib, inputs, pkgs, ... }:
+{ lib, inputs, pkgs, config, ... }:
 {
   imports = [
     ./hardware.nix
@@ -23,7 +23,7 @@
 
   home-manager = {
     backupFileExtension = "backup";
-    users.beau.imports = (map lib.custom.relativeToRoot [
+    users.${config.hostSpec.username}.imports = (map lib.custom.relativeToRoot [
       "modules/home/common"
       "modules/home/pi4"
     ]);

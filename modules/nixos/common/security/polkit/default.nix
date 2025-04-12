@@ -9,7 +9,7 @@
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/etc/profiles/per-user/beau/bin/shutdown";
+          command =  "/etc/profiles/per-user/${config.hostSpec.username}/bin/shutdown";
           options = [ "NOPASSWD" ];
         }
         {
