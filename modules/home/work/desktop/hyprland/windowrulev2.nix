@@ -39,11 +39,11 @@ let
     "size 40% 80%, class:(org.pwmt.zathura)"
   ];
 in
-  defaultRules
-  ++ tilingWindows
-  ++ fullscreenWindows
-  ++ nonFullscreenWindows
-  ++ instantWindows
-  ++ tallWindows
-  ++ largeWindows
-  ++ extraRules
+defaultRules
+++ tilingWindows
+++ fullscreenWindows
+++ nonFullscreenWindows
+++ instantWindows
+++ tallWindows
+++ largeWindows
+++ extraRules

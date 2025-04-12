@@ -10,5 +10,4 @@ let
     "Signal"
   ];
 in
-  leftMonitorWorkspaces ++ rightMonitorWorkspaces
-
+leftMonitorWorkspaces ++ rightMonitorWorkspaces

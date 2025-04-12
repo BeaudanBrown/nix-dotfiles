@@ -1,22 +1,24 @@
 {
-  outputs = { nixpkgs, flake-utils, ... }:
+  outputs =
+    { nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
       in
-        {
+      {
         devShells.default = pkgs.mkShell {
-          env.R_LIBS_USER="./.Rlib";
-          packages = with pkgs;
+          env.R_LIBS_USER = "./.Rlib";
+          packages =
+            with pkgs;
             [
               R
               quarto
-            ] ++ (with rPackages;
-              [
-                languageserver
-                dotenv
-              ]);
+            ]
+            ++ (with rPackages; [
+              languageserver
+              dotenv
+            ]);
         };
       }
     );

@@ -1,4 +1,5 @@
-{ pkgs, lib, ... }: {
+{ pkgs, lib, ... }:
+{
   bindm = [
     "SUPER,mouse:272,movewindow"
     "SUPER,mouse:273,resizewindow"
@@ -49,13 +50,22 @@
         '';
       };
 
-      launchProgram = { key, app, workspace, class ? null, title ? null }:
+      launchProgram =
+        {
+          key,
+          app,
+          workspace,
+          class ? null,
+          title ? null,
+        }:
         let
-          appCmd = "hyprland_show_app -a ${app}" +
-            (if class != null then " -c ${class}" else "") +
-            (if workspace != null then " -w ${workspace}" else "") +
-            (if title != null then " -t \"${title}\"" else "");
-        in [
+          appCmd =
+            "hyprland_show_app -a ${app}"
+            + (if class != null then " -c ${class}" else "")
+            + (if workspace != null then " -w ${workspace}" else "")
+            + (if title != null then " -t \"${title}\"" else "");
+        in
+        [
           ''SUPER, ${key}, exec, ${appCmd}''
           ''SUPERALT, ${key}, exec, ${appCmd} -p''
           ''SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}''
@@ -63,17 +73,61 @@
 
     in
     lib.concatMap launchProgram [
-      { key = "Return"; app = "$TERMINAL";      workspace = "$TERMINAL"; }
-      { key = "s";      app = "slack";          workspace = "Slack";   class = "Slack"; }
-      { key = "c";      app = "signal-desktop"; workspace = "Signal";  class = "signal"; }
-      { key = "w";      app = "brave";          workspace = "Brave";   class = "brave-browser"; }
-      { key = "m";      app = "spotify";        workspace = "Spotify"; title = "Spotify Premium"; }
-      { key = "n";      app = "caprine";        workspace = "Caprine"; class = "Caprine"; }
-      { key = "v";      app = "launch_windows"; workspace = "Windows"; class = "VirtualBox Machine"; }
-      { key = "g";      app = "steam";          workspace = "Steam";   class = "Steam"; }
-      { key = "d";      app = "discord";        workspace = "Discord"; class = "discord"; }
-    ] ++
-    [
+      {
+        key = "Return";
+        app = "$TERMINAL";
+        workspace = "$TERMINAL";
+      }
+      {
+        key = "s";
+        app = "slack";
+        workspace = "Slack";
+        class = "Slack";
+      }
+      {
+        key = "c";
+        app = "signal-desktop";
+        workspace = "Signal";
+        class = "signal";
+      }
+      {
+        key = "w";
+        app = "brave";
+        workspace = "Brave";
+        class = "brave-browser";
+      }
+      {
+        key = "m";
+        app = "spotify";
+        workspace = "Spotify";
+        title = "Spotify Premium";
+      }
+      {
+        key = "n";
+        app = "caprine";
+        workspace = "Caprine";
+        class = "Caprine";
+      }
+      {
+        key = "v";
+        app = "launch_windows";
+        workspace = "Windows";
+        class = "VirtualBox Machine";
+      }
+      {
+        key = "g";
+        app = "steam";
+        workspace = "Steam";
+        class = "Steam";
+      }
+      {
+        key = "d";
+        app = "discord";
+        workspace = "Discord";
+        class = "discord";
+      }
+    ]
+    ++ [
       #################### Program Launch ####################
       "SUPER, space, exec, rofi -show drun"
       "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir'"
@@ -101,41 +155,28 @@
       "SUPERSHIFT, p, exec, playerctl play-pause"
       "SUPER, period, exec, playerctl next"
       "SUPER, comma, exec, playerctl previous"
-    ] ++
-    # Change workspace
-    (map
-      (n:
-        "SUPER,${n},workspace,name:${n}"
-      )
-      workspaces) ++
-    # Move window to workspace
-    (map
-      (n:
-        "SUPERSHIFT,${n},movetoworkspacesilent,name:${n}"
-      )
-      workspaces) ++
-    # Move focus
-    (lib.mapAttrsToList
-      (key: direction:
-        "SUPER,${key},movefocus,${direction}"
-      )
-      directions) ++
-    # Move windows
-    (lib.mapAttrsToList
-      (key: direction:
-        "SUPERSHIFT,${key},movewindoworgroup,${direction}"
-      )
-      directions) ++
-    # Move workspace to other monitor
-    (lib.mapAttrsToList
-      (key: direction:
-        "SUPERALT,${key},moveworkspacetomonitor,e-0 ${direction}"
-      )
-      directions);
-    # # Swap windows
-    # (lib.mapAttrsToList
-    #   (key: direction:
-    #     "SUPERALT,${key},swapwindow,${direction}"
-    #   )
-    #   directions) ++
+    ]
+    ++
+      # Change workspace
+      (map (n: "SUPER,${n},workspace,name:${n}") workspaces)
+    ++
+      # Move window to workspace
+      (map (n: "SUPERSHIFT,${n},movetoworkspacesilent,name:${n}") workspaces)
+    ++
+      # Move focus
+      (lib.mapAttrsToList (key: direction: "SUPER,${key},movefocus,${direction}") directions)
+    ++
+      # Move windows
+      (lib.mapAttrsToList (key: direction: "SUPERSHIFT,${key},movewindoworgroup,${direction}") directions)
+    ++
+      # Move workspace to other monitor
+      (lib.mapAttrsToList (
+        key: direction: "SUPERALT,${key},moveworkspacetomonitor,e-0 ${direction}"
+      ) directions);
+  # # Swap windows
+  # (lib.mapAttrsToList
+  #   (key: direction:
+  #     "SUPERALT,${key},swapwindow,${direction}"
+  #   )
+  #   directions) ++
 }

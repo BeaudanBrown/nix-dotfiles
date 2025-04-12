@@ -13,17 +13,18 @@
   # Required to mount cifs
   # https://github.com/NixOS/nixpkgs/issues/34638
   system.activationScripts.symlink-requestkey = ''
-      if [ ! -d /sbin ]; then
-        mkdir /sbin
-      fi
-      ln -sfn /run/current-system/sw/bin/request-key /sbin/request-key
+    if [ ! -d /sbin ]; then
+      mkdir /sbin
+    fi
+    ln -sfn /run/current-system/sw/bin/request-key /sbin/request-key
   '';
 
   environment.etc."request-key.conf" = {
-    text = let
-      upcall = "${pkgs.cifs-utils}/bin/cifs.upcall";
-      keyctl = "${pkgs.keyutils}/bin/keyctl";
-    in
+    text =
+      let
+        upcall = "${pkgs.cifs-utils}/bin/cifs.upcall";
+        keyctl = "${pkgs.keyutils}/bin/keyctl";
+      in
       ''
         #OP     TYPE          DESCRIPTION  CALLOUT_INFO  PROGRAM
         # -t is required for DFS share servers...
@@ -39,6 +40,6 @@
         create  user          debug:loop:* *             |${pkgs.coreutils}/bin/cat
         create  user          debug:*      *             ${pkgs.keyutils}/share/keyutils/request-key-debug.sh %k %d %c %S
         negate  *             *            *             ${keyctl} negate %k 30 %S
-    '';
+      '';
   };
 }

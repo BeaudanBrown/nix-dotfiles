@@ -10,36 +10,44 @@
     extra-substituters = "https://devenv.cachix.org";
   };
 
-  outputs = { self, nixpkgs, devenv, systems, ... } @ inputs:
-  let
-    forEachSystem = nixpkgs.lib.genAttrs (import systems);
-  in
-  {
-    packages = forEachSystem (system: {
-      devenv-up = self.devShells.${system}.default.config.procfileScript;
-    });
-
-    devShells = forEachSystem
-    (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      devenv,
+      systems,
+      ...
+    }@inputs:
     let
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
+      forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
     {
-      default = devenv.lib.mkShell {
-        inherit inputs pkgs;
-        modules = [
-          {
-            languages = {
-              go.enable = true;
-            };
+      packages = forEachSystem (system: {
+        devenv-up = self.devShells.${system}.default.config.procfileScript;
+      });
 
-            pre-commit.hooks.gofmt.enable = true;
-          }
-        ];
-      };
-    });
-  };
+      devShells = forEachSystem (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+          };
+        in
+        {
+          default = devenv.lib.mkShell {
+            inherit inputs pkgs;
+            modules = [
+              {
+                languages = {
+                  go.enable = true;
+                };
+
+                pre-commit.hooks.gofmt.enable = true;
+              }
+            ];
+          };
+        }
+      );
+    };
 }

@@ -20,15 +20,17 @@
         position = "0, -440";
       };
 
-      label = [{
-        monitor = "";
-        text = "$TIME";
-        font_size = 50;
-        color = "rgb(83a598)";
-        position = "0, 440";
-        valign = "center";
-        halign = "center";
-      }];
+      label = [
+        {
+          monitor = "";
+          text = "$TIME";
+          font_size = 50;
+          color = "rgb(83a598)";
+          position = "0, 440";
+          valign = "center";
+          halign = "center";
+        }
+      ];
     };
   };
 }

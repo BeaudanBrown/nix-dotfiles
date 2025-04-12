@@ -1,4 +1,4 @@
-{ ...}:
+{ ... }:
 let
   progress-bar = [
     "▏   "
@@ -35,18 +35,18 @@ let
     "████"
   ];
 in
-  {
+{
   programs.waybar = {
     enable = true;
     style = ''
-        .mainBar * {
-          font-family: "JetBrainsMono Nerd Font Mono";
-          font-size: 12pt;
-        }
+      .mainBar * {
+        font-family: "JetBrainsMono Nerd Font Mono";
+        font-size: 12pt;
+      }
 
-        .modules-right * {
-          margin: 3;
-        }
+      .modules-right * {
+        margin: 3;
+      }
     '';
     settings = {
       mainBar = {
@@ -54,9 +54,17 @@ in
         layer = "top";
         position = "bottom";
         height = 30;
-        modules-left = [ "battery" "backlight" "wireplumber" ];
+        modules-left = [
+          "battery"
+          "backlight"
+          "wireplumber"
+        ];
         modules-center = [ "hyprland/workspaces" ];
-        modules-right = [ "tray" "memory" "clock" ];
+        modules-right = [
+          "tray"
+          "memory"
+          "clock"
+        ];
         backlight = {
           device = "intel_backlight";
           format = "🔆 {icon} {percent:3}%";

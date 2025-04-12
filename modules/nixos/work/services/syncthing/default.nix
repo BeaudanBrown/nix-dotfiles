@@ -1,8 +1,9 @@
 {
-config,
-...
+  config,
+  ...
 }:
 {
+  users.users.${config.hostSpec.username}.extraGroups = [ "syncthing" ];
   services.syncthing = {
     enable = true;
     openDefaultPorts = true;
@@ -30,17 +31,29 @@ config,
         "documents" = {
           id = "txxit-w9cwz";
           path = "~/documents";
-          devices = [ "server" "grill" "laptop" ];
+          devices = [
+            "server"
+            "grill"
+            "laptop"
+          ];
         };
         "monash" = {
           id = "twjfr-ekoqc";
           path = "~/monash";
-          devices = [ "server" "grill" "laptop" ];
+          devices = [
+            "server"
+            "grill"
+            "laptop"
+          ];
         };
         "collab" = {
           id = "vccfp-s5yfe";
           path = "~/collab";
-          devices = [ "server" "grill" "laptop" ];
+          devices = [
+            "server"
+            "grill"
+            "laptop"
+          ];
         };
       };
     };

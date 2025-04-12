@@ -1,7 +1,7 @@
 {
-config,
-pkgs,
-...
+  config,
+  pkgs,
+  ...
 }:
 {
   programs.zsh = {
@@ -45,12 +45,12 @@ pkgs,
     '';
 
     initExtra = ''
-  if [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]]; then
-    tmux new -A -s default &> /dev/null
-  fi
+      if [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]]; then
+        tmux new -A -s default &> /dev/null
+      fi
 
-  DIRENV_CONFIG="${config.home.homeDirectory}/.config/direnv"
-  compdef batman=man
+      DIRENV_CONFIG="${config.home.homeDirectory}/.config/direnv"
+      compdef batman=man
     '';
   };
 }

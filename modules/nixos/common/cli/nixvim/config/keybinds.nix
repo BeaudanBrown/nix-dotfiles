@@ -1,9 +1,9 @@
-{ lib, ...}:
+{ lib, ... }:
 let
   pluginFolder = ./plugins;
   files = builtins.attrNames (builtins.readDir pluginFolder);
-  pluginFiles = map (file: (import "${pluginFolder}/${file}"){}) files;
-  pluginKeymaps = builtins.concatMap (file: if file ? keymaps then file.keymaps else []) pluginFiles;
+  pluginFiles = map (file: (import "${pluginFolder}/${file}") { }) files;
+  pluginKeymaps = builtins.concatMap (file: if file ? keymaps then file.keymaps else [ ]) pluginFiles;
 in
 {
   keymaps = [
@@ -19,7 +19,14 @@ in
     {
       key = "<A-h>";
       action = ''<cmd>TmuxNavigateLeft<CR>'';
-      mode = [ "n" "v" "i" "c" "x" "t" ];
+      mode = [
+        "n"
+        "v"
+        "i"
+        "c"
+        "x"
+        "t"
+      ];
       options = {
         noremap = true;
         silent = true;
@@ -28,7 +35,14 @@ in
     {
       key = "<A-j>";
       action = ''<cmd>TmuxNavigateDown<CR>'';
-      mode = [ "n" "v" "i" "c" "x" "t" ];
+      mode = [
+        "n"
+        "v"
+        "i"
+        "c"
+        "x"
+        "t"
+      ];
       options = {
         noremap = true;
         silent = true;
@@ -37,7 +51,14 @@ in
     {
       key = "<A-k>";
       action = ''<cmd>TmuxNavigateUp<CR>'';
-      mode = [ "n" "v" "i" "c" "x" "t" ];
+      mode = [
+        "n"
+        "v"
+        "i"
+        "c"
+        "x"
+        "t"
+      ];
       options = {
         noremap = true;
         silent = true;
@@ -46,7 +67,14 @@ in
     {
       key = "<A-l>";
       action = ''<cmd>TmuxNavigateRight<CR>'';
-      mode = [ "n" "v" "i" "c" "x" "t" ];
+      mode = [
+        "n"
+        "v"
+        "i"
+        "c"
+        "x"
+        "t"
+      ];
       options = {
         noremap = true;
         silent = true;
@@ -179,7 +207,10 @@ in
     {
       key = "s";
       action = ''"_s'';
-      mode = [ "n" "v" ];
+      mode = [
+        "n"
+        "v"
+      ];
       options = {
         noremap = true;
         silent = true;
@@ -269,7 +300,11 @@ in
     {
       key = "<C-j>";
       action = ''wildmenumode() ? "<C-z>" : "<C-n>"'';
-      mode = [ "c" "n" "t" ];
+      mode = [
+        "c"
+        "n"
+        "t"
+      ];
       options = {
         expr = true;
         noremap = true;
@@ -278,7 +313,11 @@ in
     {
       key = "<C-k>";
       action = ''wildmenumode() ? "<Up>" : "<C-p>"'';
-      mode = [ "c" "n" "t" ];
+      mode = [
+        "c"
+        "n"
+        "t"
+      ];
       options = {
         expr = true;
         noremap = true;

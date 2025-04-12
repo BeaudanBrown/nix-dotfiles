@@ -2,7 +2,7 @@
 let
   inherit (config.lib.formats.rasi) mkLiteral;
 in
-  {
+{
   imports = [ ./scripts/rofi_launch_dir.nix ];
   programs.rofi = {
     enable = true;

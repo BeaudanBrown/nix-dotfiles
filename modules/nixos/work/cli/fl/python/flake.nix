@@ -10,7 +10,14 @@
     extra-substituters = "https://devenv.cachix.org";
   };
 
-  outputs = { self, nixpkgs, devenv, systems, ... } @ inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      devenv,
+      systems,
+      ...
+    }@inputs:
     let
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
@@ -19,48 +26,51 @@
         devenv-up = self.devShells.${system}.default.config.procfileScript;
       });
 
-      devShells = forEachSystem
-        (system:
-          let
-            pkgs = nixpkgs.legacyPackages.${system};
+      devShells = forEachSystem (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
 
-            # gitPkg = pkgs.python3Packages.buildPythonPackage {
-            #   pname = "";
-            #   version = "";
-            #   src = pkgs.fetchFromGitHub {
-            #     owner = "";
-            #     repo = "";
-            #     rev = "";
-            #     sha256 = "";
-            #   };
-            # };
+          # gitPkg = pkgs.python3Packages.buildPythonPackage {
+          #   pname = "";
+          #   version = "";
+          #   src = pkgs.fetchFromGitHub {
+          #     owner = "";
+          #     repo = "";
+          #     rev = "";
+          #     sha256 = "";
+          #   };
+          # };
 
-            # pyPiPkg = with pkgs.python3Packages; buildPythonPackage rec {
-            #   pname = "";
-            #   version = "";
-            #   src = fetchPypi {
-            #     inherit pname version;
-            #     sha256 = "";
-            #   };
-            #   doCheck = false;
-            #   checkInputs = [];
-            #   propagatedBuildInputs = [];
-            #   dependencies = [];
-            # };
+          # pyPiPkg = with pkgs.python3Packages; buildPythonPackage rec {
+          #   pname = "";
+          #   version = "";
+          #   src = fetchPypi {
+          #     inherit pname version;
+          #     sha256 = "";
+          #   };
+          #   doCheck = false;
+          #   checkInputs = [];
+          #   propagatedBuildInputs = [];
+          #   dependencies = [];
+          # };
 
-          in
-          {
-            default = devenv.lib.mkShell {
-              inherit inputs pkgs;
-              modules = [
-                {
-                  packages = with pkgs; [
-                    (python3.withPackages (python-pkgs: with python-pkgs; [
-                    ]))
-                  ];
-                }
-              ];
-            };
-          });
+        in
+        {
+          default = devenv.lib.mkShell {
+            inherit inputs pkgs;
+            modules = [
+              {
+                packages = with pkgs; [
+                  (python3.withPackages (
+                    python-pkgs: with python-pkgs; [
+                    ]
+                  ))
+                ];
+              }
+            ];
+          };
+        }
+      );
     };
 }

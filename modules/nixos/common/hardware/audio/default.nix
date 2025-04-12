@@ -1,7 +1,7 @@
 {
-pkgs,
-config,
-...
+  pkgs,
+  config,
+  ...
 }:
 {
   security.rtkit.enable = true;

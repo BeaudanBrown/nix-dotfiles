@@ -1,14 +1,16 @@
-{ ...}:
+{ ... }:
 {
-  imports = let
-    pluginFolder = ./plugins;
-    files = builtins.attrNames (builtins.readDir pluginFolder);
-    pluginFiles = map (file: "${pluginFolder}/${file}") files;
-  in
+  imports =
+    let
+      pluginFolder = ./plugins;
+      files = builtins.attrNames (builtins.readDir pluginFolder);
+      pluginFiles = map (file: "${pluginFolder}/${file}") files;
+    in
     [
       ./keybinds.nix
       ./extraPlugins.nix
-    ] ++ pluginFiles;
+    ]
+    ++ pluginFiles;
 
   enable = true;
 
@@ -21,7 +23,10 @@
     };
   };
 
-  clipboard.register = [ "unnamed" "unnamedplus" ];
+  clipboard.register = [
+    "unnamed"
+    "unnamedplus"
+  ];
   colorschemes.kanagawa = {
     enable = true;
     settings.theme = "dragon";
@@ -95,7 +100,7 @@
         target = "tmux";
         default_config = {
           socket_name = "default";
-          target_pane  = "{right}";
+          target_pane = "{right}";
         };
       };
     };
@@ -154,22 +159,22 @@
           "<C-j>" = "cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert })";
           "<C-k>" = "cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert })";
           "<Tab>" = ''
-              function(fallback)
-                if require("luasnip").expand_or_jumpable() then
-                  vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
-                else
-                  fallback()
-                end
+            function(fallback)
+              if require("luasnip").expand_or_jumpable() then
+                vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
+              else
+                fallback()
               end
+            end
           '';
           "<S-Tab>" = ''
-              function(fallback)
-                if require("luasnip").jumpable(-1) then
-                  vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
-                else
-                  fallback()
-                end
+            function(fallback)
+              if require("luasnip").jumpable(-1) then
+                vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
+              else
+                fallback()
               end
+            end
           '';
         };
         sources = [
@@ -219,7 +224,11 @@
     previewheight = 40;
     list = true;
     listchars = "tab:·\\ ,trail:~";
-    backspace = ["indent" "eol" "start"];
+    backspace = [
+      "indent"
+      "eol"
+      "start"
+    ];
     undodir.__raw = ''(os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/undodir/"'';
     directory.__raw = ''(os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/swp/"'';
   };
@@ -266,7 +275,10 @@
       };
     }
     {
-      event = [ "TermOpen" "WinEnter" ];
+      event = [
+        "TermOpen"
+        "WinEnter"
+      ];
       pattern = "term://*";
       command = "startinsert";
     }

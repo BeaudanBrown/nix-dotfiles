@@ -1,4 +1,4 @@
-{...}:
+{ ... }:
 {
   plugins.spectre = {
     enable = true;
@@ -24,4 +24,3 @@
     }
   ];
 }
-

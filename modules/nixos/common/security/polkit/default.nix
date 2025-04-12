@@ -5,31 +5,31 @@
       groups = [ "wheel" ];
       commands = [
         {
-          command =  "/run/current-system/sw/bin/nh";
+          command = "/run/current-system/sw/bin/nh";
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/etc/profiles/per-user/${config.hostSpec.username}/bin/shutdown";
+          command = "/etc/profiles/per-user/${config.hostSpec.username}/bin/shutdown";
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/run/current-system/sw/bin/nixos-rebuild";
+          command = "/run/current-system/sw/bin/nixos-rebuild";
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/run/current-system/sw/bin/reboot";
+          command = "/run/current-system/sw/bin/reboot";
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/home/${config.hostSpec.username}/.nix-profile/bin/reboot";
+          command = "/home/${config.hostSpec.username}/.nix-profile/bin/reboot";
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/run/current-system/sw/bin/shutdown";
+          command = "/run/current-system/sw/bin/shutdown";
           options = [ "NOPASSWD" ];
         }
         {
-          command =  "/home/${config.hostSpec.username}/.nix-profile/bin/shutdown";
+          command = "/home/${config.hostSpec.username}/.nix-profile/bin/shutdown";
           options = [ "NOPASSWD" ];
         }
       ];

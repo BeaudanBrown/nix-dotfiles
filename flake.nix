@@ -1,5 +1,6 @@
 {
-  outputs = { self, nixpkgs, ... }@inputs:
+  outputs =
+    { self, nixpkgs, ... }@inputs:
     let
       inherit (self) outputs;
       # ========== Extend lib with lib.custom ==========
@@ -8,10 +9,11 @@
       lib = nixpkgs.lib.extend (self: super: { custom = import ./lib { inherit (nixpkgs) lib; }; });
       forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
     in
-      {
-      nixosConfigurations = builtins.readDir ./hosts |>
-        builtins.attrNames |>
-        map (host: {
+    {
+      nixosConfigurations =
+        builtins.readDir ./hosts
+        |> builtins.attrNames
+        |> map (host: {
           name = host;
           value = nixpkgs.lib.nixosSystem {
             specialArgs = {
@@ -19,8 +21,8 @@
             };
             modules = [ ./hosts/${host} ];
           };
-        }) |>
-        builtins.listToAttrs;
+        })
+        |> builtins.listToAttrs;
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
       checks = forAllSystems (
         system:
