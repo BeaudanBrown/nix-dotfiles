@@ -1,4 +1,4 @@
-{ lib, inputs, ... }:
+{ lib, inputs, config, ... }:
 {
   imports = [
     ./hardware.nix
@@ -10,12 +10,12 @@
   ] ++ (map lib.custom.relativeToRoot [
       "modules/nixos/common"
       "modules/nixos/work"
-      "modules/nixos/nix-laptop"
+      "modules/nixos/laptop"
     ]);
 
   hostSpec = {
     username = "beau";
-    hostName = "grill";
+    hostName = "laptop";
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";
@@ -24,14 +24,13 @@
 
   home-manager = {
     backupFileExtension = "backup";
-    users.beau.imports = (map lib.custom.relativeToRoot [
+    users.${config.hostSpec.username}.imports = (map lib.custom.relativeToRoot [
       "modules/home/common"
       "modules/home/work"
-      "modules/home/nix-laptop"
+      "modules/home/laptop"
     ]);
   };
 
   nix.settings.cores = 8;
-  networking.hostName = "nix-laptop";
   system.stateVersion = "23.05";
 }
