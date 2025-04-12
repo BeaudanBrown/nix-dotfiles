@@ -1,0 +1,4 @@
+{ ... }:
+{
+  services.xserver.videoDrivers = [ "displaylink" ];
+}

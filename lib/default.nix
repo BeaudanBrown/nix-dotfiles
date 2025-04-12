@@ -2,26 +2,57 @@
   lib,
 }:
 with lib;
-{
+rec {
   relativeToRoot = lib.path.append ../.;
 
-  importRecursive =
-    path:
+  importRecursiveCustom =
+    { leaf, path }:
     let
       _scanPathsRec =
         _path:
-        if (builtins.pathExists (_path + "/default.nix")) then
-          [ _path ]
+        if (builtins.pathExists (_path + "/${leaf}")) then
+          [ (_path + "/${leaf}") ]
         else
           builtins.readDir _path
-          |> lib.attrsets.filterAttrs (name: type: type == "directory")
+          |> lib.attrsets.filterAttrs (_: type: type == "directory")
           |> lib.mapAttrsToList (name: _: _path + "/${name}")
           |> builtins.concatMap _scanPathsRec;
     in
     builtins.readDir path
-    |> lib.attrsets.filterAttrs (name: type: type == "directory")
+    |> lib.attrsets.filterAttrs (_: type: type == "directory")
     |> lib.mapAttrsToList (name: _: path + "/${name}")
     |> builtins.concatMap _scanPathsRec;
+
+  importHost =
+    { host, path, ... }:
+    importRecursiveCustom {
+      inherit path;
+      leaf = "${host}.nix";
+    };
+
+  importHome =
+    path:
+    importRecursiveCustom {
+      inherit path;
+      leaf = "home.nix";
+    };
+
+  importRecursive =
+    path:
+    importRecursiveCustom {
+      inherit path;
+      leaf = "default.nix";
+    };
+
+  importAll =
+    { spec, path, host }@args:
+    (importRecursive path)
+    ++ (importHost args)
+    ++ [
+      {
+        home-manager.users.${spec.username}.imports = importHome path;
+      }
+    ];
 
   scanPaths =
     path:

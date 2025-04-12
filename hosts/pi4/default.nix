@@ -16,8 +16,8 @@
       inputs.home-manager.nixosModules.home-manager
     ]
     ++ (map lib.custom.relativeToRoot [
-      "modules/nixos/common"
-      "modules/nixos/pi4"
+      "modules/common"
+      "modules/pi4"
     ]);
 
   hostSpec = {
@@ -54,6 +54,5 @@
     };
   };
 
-  nix.settings.cores = 4;
   system.stateVersion = "25.05";
 }

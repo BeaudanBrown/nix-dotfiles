@@ -1,24 +1,37 @@
 {
-  lib,
-  inputs,
-  config,
-  ...
+lib,
+inputs,
+config,
+host,
+...
 }:
-{
-  imports =
+let
+  modules =
     [
-      ./hardware.nix
-
-      inputs.sops-nix.nixosModules.sops
-      inputs.nixvim.nixosModules.nixvim
-      inputs.stylix.nixosModules.stylix
-      inputs.home-manager.nixosModules.home-manager
+      "common"
+      "work"
     ]
-    ++ (map lib.custom.relativeToRoot [
-      "modules/nixos/common"
-      "modules/nixos/work"
-      "modules/nixos/laptop"
-    ]);
+    |> builtins.concatMap (
+      module:
+      let
+        path = lib.custom.relativeToRoot "modules/${module}";
+      in
+        (lib.custom.importAll {
+          inherit path;
+          spec = config.hostSpec;
+          host = host;
+        })
+    );
+in
+  {
+  imports = [
+    ./hardware.nix
+
+    inputs.sops-nix.nixosModules.sops
+    inputs.nixvim.nixosModules.nixvim
+    inputs.stylix.nixosModules.stylix
+    inputs.home-manager.nixosModules.home-manager
+  ] ++ modules;
 
   hostSpec = {
     username = "beau";
@@ -29,17 +42,5 @@
     sshPort = 8023;
   };
 
-  home-manager = {
-    backupFileExtension = "backup";
-    users.${config.hostSpec.username}.imports = (
-      map lib.custom.relativeToRoot [
-        "modules/home/common"
-        "modules/home/work"
-        "modules/home/laptop"
-      ]
-    );
-  };
-
-  nix.settings.cores = 8;
   system.stateVersion = "23.05";
 }
