@@ -17,7 +17,12 @@
           name = host;
           value = nixpkgs.lib.nixosSystem {
             specialArgs = {
-              inherit inputs outputs lib host;
+              inherit
+                inputs
+                outputs
+                lib
+                host
+                ;
             };
             modules = [ ./hosts/${host} ];
           };

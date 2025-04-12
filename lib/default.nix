@@ -1,5 +1,5 @@
 {
-lib,
+  lib,
 }:
 with lib;
 rec {
@@ -18,7 +18,7 @@ rec {
           |> lib.mapAttrsToList (name: _: _path + "/${name}")
           |> builtins.concatMap _scanPathsRec;
     in
-      builtins.readDir path
+    builtins.readDir path
     |> lib.attrsets.filterAttrs (_: type: type == "directory")
     |> lib.mapAttrsToList (name: _: path + "/${name}")
     |> builtins.concatMap _scanPathsRec;
@@ -45,7 +45,11 @@ rec {
     };
 
   importAll =
-    { roots, host, spec }:
+    {
+      roots,
+      host,
+      spec,
+    }:
     let
       importRoot =
         { spec, path, ... }@args:
@@ -60,15 +64,15 @@ rec {
           }
         ];
     in
-      roots
+    roots
     |> builtins.concatMap (
       module:
       let
         path = relativeToRoot "modules/${module}";
       in
-        (importRoot {
-          inherit path host spec;
-        })
+      (importRoot {
+        inherit path host spec;
+      })
     );
 
   scanPaths =
@@ -90,11 +94,11 @@ rec {
         let
           expr = import path;
         in
-          if
+        if
           builtins.isAttrs expr
           && builtins.hasAttr childAttrName expr
           && builtins.typeOf (builtins.getAttr childAttrName expr) == "list"
-          then
+        then
           builtins.getAttr childAttrName expr
         else
           [ ]

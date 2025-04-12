@@ -1,19 +1,18 @@
 {
-lib,
-inputs,
-config,
-host,
-...
+  lib,
+  inputs,
+  config,
+  host,
+  ...
 }:
 let
-  roots =
-    [
-      "common"
-      "work"
-      "gaming"
-    ];
+  roots = [
+    "common"
+    "work"
+    "gaming"
+  ];
 in
-  {
+{
   imports =
     [
       ./hardware.nix
@@ -22,7 +21,8 @@ in
       inputs.nixvim.nixosModules.nixvim
       inputs.stylix.nixosModules.stylix
       inputs.home-manager.nixosModules.home-manager
-    ] ++ (lib.custom.importAll {
+    ]
+    ++ (lib.custom.importAll {
       inherit host roots;
       spec = config.hostSpec;
     });
@@ -36,6 +36,5 @@ in
     sshPort = 8022;
   };
 
-  boot.initrd.kernelModules = [ "amdgpu" ];
   system.stateVersion = "23.05";
 }
