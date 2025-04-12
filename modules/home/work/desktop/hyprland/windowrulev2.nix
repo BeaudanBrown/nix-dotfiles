@@ -14,6 +14,8 @@ let
     "class:(teams-for-linux)"
     "class:^(libreoffice.*)$"
     "class:(VirtualBox Manager)"
+    "class:(org.qbittorrent.qBittorrent)"
+    "class:(net.lutris.Lutris)"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
     "class:(VirtualBox Machine)"
