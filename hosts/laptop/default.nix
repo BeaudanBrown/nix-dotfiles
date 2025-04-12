@@ -6,22 +6,11 @@ host,
 ...
 }:
 let
-  modules =
+  roots =
     [
       "common"
       "work"
-    ]
-    |> builtins.concatMap (
-      module:
-      let
-        path = lib.custom.relativeToRoot "modules/${module}";
-      in
-        (lib.custom.importAll {
-          inherit path;
-          spec = config.hostSpec;
-          host = host;
-        })
-    );
+    ];
 in
   {
   imports = [
@@ -31,7 +20,10 @@ in
     inputs.nixvim.nixosModules.nixvim
     inputs.stylix.nixosModules.stylix
     inputs.home-manager.nixosModules.home-manager
-  ] ++ modules;
+  ] ++ (lib.custom.importAll {
+      inherit host roots;
+      spec = config.hostSpec;
+    });
 
   hostSpec = {
     username = "beau";

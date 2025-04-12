@@ -1,11 +1,18 @@
 {
-  lib,
-  inputs,
-  pkgs,
-  config,
-  ...
+lib,
+inputs,
+pkgs,
+config,
+host,
+...
 }:
-{
+let
+  roots =
+    [
+      "common"
+    ];
+in
+  {
   imports =
     [
       ./hardware.nix
@@ -14,11 +21,10 @@
       inputs.nixvim.nixosModules.nixvim
       inputs.stylix.nixosModules.stylix
       inputs.home-manager.nixosModules.home-manager
-    ]
-    ++ (map lib.custom.relativeToRoot [
-      "modules/common"
-      "modules/pi4"
-    ]);
+    ] ++ (lib.custom.importAll {
+      inherit host roots;
+      spec = config.hostSpec;
+    });
 
   hostSpec = {
     username = "beau";

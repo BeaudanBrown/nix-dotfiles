@@ -1,5 +1,5 @@
 {
-  lib,
+lib,
 }:
 with lib;
 rec {
@@ -18,7 +18,7 @@ rec {
           |> lib.mapAttrsToList (name: _: _path + "/${name}")
           |> builtins.concatMap _scanPathsRec;
     in
-    builtins.readDir path
+      builtins.readDir path
     |> lib.attrsets.filterAttrs (_: type: type == "directory")
     |> lib.mapAttrsToList (name: _: path + "/${name}")
     |> builtins.concatMap _scanPathsRec;
@@ -45,14 +45,31 @@ rec {
     };
 
   importAll =
-    { spec, path, host }@args:
-    (importRecursive path)
-    ++ (importHost args)
-    ++ [
-      {
-        home-manager.users.${spec.username}.imports = importHome path;
-      }
-    ];
+    { roots, host, spec }:
+    let
+      importRoot =
+        { spec, path, ... }@args:
+        # Normal modules
+        (importRecursive path)
+        # Host specific modules
+        ++ (importHost args)
+        # Home manager modules
+        ++ [
+          {
+            home-manager.users.${spec.username}.imports = importHome path;
+          }
+        ];
+    in
+      roots
+    |> builtins.concatMap (
+      module:
+      let
+        path = relativeToRoot "modules/${module}";
+      in
+        (importRoot {
+          inherit path host spec;
+        })
+    );
 
   scanPaths =
     path:
@@ -73,11 +90,11 @@ rec {
         let
           expr = import path;
         in
-        if
+          if
           builtins.isAttrs expr
           && builtins.hasAttr childAttrName expr
           && builtins.typeOf (builtins.getAttr childAttrName expr) == "list"
-        then
+          then
           builtins.getAttr childAttrName expr
         else
           [ ]

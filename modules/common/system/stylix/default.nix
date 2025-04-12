@@ -30,9 +30,4 @@
       size = 24;
     };
   };
-  home-manager.sharedModules = [
-    {
-      stylix.enable = true;
-    }
-  ];
 }
