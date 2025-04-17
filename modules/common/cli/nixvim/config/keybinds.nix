@@ -1,80 +1,10 @@
-{ lib, ... }:
-let
-  pluginFolder = ./plugins;
-  files = builtins.attrNames (builtins.readDir pluginFolder);
-  pluginFiles = map (file: (import "${pluginFolder}/${file}") { }) files;
-  pluginKeymaps = builtins.concatMap (file: if file ? keymaps then file.keymaps else [ ]) pluginFiles;
-in
+{ ... }:
 {
   keymaps = [
     {
       key = "<Space>";
       action = ''<Nop>'';
       mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<A-h>";
-      action = ''<cmd>TmuxNavigateLeft<CR>'';
-      mode = [
-        "n"
-        "v"
-        "i"
-        "c"
-        "x"
-        "t"
-      ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<A-j>";
-      action = ''<cmd>TmuxNavigateDown<CR>'';
-      mode = [
-        "n"
-        "v"
-        "i"
-        "c"
-        "x"
-        "t"
-      ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<A-k>";
-      action = ''<cmd>TmuxNavigateUp<CR>'';
-      mode = [
-        "n"
-        "v"
-        "i"
-        "c"
-        "x"
-        "t"
-      ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<A-l>";
-      action = ''<cmd>TmuxNavigateRight<CR>'';
-      mode = [
-        "n"
-        "v"
-        "i"
-        "c"
-        "x"
-        "t"
-      ];
       options = {
         noremap = true;
         silent = true;
@@ -98,7 +28,7 @@ in
     }
     {
       key = "<Leader>d";
-      action = '':lua close_buffer()<CR>'';
+      action = ''<Plug>CloseBuffer<CR>'';
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -324,54 +254,6 @@ in
       };
     }
     {
-      key = "<Leader>;";
-      action = '':FzfLua command_history<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader>f";
-      action = '':FzfLua grep_project<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader>F";
-      action = '':FzfLua grep_cword<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader>l";
-      action = '':FzfLua lines<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader>b";
-      action = '':FzfLua buffers<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
-      key = "<c-P>";
-      action = ''<cmd>ProjectFiles<cr>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-      };
-    }
-    {
       key = "<Leader><CR>";
       action = ''<cmd>AIChat<cr>'';
       mode = [ "n" ];
@@ -379,5 +261,5 @@ in
         noremap = true;
       };
     }
-  ] ++ pluginKeymaps;
+  ];
 }

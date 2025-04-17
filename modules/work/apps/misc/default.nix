@@ -8,7 +8,7 @@
     gparted
     nautilus
     qbittorrent
-    signal-desktop
+    signal-desktop-bin
     slack
     spotify
     sxiv

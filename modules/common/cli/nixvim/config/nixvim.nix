@@ -1,18 +1,19 @@
-{ ... }:
+{ pkgs, ... }:
 {
+  enable = true;
+
   imports =
     let
       pluginFolder = ./plugins;
       files = builtins.attrNames (builtins.readDir pluginFolder);
-      pluginFiles = map (file: "${pluginFolder}/${file}") files;
+      pluginFiles = map (file: (import "${pluginFolder}/${file}" { inherit pkgs; })) files;
     in
-    [
-      ./keybinds.nix
-      ./extraPlugins.nix
-    ]
+      [
+        ./opts.nix
+        ./keybinds.nix
+        ./extraPlugins.nix
+      ]
     ++ pluginFiles;
-
-  enable = true;
 
   # Use tabs for go files
   files = {
@@ -27,210 +28,10 @@
     "unnamed"
     "unnamedplus"
   ];
+
   colorschemes.kanagawa = {
     enable = true;
     settings.theme = "dragon";
-  };
-
-  plugins = {
-    otter.enable = true;
-    lualine.enable = true;
-    colorizer.enable = true;
-    commentary.enable = true;
-    vim-surround.enable = true;
-    markdown-preview.enable = true;
-    nix.enable = true;
-    treesitter = {
-      settings = {
-        highlight.enable = true;
-        indent.enable = true;
-      };
-      enable = true;
-    };
-    quarto.enable = true;
-    diffview.enable = true;
-    mini = {
-      enable = true;
-      mockDevIcons = true;
-      modules = {
-        icons = { };
-        animate = {
-          cursor = {
-            enable = false;
-          };
-          resize = {
-            enable = true;
-            timing.__raw = "require('mini.animate').gen_timing.linear({ duration = 30, unit = 'total' })";
-          };
-          close = {
-            enable = true;
-            timing.__raw = "require('mini.animate').gen_timing.linear({ duration = 30, unit = 'total' })";
-          };
-          open = {
-            enable = true;
-            timing.__raw = "require('mini.animate').gen_timing.linear({ duration = 30, unit = 'total' })";
-          };
-          scroll = {
-            enable = true;
-            timing.__raw = "require('mini.animate').gen_timing.linear({ duration = 30, unit = 'total' })";
-          };
-        };
-      };
-    };
-    friendly-snippets.enable = true;
-    fzf-lua = {
-      enable = true;
-      settings = {
-        files = {
-          cmd = "rg --files -g '!.git'";
-        };
-        winopts = {
-          height = 0.9;
-          width = 0.9;
-          preview = {
-            horizontal = "right:40%";
-          };
-        };
-      };
-    };
-    vim-slime = {
-      enable = true;
-      settings = {
-        dont_ask_default = 1;
-        target = "tmux";
-        default_config = {
-          socket_name = "default";
-          target_pane = "{right}";
-        };
-      };
-    };
-    tmux-navigator = {
-      enable = true;
-      settings = {
-        no_wrap = 1;
-      };
-    };
-    gitgutter = {
-      enable = true;
-      settings = {
-        terminal_report_focus = true;
-      };
-    };
-    lsp = {
-      enable = true;
-      servers = {
-        gopls.enable = true;
-        htmx.enable = true;
-        jsonls.enable = true;
-        lua_ls.enable = true;
-        pyright.enable = true;
-        nixd.enable = true;
-        r_language_server = {
-          enable = true;
-          package = null;
-        };
-      };
-      keymaps = {
-        diagnostic = {
-          "<leader>cj" = "goto_next";
-          "<leader>ck" = "goto_prev";
-        };
-        lspBuf = {
-          K = "hover";
-          gD = "references";
-          gd = "definition";
-          gt = "type_definition";
-        };
-      };
-    };
-    cmp = {
-      enable = true;
-      autoEnableSources = true;
-      settings = {
-        preselect = "cmp.PreselectMode.None";
-        snippet = {
-          expand = "function(args) require('luasnip').lsp_expand(args.body) end";
-        };
-        mapping = {
-          "<C-b>" = "cmp.mapping.scroll_docs(-4)";
-          "<C-f>" = "cmp.mapping.scroll_docs(4)";
-          "<C-e>" = "cmp.mapping.abort()";
-          "<CR>" = "cmp.mapping.confirm({ select = true })";
-          "<C-j>" = "cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert })";
-          "<C-k>" = "cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert })";
-          "<Tab>" = ''
-            function(fallback)
-              if require("luasnip").expand_or_jumpable() then
-                vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
-              else
-                fallback()
-              end
-            end
-          '';
-          "<S-Tab>" = ''
-            function(fallback)
-              if require("luasnip").jumpable(-1) then
-                vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
-              else
-                fallback()
-              end
-            end
-          '';
-        };
-        sources = [
-          { name = "luasnip"; }
-          { name = "nvim_lsp"; }
-          { name = "spell"; }
-          { name = "path"; }
-          { name = "buffer"; }
-        ];
-      };
-    };
-    luasnip.enable = true;
-  };
-
-  opts = {
-    autowrite = true;
-    completeopt = "menu";
-    background = "dark";
-    hidden = true;
-    mouse = "a";
-    encoding = "utf-8";
-    expandtab = true;
-    tabstop = 2;
-    shiftwidth = 2;
-    softtabstop = 2;
-    autoindent = true;
-    smartindent = true;
-    incsearch = true;
-    number = true;
-    splitbelow = true;
-    splitright = true;
-    wildmode = "list:longest";
-    wildignorecase = true;
-    ignorecase = true;
-    smartcase = true;
-    hlsearch = true;
-    showmatch = true;
-    updatetime = 100;
-    errorbells = false;
-    undofile = true;
-    inccommand = "nosplit";
-    signcolumn = "yes";
-    nrformats = "";
-    history = 1000;
-    diffopt = "vertical";
-    autoread = true;
-    previewheight = 40;
-    list = true;
-    listchars = "tab:·\\ ,trail:~";
-    backspace = [
-      "indent"
-      "eol"
-      "start"
-    ];
-    undodir.__raw = ''(os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/undodir/"'';
-    directory.__raw = ''(os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/swp/"'';
   };
 
   globals = {
@@ -302,6 +103,74 @@
     IncSearch.bold = true;
   };
 
+  extraConfigVim = ''
+    function s:CloseBuffer(kwbdStage)
+      if(a:kwbdStage == 1)
+        if(&modified)
+          let answer = confirm("This buffer has been modified.  Are you sure you want to delete it?", "&Yes\n&No", 2)
+          if(answer != 1)
+            return
+          endif
+        endif
+        if(!buflisted(winbufnr(0)))
+      bd!
+          return
+        endif
+        let s:kwbdBufNum = bufnr("%")
+        let s:kwbdWinNum = winnr()
+        windo call s:CloseBuffer(2)
+        execute s:kwbdWinNum . 'wincmd w'
+        let s:buflistedLeft = 0
+        let s:bufFinalJump = 0
+        let l:nBufs = bufnr("$")
+        let l:i = 1
+        while(l:i <= l:nBufs)
+          if(l:i != s:kwbdBufNum)
+            if(buflisted(l:i))
+              let s:buflistedLeft = s:buflistedLeft + 1
+            else
+              if(bufexists(l:i) && !strlen(bufname(l:i)) && !s:bufFinalJump)
+                let s:bufFinalJump = l:i
+              endif
+            endif
+          endif
+          let l:i = l:i + 1
+        endwhile
+        if(!s:buflistedLeft)
+          if(s:bufFinalJump)
+            windo if(buflisted(winbufnr(0))) | execute "b! " . s:bufFinalJump | endif
+          else
+            enew
+            let l:newBuf = bufnr("%")
+            windo if(buflisted(winbufnr(0))) | execute "b! " . l:newBuf | endif
+          endif
+          execute s:kwbdWinNum . 'wincmd w'
+        endif
+        if(buflisted(s:kwbdBufNum) || s:kwbdBufNum == bufnr("%"))
+          execute "bd! " . s:kwbdBufNum
+        endif
+        if(!s:buflistedLeft)
+          set buflisted
+          set bufhidden=delete
+          set buftype=
+          setlocal noswapfile
+        endif
+      else
+        if(bufnr("%") == s:kwbdBufNum)
+          let prevbufvar = bufnr("#")
+          if(prevbufvar > 0 && buflisted(prevbufvar) && prevbufvar != s:kwbdBufNum)
+            b #
+          else
+            bn
+          endif
+        endif
+      endif
+    endfunction
+
+    command! CloseBuffer call s:CloseBuffer(1)
+    nnoremap <silent> <Plug>CloseBuffer :<C-u>CloseBuffer<CR>
+    '';
+
   extraConfigLua = ''
     local find_root = function()
       local gitRoot = vim.fn.system('git rev-parse --show-toplevel 2> /dev/null')
@@ -326,5 +195,5 @@
         endpoint_url = "https://litellm.bepis.lol/v1/chat/completions",
       },
     }
-  '';
+    '';
 }
