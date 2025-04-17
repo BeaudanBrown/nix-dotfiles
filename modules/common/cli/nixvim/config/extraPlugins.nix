@@ -7,8 +7,8 @@
         src = pkgs.fetchFromGitHub {
           owner = "inkarkat";
           repo = "vim-ReplaceWithRegister";
-          rev = "aad1e8fa31cb4722f20fe40679caa56e25120032";
-          hash = "sha256-9dGcOFmbkBwVvPdqP30V3IzDZ5BKLdFLuYtXXXCPz7E=";
+          rev = "b82bf59e5387b57d0125afb94fd7984061031136";
+          hash = "sha256-Xq2/gWlSQVe6eSC3ODlTNXF1xbaUilPvkjcUzFguBT0=";
         };
       };
     }
