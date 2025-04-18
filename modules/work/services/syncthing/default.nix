@@ -4,6 +4,7 @@
 }:
 {
   users.users.${config.hostSpec.username}.extraGroups = [ "syncthing" ];
+  systemd.services.syncthing.environment.STNODEFAULTFOLDER = "true"; # Don't create default ~/Sync folder
   services.syncthing = {
     enable = true;
     openDefaultPorts = true;
@@ -57,5 +58,20 @@
         };
       };
     };
+  };
+  sops.secrets."syncthing/${config.networking.hostName}/cert" = {
+    path = "/home/${config.hostSpec.username}/.config/syncthing/cert.pem";
+    mode = "0400";
+    owner = config.hostSpec.username;
+    group = "users";
+    restartUnits = ["syncthing.service"];
+  };
+
+  sops.secrets."syncthing/${config.networking.hostName}/key" = {
+    path = "/home/${config.hostSpec.username}/.config/syncthing/key.pem";
+    mode = "0400";
+    owner = config.hostSpec.username;
+    group = "users";
+    restartUnits = ["syncthing.service"];
   };
 }
