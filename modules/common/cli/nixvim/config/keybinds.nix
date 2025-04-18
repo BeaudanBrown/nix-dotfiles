@@ -219,15 +219,6 @@
       };
     }
     {
-      key = "K";
-      action = ''<cmd>lua vim.lsp.buf.hover()<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
       key = "<C-j>";
       action = ''wildmenumode() ? "<C-z>" : "<C-n>"'';
       mode = [
@@ -250,14 +241,6 @@
       ];
       options = {
         expr = true;
-        noremap = true;
-      };
-    }
-    {
-      key = "<Leader><CR>";
-      action = ''<cmd>AIChat<cr>'';
-      mode = [ "n" ];
-      options = {
         noremap = true;
       };
     }

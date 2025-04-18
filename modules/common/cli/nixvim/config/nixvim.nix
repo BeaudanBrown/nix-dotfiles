@@ -11,7 +11,6 @@
       [
         ./opts.nix
         ./keybinds.nix
-        ./extraPlugins.nix
       ]
     ++ pluginFiles;
 
@@ -189,11 +188,5 @@
     end
     local root = find_root()
     vim.api.nvim_create_user_command('ProjectFiles', function() vim.cmd('FzfLua files ' .. root) end, {})
-
-    vim.g.vim_ai_chat = {
-      options = {
-        endpoint_url = "https://litellm.bepis.lol/v1/chat/completions",
-      },
-    }
     '';
 }

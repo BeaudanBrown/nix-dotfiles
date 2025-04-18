@@ -1,5 +1,5 @@
 [chat-options]
-model=o3-mini
+model=o4-mini
 stream=0
 temperature=1
 max_completion_tokens=25000
