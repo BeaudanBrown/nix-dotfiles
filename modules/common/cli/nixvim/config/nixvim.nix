@@ -47,34 +47,6 @@
 
   autoCmd = [
     {
-      desc = "Save cursor and pane position";
-      event = [ "BufLeave" ];
-      group = "cursor_pos";
-      callback = {
-        __raw = ''
-          function()
-            local buf = vim.api.nvim_get_current_buf()
-            vim.b[buf].last_cursor_pos = vim.api.nvim_win_get_cursor(0)
-            vim.b[buf].last_window_view = vim.fn.winsaveview()
-          end'';
-      };
-    }
-    {
-      desc = "Restore cursor and pane position";
-      event = [ "BufEnter" ];
-      group = "cursor_pos";
-      callback = {
-        __raw = ''
-          function()
-            local buf = vim.api.nvim_get_current_buf()
-            if vim.b[buf].last_cursor_pos then
-              vim.api.nvim_win_set_cursor(0, vim.b[buf].last_cursor_pos)
-              pcall(vim.fn.winrestview, vim.b[buf].last_window_view)
-            end
-          end'';
-      };
-    }
-    {
       event = [
         "TermOpen"
         "WinEnter"
