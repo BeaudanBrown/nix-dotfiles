@@ -1,5 +1,9 @@
-{ ... }:
+{ lib, ... }:
 {
-  home.file.".local/share/gpt/default.aichat".source = ./default.aichat;
-  home.file.".local/share/gpt/o3-mini.aichat".source = ./o3-mini.aichat;
+  home.file = builtins.readDir ./. |>
+    lib.attrsets.filterAttrs (name: type: (type == "regular") && (lib.strings.hasSuffix ".aichat" name)) |>
+    builtins.mapAttrs (name: _: {
+      source = ./${name};
+      target = ".local/share/gpt/${name}";
+    });
 }

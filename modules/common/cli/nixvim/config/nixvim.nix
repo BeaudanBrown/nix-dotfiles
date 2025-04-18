@@ -1,12 +1,12 @@
-{ pkgs, ... }:
+{ ... }:
 {
   enable = true;
 
   imports =
     let
-      pluginFolder = ./plugins;
-      files = builtins.attrNames (builtins.readDir pluginFolder);
-      pluginFiles = map (file: (import "${pluginFolder}/${file}" { inherit pkgs; })) files;
+      pluginFiles = builtins.readDir ./plugins |>
+        builtins.attrNames |>
+        map (file: (import "${./plugins}/${file}"));
     in
       [
         ./opts.nix
