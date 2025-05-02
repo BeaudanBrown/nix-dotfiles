@@ -7,9 +7,14 @@
         src = pkgs.fetchFromGitHub {
           owner = "R-nvim";
           repo = "r.nvim";
-          rev = "964075526267bf5768d14b6be83bea7a17ada56f";
-          hash = "sha256-lgusti4dehig3+4Z/SadzfrErFHzDNGrXs69NLAHwKA=";
+          rev = "70a3f8dc1b7bd5713fea0f787a4cc322ff11ad0e";
+          hash = "sha256-07VXMPcVgRS/T+WwmQUu0GvM1ZVETtiGKmntge/cOpk=";
         };
+        nvimSkipModules = [
+          "r.pdf.sumatra"
+          "r.roxygen"
+          "r.format"
+        ];
       };
     }
   ];
