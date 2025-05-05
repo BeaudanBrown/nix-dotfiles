@@ -1,18 +1,13 @@
-{ ... }:
+{ lib, ... }:
 {
   enable = true;
 
   imports =
-    let
-      pluginFiles = builtins.readDir ./plugins |>
-        builtins.attrNames |>
-        map (file: (import "${./plugins}/${file}"));
-    in
-      [
-        ./opts.nix
-        ./keybinds.nix
-      ]
-    ++ pluginFiles;
+    [
+      ./opts.nix
+      ./keybinds.nix
+    ]
+    ++ lib.custom.importRecursive ./plugins;
 
   # Use tabs for go files
   files = {

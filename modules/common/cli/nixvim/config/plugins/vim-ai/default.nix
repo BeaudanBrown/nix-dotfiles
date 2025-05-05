@@ -19,11 +19,12 @@
         endpoint_url = "https://litellm.bepis.lol/v1/chat/completions",
       },
     }
+    vim.g.vim_ai_roles_config_file  = "${./roles.ini}"
   '';
   keymaps = [
     {
       key = "<Leader><CR>";
-      action = ''<cmd>AIChat<cr>'';
+      action = ''<cmd>AIChat<CR>'';
       mode = [ "n" ];
       options = {
         noremap = true;
