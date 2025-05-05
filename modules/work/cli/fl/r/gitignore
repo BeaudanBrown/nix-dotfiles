@@ -1,3 +1,7 @@
+.devenv
+.direnv
+.envrc
+
 data/
 
 # History files
@@ -54,6 +58,3 @@ rsconnect/
 
 # Lintr file
 .lintr
-
-.devenv
-.direnv
