@@ -28,7 +28,7 @@ in
 
   hostSpec = {
     username = "beau";
-    hostName = "pi4";
+    hostName = host;
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";

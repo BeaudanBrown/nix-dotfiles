@@ -29,7 +29,7 @@ in
 
   hostSpec = {
     username = "beau";
-    hostName = "laptop";
+    hostName = host;
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";

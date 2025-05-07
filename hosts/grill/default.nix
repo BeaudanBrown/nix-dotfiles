@@ -35,7 +35,7 @@ in
 
   hostSpec = {
     username = "beau";
-    hostName = "grill";
+    hostName = host;
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";
