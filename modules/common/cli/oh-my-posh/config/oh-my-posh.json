@@ -12,7 +12,7 @@
 					"style": "plain",
 					"foreground": "blue",
 					"background": "transparent",
-					"template": "{{ .Path }}",
+					"template": "{{ .UserName }}@{{ .HostName }}: {{ .Path }}",
 					"properties": {
 						"style": "full"
 					}
