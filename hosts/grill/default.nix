@@ -8,6 +8,7 @@
 }:
 let
   roots = [
+    "minimal"
     "common"
     "work"
     "gaming"

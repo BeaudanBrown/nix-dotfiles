@@ -1,13 +1,13 @@
 {
-  ...
+  config, ...
 }:
 {
   programs.git = {
     enable = true;
     config = {
       user = {
-        name = "Beaudan Brown";
-        email = "beaudan.brown@gmail.com";
+        name = config.hostSpec.userFullName;
+        email = config.hostSpec.email;
       };
       alias = {
         lg = "log --all --graph --decorate --oneline";

@@ -21,7 +21,7 @@
       description = "The port to run sshd service on";
     };
     email = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
+      type = lib.types.str;
       description = "The email of the user";
     };
     wifi = lib.mkOption {

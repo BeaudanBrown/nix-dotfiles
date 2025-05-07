@@ -7,6 +7,7 @@
 }:
 let
   roots = [
+    "minimal"
     "common"
   ];
 in
