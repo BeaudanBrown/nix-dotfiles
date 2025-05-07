@@ -34,7 +34,7 @@
         let
           pkgs = nixpkgs.legacyPackages.${system};
         in
-        import ./checks.nix { inherit inputs system pkgs; }
+        import ./lib/checks.nix { inherit inputs system pkgs; }
       );
     };
 
