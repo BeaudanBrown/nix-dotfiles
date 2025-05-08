@@ -4,8 +4,8 @@
   nix = {
     gc = {
       automatic = true;
-      dates = "weekly";
-      options = "-d";
+      dates = "daily";
+      options = "--delete-older-than 7d";
     };
   };
 }
