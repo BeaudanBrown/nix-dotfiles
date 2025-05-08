@@ -1,5 +1,6 @@
 {
-  config, ...
+  config,
+  ...
 }:
 {
   programs.git = {

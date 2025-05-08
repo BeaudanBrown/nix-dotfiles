@@ -4,10 +4,10 @@
     enable = true;
     # Delete the default keybings that clash with replace
     postConfig = ''
-        vim.keymap.del('n', 'grn')
-        vim.keymap.del('n', 'gra')
-        vim.keymap.del('n', 'gri')
-        '';
+      vim.keymap.del('n', 'grn')
+      vim.keymap.del('n', 'gra')
+      vim.keymap.del('n', 'gri')
+    '';
     servers = {
       gopls.enable = true;
       htmx.enable = true;

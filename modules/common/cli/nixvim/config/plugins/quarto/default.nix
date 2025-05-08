@@ -2,6 +2,9 @@
 {
   plugins.quarto = {
     enable = true;
-    lazyLoad.settings.ft = [ "quarto" "markdown" ];
+    lazyLoad.settings.ft = [
+      "quarto"
+      "markdown"
+    ];
   };
 }

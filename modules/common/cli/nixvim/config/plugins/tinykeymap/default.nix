@@ -50,5 +50,5 @@
       'GitGutterPrevHunk | GitGutterPreviewHunk',
       { desc = 'Go to previous hunk' }
     );
-    '';
+  '';
 }

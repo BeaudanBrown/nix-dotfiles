@@ -2,12 +2,10 @@
 {
   enable = true;
 
-  imports =
-    [
-      ./opts.nix
-      ./keybinds.nix
-    ]
-    ++ lib.custom.importRecursive ./plugins;
+  imports = [
+    ./opts.nix
+    ./keybinds.nix
+  ] ++ lib.custom.importRecursive ./plugins;
 
   # Use tabs for go files
   files = {
@@ -135,7 +133,7 @@
 
     command! CloseBuffer call s:CloseBuffer(1)
     nnoremap <silent> <Plug>CloseBuffer :<C-u>CloseBuffer<CR>
-    '';
+  '';
 
   extraConfigLua = ''
     local find_root = function()
@@ -155,5 +153,5 @@
     end
     local root = find_root()
     vim.api.nvim_create_user_command('ProjectFiles', function() vim.cmd('FzfLua files ' .. root) end, {})
-    '';
+  '';
 }

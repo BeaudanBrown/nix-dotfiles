@@ -64,7 +64,7 @@
     mode = "0400";
     owner = config.hostSpec.username;
     group = "users";
-    restartUnits = ["syncthing.service"];
+    restartUnits = [ "syncthing.service" ];
   };
 
   sops.secrets."syncthing/${config.networking.hostName}/key" = {
@@ -72,6 +72,6 @@
     mode = "0400";
     owner = config.hostSpec.username;
     group = "users";
-    restartUnits = ["syncthing.service"];
+    restartUnits = [ "syncthing.service" ];
   };
 }
