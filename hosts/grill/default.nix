@@ -44,7 +44,6 @@ in
 
   boot = {
     supportedFilesystems = [ "ntfs" ];
-    kernelPackages = pkgs.linuxPackages_latest;
     loader = {
       timeout = 1;
       efi.canTouchEfiVariables = true;
