@@ -12,9 +12,9 @@
 
   outputs =
     {
-    self,
-    nixpkgs,
-    ...
+      self,
+      nixpkgs,
+      ...
     }@inputs:
     let
       inherit (self) outputs;
@@ -38,10 +38,11 @@
               sshPort = 22;
             };
           in
-            lib.nixosSystem {
-              system = "x86_64-linux";
-              specialArgs = minimalSpecialArgs;
-              modules = [
+          lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = minimalSpecialArgs;
+            modules =
+              [
                 inputs.disko.nixosModules.disko
                 inputs.home-manager.nixosModules.home-manager
                 (lib.custom.relativeToRoot "modules/common/system/disko/${host}.nix")
@@ -65,14 +66,15 @@
                     };
                   };
                 }
-              ] ++ (lib.custom.importAll {
-                  inherit host spec;
-                  roots = [ "minimal" ];
-                });
-            }
+              ]
+              ++ (lib.custom.importAll {
+                inherit host spec;
+                roots = [ "minimal" ];
+              });
+          }
         );
     in
-      {
+    {
       nixosConfigurations = {
         # host = newConfig "hostname" username"
         grill = newConfig "grill" "beau";

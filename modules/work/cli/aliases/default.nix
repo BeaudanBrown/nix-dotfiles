@@ -1,7 +1,7 @@
 {
-pkgs,
-config,
-...
+  pkgs,
+  config,
+  ...
 }:
 {
   environment.shellAliases = {
