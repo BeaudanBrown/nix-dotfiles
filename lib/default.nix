@@ -61,6 +61,9 @@ rec {
         ++ [
           {
             home-manager.users.${spec.username}.imports = importHome path;
+            home-manager.extraSpecialArgs = {
+              hostSpec = spec;
+            };
           }
         ];
     in

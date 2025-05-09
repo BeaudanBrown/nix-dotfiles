@@ -13,11 +13,6 @@
     dotDir = ".config/zsh";
     plugins = [
       {
-        name = "vi-mode";
-        src = pkgs.zsh-vi-mode;
-        file = "share/zsh-vi-mode/zsh-vi-mode.plugin.zsh";
-      }
-      {
         name = "fzf-git-sh";
         src = pkgs.fzf-git-sh;
         file = "share/fzf-git-sh/fzf-git.zsh";
@@ -35,7 +30,7 @@
       '';
     };
 
-    initContent = lib.mkOrder 550 ''
+    initContent = lib.mkOrder 550 /* bash */ ''
       zmodload zsh/complist
       zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
       zstyle ':completion:*' menu select
