@@ -7,6 +7,7 @@
 
     targets = {
       grub.useImage = true;
+      grub.useWallpaper = true;
       nixvim.enable = false;
       gnome.enable = false;
     };

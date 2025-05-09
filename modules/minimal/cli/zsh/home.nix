@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -34,7 +35,7 @@
       '';
     };
 
-    initExtraBeforeCompInit = ''
+    initContent = lib.mkOrder 550 ''
       zmodload zsh/complist
       zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
       zstyle ':completion:*' menu select
@@ -42,9 +43,7 @@
       bindkey -M menuselect 'k' vi-up-line-or-history
       bindkey -M menuselect 'l' vi-forward-char
       bindkey -M menuselect 'j' vi-down-line-or-history
-    '';
 
-    initExtra = ''
       if [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]]; then
         tmux new -A -s default &> /dev/null
       fi

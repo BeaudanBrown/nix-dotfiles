@@ -1,5 +1,6 @@
 [chat-options]
 model=gemini-2.5-flash
+request_timeout=120
 
 >>> user
 
