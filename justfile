@@ -21,3 +21,6 @@ iso-install DRIVE: iso
 # Copy all the config files to the remote host
 sync USER HOST PATH:
 	rsync -av --filter=':- .gitignore' -e "ssh -l {{USER}} -oport=22" . {{USER}}@{{HOST}}:{{PATH}}/nix-config
+
+update-sops:
+  sops updatekeys secrets.yaml

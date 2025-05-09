@@ -29,9 +29,10 @@
       default = false;
       description = "Used to indicate if a host has wifi";
     };
-    domain = lib.mkOption {
+    dotfiles = lib.mkOption {
       type = lib.types.str;
-      description = "The domain of the host";
+      description = "The location of the host dotfiles";
+      default = "${config.hostSpec.home}/documents/nix-dotfiles";
     };
     userFullName = lib.mkOption {
       type = lib.types.str;
