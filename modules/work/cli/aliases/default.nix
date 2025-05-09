@@ -1,0 +1,18 @@
+{
+pkgs,
+config,
+...
+}:
+{
+  environment.shellAliases = {
+    sudo = "sudo ";
+    nc = "vim ~/documents/nix-dotfiles";
+    nr = ''sudo ${pkgs.nh}/bin/nh os switch "$(readlink -f ${config.hostSpec.dotfiles})"'';
+    ls = "${pkgs.eza}/bin/eza -lh --group-directories-first";
+    cat = "${pkgs.bat}/bin/bat";
+    shutup = "sudo shutdown now";
+    nixos-rebuild = "nixos-rebuild --flake ${config.hostSpec.home}/documents/nix-dotfiles";
+    df = "${pkgs.dysk}/bin/dysk";
+    du = "du -h -d 1";
+  };
+}

@@ -11,5 +11,4 @@
     gnumake
     nh
   ];
-  environment.shellAliases = import ./aliases.nix { inherit pkgs; };
 }
