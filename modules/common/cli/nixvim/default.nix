@@ -1,5 +1,14 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  config,
+  inputs,
+  ...
+}@specialArgs:
 let
+  pkgsStable = import inputs.nixpkgsStable {
+    inherit (pkgs) system;
+  };
+
   nvimcom = pkgs.rPackages.buildRPackage {
     name = "nvimcom";
     src =
@@ -30,5 +39,7 @@ in
     ];
   };
 
-  programs.nixvim = (import ./config/nixvim.nix);
+  programs.nixvim = {
+    plugins.obsidian.package = pkgsStable.vimPlugins.obsidian-nvim;
+  } // (import ./config/nixvim.nix specialArgs);
 }

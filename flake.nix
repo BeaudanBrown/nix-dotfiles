@@ -3,6 +3,7 @@
     {
       self,
       nixpkgs,
+      nixpkgsStable,
       flake-utils,
       ...
     }@inputs:
@@ -36,6 +37,7 @@
             specialArgs = {
               inherit
                 inputs
+                nixpkgsStable
                 outputs
                 lib
                 host
@@ -58,6 +60,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgsStable.url = "github:NixOS/nixpkgs/nixos-24.11";
 
     home-manager = {
       url = "github:nix-community/home-manager";
