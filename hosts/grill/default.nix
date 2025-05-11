@@ -43,19 +43,7 @@ in
 
   boot = {
     supportedFilesystems = [ "ntfs" ];
-    loader = {
-      timeout = 1;
-      efi.canTouchEfiVariables = true;
-      systemd-boot.enable = false;
-      grub = {
-        enable = true;
-        useOSProber = true;
-        efiSupport = true;
-        device = "nodev";
-        configurationLimit = 10;
-      };
-    };
   };
 
-  system.stateVersion = "24.11";
+  system.stateVersion = "25.05";
 }
