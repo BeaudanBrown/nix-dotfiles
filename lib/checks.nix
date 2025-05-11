@@ -54,7 +54,10 @@
 
       # ========== shellscripts ==========
       shfmt.enable = true;
-      shellcheck.enable = true;
+      shellcheck = {
+        enable = true;
+        files = ".*\.sh$";
+      };
 
       end-of-file-fixer.enable = true;
     };

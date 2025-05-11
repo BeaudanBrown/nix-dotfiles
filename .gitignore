@@ -1,3 +1,5 @@
+.direnv
 result
 result/
 latest.iso
+.pre-commit-config.yaml

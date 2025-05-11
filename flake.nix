@@ -1,15 +1,32 @@
 {
   outputs =
-    { self, nixpkgs, ... }@inputs:
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }@inputs:
     let
       inherit (self) outputs;
       # ========== Extend lib with lib.custom ==========
       # NOTE: This approach allows lib.custom to propagate into hm
       # see: https://github.com/nix-community/home-manager/pull/3454
       lib = nixpkgs.lib.extend (self: super: { custom = import ./lib { inherit (nixpkgs) lib; }; });
-      forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
     in
-    {
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
+        checks = import ./lib/checks.nix { inherit inputs system pkgs; };
+        devShells.default = pkgs.mkShell {
+          inherit (self.checks.${system}.pre-commit-check) shellHook;
+        };
+      }
+    )
+    // {
       nixosConfigurations =
         builtins.readDir ./hosts
         |> builtins.attrNames
@@ -28,14 +45,6 @@
           };
         })
         |> builtins.listToAttrs;
-      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
-      checks = forAllSystems (
-        system:
-        let
-          pkgs = nixpkgs.legacyPackages.${system};
-        in
-        import ./lib/checks.nix { inherit inputs system pkgs; }
-      );
     };
 
   nixConfig = {
@@ -72,6 +81,18 @@
     pre-commit-hooks = {
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    systems.url = "github:nix-systems/default";
+
+    flake-utils = {
+      url = "github:numtide/flake-utils";
+      inputs.systems.follows = "systems";
     };
   };
 }
