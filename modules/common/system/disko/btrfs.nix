@@ -42,9 +42,7 @@
                 };
                 "/swap" = {
                   mountpoint = "/.swapvol";
-                  swap = {
-                    swapfile.size = swapSize;
-                  };
+                  swap.swapfile.size = swapSize;
                 };
               };
             };

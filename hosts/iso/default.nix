@@ -38,13 +38,8 @@
 
   # root's ssh key are mainly used for remote deployment
   users.extraUsers.root = {
-    inherit (config.users.users.${config.hostSpec.username}) hashedPassword;
     openssh.authorizedKeys.keys =
       config.users.users.${config.hostSpec.username}.openssh.authorizedKeys.keys;
-  };
-
-  users.users.${config.hostSpec.username} = {
-    hashedPassword = "$y$j9T$rxvMdBfBYR6YMFmQOTEl90$qAOeCeZFDuv8v6eFiqtjZGsL6yuB2e5mhi5dZt3Ts37";
   };
 
   boot = {
