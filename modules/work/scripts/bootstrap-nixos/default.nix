@@ -7,7 +7,7 @@ let
       target_ip=""
       target_user=${config.hostSpec.username}
       ssh_port=22
-      ssh_key="/home/${config.hostSpec.username}/.ssh/id_ed25519"
+      ssh_key="${config.hostSpec.home}/.ssh/id_ed25519"
       persist_dir=""
       luks_passphrase="passphrase"
       luks_secondary_drive_labels=""
