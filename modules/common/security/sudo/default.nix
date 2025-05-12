@@ -21,7 +21,7 @@
           options = [ "NOPASSWD" ];
         }
         {
-          command = "/home/${config.hostSpec.username}/.nix-profile/bin/reboot";
+          command = "${config.hostSpec.home}/.nix-profile/bin/reboot";
           options = [ "NOPASSWD" ];
         }
         {
@@ -29,7 +29,7 @@
           options = [ "NOPASSWD" ];
         }
         {
-          command = "/home/${config.hostSpec.username}/.nix-profile/bin/shutdown";
+          command = "${config.hostSpec.home}/.nix-profile/bin/shutdown";
           options = [ "NOPASSWD" ];
         }
       ];

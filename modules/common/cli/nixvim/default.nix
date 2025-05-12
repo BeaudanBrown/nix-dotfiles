@@ -32,7 +32,8 @@ in
     shellAliases.vim = "nvim";
     variables = {
       EDITOR = "nvim";
-      R_LIBS_USER = "/home/${config.hostSpec.username}/.config/Rlib";
+      R_LIBS_USER = "${config.hostSpec.home}/.config/Rlib";
+      R_PROFILE = "${config.hostSpec.home}/.config/Rprofile";
     };
     systemPackages = [
       my-r

@@ -9,7 +9,7 @@
     enable = true;
     openDefaultPorts = true;
     user = config.hostSpec.username;
-    dataDir = "/home/${config.hostSpec.username}";
+    dataDir = "${config.hostSpec.home}";
     settings = {
       options = {
         urAccepted = -1;
@@ -60,7 +60,7 @@
     };
   };
   sops.secrets."syncthing/${config.networking.hostName}/cert" = {
-    path = "/home/${config.hostSpec.username}/.config/syncthing/cert.pem";
+    path = "${config.hostSpec.home}/.config/syncthing/cert.pem";
     mode = "0400";
     owner = config.hostSpec.username;
     group = "users";
@@ -68,7 +68,7 @@
   };
 
   sops.secrets."syncthing/${config.networking.hostName}/key" = {
-    path = "/home/${config.hostSpec.username}/.config/syncthing/key.pem";
+    path = "${config.hostSpec.home}/.config/syncthing/key.pem";
     mode = "0400";
     owner = config.hostSpec.username;
     group = "users";

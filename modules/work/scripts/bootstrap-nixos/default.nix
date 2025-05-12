@@ -144,7 +144,7 @@ let
         echo "  -d <target_ip>                 specify ip or domain to the target host."
         echo "  -k <ssh_key>                            specify the full path to the ssh_key you'll use for remote access to the"
         echo "                                          target during install process."
-        echo "                                          Example: -k /home/${config.hostSpec.username}/.ssh/my_ssh_key"
+        echo "                                          Example: -k ${config.hostSpec.home}/.ssh/my_ssh_key"
         echo
         echo "OPTIONS:"
         echo "  -u <target_user>                        specify target_user with sudo access. nix-dotfiles will be cloned to their home."
