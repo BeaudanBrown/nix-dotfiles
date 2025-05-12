@@ -3,6 +3,7 @@
     {
       self,
       nixpkgs,
+      nixpkgsUnstable,
       flake-utils,
       pre-commit-hooks,
       ...
@@ -11,6 +12,7 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        pkgsUnstable = nixpkgsUnstable.legacyPackages.${system};
       in
       {
         checks = {
@@ -37,8 +39,10 @@
             [
               R
               quarto
-              air-formatter
             ]
+            ++ (with pkgsUnstable; [
+              air-formatter
+            ])
             ++ (with rPackages; [
               languageserver
               dotenv
@@ -49,6 +53,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
     pre-commit-hooks.url = "github:cachix/git-hooks.nix";
     flake-utils = {
