@@ -5,18 +5,18 @@ with lib;
 rec {
   relativeToRoot = lib.path.append ../.;
 
-  importRecursiveCustom =
+  importRecursive =
     { leaf, path }:
     let
       _scanPathsRec =
         _path:
-        if (builtins.pathExists (_path + "/${leaf}")) then
-          [ (_path + "/${leaf}") ]
-        else
+        (if (builtins.pathExists (_path + "/${leaf}")) then [ (_path + "/${leaf}") ] else [ ])
+        ++ (
           builtins.readDir _path
           |> lib.attrsets.filterAttrs (_: type: type == "directory")
           |> lib.mapAttrsToList (name: _: _path + "/${name}")
-          |> builtins.concatMap _scanPathsRec;
+          |> builtins.concatMap _scanPathsRec
+        );
     in
     builtins.readDir path
     |> lib.attrsets.filterAttrs (_: type: type == "directory")
@@ -24,24 +24,17 @@ rec {
     |> builtins.concatMap _scanPathsRec;
 
   importHost =
-    { host, path, ... }:
-    importRecursiveCustom {
+    { host, path }:
+    importRecursive {
       inherit path;
       leaf = "${host}.nix";
     };
 
   importHome =
-    path:
-    importRecursiveCustom {
+    { path, category }:
+    importRecursive {
       inherit path;
-      leaf = "home.nix";
-    };
-
-  importRecursive =
-    path:
-    importRecursiveCustom {
-      inherit path;
-      leaf = "default.nix";
+      leaf = "hm_${category}.nix";
     };
 
   importAll =
@@ -51,31 +44,29 @@ rec {
       spec,
     }:
     let
-      importRoot =
-        { spec, path, ... }@args:
+      path = relativeToRoot "modules";
+    in
+    (importHost { inherit host path; })
+    ++ (
+      roots
+      |> builtins.concatMap (
+        category:
         # Normal modules
-        (importRecursive path)
+        (importRecursive {
+          inherit path;
+          leaf = "${category}.nix";
+        })
         # Host specific modules
-        ++ (importHost args)
         # Home manager modules
         ++ [
           {
             home-manager = {
-              users.${spec.username}.imports = importHome path;
+              users.${spec.username}.imports = importHome { inherit path category; };
               backupFileExtension = "backup";
             };
           }
-        ];
-    in
-    roots
-    |> builtins.concatMap (
-      module:
-      let
-        path = relativeToRoot "modules/${module}";
-      in
-      (importRoot {
-        inherit path host spec;
-      })
+        ]
+      )
     );
 
   scanPaths =
