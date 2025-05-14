@@ -2,7 +2,7 @@
 {
   home.file."codexConfig" = {
     source = (pkgs.formats.yaml { }).generate "config" {
-      model = "gpt-4.1";
+      model = "gemini-2.5-flash";
       provider = "litellm";
       providers = {
         litellm = {

@@ -4,9 +4,7 @@
   home.file.".Rprofile" =
     let
       profile = ''
-        function() {
-          options(browser = "brave")
-        }
+        options(browser = "brave")
       '';
     in
     {
