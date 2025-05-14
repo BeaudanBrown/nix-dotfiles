@@ -4,8 +4,8 @@ keys:
   - &laptop_host age1uh6p7659gdlnevxzryhe4mx39xkhr856q8v4ergzjcfl2atm2asq0ejrpx
   - &pi4_user age170a0x33mdeghu5mzse59yxdlk4tw3m829fptahxn0gau29kcgd6qr72dlv
   - &pi4_host age193l9m3xmzpn3zqe97fqjkv4dfxqth4d72rzf98ksuc5ctgeal3yst786rk
-  - &grill age1pc9fps5xj9mf37w0kk2u8gs00udcw3fmp3g335gw830rjmwl5p3su3ktry
-  - &beau_grill age128ewqczyw70rszzwjvvxh50k83et3j59hq283j3mu9nutf007f4sktychp
+  - &grill age1cewevv0993mut39zamyewud7my7nfgdza48cz4pvetxzlsc7ffhqga937v
+  - &beau_grill age17jqwxa9hjdke24rax8jhydkjl2kfeys5um2z8j66zua4re274sts6hmzdf
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:
