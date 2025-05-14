@@ -1,7 +1,8 @@
-{ pkgs, hostSpec, ... }:
+{ pkgs, osConfig, ... }:
 let
   plugins = pkgs.tmuxPlugins // pkgs.callPackage ./custom-plugins.nix { };
-  new_gpt_chat = import ./new_gpt_chat.nix { inherit pkgs; };
+  # new_gpt_chat = import ./new_gpt_chat.nix { inherit pkgs; };
+  tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
 in
 {
   programs.tmux = {
@@ -61,73 +62,28 @@ in
             detach-client
           }
 
-          bind-key -n M-Enter if-shell -F '#{==:#{session_name},scratch}' {
-            set -gF '@last_scratch_name' scratch
-            detach-client
-          } {
-            set -gF '@last_scratch_name' scratch
-            if-shell -F '#{!=:#{session_name},default}' {
-              detach-client
-            }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s scratch -c #{pane_current_path}"'
-          }
+          bind-key -n M-Enter run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup scratch"
 
-          bind-key -n M-b if-shell -F '#{==:#{session_name},build}' {
-            set -gF '@last_scratch_name' build
-            detach-client
-          } {
-            set -gF '@last_scratch_name' build
-            if-shell -F '#{!=:#{session_name},default}' {
-              detach-client
-            }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s build -c #{pane_current_path}"'
-          }
+          bind-key -n M-b run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w build"
+
+          bind-key -n M-r run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"; exec zsh \\\"\""
+
+          bind-key -n M-m run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w gpt codex"
+
+          bind-key -n M-o run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
 
           bind-key -n M-R if-shell -F '#{==:#{session_name},rebuild}' {
             set -gF '@last_scratch_name' rebuild
-            send-keys -t rebuild: 'nh os switch "$(readlink -f ${hostSpec.dotfiles})"' C-m
+            send-keys -t rebuild: 'nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"' C-m
           } {
             set -gF '@last_scratch_name' rebuild
             if-shell -F '#{!=:#{session_name},default}' {
               detach-client
             }
             if-shell 'tmux has-session -t rebuild' {
-              send-keys -t rebuild: 'nh os switch "$(readlink -f ${hostSpec.dotfiles})"' C-m
+              send-keys -t rebuild: 'nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"' C-m
             }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${hostSpec.dotfiles})"; exec zsh \\\"\""'
-          }
-
-          bind-key -n M-r if-shell -F '#{==:#{session_name},rebuild}' {
-            set -gF '@last_scratch_name' rebuild
-            detach-client
-          } {
-            set -gF '@last_scratch_name' rebuild
-            if-shell -F '#{!=:#{session_name},default}' {
-              detach-client
-            }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${hostSpec.dotfiles})"; exec zsh \\\"\""'
-          }
-
-          bind-key -n M-m if-shell -F '#{==:#{session_name},gpt}' {
-            set -gF '@last_scratch_name' gpt
-            detach-client
-          } {
-            set -gF '@last_scratch_name' gpt
-            if-shell -F '#{!=:#{session_name},default}' {
-              detach-client
-            }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s gpt \"${new_gpt_chat}/bin/new_gpt_chat\""'
-          }
-
-          bind-key -n M-o if-shell -F '#{==:#{session_name},obsidian}' {
-            set -gF '@last_scratch_name' obsidian
-            detach-client
-          } {
-            set -gF '@last_scratch_name' obsidian
-            if-shell -F '#{!=:#{session_name},default}' {
-              detach-client
-            }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s obsidian \"cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""'
+            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"; exec zsh \\\"\""'
           }
 
           bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {

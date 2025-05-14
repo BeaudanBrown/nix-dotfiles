@@ -60,9 +60,9 @@ rec {
         # Home manager modules
         ++ [
           {
-            home-manager.users.${spec.username}.imports = importHome path;
-            home-manager.extraSpecialArgs = {
-              hostSpec = spec;
+            home-manager = {
+              users.${spec.username}.imports = importHome path;
+              backupFileExtension = "backup";
             };
           }
         ];

@@ -1,7 +1,5 @@
 {
   config,
-  lib,
-  osConfig,
   ...
 }:
 {
@@ -19,7 +17,4 @@
       videos = null;
     };
   };
-
-  # TODO: Put this somewhere better
-  home.stateVersion = lib.mkDefault (osConfig.system.stateVersion or "23.05");
 }
