@@ -84,6 +84,8 @@ in
           format = "🔊 {icon} {volume:3}%";
           format-muted = "🔇";
           # on-click = "helvum";
+          on-scroll-up = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+";
+          on-scroll-down = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-";
           format-icons = progress-bar;
         };
         battery = {

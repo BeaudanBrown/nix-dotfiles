@@ -1,12 +1,8 @@
 {
-  pkgs,
   config,
   ...
 }:
 {
-  environment = {
-    systemPackages = [ pkgs.sops ];
-  };
   sops = {
     # Which secrets to use, get stored by default in /run/secrets/<name>
     secrets = {

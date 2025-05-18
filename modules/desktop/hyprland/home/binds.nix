@@ -6,8 +6,8 @@
   ];
 
   binde = [
-    "SUPER,equal, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"
-    "SUPER,minus, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-"
+    "SUPER,equal, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
+    "SUPER,minus, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
 
     "SUPER,b, exec, light -A 10"
     "SUPERSHIFT,b, exec, light -U 10"

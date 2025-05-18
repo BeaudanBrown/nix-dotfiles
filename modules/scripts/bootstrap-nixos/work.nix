@@ -11,8 +11,7 @@ let
       persist_dir=""
       luks_passphrase="passphrase"
       luks_secondary_drive_labels=""
-      # path relative to home directory where nix-config and nix-secrets are written in the users home
-      nix_src_path="${config.hostSpec.dotfiles}"
+      dotfiles_dir="${config.hostSpec.dotfiles}"
 
       ### UX helpers
 
@@ -90,6 +89,7 @@ let
             | .creation_rules[].key_groups[].age += [\"''${keyname}\"]
             | .creation_rules[].key_groups[].age[-1] alias |= ." "$sops_file"
         fi
+        repo_dirty=1
       }
 
       # Generate a user age key, update the .sops.yaml entries, and return the key in age_secret_key
@@ -111,8 +111,30 @@ let
         # sops encrypt $yaml_file > $yaml_file
 
         green "Generated age key for ''${key_name}"
-        sops_add_age_key "$key_name" "$public_key" "$nix_src_path/.sops.yaml"
+        sops_add_age_key "$key_name" "$public_key" "$dotfiles_dir/.sops.yaml"
         sync "$target_user" "$temp/user_age_key" "/home/$target_user/.config/sops/age/keys.txt"
+      }
+
+      function sops_generate_host_age_key() {
+        green "Generating an age key based on the new ssh_host_ed25519_key"
+
+        # Get the SSH key
+        target_key=$(ssh-keyscan -p "$ssh_port" -t ssh-ed25519 "$target_ip" 2>&1 | grep ssh-ed25519 | cut -f2- -d" ") || {
+          red "Failed to get ssh key. Host down or maybe SSH port now changed?"
+          exit 1
+        }
+
+        host_age_key=$(echo "$target_key" | ssh-to-age)
+
+        if grep -qv '^age1' <<<"$host_age_key"; then
+          red "The result from generated age key does not match the expected format."
+          yellow "Result: $host_age_key"
+          yellow "Expected format: age10000000000000000000000000000000000000000000000000000000000"
+          exit 1
+        fi
+
+        green "Updating secrets/.sops.yaml"
+        sops_add_age_key "$target_hostname" "$host_age_key" "$dotfiles_dir/.sops.yaml"
       }
 
       # Create a temp directory for generated host keys
@@ -128,7 +150,7 @@ let
       function sync() {
         local user="$1"
         local source="$2"
-        local destination="''${3:-$nix_src_path}"
+        local destination="''${3:-$dotfiles_dir}"
         rsync -av --mkpath --filter=':- .gitignore' -e "ssh -oControlMaster=no -l $user -oport=$ssh_port" "$source" "$user@$target_ip:$destination"
       }
 
@@ -224,7 +246,7 @@ let
       scp_cmd="scp -oControlPath=none -oport=$ssh_port -oStrictHostKeyChecking=no -i $ssh_key"
 
       # Setup minimal environment for nixos-anywhere and run it
-      generated_hardware_config=0
+      repo_dirty=0
       function nixos_anywhere() {
         # Clear the known keys, since they should be newly generated for the iso
         green "Wiping known_hosts of $target_ip"
@@ -271,9 +293,9 @@ let
         if no_or_yes "Generate a new hardware config for this host? Yes if your nix-dotfiles doesn't have an entry for this host."; then
           green "Generating hardware-configuration.nix on $target_hostname and adding it to the local nix-dotfiles."
           $ssh_root_cmd "nixos-generate-config --no-filesystems --root /mnt"
-          $scp_cmd root@"$target_ip":/mnt/etc/nixos/hardware-configuration.nix \
-            ''${nix_src_path}/hosts/"$target_hostname"/hardware.nix
-          generated_hardware_config=1
+          $scp_cmd "$target_user"@"$target_ip":/mnt/etc/nixos/hardware-configuration.nix \
+            ''${dotfiles_dir}/hosts/"$target_hostname"/hardware.nix
+          repo_dirty=1
         fi
 
         # --extra-files here picks up the ssh host key we generated earlier and puts it onto the target machine
@@ -296,28 +318,6 @@ let
           $ssh_root_cmd "cp -R /etc/ssh/ $persist_dir/etc/ssh/ || true"
         fi
         cd - >/dev/null
-      }
-
-      function sops_generate_host_age_key() {
-        green "Generating an age key based on the new ssh_host_ed25519_key"
-
-        # Get the SSH key
-        target_key=$(ssh-keyscan -p "$ssh_port" -t ssh-ed25519 "$target_ip" 2>&1 | grep ssh-ed25519 | cut -f2- -d" ") || {
-          red "Failed to get ssh key. Host down or maybe SSH port now changed?"
-          exit 1
-        }
-
-        host_age_key=$(echo "$target_key" | ssh-to-age)
-
-        if grep -qv '^age1' <<<"$host_age_key"; then
-          red "The result from generated age key does not match the expected format."
-          yellow "Result: $host_age_key"
-          yellow "Expected format: age10000000000000000000000000000000000000000000000000000000000"
-          exit 1
-        fi
-
-        green "Updating secrets/.sops.yaml"
-        sops_add_age_key "$target_hostname" "$host_age_key" "$nix_src_path/.sops.yaml"
       }
 
       function luks_setup_secondary_drive_decryption() {
@@ -357,8 +357,9 @@ let
       fi
 
       if [[ $updated_age_keys == 1 ]]; then
-        cd $nix_src_path
-        sops updatekeys $nix_src_path/secrets.yaml
+        cd $dotfiles_dir
+        sops updatekeys $dotfiles_dir/secrets.yaml
+        repo_dirty=1
         cd -
       fi
 
@@ -366,12 +367,12 @@ let
         green "Adding ssh host fingerprint at $target_ip to ~/.ssh/known_hosts"
         ssh-keyscan -p "$ssh_port" "$target_ip" 2>/dev/null | grep -v '^#' >>~/.ssh/known_hosts || true
         green "Copying full nix-dotfiles to $target_hostname"
-        sync "$target_user" "$nix_src_path/"
+        sync "$target_user" "$dotfiles_dir/"
 
         # FIXME(bootstrap): Add some sort of key access from the target to download the config (if it's a cloud system)
         if yes_or_no "Do you want to rebuild immediately?"; then
           green "Rebuilding nix-dotfiles on $target_hostname"
-          $ssh_cmd "cd $nix_src_path && sudo nixos-rebuild --impure --show-trace --flake .#$target_hostname switch"
+          $ssh_cmd "cd $dotfiles_dir && sudo nixos-rebuild --impure --show-trace --flake .#$target_hostname switch"
         fi
       else
         echo
@@ -385,11 +386,13 @@ let
         echo
       fi
 
-      if [[ $generated_hardware_config == 1 ]]; then
+      if [[ $repo_dirty == 1 ]]; then
         if yes_or_no "Do you want to commit and push the generated hardware.nix for $target_hostname to nix-dotfiles?"; then
           (pre-commit run --all-files 2>/dev/null || true) &&
-            git add "$nix_src_path/hosts/$target_hostname/hardware.nix" &&
-            (git commit -m "feat: hardware.nix for $target_hostname" || true) &&
+            git add "$dotfiles_dir/hosts/$target_hostname/hardware.nix" &&
+            git add "$dotfiles_dir/secrets.yaml" &&
+            git add "$dotfiles_dir/.sops.yaml" &&
+            (git commit -m "feat: init for $target_hostname" || true) &&
             git push
         fi
       fi
@@ -402,9 +405,6 @@ in
     (pkgs.writeShellApplication {
       name = "bootstrap_nixos";
       text = script;
-      extraShellCheckFlags = [
-        "-x"
-      ];
       runtimeInputs = with pkgs; [
         gawk
         rsync
