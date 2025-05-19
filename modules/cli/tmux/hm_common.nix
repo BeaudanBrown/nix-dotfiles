@@ -67,9 +67,9 @@ in
 
           bind-key -n M-r run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"; exec zsh \\\"\""
 
-
-          # bind-key -n M-m run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w gpt \"direnv allow .; eval $(direnv export bash); codex\""
           bind-key -n M-m run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w gpt ${new_gpt_chat}/bin/new_gpt_chat"
+
+          bind-key -n M-M run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w codex \"direnv allow .; eval $(direnv export bash); codex\""
 
           bind-key -n M-o run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
 

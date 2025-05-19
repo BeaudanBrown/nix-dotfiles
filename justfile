@@ -24,3 +24,9 @@ sync USER HOST PATH:
 
 update-sops:
   sops updatekeys -y secrets.yaml
+
+test-iso:
+  qemu-system-x86_64 \
+      -m 4096M \
+      --drive media=cdrom,file=latest.iso,format=raw,readonly=on \
+      --smp cores=4,sockets=1,threads=1 \

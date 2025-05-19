@@ -8,6 +8,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     disko.url = "github:nix-community/disko";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -45,15 +49,12 @@
               [
                 inputs.disko.nixosModules.disko
                 inputs.home-manager.nixosModules.home-manager
-                (lib.custom.relativeToRoot "modules/common/system/disko/${host}.nix")
+                inputs.sops-nix.nixosModules.sops
+                (lib.custom.relativeToRoot "modules/system/disko/${host}.nix")
                 (lib.custom.relativeToRoot "hosts/${host}/hardware.nix")
                 {
                   hostSpec = spec;
 
-                  # TODO: Figure out if password and boot loader can be moved somewhere
-                  users.users.${spec.username} = {
-                    hashedPassword = "$y$j9T$rxvMdBfBYR6YMFmQOTEl90$qAOeCeZFDuv8v6eFiqtjZGsL6yuB2e5mhi5dZt3Ts37";
-                  };
                   boot.loader = {
                     timeout = 1;
                     efi.canTouchEfiVariables = true;

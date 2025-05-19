@@ -10,6 +10,7 @@
     "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
     "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
     inputs.home-manager.nixosModules.home-manager
+    inputs.sops-nix.nixosModules.sops
     (lib.custom.importAll {
       host = "iso";
       roots = [ "minimal" ];
