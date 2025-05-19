@@ -30,6 +30,10 @@
           id = "B4SXNGB-I6QC6RM-GCPSPXR-JSCTBNJ-RTFDNVW-OPVO3TB-BQ7EDSO-ODJV4AC";
           autoAcceptFolder = true;
         };
+        "lachy-thinkpad" = {
+          id = "EJCNETP-BUV3ZI5-ADHABNE-OV3GPSW-LBTQ44J-73JW5G6-AUBM2CG-5E3YHA6";
+          autoAcceptFolder = true;
+        };
       };
       folders = {
         "documents" = {
@@ -57,6 +61,7 @@
             "server"
             "grill"
             "laptop"
+            "lachy-thinkpad"
           ];
         };
       };
