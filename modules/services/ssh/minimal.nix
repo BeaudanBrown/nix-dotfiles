@@ -16,4 +16,16 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDi27VjcR3I1rSTHfp3JvOZw1HQv1fCSTjIiob4cLa6q JuiceSSH" # galaxy s9
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILiMXGI4mXg1Aw/gvx9LH5wEYMJ0M0ZgVKtoUZioaWfH beau@nixos" # laptop
   ];
+
+  systemd.tmpfiles.rules = [
+    "d ${config.hostSpec.home}/.ssh 0700 ${config.hostSpec.username} users - -"
+  ];
+  sops.secrets = {
+    "ssh/${config.networking.hostName}/priv" = {
+      path = "${config.hostSpec.home}/.ssh/id_ed25519";
+      mode = "0600";
+      owner = config.hostSpec.username;
+      inherit (config.users.users.${config.hostSpec.username}) group;
+    };
+  };
 }
