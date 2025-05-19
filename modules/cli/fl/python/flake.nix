@@ -1,76 +1,72 @@
 {
   inputs = {
-    nixpkgs.url = "github:cachix/devenv-nixpkgs/rolling";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
-    devenv.url = "github:cachix/devenv";
-  };
-
-  nixConfig = {
-    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
-    extra-substituters = "https://devenv.cachix.org";
+    pre-commit-hooks.url = "github:cachix/git-hooks.nix";
+    flake-utils = {
+      url = "github:numtide/flake-utils";
+      inputs.systems.follows = "systems";
+    };
   };
 
   outputs =
     {
       self,
       nixpkgs,
-      devenv,
-      systems,
+      # nixpkgsUnstable,
+      flake-utils,
+      pre-commit-hooks,
       ...
-    }@inputs:
-    let
-      forEachSystem = nixpkgs.lib.genAttrs (import systems);
-    in
-    {
-      packages = forEachSystem (system: {
-        devenv-up = self.devShells.${system}.default.config.procfileScript;
-      });
-
-      devShells = forEachSystem (
-        system:
-        let
-          pkgs = nixpkgs.legacyPackages.${system};
-
-          # gitPkg = pkgs.python3Packages.buildPythonPackage {
-          #   pname = "";
-          #   version = "";
-          #   src = pkgs.fetchFromGitHub {
-          #     owner = "";
-          #     repo = "";
-          #     rev = "";
-          #     sha256 = "";
-          #   };
-          # };
-
-          # pyPiPkg = with pkgs.python3Packages; buildPythonPackage rec {
-          #   pname = "";
-          #   version = "";
-          #   src = fetchPypi {
-          #     inherit pname version;
-          #     sha256 = "";
-          #   };
-          #   doCheck = false;
-          #   checkInputs = [];
-          #   propagatedBuildInputs = [];
-          #   dependencies = [];
-          # };
-
-        in
-        {
-          default = devenv.lib.mkShell {
-            inherit inputs pkgs;
-            modules = [
-              {
-                packages = with pkgs; [
-                  (python3.withPackages (
-                    python-pkgs: with python-pkgs; [
-                    ]
-                  ))
-                ];
-              }
-            ];
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        # pkgsUnstable = nixpkgsUnstable.legacyPackages.${system};
+      in
+      {
+        checks = {
+          pre-commit-check = pre-commit-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              ruff-format.enable = true;
+            };
           };
-        }
-      );
-    };
+        };
+        devShells.default = pkgs.mkShell {
+          inherit (self.checks.${system}.pre-commit-check) shellHook;
+          buildInpus = [
+            pkgs.bashInteractive
+            self.checks.${system}.pre-commit-check.enabledPackages
+          ];
+
+          packages = with pkgs; [
+            (python3.withPackages (
+              python-pkgs: with python-pkgs; [
+                # pandas
+                # (buildPythonPackage {
+                #   pname = "";
+                #   version = "";
+                #   src = pkgs.fetchFromGitHub {
+                #     owner = "akshaynagpal";
+                #     repo = "w2n";
+                #     rev = "33aac8a1d71ef1dffd4435fe6e9f998154bcb051";
+                #     sha256 = "sha256-2hoiTBZdmUmORwVArzZiSWG04jpXcycFaAODtei9Tm4=";
+                #   };
+                #   src = fetchPypi {
+                #     inherit pname version;
+                #     sha256 = "";
+                #   };
+                #   doCheck = false;
+                #   checkInputs = [];
+                #   propagatedBuildInputs = [];
+                #   dependencies = [semantic-version];
+                # })
+              ]
+            ))
+          ];
+        };
+      }
+    );
 }
