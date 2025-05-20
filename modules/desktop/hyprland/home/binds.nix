@@ -105,7 +105,7 @@
         key = "m";
         app = "spotify";
         workspace = "Spotify";
-        title = "Spotify Premium";
+        class = "spotify";
       }
       {
         key = "n";

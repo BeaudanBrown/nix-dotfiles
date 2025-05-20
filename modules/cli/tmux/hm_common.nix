@@ -65,27 +65,18 @@ in
 
           bind-key -n M-b run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w build"
 
-          bind-key -n M-r run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"; exec zsh \\\"\""
+          rebuild_cmd="zsh -c \\\"nh os switch ${osConfig.hostSpec.dotfiles}\\\"; exec zsh"
+          bind-key -n M-r \
+                run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup rebuild \"$rebuild_cmd\""
+
+          bind-key -n M-R \
+                run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -f rebuild \"$rebuild_cmd\""
 
           bind-key -n M-m run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w gpt ${new_gpt_chat}/bin/new_gpt_chat"
 
           bind-key -n M-M run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w codex \"direnv allow .; eval $(direnv export bash); codex\""
 
           bind-key -n M-o run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
-
-          bind-key -n M-R if-shell -F '#{==:#{session_name},rebuild}' {
-            set -gF '@last_scratch_name' rebuild
-            send-keys -t rebuild: 'nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"' C-m
-          } {
-            set -gF '@last_scratch_name' rebuild
-            if-shell -F '#{!=:#{session_name},default}' {
-              detach-client
-            }
-            if-shell 'tmux has-session -t rebuild' {
-              send-keys -t rebuild: 'nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"' C-m
-            }
-            run-shell -t default: 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s rebuild \"zsh -c \\\"nh os switch "$(readlink -f ${osConfig.hostSpec.dotfiles})"; exec zsh \\\"\""'
-          }
 
           bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
             run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'

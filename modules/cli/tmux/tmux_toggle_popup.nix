@@ -13,12 +13,17 @@ let
       }
 
       PER_WINDOW_MODE=false
+      FORCE_INIT=false
 
       while [[ $# -gt 0 ]]; do
         case "$1" in
           -w|--per-window)
           PER_WINDOW_MODE=true
           shift # past argument
+          ;;
+          -f|--force-init)
+          FORCE_INIT=true
+          shift
           ;;
           --) # End of all options
           shift # past argument
@@ -85,6 +90,12 @@ let
         TMUX_COMMAND_FOR_POPUP="tmux new-session -A -s \"''${TARGET_SESSION_NAME}\" -c \"''${DEFAULT_SESSION_CWD}\""
       else
         TMUX_COMMAND_FOR_POPUP="tmux new-session -A -s \"''${TARGET_SESSION_NAME}\" -c \"''${DEFAULT_SESSION_CWD}\" \"''${INIT_COMMAND}\""
+      fi
+
+      if $FORCE_INIT && [[ -n "$INIT_COMMAND" ]]; then
+        tmux send-keys -t "$TARGET_SESSION_NAME" C-c
+        sleep 0.1
+        tmux send-keys -t "$TARGET_SESSION_NAME" "$INIT_COMMAND" Enter
       fi
 
       tmux display-popup -E -w 95% -h 95% "''${TMUX_COMMAND_FOR_POPUP}"
