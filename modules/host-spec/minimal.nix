@@ -49,10 +49,10 @@
     };
 
     # Configuration Settings
-    isServer = lib.mkOption {
+    isBootstrap = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Used to indicate a server host";
+      description = "Used to indicate a bootstop config";
     };
   };
 }

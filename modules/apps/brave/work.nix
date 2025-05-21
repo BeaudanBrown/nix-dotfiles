@@ -14,9 +14,10 @@
   programs.chromium.extraOpts = {
     "PasswordManagerEnabled" = false;
     "SpellcheckEnabled" = true;
-    "SpellcheckLanguage" = [
-      "en-AU"
-    ];
+    "SpellcheckLanguage" = [ "en-AU" ];
     "DefaultDownloadDirectory" = "${config.hostSpec.home}/downloads";
+    "DefaultNotificationsSetting" = 2;
+    "AutofillCreditCardEnabled" = false;
+    "AutofillAddressEnabled" = false;
   };
 }

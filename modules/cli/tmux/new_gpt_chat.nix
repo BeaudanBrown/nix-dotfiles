@@ -22,6 +22,7 @@ let
     nvim \
       -c "autocmd BufLeave <buffer> silent! write" \
       -c 'normal G' \
+      -c 'normal o' \
       -c 'startinsert!' -O default.aichat
   '';
 in

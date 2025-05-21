@@ -372,6 +372,8 @@ let
         # FIXME(bootstrap): Add some sort of key access from the target to download the config (if it's a cloud system)
         if yes_or_no "Do you want to rebuild immediately?"; then
           green "Rebuilding nix-dotfiles on $target_hostname"
+          # FIXME(bootstrap): This should probably only happen on devices that require it
+          $ssh_cmd "cd $dotfiles_dir && nix-prefetch-url --name displaylink-610.zip https://www.synaptics.com/sites/default/files/exe_files/2024-10/DisplayLink%20USB%20Graphics%20Software%20for%20Ubuntu6.1-EXE.zip"
           $ssh_cmd "cd $dotfiles_dir && sudo nixos-rebuild --impure --show-trace --flake .#$target_hostname switch"
         fi
       else

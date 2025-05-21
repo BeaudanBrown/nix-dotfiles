@@ -40,6 +40,7 @@
               wifi = true;
               userFullName = "Beaudan Brown";
               sshPort = 22;
+              isBootstrap = true;
             };
           in
           lib.nixosSystem {
@@ -79,6 +80,7 @@
       nixosConfigurations = {
         # host = newConfig "hostname" username"
         grill = newConfig "grill" "beau";
+        laptop = newConfig "laptop" "beau";
       };
     };
 }

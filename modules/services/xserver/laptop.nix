@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
-  services.xserver.videoDrivers = [ "displaylink" ];
+  services.xserver.videoDrivers = if config.hostSpec.isBootstrap then [ ] else [ "displaylink" ];
 }
