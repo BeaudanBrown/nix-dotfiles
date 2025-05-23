@@ -18,8 +18,11 @@
   keymaps = [
     {
       key = "<c-P>";
-      action = ''<cmd>ProjectFiles<cr>'';
-      mode = [ "n" ];
+      action = ''<Esc><cmd>ProjectFiles<cr>'';
+      mode = [
+        "n"
+        "i"
+      ];
       options = {
         noremap = true;
       };
