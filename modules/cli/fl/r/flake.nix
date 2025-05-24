@@ -41,7 +41,7 @@
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
           env.R_LIBS_USER = "./.Rlib";
-          buildInpus = [
+          buildInputs = [
             pkgs.bashInteractive
             self.checks.${system}.pre-commit-check.enabledPackages
           ];

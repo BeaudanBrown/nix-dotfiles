@@ -36,7 +36,7 @@
         };
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
-          buildInpus = [
+          buildInputs = [
             pkgs.bashInteractive
             self.checks.${system}.pre-commit-check.enabledPackages
           ];

@@ -71,7 +71,7 @@
     path = "${config.hostSpec.home}/.config/syncthing/cert.pem";
     mode = "0400";
     owner = config.hostSpec.username;
-    group = "users";
+    inherit (config.users.users.${config.hostSpec.username}) group;
     restartUnits = [ "syncthing.service" ];
   };
 
@@ -79,7 +79,7 @@
     path = "${config.hostSpec.home}/.config/syncthing/key.pem";
     mode = "0400";
     owner = config.hostSpec.username;
-    group = "users";
+    inherit (config.users.users.${config.hostSpec.username}) group;
     restartUnits = [ "syncthing.service" ];
   };
 }
