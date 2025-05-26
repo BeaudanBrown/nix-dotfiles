@@ -37,5 +37,5 @@ in
     sshPort = 8023;
   };
 
-  system.stateVersion = "23.05";
+  system.stateVersion = "25.05";
 }

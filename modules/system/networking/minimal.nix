@@ -42,22 +42,22 @@
               cookie-flags = "2";
               disable_udp = "no";
               enable_csd_trojan = "no";
-              gateway = "vpn.monash.edu";
+              gateway = "vpn.gp.monash.edu";
               gateway-flags = "2";
               gwcert-flags = "2";
               lasthost-flags = "0";
               pem_passphrase_fsid = "no";
               prevent_invalid_cert = "no";
-              protocol = "anyconnect";
+              protocol = "gp";
               resolve-flags = "2";
               service-type = "org.freedesktop.NetworkManager.openconnect";
               stoken_source = "totp";
-              useragent = "AnyConnect";
+              useragent = "PAN";
               xmlconfig-flags = "0";
             };
             vpn-secrets = {
               "form:main:group_list" = "1 - Staff/HDR/PhD";
-              lasthost = "vpn.monash.edu";
+              lasthost = "vpn.gp.monash.edu";
               save_passwords = "yes";
             };
           };
