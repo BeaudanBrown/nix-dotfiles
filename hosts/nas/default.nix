@@ -19,6 +19,7 @@ in
 
       inputs.sops-nix.nixosModules.sops
       inputs.nixvim.nixosModules.nixvim
+      inputs.stylix.nixosModules.stylix
       inputs.disko.nixosModules.disko
       inputs.home-manager.nixosModules.home-manager
     ]
