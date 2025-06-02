@@ -37,6 +37,7 @@
               username = user;
               hostName = host;
               email = "beaudan.brown@gmail.com";
+              # TODO: make this configurable?
               wifi = true;
               userFullName = "Beaudan Brown";
               sshPort = 22;
@@ -81,6 +82,7 @@
         # host = newConfig "hostname" username"
         grill = newConfig "grill" "beau";
         laptop = newConfig "laptop" "beau";
+        nas = newConfig "nas" "beau";
       };
     };
 }

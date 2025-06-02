@@ -295,6 +295,7 @@ let
           $ssh_root_cmd "nixos-generate-config --no-filesystems --root /mnt"
           $scp_cmd "$target_user"@"$target_ip":/mnt/etc/nixos/hardware-configuration.nix \
             ''${dotfiles_dir}/hosts/"$target_hostname"/hardware.nix
+          git add "$dotfiles_dir/hosts/$target_hostname/hardware.nix"
           repo_dirty=1
         fi
 
@@ -391,7 +392,6 @@ let
       if [[ $repo_dirty == 1 ]]; then
         if yes_or_no "Do you want to commit and push the generated hardware.nix for $target_hostname to nix-dotfiles?"; then
           (pre-commit run --all-files 2>/dev/null || true) &&
-            git add "$dotfiles_dir/hosts/$target_hostname/hardware.nix" &&
             git add "$dotfiles_dir/secrets.yaml" &&
             git add "$dotfiles_dir/.sops.yaml" &&
             (git commit -m "feat: init for $target_hostname" || true) &&
