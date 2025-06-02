@@ -56,18 +56,6 @@
                 (lib.custom.relativeToRoot "hosts/${host}/hardware.nix")
                 {
                   hostSpec = spec;
-
-                  boot.loader = {
-                    timeout = 1;
-                    efi.canTouchEfiVariables = true;
-                    systemd-boot.enable = false;
-                    grub = {
-                      enable = true;
-                      efiSupport = true;
-                      device = "nodev";
-                      configurationLimit = 10;
-                    };
-                  };
                 }
               ]
               ++ (lib.custom.importAll {
