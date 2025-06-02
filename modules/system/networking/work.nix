@@ -5,6 +5,9 @@
     networkmanagerapplet
     openconnect
   ];
+  environment.etc = {
+    "resolv.conf".text = "nameserver 1.1.1.1\n";
+  };
   networking = {
     networkmanager = {
       plugins = [
