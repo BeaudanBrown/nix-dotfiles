@@ -42,6 +42,7 @@ rec {
       roots,
       host,
       spec,
+      extraSpecialArgs ? { },
     }:
     let
       path = relativeToRoot "modules";
@@ -61,6 +62,7 @@ rec {
         ++ [
           {
             home-manager = {
+              inherit extraSpecialArgs;
               users.${spec.username}.imports = importHome { inherit path category; };
               backupFileExtension = "backup";
             };

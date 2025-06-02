@@ -7,8 +7,8 @@
         src = pkgs.fetchFromGitHub {
           owner = "R-nvim";
           repo = "r.nvim";
-          rev = "70a3f8dc1b7bd5713fea0f787a4cc322ff11ad0e";
-          hash = "sha256-07VXMPcVgRS/T+WwmQUu0GvM1ZVETtiGKmntge/cOpk=";
+          rev = "382858fcf23aabbf47ff06279baf69d52260b939";
+          hash = "sha256-j2rXXO7246Nh8U6XyX43nNTbrire9ta9Ono9Yr+Eh9M=";
         };
         nvimSkipModules = [
           "r.pdf.sumatra"

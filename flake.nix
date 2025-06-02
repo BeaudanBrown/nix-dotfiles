@@ -3,6 +3,7 @@
     {
       self,
       nixpkgs,
+      nixpkgsUnstable,
       flake-utils,
       ...
     }@inputs:
@@ -39,6 +40,7 @@
                 outputs
                 lib
                 host
+                nixpkgsUnstable
                 ;
             };
             modules = [ ./hosts/${host} ];

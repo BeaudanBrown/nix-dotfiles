@@ -2,6 +2,12 @@ let
   defaultRules = [
     "float, class:(.*)"
   ];
+  onCursorWindows = builtins.map (x: "move onscreen cursor, " + x) [
+    "class:(zoom), title:(menu window)"
+  ];
+  rightClickWindows = builtins.map (x: "size 5% 10%, " + x) [
+    "class:(zoom), title:(menu window)"
+  ];
   tilingWindows = builtins.map (x: "tile, " + x) [
     "class:(kitty)"
     "class:(signal)"
@@ -47,3 +53,5 @@ defaultRules
 ++ tallWindows
 ++ largeWindows
 ++ extraRules
+++ onCursorWindows
+++ rightClickWindows

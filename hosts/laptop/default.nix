@@ -3,6 +3,7 @@
   inputs,
   config,
   host,
+  nixpkgsUnstable,
   ...
 }:
 let
@@ -26,6 +27,7 @@ in
     ++ (lib.custom.importAll {
       inherit host roots;
       spec = config.hostSpec;
+      extraSpecialArgs = { inherit nixpkgsUnstable; };
     });
 
   hostSpec = {
