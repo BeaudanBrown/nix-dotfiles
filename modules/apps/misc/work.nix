@@ -9,7 +9,6 @@
     nautilus
     qbittorrent
     signal-desktop-bin
-    slack
     spotify
     sxiv
     tor-browser
