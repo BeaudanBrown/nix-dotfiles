@@ -97,5 +97,10 @@
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
+
+    arion = {
+      url = "github:hercules-ci/arion";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 }

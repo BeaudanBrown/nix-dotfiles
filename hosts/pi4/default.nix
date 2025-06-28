@@ -32,7 +32,7 @@ in
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";
-    sshPort = 8023;
+    sshPort = 22;
   };
 
   system.stateVersion = "25.05";

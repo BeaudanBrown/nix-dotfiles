@@ -11,15 +11,19 @@
       "kvm.enable_virt_at_load=0"
     ];
     loader = {
-      timeout = 1;
       efi.canTouchEfiVariables = true;
-      systemd-boot.enable = false;
-      grub = {
+      systemd-boot = {
         enable = true;
-        efiSupport = true;
-        device = "nodev";
         configurationLimit = 5;
       };
+      # timeout = 1;
+      # systemd-boot.enable = false;
+      # grub = {
+      #   enable = true;
+      #   efiSupport = true;
+      #   device = "nodev";
+      #   configurationLimit = 5;
+      # };
     };
   };
 }

@@ -38,7 +38,7 @@ in
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";
-    sshPort = 8022;
+    sshPort = 22;
   };
 
   boot = {

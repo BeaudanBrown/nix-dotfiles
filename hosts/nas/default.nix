@@ -21,6 +21,7 @@ in
       inputs.nixvim.nixosModules.nixvim
       inputs.stylix.nixosModules.stylix
       inputs.disko.nixosModules.disko
+      # inputs.arion.nixosModules.arion
       inputs.home-manager.nixosModules.home-manager
     ]
     ++ (lib.custom.importAll {
@@ -36,7 +37,7 @@ in
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";
-    sshPort = 8022;
+    sshPort = 22;
   };
 
   system.stateVersion = "25.05";
