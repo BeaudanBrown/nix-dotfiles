@@ -3,6 +3,11 @@
   programs.ssh = {
     enable = true;
     matchBlocks = {
+      grill = {
+        hostname = "ssh.bepis.lol";
+        port = 8022;
+        user = "beau";
+      };
       nas = {
         hostname = "192.168.1.103";
         user = "beau";

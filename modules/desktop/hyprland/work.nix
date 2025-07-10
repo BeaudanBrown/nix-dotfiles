@@ -12,20 +12,22 @@
   users.users.${config.hostSpec.username}.extraGroups = [ "video" ];
 
   programs.hyprland.enable = true;
-  services.xserver = {
-    enable = true;
-    autoRepeatDelay = 175;
-    autoRepeatInterval = 50;
+  services = {
     displayManager = {
       gdm = {
         enable = true;
         wayland = true;
       };
     };
-    xkb = {
-      layout = "au";
-      variant = "";
-      options = "caps:escape";
+    xserver = {
+      enable = true;
+      autoRepeatDelay = 175;
+      autoRepeatInterval = 50;
+      xkb = {
+        layout = "au";
+        variant = "";
+        options = "caps:escape";
+      };
     };
   };
 }

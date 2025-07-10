@@ -1,11 +1,7 @@
-{ pkgs, nixpkgsUnstable, ... }:
-let
-  pkgsUnstable = nixpkgsUnstable.legacyPackages.${pkgs.system};
-in
+{ pkgs, ... }:
 {
   programs.rbw = {
     enable = true;
-    package = pkgsUnstable.rbw;
     settings = {
       base_url = "https://pw.beaudan.me";
       email = "beaudan.brown@gmail.com";
