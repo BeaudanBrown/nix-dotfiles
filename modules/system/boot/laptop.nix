@@ -6,8 +6,6 @@
     "snd_soc_avs"
   ];
 
-  # For zfs
-  # nixpkgs.config.allowBroken = true;
   boot = {
     supportedFilesystems = [ "zfs" ];
   };
