@@ -2,7 +2,6 @@
 # and may be overwritten by future invocations.  Please make changes
 # to /etc/nixos/configuration.nix instead.
 {
-  config,
   lib,
   pkgs,
   modulesPath,
@@ -26,7 +25,8 @@
     extraModulePackages = [ ];
     loader = {
       # Use the extlinux boot loader. (NixOS wants to enable GRUB by default)
-      grub.enable = false;
+      grub.enable = lib.mkForce false;
+      systemd-boot.enable = lib.mkForce true;
       # Enables the generation of /boot/extlinux/extlinux.conf
       generic-extlinux-compatible.enable = true;
     };

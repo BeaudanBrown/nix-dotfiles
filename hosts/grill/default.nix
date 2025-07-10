@@ -41,9 +41,5 @@ in
     sshPort = 8022;
   };
 
-  boot = {
-    supportedFilesystems = [ "ntfs" ];
-  };
-
   system.stateVersion = "25.05";
 }
