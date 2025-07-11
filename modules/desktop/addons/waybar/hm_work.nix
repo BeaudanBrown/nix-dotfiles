@@ -56,6 +56,7 @@ in
         height = 30;
         modules-left = [
           "battery"
+          "idle_inhibitor"
           "backlight"
           "wireplumber"
         ];
@@ -65,6 +66,13 @@ in
           "memory"
           "clock"
         ];
+        idle_inhibitor = {
+          format = "{icon}";
+          format-icons = {
+            activated = "☕";
+            deactivated = "⌛";
+          };
+        };
         backlight = {
           device = "intel_backlight";
           format = "🔆 {icon} {percent:3}%";
