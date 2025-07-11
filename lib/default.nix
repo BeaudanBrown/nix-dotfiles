@@ -31,11 +31,19 @@ rec {
     };
 
   importHome =
-    { path, category }:
-    importRecursive {
+    {
+      path,
+      category,
+      host,
+    }:
+    (importRecursive {
       inherit path;
       leaf = "hm_${category}.nix";
-    };
+    })
+    ++ (importRecursive {
+      inherit path;
+      leaf = "hm_${host}.nix";
+    });
 
   importAll =
     {
@@ -63,7 +71,7 @@ rec {
           {
             home-manager = {
               inherit extraSpecialArgs;
-              users.${spec.username}.imports = importHome { inherit path category; };
+              users.${spec.username}.imports = importHome { inherit path category host; };
               backupFileExtension = "backup";
             };
           }
