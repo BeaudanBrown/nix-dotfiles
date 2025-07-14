@@ -55,8 +55,8 @@ in
         position = "bottom";
         height = 30;
         modules-left = [
-          "battery"
           "idle_inhibitor"
+          "battery"
           "backlight"
           "wireplumber"
         ];
