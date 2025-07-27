@@ -3,6 +3,7 @@
     {
       self,
       nixpkgs,
+      nixpkgsStable,
       flake-utils,
       ...
     }@inputs:
@@ -39,6 +40,7 @@
                 outputs
                 lib
                 host
+                nixpkgsStable
                 ;
             };
             modules = [ ./hosts/${host} ];
@@ -57,7 +59,7 @@
   };
 
   inputs = {
-    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgsStable.url = "github:NixOS/nixpkgs/nixos-25.05";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     home-manager = {

@@ -8,6 +8,7 @@ let
     "Brave"
     "Steam"
     "Signal"
+    "Caprine"
   ];
 in
 leftMonitorWorkspaces ++ rightMonitorWorkspaces
