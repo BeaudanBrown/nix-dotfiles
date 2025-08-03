@@ -6,8 +6,8 @@ keys:
   - &beau_grill age1k3fhza4mhr8a5dl3n508m88lcnyy4lnqrfwaz3svdzecq33hzqsq77p7dv
   - &laptop age1ta8989w025p3yzxdyan8827a0l05hagm6ac4g9dfnl6xwwmupacsxz3kd0
   - &beau_laptop age1rl4hv7d8j4wnpchqlswpvw9qtweq8ek2afcvaha6cyjr5fpv2f5s5wrk6s
-  - &nas age1275f9lc7c8hykxtvgl3ttdeycffxg73fthwk7n57v3t654ddl30s8zze5w
-  - &beau_nas age1cqnke5z3zcznun3g980llxvfde5zngkaqkhs4mky4wzwlvm6ng5ssnqnxw
+  - &nas age1ze8kg4whxvufmtv65u6s4rh65vpgmfhay5zt0s9ep2jrv5skfyrserd752
+  - &beau_nas age1c9988usnrxht58kdmp2jhsmgdsc76pl3gnhu5cvh7jcrmr8vn9gqhz22m0
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:

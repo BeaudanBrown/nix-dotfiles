@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   boot = {
     supportedFilesystems = [
@@ -15,7 +15,7 @@
         enable = true;
         configurationLimit = 5;
       };
-      timeout = 1;
+      timeout = lib.mkForce 1;
     };
   };
 }

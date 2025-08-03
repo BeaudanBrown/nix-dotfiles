@@ -18,4 +18,10 @@
       };
     }
   ];
+  extraConfigLua = ''
+    require("r").setup {
+      rconsole_width = 66,
+      rconsole_height = 0
+    }
+  '';
 }
