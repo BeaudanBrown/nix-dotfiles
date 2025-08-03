@@ -1,0 +1,4 @@
+{ ... }:
+{
+  programs.autojump.enable = true;
+}

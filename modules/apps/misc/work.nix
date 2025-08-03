@@ -15,6 +15,5 @@
     vlc
     zoom-us
   ];
-  programs.autojump.enable = true;
   programs.kdeconnect.enable = true;
 }
