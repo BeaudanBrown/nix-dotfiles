@@ -9,25 +9,25 @@ let
   roots = [
     "minimal"
     "common"
+    "network"
     "work"
     "gaming"
   ];
 in
 {
-  imports =
-    [
-      ./hardware.nix
+  imports = [
+    ./hardware.nix
 
-      inputs.sops-nix.nixosModules.sops
-      inputs.nixvim.nixosModules.nixvim
-      inputs.stylix.nixosModules.stylix
-      inputs.disko.nixosModules.disko
-      inputs.home-manager.nixosModules.home-manager
-    ]
-    ++ (lib.custom.importAll {
-      inherit host roots;
-      spec = config.hostSpec;
-    });
+    inputs.sops-nix.nixosModules.sops
+    inputs.nixvim.nixosModules.nixvim
+    inputs.stylix.nixosModules.stylix
+    inputs.disko.nixosModules.disko
+    inputs.home-manager.nixosModules.home-manager
+  ]
+  ++ (lib.custom.importAll {
+    inherit host roots;
+    spec = config.hostSpec;
+  });
 
   nix.settings.cores = 12;
   hardware.bluetooth.enable = true;

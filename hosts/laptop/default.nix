@@ -10,6 +10,7 @@ let
   roots = [
     "minimal"
     "common"
+    "network"
     "work"
   ];
 in

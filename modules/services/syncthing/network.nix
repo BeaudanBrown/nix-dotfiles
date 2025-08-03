@@ -38,7 +38,7 @@
       folders = {
         "documents" = {
           id = "txxit-w9cwz";
-          path = "~/documents";
+          path = "${config.hostSpec.home}/documents";
           devices = [
             "server"
             "grill"
@@ -47,7 +47,7 @@
         };
         "monash" = {
           id = "twjfr-ekoqc";
-          path = "~/monash";
+          path = "${config.hostSpec.home}/monash";
           devices = [
             "server"
             "grill"
@@ -56,7 +56,7 @@
         };
         "collab" = {
           id = "vccfp-s5yfe";
-          path = "~/collab";
+          path = "${config.hostSpec.home}/collab";
           devices = [
             "server"
             "grill"
@@ -66,6 +66,12 @@
         };
       };
     };
+  };
+
+  networking.firewall = {
+    allowedTCPPorts = [
+      8384
+    ];
   };
   sops.secrets."syncthing/${config.networking.hostName}/cert" = {
     path = "${config.hostSpec.home}/.config/syncthing/cert.pem";
