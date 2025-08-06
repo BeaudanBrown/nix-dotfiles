@@ -3,6 +3,7 @@
   inputs,
   config,
   host,
+  pkgs,
   ...
 }:
 let
@@ -31,6 +32,33 @@ in
 
   nix.settings.cores = 12;
   hardware.bluetooth.enable = true;
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
+  systemd.tmpfiles.rules =
+    let
+      rocmEnv = pkgs.symlinkJoin {
+        name = "rocm-combined";
+        paths = with pkgs.rocmPackages; [
+          rocblas
+          hipblas
+          clr
+        ];
+      };
+    in
+    [
+      "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
+    ];
+
+  users.users.${config.hostSpec.username}.extraGroups = [ "render" ];
+
+  hardware.graphics.extraPackages = with pkgs; [
+    rocmPackages.clr.icd
+  ];
+
+  nixpkgs.config.rocmSupport = true;
 
   hostSpec = {
     username = "beau";

@@ -97,5 +97,7 @@
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
+
+    authentik-nix.url = "github:nix-community/authentik-nix";
   };
 }

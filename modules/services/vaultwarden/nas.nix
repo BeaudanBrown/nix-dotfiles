@@ -1,18 +1,5 @@
 { config, ... }:
 {
-  # Required to allow systemd service to use custom data folder
-  fileSystems."/var/lib/vaultwarden" = {
-    device = "/pool1/appdata/vaultwarden";
-    options = [ "bind" ];
-  };
-  systemd.tmpfiles.rules = [
-    "d /pool1/appdata/vaultwarden/ 0700 vaultwarden vaultwarden - -"
-  ];
-  services.nginx.enable = true;
-  security.acme = {
-    acceptTerms = true;
-    defaults.email = "beaudan.brown@gmail.com";
-  };
   services.nginx.virtualHosts."pw.bepis.lol" = {
     enableACME = true;
     forceSSL = true;

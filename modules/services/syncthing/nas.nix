@@ -17,16 +17,4 @@ in
     "d /pool1/appdata/syncthing 0755 ${config.hostSpec.username} users - -"
   ]
   ++ generateTmpfilesRules syncthingFolders;
-
-  fileSystems = (
-    builtins.attrNames syncthingFolders
-    |> builtins.map (name: {
-      name = syncthingFolders.${name}.path;
-      value = {
-        device = "/pool1/appdata/syncthing/${name}";
-        options = [ "bind" ];
-      };
-    })
-    |> builtins.listToAttrs
-  );
 }

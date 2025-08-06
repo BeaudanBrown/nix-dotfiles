@@ -3,106 +3,122 @@
 let
   script = # bash
     ''
-      # Function to display usage
-      usage() {
-        echo "Usage: $(basename "$0") [-w|--per-window] <target_prefix> [init_command]"
-        echo "  <target_prefix>: Prefix for the session name (e.g., 'gpt', 'scratch')."
-        echo "  <init_command>: Command to run when a new session is created."
-        echo "  -w, --per-window: Enable one session per 'default' session window."
-        exit 1
-      }
+            #!/usr/bin/env bash
+            set -euo pipefail
 
-      PER_WINDOW_MODE=false
-      FORCE_INIT=false
+            die()  { echo "error: $*" >&2; exit 1; }
+            usage() {
+              cat <<EOF
+      $(basename "$0") [OPTIONS] <session> [command]
 
-      while [[ $# -gt 0 ]]; do
-        case "$1" in
-          -w|--per-window)
-          PER_WINDOW_MODE=true
-          shift # past argument
-          ;;
-          -f|--force-init)
-          FORCE_INIT=true
-          shift
-          ;;
-          --) # End of all options
-          shift # past argument
-          break
-          ;;
-          -*) # Unknown option
-          echo "Unknown option: $1"
-          usage
-          ;;
-          *)  # Not an option, so it's the start of positional arguments
-          break
-          ;;
-        esac
-      done
+      Options
+        -n, --new-window   Open a new tmux window inside <session> (no popup)
+        -f, --force        Always run <command>, never detach first
+        -k, --keep         Keep window/pane open after <command> exits
+      EOF
+              exit 1
+            }
 
-      if [[ $# -lt 1 ]]; then
-        echo "Error: Missing mandatory TARGET_SESSION argument."
-        usage
-      fi
+            # ------------------------------------------------------------
+            # Option parsing ------------------------------------------------
+            # ------------------------------------------------------------
+            opts=$(getopt -o nfk -l new-window,force,keep -- "$@") || usage
+            eval set -- "$opts"
 
-      TARGET_SESSION="$1"
-      shift
+            new_window=0 force=0 keep=0
+            while true; do
+              case $1 in
+                -n|--new-window) new_window=1 ;;
+                -f|--force)      force=1 ;;
+                -k|--keep)       keep=1 ;;
+                --) shift; break ;;
+              esac
+              shift
+            done
 
-      # INIT_COMMAND is optional; default to empty string if not provided.
-      if [[ $# -gt 0 ]]; then
-        INIT_COMMAND="$1"
-        shift
-      else
-        INIT_COMMAND=""
-      fi
+            [[ $# -ge 1 ]] || usage
+            target="$1"; shift
+            cmd=''${1-}          # empty means “no command”
 
-      CURRENT_SESSION_NAME=$(tmux display-message -p '#{session_name}')
-      DEFAULT_SESSION_CWD=$(tmux display-message -p -t default: '#{pane_current_path}')
+            # ------------------------------------------------------------
+            # Small helpers ------------------------------------------------
+            # ------------------------------------------------------------
+            curr_session=$(tmux display-message -p '#{session_name}')
+            cwd=$(tmux display-message -p -t default: '#{pane_current_path}') \
+              || die "Could not determine CWD from 'default' session"
 
-      if [ -z "$DEFAULT_SESSION_CWD" ]; then
-        tmux display-message "Error: Could not get CWD from 'default' session. Ensure 'default' session exists and has an active pane."
-        exit 1
-      fi
+            session_exists() { tmux has-session -t "$target" 2>/dev/null; }
 
-      TARGET_SESSION_NAME=""
-      if [ "$PER_WINDOW_MODE" = true ]; then
-        DEFAULT_SESSION_ACTIVE_WINDOW_INDEX=$(tmux display-message -p -t default: '#{window_index}')
-        if [ -z "$DEFAULT_SESSION_ACTIVE_WINDOW_INDEX" ]; then
-          tmux display-message "Error: Per-window mode enabled, but could not get active window index from 'default' session."
-          exit 1
-        fi
-        TARGET_SESSION_NAME="''${TARGET_SESSION}-''${DEFAULT_SESSION_ACTIVE_WINDOW_INDEX}"
-      else
-        TARGET_SESSION_NAME="''${TARGET_SESSION}"
-      fi
+            popup() {          # popup "<string that is evaluated by -E>"
+              tmux display-popup -E -w 95% -h 95% "$*"
+            }
 
-      tmux set -gF '@last_scratch_name' "$TARGET_SESSION_NAME"
+            new_session_cmd() {
+              local extra=''${1-}
+              printf 'tmux new-session -A -s "%s" -c "%s"%s' \
+                     "$target" "$cwd" "''${extra:+ \"$extra\"}"
+            }
 
-      if [ "$CURRENT_SESSION_NAME" = "$TARGET_SESSION_NAME" ]; then
-        tmux detach-client
-        exit 0
-      fi
+            run_in_session() {     # send $cmd to already-attached session
+              [[ -n $cmd ]] || return
+              tmux send-keys -t "$target" C-c
+              sleep 0.1
+              tmux send-keys -t "$target" "$cmd" Enter
+            }
 
-      if [ "$CURRENT_SESSION_NAME" != "default" ]; then
-        tmux detach-client
-      fi
+            # remember last scratch name (unchanged behaviour)
+            tmux set -gF '@last_scratch_name' "$target"
 
-      if [ -z "$INIT_COMMAND" ]; then
-        TMUX_COMMAND_FOR_POPUP="tmux new-session -A -s \"''${TARGET_SESSION_NAME}\" -c \"''${DEFAULT_SESSION_CWD}\""
-      else
-        TMUX_COMMAND_FOR_POPUP="tmux new-session -A -s \"''${TARGET_SESSION_NAME}\" -c \"''${DEFAULT_SESSION_CWD}\" \"''${INIT_COMMAND}\""
-      fi
+            # ------------------------------------------------------------
+            # MAIN LOGIC --------------------------------------------------
+            # ------------------------------------------------------------
 
-      if $FORCE_INIT && [[ -n "$INIT_COMMAND" ]]; then
-        tmux send-keys -t "$TARGET_SESSION_NAME" C-c
-        sleep 0.1
-        tmux send-keys -t "$TARGET_SESSION_NAME" "$INIT_COMMAND" Enter
-      fi
+            # 1) — “open a new window” mode --------------------------------
+            if (( new_window )); then
+              # ensure we are attached to the right session (via popup)
+              if [[ $curr_session != "$target" ]]; then
+                [[ $curr_session != "default" ]] && tmux detach-client
+                popup "$(new_session_cmd)"
+              fi
 
-      tmux display-popup -E -w 95% -h 95% "''${TMUX_COMMAND_FOR_POPUP}"
+              # create the new window
+              if [[ -z $cmd ]]; then
+                tmux new-window -c "$cwd"
+              else
+                tail=''${keep:+; exec $SHELL}
+                tmux new-window -c "$cwd" "$cmd$tail"
+              fi
+              exit                        # done
+            fi
+
+            # 2) — “toggle” (detach) behaviour -----------------------------
+            if ! (( force )); then
+              if [[ $curr_session == "$target" ]]; then
+                tmux detach-client; exit
+              fi
+              [[ $curr_session != "default" ]] && tmux detach-client
+            fi
+
+            # 3) — already inside session + --force => just run command ----
+            if (( force )) && session_exists && [[ $curr_session == "$target" ]]; then
+              run_in_session; exit
+            fi
+
+            # 4) — open / create popup -------------------------------------
+            extra=""
+            if [[ -n $cmd ]]; then
+              extra=$cmd
+              (( keep )) && extra="$extra; exec \$SHELL"
+            fi
+            popup "$(new_session_cmd "$extra")"
+
+            # 5) — after popup is open, maybe send command -----------------
+            if (( force )) && session_exists; then
+              run_in_session
+            fi
     '';
 
 in
-
 pkgs.writeShellApplication {
   name = "tmux_toggle_popup";
   runtimeInputs = [ pkgs.tmux ];

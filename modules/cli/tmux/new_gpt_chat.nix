@@ -27,6 +27,6 @@ let
   '';
 in
 pkgs.writeShellApplication {
-  name = "new_gpt_chat";
+  name = "LLM";
   text = script;
 }

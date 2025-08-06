@@ -14,8 +14,8 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "ofirgall";
       repo = "tmux-window-name";
-      rev = "dc97a79ac35a9db67af558bb66b3a7ad41c924e7";
-      sha256 = "sha256-o7ZzlXwzvbrZf/Uv0jHM+FiHjmBO0mI63pjeJwVJEhE=";
+      rev = "9a75967ced4f3925de0714e96395223aa7e2b4ad";
+      sha256 = "sha256-klS3MoGQnEiUa9RldKGn7D9yxw/9OXbfww43Wi1lV/w=";
     };
     nativeBuildInputs = [ pkgs.makeWrapper ];
     rtpFilePath = "tmux_window_name.tmux";
@@ -30,7 +30,7 @@ in
 {
   programs.tmux.extraConfig = # bash
     ''
-      set -g @tmux_window_dir_programs "['nvim', 'vim', 'vi', 'git']"
+      set -g @tmux_window_name_icon_style "'name_and_icon'"
     '';
 
   programs.zsh.initContent = ''

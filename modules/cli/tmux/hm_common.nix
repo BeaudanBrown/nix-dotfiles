@@ -1,8 +1,4 @@
-{ pkgs, osConfig, ... }:
-let
-  new_gpt_chat = import ./new_gpt_chat.nix { inherit pkgs; };
-  tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
-in
+{ pkgs, ... }:
 {
   programs.tmux = {
     enable = true;
@@ -61,22 +57,23 @@ in
             detach-client
           }
 
-          bind-key -n M-Enter run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup scratch"
+          bind-key -n M-Enter run-shell "tmux_toggle_popup scratch"
 
-          bind-key -n M-b run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w build"
+          bind-key -n M-b run-shell "tmux_toggle_popup build"
+          bind-key -n M-B run-shell "tmux_toggle_popup build -n"
 
-          rebuild_cmd="zsh -c \\\"nh os switch ${osConfig.hostSpec.dotfiles}\\\"; exec zsh"
           bind-key -n M-r \
-                run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup rebuild \"$rebuild_cmd\""
+                run-shell "tmux_toggle_popup -k rebuild ${rebuild_cmd}/bin/rebuild_cmd"
 
           bind-key -n M-R \
-                run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -f rebuild \"$rebuild_cmd\""
+                run-shell "tmux_toggle_popup -f rebuild ${rebuild_cmd}/bin/rebuild_cmd"
 
-          bind-key -n M-m run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w gpt ${new_gpt_chat}/bin/new_gpt_chat"
+          bind-key -n M-m run-shell "tmux_toggle_popup LLM LLM"
 
-          bind-key -n M-M run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup -w codex \"direnv allow .; eval $(direnv export bash); codex\""
+          # bind-key -n M-M run-shell "tmux_toggle_popup -w codex \"direnv allow .; eval $(direnv export bash); codex\""
+          bind-key -n M-M run-shell "tmux_toggle_popup -n LLM LLM"
 
-          bind-key -n M-o run-shell "${tmux_toggle_popup}/bin/tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
+          bind-key -n M-o run-shell "tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
 
           bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
             run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'

@@ -16,14 +16,6 @@
       nixd.enable = true;
       air = {
         enable = true;
-        onAttach.function = ''
-          vim.api.nvim_create_autocmd("BufWritePre", {
-              buffer = bufnr,
-              callback = function()
-                  vim.lsp.buf.format()
-              end,
-          })
-        '';
       };
       r_language_server = {
         enable = true;

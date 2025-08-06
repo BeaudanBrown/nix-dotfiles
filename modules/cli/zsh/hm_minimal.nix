@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   lib,
   pkgs,
   ...
@@ -10,7 +11,7 @@
     syntaxHighlighting.enable = true;
     history.size = 10000;
     defaultKeymap = "viins";
-    dotDir = ".config/zsh";
+    dotDir = "${osConfig.hostSpec.home}/.config/zsh";
     plugins = [
       {
         name = "fzf-git-sh";

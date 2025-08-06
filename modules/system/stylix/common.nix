@@ -6,7 +6,6 @@
     base16Scheme = "${pkgs.base16-schemes}/share/themes/kanagawa.yaml";
 
     targets = {
-      grub.useImage = true;
       grub.useWallpaper = true;
       nixvim.enable = false;
       gnome.enable = false;

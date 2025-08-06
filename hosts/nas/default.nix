@@ -3,6 +3,7 @@
   inputs,
   config,
   host,
+  nixpkgsStable,
   ...
 }:
 let
@@ -21,11 +22,13 @@ in
     inputs.nixvim.nixosModules.nixvim
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
+    inputs.authentik-nix.nixosModules.default
     inputs.home-manager.nixosModules.home-manager
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
     spec = config.hostSpec;
+    extraSpecialArgs = { inherit nixpkgsStable; };
   });
 
   nix.settings.cores = 8;
