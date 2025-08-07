@@ -22,7 +22,7 @@
           timing.__raw = "require('mini.animate').gen_timing.linear({ duration = 30, unit = 'total' })";
         };
         scroll = {
-          enable = true;
+          enable = false;
           timing.__raw = "require('mini.animate').gen_timing.linear({ duration = 30, unit = 'total' })";
         };
       };

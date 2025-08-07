@@ -1,8 +1,22 @@
 { ... }:
 {
   plugins.obsidian = {
-    enable = false;
+    enable = true;
+    # TODO: Make this work properly
+    # luaConfig.post = ''
+    #   require("obsidian").setup {
+    #     callbacks = {
+    #       enter_note = function(_, note)
+    #         vim.keymap.set("n", "<localleader><localleader>", "<cmd>Obsidian toggle_checkbox<cr>", {
+    #           buffer = note.bufnr,
+    #           desc = "Toggle checkbox",
+    #         })
+    #       end,
+    #     },
+    #   }
+    # '';
     settings = {
+      legacy_commands = false;
       workspaces = [
         {
           name = "main";
@@ -24,20 +38,6 @@
           x = {
             char = "✔";
             hl_group = "ObsidianDone";
-          };
-        };
-      };
-      mappings = {
-        "<localleader><localleader>" = {
-          action = "require('obsidian').util.toggle_checkbox";
-          opts = {
-            buffer = true;
-          };
-        };
-        "<cr>" = {
-          action = "require('obsidian').util.smart_action()";
-          opts = {
-            buffer = true;
           };
         };
       };
