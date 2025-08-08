@@ -15,12 +15,18 @@
     '';
     settings = {
       provider = {
+        anthropic = {
+          options = {
+            apiKey = "{file:${config.sops.secrets.anthropic_api_key.path}}";
+          };
+          models = { };
+        };
         litellm = {
           npm = "@ai-sdk/openai-compatible";
           name = "LiteLLM";
           options = {
             baseURL = "https://litellm.bepis.lol";
-            apiKey = "{file:${config.sops.secrets.anthropic_api_key.path}}";
+            apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
           };
           models = {
             sonnet = {
