@@ -30,7 +30,7 @@
     };
   };
 
-  home-manager.users.${config.hostSpec.username}.programs.ssh = {
+  hm.programs.ssh = {
     enable = true;
     matchBlocks = {
       laptop = {

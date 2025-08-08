@@ -1,9 +1,6 @@
+{ ... }:
 {
-  config,
-  ...
-}:
-{
-  home-manager.users.${config.hostSpec.username}.services.dunst = {
+  hm.services.dunst = {
     enable = true;
   };
 }

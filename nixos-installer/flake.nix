@@ -47,21 +47,20 @@
           lib.nixosSystem {
             system = "x86_64-linux";
             specialArgs = minimalSpecialArgs;
-            modules =
-              [
-                inputs.disko.nixosModules.disko
-                inputs.home-manager.nixosModules.home-manager
-                inputs.sops-nix.nixosModules.sops
-                (lib.custom.relativeToRoot "modules/system/disko/${host}.nix")
-                (lib.custom.relativeToRoot "hosts/${host}/hardware.nix")
-                {
-                  hostSpec = spec;
-                }
-              ]
-              ++ (lib.custom.importAll {
-                inherit host spec;
-                roots = [ "minimal" ];
-              });
+            modules = [
+              inputs.disko.nixosModules.disko
+              inputs.home-manager.nixosModules.home-manager
+              inputs.sops-nix.nixosModules.sops
+              (lib.custom.relativeToRoot "modules/system/disko/${host}.nix")
+              (lib.custom.relativeToRoot "hosts/${host}/hardware.nix")
+              {
+                hostSpec = spec;
+              }
+            ]
+            ++ (lib.custom.importAll {
+              inherit host;
+              roots = [ "minimal" ];
+            });
           }
         );
     in

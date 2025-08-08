@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 {
   stylix = {
     enable = true;
@@ -31,5 +31,5 @@
     };
   };
 
-  home-manager.users.${config.hostSpec.username}.stylix.enable = true;
+  hm.stylix.enable = true;
 }

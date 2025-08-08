@@ -1,6 +1,5 @@
 {
   pkgs,
-  config,
   ...
 }:
 {
@@ -8,5 +7,5 @@
     htop = ''${pkgs.btop}/bin/btop'';
   };
 
-  home-manager.users.${config.hostSpec.username}.programs.btop.enable = true;
+  hm.programs.btop.enable = true;
 }

@@ -14,7 +14,6 @@
     (lib.custom.importAll {
       host = "iso";
       roots = [ "minimal" ];
-      spec = config.hostSpec;
     })
   ];
 

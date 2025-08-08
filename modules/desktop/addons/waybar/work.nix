@@ -1,7 +1,4 @@
-{
-  config,
-  ...
-}:
+{ ... }:
 let
   progress-bar = [
     "▏   "
@@ -39,7 +36,7 @@ let
   ];
 in
 {
-  home-manager.users.${config.hostSpec.username}.programs.waybar = {
+  hm.programs.waybar = {
     enable = true;
     style = ''
       .mainBar * {

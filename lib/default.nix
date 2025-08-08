@@ -34,7 +34,6 @@ rec {
     {
       roots,
       host,
-      spec,
       extraSpecialArgs ? { },
     }:
     let

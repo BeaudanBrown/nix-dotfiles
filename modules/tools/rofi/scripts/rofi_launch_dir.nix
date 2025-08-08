@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 let
   script = ''
 
@@ -17,7 +17,7 @@ let
   };
 in
 {
-  home-manager.users.${config.hostSpec.username}.home.packages = [
+  hm.home.packages = [
     rofi_launch_dir
   ];
 }

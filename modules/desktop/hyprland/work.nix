@@ -32,7 +32,7 @@
     };
   };
 
-  home-manager.users.${config.hostSpec.username} = {
+  hm = {
     xdg.portal = {
       enable = true;
       config = {

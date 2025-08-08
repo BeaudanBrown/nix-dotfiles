@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  home-manager.users.${config.hostSpec.username}.programs.direnv = {
+  hm.programs.direnv = {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;

@@ -46,7 +46,7 @@ in
     tmux_toggle_popup
   ];
 
-  home-manager.users.${config.hostSpec.username}.programs.tmux = {
+  hm.programs.tmux = {
     enable = true;
     escapeTime = 0;
     historyLimit = 50000;

@@ -1,9 +1,6 @@
+{ ... }:
 {
-  config,
-  ...
-}:
-{
-  home-manager.users.${config.hostSpec.username}.services.kdeconnect = {
+  hm.services.kdeconnect = {
     enable = true;
     indicator = true;
   };

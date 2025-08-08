@@ -1,13 +1,10 @@
-{
-  config,
-  ...
-}:
+{ ... }:
 {
   environment.sessionVariables = {
     TERMINAL = "kitty";
   };
 
-  home-manager.users.${config.hostSpec.username}.programs.kitty = {
+  hm.programs.kitty = {
     enable = true;
     settings = {
       confirm_os_window_close = 0;

@@ -7,7 +7,7 @@
   environment.shellAliases = {
     sudo = "sudo ";
     nc = "vim ~/documents/nix-dotfiles";
-    nr = ''${pkgs.nh}/bin/nh os switch "$(readlink -f ${config.hostSpec.dotfiles})"'';
+    nr = ''${pkgs.nh}/bin/nh os switch "${config.hostSpec.dotfiles}"'';
     ls = "${pkgs.eza}/bin/eza -lh --group-directories-first";
     cat = "${pkgs.bat}/bin/bat";
     shutup = "sudo shutdown now";

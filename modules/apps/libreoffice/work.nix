@@ -1,6 +1,5 @@
 {
   pkgs,
-  config,
   ...
 }:
 {
@@ -8,7 +7,7 @@
     libreoffice
   ];
 
-  home-manager.users.${config.hostSpec.username}.xdg = {
+  hm.xdg = {
     mimeApps = {
       enable = true;
       # to see available > ls /run/current-system/sw/share/applications/

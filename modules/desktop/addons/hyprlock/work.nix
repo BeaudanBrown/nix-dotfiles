@@ -1,9 +1,6 @@
+{ ... }:
 {
-  config,
-  ...
-}:
-{
-  home-manager.users.${config.hostSpec.username}.programs.hyprlock = {
+  hm.programs.hyprlock = {
     enable = true;
     settings = {
       general = {

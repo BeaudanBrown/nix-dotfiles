@@ -7,7 +7,7 @@
 {
   users.users.${config.hostSpec.username} = {
     isNormalUser = true;
-    home = "/home/${config.hostSpec.username}";
+    home = "${config.hostSpec.home}";
     extraGroups = [ "wheel" ];
     group = "users";
     shell = pkgs.zsh;
@@ -20,12 +20,12 @@
     initialHashedPassword = lib.mkForce null;
   };
 
-  home-manager.users.${config.hostSpec.username}.xdg = {
+  hm.xdg = {
     userDirs = {
       enable = true;
       createDirectories = true;
-      documents = "${config.home-manager.users.${config.hostSpec.username}.home.homeDirectory}/documents";
-      download = "${config.home-manager.users.${config.hostSpec.username}.home.homeDirectory}/downloads";
+      documents = "${config.hostSpec.home}/documents";
+      download = "${config.hostSpec.username}/downloads";
       desktop = null;
       pictures = null;
       music = null;

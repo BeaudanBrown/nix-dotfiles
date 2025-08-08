@@ -27,7 +27,6 @@ in
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
-    spec = config.hostSpec;
   });
 
   nix.settings.cores = 12;

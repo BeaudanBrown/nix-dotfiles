@@ -8,7 +8,7 @@
   programs.zsh.enable = true;
   environment.shells = [ pkgs.zsh ];
 
-  home-manager.users.${config.hostSpec.username}.programs.zsh = {
+  hm.programs.zsh = {
     enable = true;
     syntaxHighlighting.enable = true;
     history.size = 10000;

@@ -6,7 +6,7 @@
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
-  home-manager.users.${config.hostSpec.username}.programs.opencode = {
+  hm.programs.opencode = {
     enable = true;
     rules = ''
       You are a helpful AI assistant focused on development tasks.

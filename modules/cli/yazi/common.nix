@@ -1,6 +1,6 @@
-{ config, ... }:
+{ ... }:
 {
-  home-manager.users.${config.hostSpec.username}.programs.yazi = {
+  hm.programs.yazi = {
     enable = true;
     enableZshIntegration = true;
   };

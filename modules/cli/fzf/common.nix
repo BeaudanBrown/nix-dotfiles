@@ -1,6 +1,6 @@
-{ config, ... }:
+{ ... }:
 {
-  home-manager.users.${config.hostSpec.username}.programs.fzf = {
+  hm.programs.fzf = {
     enable = true;
   };
 }

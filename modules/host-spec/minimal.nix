@@ -55,4 +55,12 @@
       description = "Used to indicate a bootstop config";
     };
   };
+
+  options.hm = lib.mkOption {
+    type = lib.types.attrsOf lib.types.anything;
+    default = { };
+    description = "Shortcut to home-manager config";
+  };
+
+  config.home-manager.users.${config.hostSpec.username} = config.hm;
 }

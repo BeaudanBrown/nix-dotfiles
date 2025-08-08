@@ -1,9 +1,6 @@
+{ ... }:
 {
-  config,
-  ...
-}:
-{
-  home-manager.users.${config.hostSpec.username}.services.hypridle = {
+  hm.services.hypridle = {
     enable = true;
     settings = {
       general = {

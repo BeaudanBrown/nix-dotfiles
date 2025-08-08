@@ -8,7 +8,7 @@ in
 {
   imports = [ ./scripts/rofi_launch_dir.nix ];
 
-  home-manager.users.${config.hostSpec.username}.programs.rofi = {
+  hm.programs.rofi = {
     enable = true;
     extraConfig = {
       show-icons = true;
