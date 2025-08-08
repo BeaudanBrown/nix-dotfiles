@@ -1,6 +1,6 @@
-{ lib, ... }:
+{ lib, config, ... }:
 {
-  home.file =
+  home-manager.users.${config.hostSpec.username}.home.file =
     (
       builtins.readDir ./.
       |> lib.attrsets.filterAttrs (

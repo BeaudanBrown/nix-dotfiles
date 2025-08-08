@@ -19,4 +19,19 @@
     inherit (config.users.users.${config.hostSpec.username}) hashedPassword;
     initialHashedPassword = lib.mkForce null;
   };
+
+  home-manager.users.${config.hostSpec.username}.xdg = {
+    userDirs = {
+      enable = true;
+      createDirectories = true;
+      documents = "${config.home-manager.users.${config.hostSpec.username}.home.homeDirectory}/documents";
+      download = "${config.home-manager.users.${config.hostSpec.username}.home.homeDirectory}/downloads";
+      desktop = null;
+      pictures = null;
+      music = null;
+      publicShare = null;
+      templates = null;
+      videos = null;
+    };
+  };
 }

@@ -36,4 +36,17 @@ in
   };
 
   programs.nixvim = (import ./config/nixvim.nix specialArgs);
+
+  home-manager.users.${config.hostSpec.username} = {
+    home.file.".Rprofile" =
+      let
+        profile = ''
+          options(browser = "brave")
+        '';
+      in
+      {
+        text = profile;
+        target = "${config.hostSpec.home}/.config/Rprofile";
+      };
+  };
 }

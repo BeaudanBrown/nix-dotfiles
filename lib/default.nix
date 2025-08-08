@@ -30,21 +30,6 @@ rec {
       leaf = "${host}.nix";
     };
 
-  importHome =
-    {
-      path,
-      category,
-      host,
-    }:
-    (importRecursive {
-      inherit path;
-      leaf = "hm_${category}.nix";
-    })
-    ++ (importRecursive {
-      inherit path;
-      leaf = "hm_${host}.nix";
-    });
-
   importAll =
     {
       roots,
@@ -65,13 +50,11 @@ rec {
           inherit path;
           leaf = "${category}.nix";
         })
-        # Host specific modules
-        # Home manager modules
+        # Home manager configuration
         ++ [
           {
             home-manager = {
               inherit extraSpecialArgs;
-              users.${spec.username}.imports = importHome { inherit path category host; };
               backupFileExtension = "backup";
             };
           }

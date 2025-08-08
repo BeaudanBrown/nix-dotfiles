@@ -1,6 +1,9 @@
-{ ... }:
 {
-  programs.feh = {
+  config,
+  ...
+}:
+{
+  home-manager.users.${config.hostSpec.username}.programs.feh = {
     enable = true;
     keybindings = {
       prev_img = [

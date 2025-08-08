@@ -1,10 +1,14 @@
-{ config, ... }:
+{
+  config,
+  ...
+}:
 let
-  inherit (config.lib.formats.rasi) mkLiteral;
+  inherit (config.home-manager.users.${config.hostSpec.username}.lib.formats.rasi) mkLiteral;
 in
 {
   imports = [ ./scripts/rofi_launch_dir.nix ];
-  programs.rofi = {
+
+  home-manager.users.${config.hostSpec.username}.programs.rofi = {
     enable = true;
     extraConfig = {
       show-icons = true;

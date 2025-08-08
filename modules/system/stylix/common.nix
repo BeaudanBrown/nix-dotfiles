@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
   stylix = {
     enable = true;
@@ -30,4 +30,6 @@
       size = 24;
     };
   };
+
+  home-manager.users.${config.hostSpec.username}.stylix.enable = true;
 }
