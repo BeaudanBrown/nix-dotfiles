@@ -131,6 +131,18 @@
         workspace = "Discord";
         class = "discord";
       }
+      {
+        key = "o";
+        app = "kitty --class=Grill ssh grill";
+        workspace = "Grill";
+        class = "Grill";
+      }
+      {
+        key = "y";
+        app = "kitty --class=Nas ssh nas";
+        workspace = "Nas";
+        class = "Nas";
+      }
     ]
     ++ [
       #################### Program Launch ####################

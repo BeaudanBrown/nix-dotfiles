@@ -3,7 +3,8 @@
   plugins.treesitter = {
     enable = true;
     settings = {
-      highlight.enable = true;
+      # TODO: this seems broken
+      # highlight.enable = true;
       indent.enable = true;
     };
   };

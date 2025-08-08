@@ -1,4 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, osConfig, ... }:
+let
+  rebuild_cmd = pkgs.writeShellApplication {
+    name = "rebuild_cmd";
+    text = "nh os switch ${osConfig.hostSpec.dotfiles}";
+  };
+in
 {
   programs.tmux = {
     enable = true;
