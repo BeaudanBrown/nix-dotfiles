@@ -15,7 +15,7 @@
     )
     // {
       "default.aichat" = {
-        source = ./o4-mini.aichat;
+        source = ./gpt-5-mini.aichat;
         target = ".local/share/gpt/default.aichat";
       };
     };

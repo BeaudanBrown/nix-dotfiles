@@ -1,6 +1,7 @@
 { ... }:
 {
   services.zfs.autoScrub.enable = true;
+  services.zfs.autoSnapshot.enable = true;
   # sudo zfs get -r mountpoint
   disko.devices = import ./btrfs.nix {
     deviceName = "/dev/disk/by-id/wwn-0x5002538e90b1957f";
