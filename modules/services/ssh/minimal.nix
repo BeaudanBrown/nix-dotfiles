@@ -35,17 +35,17 @@
     enable = true;
     matchBlocks = {
       laptop = {
-        hostname = "ssh.bepis.lol";
+        hostname = "laptop.lan";
         port = 8023;
         user = "beau";
       };
       grill = {
-        hostname = "ssh.bepis.lol";
+        hostname = "grill.lan";
         port = 8022;
         user = "beau";
       };
       nas = {
-        hostname = "192.168.68.103";
+        hostname = "nas.lan";
         user = "beau";
         port = 8022;
       };
