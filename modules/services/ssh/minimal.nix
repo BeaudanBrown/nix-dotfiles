@@ -36,18 +36,15 @@
     matchBlocks = {
       laptop = {
         hostname = "laptop.lan";
-        port = 8023;
         user = "beau";
       };
       grill = {
         hostname = "grill.lan";
-        port = 8022;
         user = "beau";
       };
       nas = {
         hostname = "nas.lan";
         user = "beau";
-        port = 8022;
       };
       pizero = {
         hostname = "192.168.1.103";

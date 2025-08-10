@@ -16,9 +16,19 @@
       type = lib.types.str;
       description = "The hostname of the host";
     };
+    tailIP = lib.mkOption {
+      type = lib.types.str;
+      description = "Headscale ip address";
+    };
+    tailDomain = lib.mkOption {
+      type = lib.types.str;
+      description = "The tailscale server domain";
+      default = "nas.lan";
+    };
     sshPort = lib.mkOption {
       type = lib.types.int;
       description = "The port to run sshd service on";
+      default = 22;
     };
     email = lib.mkOption {
       type = lib.types.str;

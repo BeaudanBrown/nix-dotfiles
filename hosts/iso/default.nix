@@ -26,7 +26,6 @@
     username = "beau";
     email = "beaudan.brown@gmail.com";
     userFullName = "Beaudan Brown";
-    sshPort = 22;
   };
 
   # The default compression-level is (6) and takes too long on some machines (>30m). 3 takes <2m

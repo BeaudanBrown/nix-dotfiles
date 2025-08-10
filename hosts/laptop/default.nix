@@ -31,10 +31,10 @@ in
   hostSpec = {
     username = "beau";
     hostName = host;
+    tailIP = "100.64.0.2";
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";
-    sshPort = 8023;
   };
 
   system.stateVersion = "25.05";

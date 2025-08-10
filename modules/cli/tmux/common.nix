@@ -1,16 +1,11 @@
 {
   pkgs,
-  config,
   lib,
   ...
 }:
 let
   llm = import ./new_gpt_chat.nix { inherit pkgs; };
   tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
-  rebuild_cmd = pkgs.writeShellApplication {
-    name = "rebuild_cmd";
-    text = "nh os switch ${config.hostSpec.dotfiles}";
-  };
 
   tmux-window-name = pkgs.tmuxPlugins.mkTmuxPlugin {
     pluginName = "tmux-window-name";
@@ -112,10 +107,10 @@ in
           bind-key -n M-B run-shell "tmux_toggle_popup build -n"
 
           bind-key -n M-r \
-                run-shell "tmux_toggle_popup -k rebuild ${rebuild_cmd}/bin/rebuild_cmd"
+                run-shell "tmux_toggle_popup -k rebuild nr"
 
           bind-key -n M-R \
-                run-shell "tmux_toggle_popup -f rebuild ${rebuild_cmd}/bin/rebuild_cmd"
+                run-shell "tmux_toggle_popup -f rebuild nr"
 
           bind-key -n M-m run-shell "tmux_toggle_popup LLM LLM"
 

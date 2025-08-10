@@ -40,7 +40,6 @@
               # TODO: make this configurable?
               wifi = true;
               userFullName = "Beaudan Brown";
-              sshPort = 22;
               isBootstrap = true;
             };
           in

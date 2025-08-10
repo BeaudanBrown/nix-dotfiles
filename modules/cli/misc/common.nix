@@ -9,5 +9,6 @@
     unzip
     gnumake
     nh
+    ncdu
   ];
 }
