@@ -15,10 +15,9 @@
   };
   services.headscale = {
     enable = true;
-    address = "0.0.0.0";
     port = 10101;
     settings = {
-      server_url = "https://hs.bepis.lol:";
+      server_url = "https://hs.bepis.lol";
       dns = {
         override_local_dns = true;
         base_domain = "lan";
@@ -32,22 +31,25 @@
       };
       tls_cert_path = null;
       tls_key_path = null;
+      derp = {
+        enabled = true;
+      };
       oidc = {
         only_start_if_oidc_is_available = true;
         issuer = "https://auth.bepis.lol/application/o/headscale/";
-        client_id = "VcSR0T2XYO8pfq8Akhhij2CGqQxXlvsRr0KyHeq9";
-        client_secret_path = config.sops.secrets.headscale.path;
+        client_id = "FwfGvUzRKRPQWyFsV3PzKA0eh0T5qctUp8o0hpBL";
+        client_secret_path = config.sops.secrets.headscale_authentic_secret.path;
       };
     };
   };
   # Client secret key generated through authentik
-  sops.secrets.headscale = {
+  sops.secrets.headscale_authentic_secret = {
     mode = "0600";
     owner = "headscale";
     group = "headscale";
   };
   sops.secrets.headscale_noise = {
-    path = "/pool1/appdata/headscale/noise_private.key";
+    path = "/var/lib/headscale/noise_private.key";
     mode = "0600";
     owner = "headscale";
     group = "headscale";
