@@ -8,7 +8,7 @@
     };
   };
   services.immich = {
-    enable = true;
+    enable = false;
     settings = {
       server.externalDomain = "img.bepis.lol";
     };

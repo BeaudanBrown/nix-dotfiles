@@ -27,7 +27,6 @@
     "kvm-intel"
     "wl"
   ];
-  # Disabling wifi due to vulnerabilities
   # boot.extraModulePackages = [ config.boot.kernelPackages.broadcom_sta ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
