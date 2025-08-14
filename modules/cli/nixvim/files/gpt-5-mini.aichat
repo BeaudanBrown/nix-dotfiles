@@ -3,7 +3,7 @@ model=gpt-5-mini
 stream=0
 temperature=1
 max_completion_tokens=25000
-request_timeout=120
+request_timeout=240
 initial_prompt=
 
 >>> user

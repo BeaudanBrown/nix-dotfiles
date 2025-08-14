@@ -1,5 +1,14 @@
-{ ... }:
+{ config, ... }:
 {
+  services.nginx.tailscaleAuth.virtualHosts = [ "llm.grill.lan" ];
+  services.nginx.virtualHosts."llm.grill.lan" = {
+    forceSSL = true;
+    useACMEHost = "grill.lan";
+    locations."/" = {
+      proxyPass = "http://${config.services.nextjs-ollama-llm-ui.hostName}:${toString config.services.nextjs-ollama-llm-ui.port}";
+      proxyWebsockets = true;
+    };
+  };
   nixpkgs.overlays = [
     (final: prev: {
       ollama = prev.ollama.overrideAttrs (oldAttrs: rec {

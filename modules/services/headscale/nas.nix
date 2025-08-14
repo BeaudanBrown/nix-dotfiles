@@ -13,6 +13,9 @@
       # };
     };
   };
+  services.nginx.tailscaleAuth = {
+    enable = true;
+  };
   services.headscale = {
     enable = true;
     port = 10101;

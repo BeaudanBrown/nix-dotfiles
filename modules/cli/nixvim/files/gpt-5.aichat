@@ -1,4 +1,8 @@
 [chat-options]
 model=gpt-5
+temperature=1
+max_completion_tokens=25000
+request_timeout=240
+initial_prompt=
 
 >>> user
