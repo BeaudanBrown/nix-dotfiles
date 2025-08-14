@@ -4,7 +4,7 @@
   services.zfs.autoSnapshot.enable = true;
   # sudo zfs get -r mountpoint
   disko.devices = import ./btrfs.nix {
-    deviceName = "/dev/disk/by-id/wwn-0x5002538e90b1957f";
+    deviceName = "/dev/disk/by-id/nvme-eui.000000000000000100a075254e29ad87";
     swapSize = "16G";
   };
   boot.zfs.extraPools = [ "pool1" ];

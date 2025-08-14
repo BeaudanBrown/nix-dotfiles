@@ -17,6 +17,7 @@
     "xhci_pci"
     "ehci_pci"
     "ahci"
+    "nvme"
     "usbhid"
     "usb_storage"
     "uas"
