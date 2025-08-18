@@ -29,8 +29,8 @@
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
           };
           models = {
-            sonnet = {
-              name = "claude-sonnet-4";
+            claude-sonnet-4 = {
+              name = "sonnet-4";
             };
             gpt-5 = {
               name = "gpt-5";
