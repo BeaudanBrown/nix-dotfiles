@@ -1,17 +1,24 @@
 { config, ... }:
+let
+  domain = "img.bepis.lol";
+in
 {
-  services.nginx.virtualHosts."img.bepis.lol" = {
-    enableACME = true;
-    forceSSL = true;
-    locations."/" = {
-      proxyPass = "http://${config.services.immich.host}:${toString config.services.immich.port}";
-      proxyWebsockets = true;
-    };
-  };
+  hostedServices = [
+    {
+      inherit domain;
+      upstreamHost = config.services.immich.host;
+      upstreamPort = toString config.services.immich.port;
+      webSockets = true;
+    }
+  ];
+
   services.immich = {
     enable = true;
     settings = {
-      server.externalDomain = "https://img.bepis.lol";
+      server.externalDomain = "https://${domain}";
+      job = {
+        smartSearch.concurrency = 6;
+      };
       machineLearning = {
         enabled = true;
         urls = [

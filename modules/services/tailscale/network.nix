@@ -8,7 +8,10 @@
   services.tailscale = {
     enable = true;
     authKeyFile = config.sops.secrets."headscale/pre_auth".path;
-    extraUpFlags = [ "--login-server=https://hs.bepis.lol" ];
+    extraUpFlags = [
+      "--login-server=https://hs.bepis.lol"
+      "--accept-dns=true"
+    ];
   };
   sops.secrets."headscale/pre_auth" = { };
 }

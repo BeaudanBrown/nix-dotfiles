@@ -1,14 +1,12 @@
 { config, ... }:
 {
-  services.nginx.virtualHosts."auth.bepis.lol" = {
-    enableACME = true;
-    forceSSL = true;
-    locations."/" = {
-      # This port is currently hard coded in the module
-      proxyPass = "http://127.0.0.1:9000";
-      proxyWebsockets = true;
-    };
-  };
+  hostedServices = [
+    {
+      domain = "auth.bepis.lol";
+      upstreamPort = "9000";
+      webSockets = true;
+    }
+  ];
   services.authentik = {
     enable = true;
     environmentFile = config.sops.secrets.authentik_env.path;

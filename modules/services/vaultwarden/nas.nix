@@ -1,29 +1,25 @@
 { config, ... }:
+let
+  domain = "pw.bepis.lol";
+in
 {
-  services.nginx.virtualHosts."pw.bepis.lol" = {
-    enableACME = true;
-    forceSSL = true;
-    locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}";
-    };
-  };
+  hostedServices = [
+    {
+      inherit domain;
+      upstreamPort = toString config.services.vaultwarden.config.ROCKET_PORT;
+    }
+  ];
+
   services.vaultwarden = {
     enable = true;
     backupDir = null;
     config = {
-      DOMAIN = "https://pw.bepis.lol";
+      DOMAIN = "https://${domain}";
       SIGNUPS_ALLOWED = true;
       ROCKET_ADDRESS = "127.0.0.1";
       ROCKET_PORT = 8222;
       ROCKET_LOG = "critical";
     };
-  };
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [
-      80
-      443
-    ];
   };
   users.users.${config.hostSpec.username}.extraGroups = [ "vaultwarden" ];
 

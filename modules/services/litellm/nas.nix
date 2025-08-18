@@ -1,12 +1,17 @@
 { config, ... }:
+let
+  litellmDomain = "litellm.bepis.lol";
+in
 {
-  services.nginx.virtualHosts."litellm.bepis.lol" = {
-    enableACME = true;
-    forceSSL = true;
-    locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString config.services.litellm.port}";
-    };
-  };
+  hostedServices = [
+    {
+      domain = litellmDomain;
+      upstreamHost = config.services.litellm.host;
+      upstreamPort = toString config.services.litellm.port;
+      tailnet = true;
+    }
+  ];
+
   services.litellm = {
     enable = true;
     environmentFile = config.sops.secrets.litellm.path;

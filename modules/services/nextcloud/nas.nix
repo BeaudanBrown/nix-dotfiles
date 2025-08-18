@@ -1,5 +1,17 @@
 { config, ... }:
 {
+  # TODO: I think nextcloud is doing it itself
+  # hostedServices = [
+  #   {
+  #     domain = config.services.nextcloud.hostName;
+  #     upstreamPort = toString config.services.nextcloud.port;
+  #     webSockets = true;
+  #   }
+  # ];
+  services.cloudflare-dyndns.domains = [
+    config.services.nextcloud.hostName
+  ];
+
   services.nextcloud = {
     enable = true;
     hostName = "cloud.bepis.lol";

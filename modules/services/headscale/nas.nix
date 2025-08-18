@@ -1,18 +1,16 @@
 { config, ... }:
+let
+  domain = "hs.bepis.lol";
+in
 {
-  services.nginx.virtualHosts."hs.bepis.lol" = {
-    forceSSL = true;
-    enableACME = true;
-    locations = {
-      "/" = {
-        proxyPass = "http://localhost:${toString config.services.headscale.port}";
-        proxyWebsockets = true;
-      };
-      # "/metrics" = {
-      #   proxyPass = "http://${config.services.headscale.settings.metrics_listen_addr}/metrics";
-      # };
-    };
-  };
+  hostedServices = [
+    {
+      inherit domain;
+      upstreamPort = toString config.services.headscale.port;
+      webSockets = true;
+    }
+  ];
+
   services.nginx.tailscaleAuth = {
     enable = true;
   };
@@ -20,7 +18,7 @@
     enable = true;
     port = 10101;
     settings = {
-      server_url = "https://hs.bepis.lol";
+      server_url = "https://${domain}";
       dns = {
         override_local_dns = true;
         base_domain = "lan";

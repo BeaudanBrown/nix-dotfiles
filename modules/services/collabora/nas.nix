@@ -1,13 +1,13 @@
 { config, lib, ... }:
 {
-  services.nginx.virtualHosts."docs.bepis.lol" = {
-    enableACME = true;
-    forceSSL = true;
-    locations."/" = {
-      proxyPass = "http://127.0.0.1:${toString config.services.collabora-online.port}";
-      proxyWebsockets = true;
-    };
-  };
+  hostedServices = [
+    {
+      domain = config.services.collabora-online.settings.server_name;
+      upstreamPort = toString config.services.collabora-online.port;
+      webSockets = true;
+    }
+  ];
+
   services.collabora-online = {
     enable = true;
     settings = {
@@ -34,7 +34,7 @@
     let
       inherit (config.services.nextcloud) occ;
       wopi_url = "http://127.0.0.1:${toString config.services.collabora-online.port}";
-      public_wopi_url = "https://docs.bepis.lol";
+      public_wopi_url = "https://${config.services.collabora-online.settings.server_name}";
       wopi_allowlist = lib.concatStringsSep "," [
         "127.0.0.1"
         "::1"
@@ -62,12 +62,12 @@
   # https://diogotc.com/blog/collabora-nextcloud-nixos/
   networking.hosts = {
     "127.0.0.1" = [
-      "cloud.bepis.lol"
-      "docs.bepis.lol"
+      config.services.nextcloud.hostName
+      config.services.collabora-online.settings.server_name
     ];
     "::1" = [
-      "cloud.bepis.lol"
-      "docs.bepis.lol"
+      config.services.nextcloud.hostName
+      config.services.collabora-online.settings.server_name
     ];
   };
 }
