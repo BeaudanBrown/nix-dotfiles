@@ -30,15 +30,14 @@
     loadModels = [
       "gpt-oss:20b"
     ];
+    environmentVariables = {
+      OLLAMA_GPU_OVERHEAD = "1610612736";
+      OLLAMA_NUM_PARALLEL = "1";
+    };
   };
   services.nextjs-ollama-llm-ui = {
     enable = true;
     hostname = "0.0.0.0";
     ollamaUrl = "http://127.0.0.1:11434";
-  };
-  networking.firewall = {
-    allowedTCPPorts = [
-      3000
-    ];
   };
 }

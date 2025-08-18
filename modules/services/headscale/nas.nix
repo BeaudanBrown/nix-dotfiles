@@ -20,15 +20,9 @@ in
     settings = {
       server_url = "https://${domain}";
       dns = {
-        override_local_dns = true;
         base_domain = "lan";
         magic_dns = true;
-        nameservers.global = [
-          "1.1.1.1"
-          "1.0.0.1"
-          "2606:4700:4700::1111"
-          "2606:4700:4700::1001"
-        ];
+        override_local_dns = false;
       };
       tls_cert_path = null;
       tls_key_path = null;
