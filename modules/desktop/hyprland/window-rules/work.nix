@@ -1,3 +1,4 @@
+{ ... }:
 let
   defaultRules = [
     "float, class:(.*)"
@@ -10,6 +11,9 @@ let
   ];
   tilingWindows = builtins.map (x: "tile, " + x) [
     "class:(kitty)"
+    "class:(nas)"
+    "class:(laptop)"
+    "class:(grill)"
     "class:(signal)"
     "class:(brave-browser)"
     "class:(Slack)"
@@ -45,13 +49,21 @@ let
     "size 40% 80%, class:(org.pwmt.zathura)"
   ];
 in
-defaultRules
-++ tilingWindows
-++ fullscreenWindows
-++ nonFullscreenWindows
-++ instantWindows
-++ tallWindows
-++ largeWindows
-++ extraRules
-++ onCursorWindows
-++ rightClickWindows
+{
+  hm.wayland.windowManager.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+
+    settings.windowrulev2 =
+      defaultRules
+      ++ tilingWindows
+      ++ fullscreenWindows
+      ++ nonFullscreenWindows
+      ++ instantWindows
+      ++ tallWindows
+      ++ largeWindows
+      ++ extraRules
+      ++ onCursorWindows
+      ++ rightClickWindows;
+  };
+}

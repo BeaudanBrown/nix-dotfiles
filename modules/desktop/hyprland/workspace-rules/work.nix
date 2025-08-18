@@ -1,3 +1,4 @@
+{ ... }:
 let
   leftMonitorWorkspaces = builtins.map (name: "name:" + name + ", monitor:DP-1") [
     "kitty"
@@ -11,4 +12,7 @@ let
     "Caprine"
   ];
 in
-leftMonitorWorkspaces ++ rightMonitorWorkspaces
+{
+  hm.wayland.windowManager.hyprland.settings.workspace =
+    leftMonitorWorkspaces ++ rightMonitorWorkspaces;
+}

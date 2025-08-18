@@ -67,7 +67,6 @@ let
     PID_PATH="/tmp/$WORKSPACE_NAME"
 
     launch_app() {
-    	# TODO: Check if there is a conflicting app already open
     	echo "Launching $APP_NAME"
 
       if [ "$PULL" = false ] && [ "$CUR_WORKSPACE_NAME" != "$WORKSPACE_NAME" ]; then
@@ -75,7 +74,7 @@ let
         hyprctl dispatch exec "[workspace name:$WORKSPACE_NAME] $APP_NAME"
       else
         echo "Launching app where it is"
-        $APP_NAME
+        eval "$APP_NAME"
       fi
     	return 0
     }
