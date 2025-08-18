@@ -32,6 +32,12 @@
             sonnet = {
               name = "claude-sonnet-4";
             };
+            gpt-5 = {
+              name = "gpt-5";
+            };
+            gpt-5-mini = {
+              name = "gpt-5-mini";
+            };
           };
         };
       };

@@ -4,7 +4,7 @@
     enable = true;
     settings = {
       # TODO: this seems broken
-      # highlight.enable = true;
+      highlight.enable = true;
       indent.enable = true;
     };
   };

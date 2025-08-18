@@ -103,6 +103,8 @@ in
 
           bind-key -n M-Enter run-shell "tmux_toggle_popup scratch"
 
+          bind-key -n M-y run-shell "tmux_toggle_popup htop htop"
+
           bind-key -n M-b run-shell "tmux_toggle_popup build"
           bind-key -n M-B run-shell "tmux_toggle_popup build -n"
 
