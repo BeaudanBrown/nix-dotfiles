@@ -35,7 +35,14 @@
       key = "<Leader>gl";
       action = ''<cmd>GinLog<CR>'';
       mode = [ "n" ];
-
+      options = {
+        noremap = true;
+      };
+    }
+    {
+      key = "<Leader>gd";
+      action = ''<cmd>GinDiff<CR>'';
+      mode = [ "n" ];
       options = {
         noremap = true;
       };

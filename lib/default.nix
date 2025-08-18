@@ -61,17 +61,6 @@ rec {
       )
     );
 
-  scanPaths =
-    path:
-    builtins.readDir path
-    |> lib.attrsets.filterAttrs (
-      child: _type:
-      ((_type == "directory") && (builtins.pathExists (path + "/${child}/default.nix")))
-      || ((lib.strings.hasSuffix ".nix" child) && (child != "default.nix"))
-    )
-    |> builtins.attrNames
-    |> builtins.map (subPath: (path + "/${subPath}"));
-
   concatListsFromPaths =
     childAttrName: paths:
     builtins.concatLists (
