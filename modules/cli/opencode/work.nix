@@ -41,6 +41,18 @@
           };
         };
       };
+      mcp = {
+        nixos = {
+          type = "local";
+          command = [
+            "nix"
+            "run"
+            "github:utensils/mcp-nixos"
+            "--"
+          ];
+          enabled = true;
+        };
+      };
     };
   };
 }
