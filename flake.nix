@@ -98,6 +98,8 @@
       inputs.systems.follows = "systems";
     };
 
+    nix-ai-tools.url = "github:numtide/nix-ai-tools";
+
     authentik-nix.url = "github:nix-community/authentik-nix";
   };
 }
