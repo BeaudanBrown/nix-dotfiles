@@ -6,8 +6,6 @@ let
   inherit (config.home-manager.users.${config.hostSpec.username}.lib.formats.rasi) mkLiteral;
 in
 {
-  imports = [ ./scripts/rofi_launch_dir.nix ];
-
   hm.programs.rofi = {
     enable = true;
     extraConfig = {

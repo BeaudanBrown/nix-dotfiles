@@ -60,7 +60,7 @@ let
     ];
     text = ''
       if [ "$#" -gt 0 ]; then
-        nohup gio open -- "$1" >/dev/null 2>&1 &
+        coproc nautilus "$1" > /dev/null  2>&1
         exit 0
       fi
       cd "$HOME" || exit 1
