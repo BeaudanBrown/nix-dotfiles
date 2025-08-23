@@ -1,15 +1,21 @@
 { config, lib, ... }:
+let
+  portKey = "collabora";
+in
 {
+  custom.ports.requests = [ { key = portKey; } ];
+
   hostedServices = [
     {
       domain = config.services.collabora-online.settings.server_name;
-      upstreamPort = toString config.services.collabora-online.port;
+      upstreamPort = toString config.custom.ports.assigned.${portKey};
       webSockets = true;
     }
   ];
 
   services.collabora-online = {
     enable = true;
+    port = config.custom.ports.assigned.${portKey};
     settings = {
       server_name = "docs.bepis.lol";
       ssl = {

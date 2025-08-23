@@ -1,22 +1,22 @@
 { config, ... }:
 let
   domain = "hs.bepis.lol";
+  portKey = "headscale";
 in
 {
+  custom.ports.requests = [ { key = portKey; } ];
+
   hostedServices = [
     {
       inherit domain;
-      upstreamPort = toString config.services.headscale.port;
+      upstreamPort = toString config.custom.ports.assigned.${portKey};
       webSockets = true;
     }
   ];
 
-  services.nginx.tailscaleAuth = {
-    enable = true;
-  };
   services.headscale = {
     enable = true;
-    port = 10101;
+    port = config.custom.ports.assigned.${portKey};
     settings = {
       server_url = "https://${domain}";
       dns = {

@@ -1,19 +1,23 @@
 { config, ... }:
 let
   domain = "img.bepis.lol";
+  portKey = "immich";
 in
 {
+  custom.ports.requests = [ { key = portKey; } ];
+
   hostedServices = [
     {
       inherit domain;
       upstreamHost = config.services.immich.host;
-      upstreamPort = toString config.services.immich.port;
+      upstreamPort = toString config.custom.ports.assigned.${portKey};
       webSockets = true;
     }
   ];
 
   services.immich = {
     enable = true;
+    port = config.custom.ports.assigned.${portKey};
     settings = {
       server.externalDomain = "https://${domain}";
       job = {

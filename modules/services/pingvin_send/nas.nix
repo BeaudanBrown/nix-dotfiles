@@ -1,15 +1,25 @@
 { config, ... }:
+let
+  domain = "send.bepis.lol";
+  keyFrontend = "pingvin/frontend";
+  keyBackend = "pingvin/backend";
+in
 {
+  custom.ports.requests = [
+    { key = keyFrontend; }
+    { key = keyBackend; }
+  ];
+
   hostedServices = [
     {
-      domain = "send.bepis.lol";
-      upstreamPort = toString config.services.pingvin-share.frontend.port;
+      inherit domain;
+      upstreamPort = toString config.custom.ports.assigned.${keyFrontend};
     }
   ];
-  # TODO: make the port selection more robust
+
   services.pingvin-share = {
     enable = true;
-    frontend.port = 9999;
-    backend.port = 10000;
+    frontend.port = config.custom.ports.assigned.${keyFrontend};
+    backend.port = config.custom.ports.assigned.${keyBackend};
   };
 }

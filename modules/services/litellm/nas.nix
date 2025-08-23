@@ -1,19 +1,23 @@
 { config, ... }:
 let
   litellmDomain = "litellm.bepis.lol";
+  portKey = "litellm";
 in
 {
+  custom.ports.requests = [ { key = portKey; } ];
+
   hostedServices = [
     {
       domain = litellmDomain;
       upstreamHost = config.services.litellm.host;
-      upstreamPort = toString config.services.litellm.port;
+      upstreamPort = toString config.custom.ports.assigned.${portKey};
       tailnet = true;
     }
   ];
 
   services.litellm = {
     enable = true;
+    port = config.custom.ports.assigned.${portKey};
     environmentFile = config.sops.secrets.litellm.path;
     settings = {
       litellm_settings = {

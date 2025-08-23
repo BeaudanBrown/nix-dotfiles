@@ -1,12 +1,15 @@
 { config, ... }:
 let
   domain = "pw.bepis.lol";
+  portKey = "vaultwarden";
 in
 {
+  custom.ports.requests = [ { key = portKey; } ];
+
   hostedServices = [
     {
       inherit domain;
-      upstreamPort = toString config.services.vaultwarden.config.ROCKET_PORT;
+      upstreamPort = toString config.custom.ports.assigned.${portKey};
     }
   ];
 
@@ -17,7 +20,7 @@ in
       DOMAIN = "https://${domain}";
       SIGNUPS_ALLOWED = true;
       ROCKET_ADDRESS = "127.0.0.1";
-      ROCKET_PORT = 8222;
+      ROCKET_PORT = config.custom.ports.assigned.${portKey};
       ROCKET_LOG = "critical";
     };
   };
