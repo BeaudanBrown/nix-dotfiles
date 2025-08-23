@@ -1,6 +1,5 @@
 { config, ... }:
 {
-  services.nginx.tailscaleAuth.virtualHosts = [ "llm.grill.lan" ];
   services.nginx.virtualHosts."llm.grill.lan" = {
     forceSSL = true;
     useACMEHost = "grill.lan";

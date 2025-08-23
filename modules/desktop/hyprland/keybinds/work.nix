@@ -70,8 +70,8 @@ let
 
   baseBinds = [
     # Program launchers (rofi etc.)
-    "SUPER, space, exec, rofi -show drun"
-    "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir'"
+    "SUPER, space, exec, rofi -show drun -matching fuzzy"
+    "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir' -matching fuzzy"
     "SUPER, i, exec, ${pkgs.rofi-rbw-wayland}/bin/rofi-rbw"
 
     # Screenshot region to clipboard

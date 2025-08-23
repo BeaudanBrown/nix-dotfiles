@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   ...
 }:
 let
@@ -8,8 +9,14 @@ in
 {
   hm.programs.rofi = {
     enable = true;
+    package = pkgs.rofi-wayland;
     extraConfig = {
       show-icons = true;
+      matching = "fuzzy";
+      case-sensitive = false;
+      tokenize = true;
+      sort = true;
+      sorting-method = "fzf";
       # Keybinds
       # https://github.com/davatorium/rofi/blob/next/doc/rofi-keys.5.markdown
       kb-remove-to-eol = "";

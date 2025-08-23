@@ -50,7 +50,6 @@ in
     plugins = with pkgs.tmuxPlugins; [
       catppuccin
       extrakto
-      yank
       tmux-window-name
     ];
     extraConfig = # bash
@@ -64,6 +63,10 @@ in
           bind-key -n M-n select-window -n
           bind-key -n M-p select-window -p
           bind C-u copy-mode -u
+
+          set -g set-clipboard on
+          set -as terminal-features ',xterm-kitty:clipboard'
+          set -g allow-passthrough on
 
           bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
           bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane

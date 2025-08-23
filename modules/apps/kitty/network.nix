@@ -12,6 +12,7 @@
       cursor_trail = 50;
       cursor_trail_decay = "0.2 0.4";
       cursor_trail_start_threshold = 10;
+      clipboard_control = "write-clipboard write-primary";
     };
   };
 }
