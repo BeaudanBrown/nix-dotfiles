@@ -8,6 +8,8 @@ let
   roots = [
     "minimal"
     "common"
+    "vpn"
+    "terminal"
   ];
 in
 {
@@ -22,6 +24,8 @@ in
   ++ (lib.custom.importAll {
     inherit host roots;
   });
+
+  boot.loader.systemd-boot.enable = lib.mkForce false;
 
   hostSpec = {
     username = "beau";
