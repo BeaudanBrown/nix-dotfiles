@@ -8,8 +8,7 @@ let
   roots = [
     "minimal"
     "common"
-    "vpn"
-    "terminal"
+    "network"
   ];
 in
 {

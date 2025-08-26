@@ -9,7 +9,8 @@ let
   roots = [
     "minimal"
     "common"
-    "network"
+    "network" # Tailnet + Kitty etc
+    "main" # Main machines: desktop, laptop, server
     "work"
   ];
 in

@@ -26,7 +26,7 @@
     loader = {
       # Use the extlinux boot loader. (NixOS wants to enable GRUB by default)
       grub.enable = lib.mkForce false;
-      systemd-boot.enable = lib.mkForce true;
+      systemd-boot.enable = lib.mkForce false;
       # Enables the generation of /boot/extlinux/extlinux.conf
       generic-extlinux-compatible.enable = true;
     };
