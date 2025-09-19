@@ -4,3 +4,4 @@ result/
 latest.iso
 .pre-commit-config.yaml
 AGENTS.md
+.claude
