@@ -51,6 +51,7 @@ in
       catppuccin
       extrakto
       tmux-window-name
+      yank
     ];
     extraConfig = # bash
       ''

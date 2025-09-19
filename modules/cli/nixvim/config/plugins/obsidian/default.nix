@@ -28,9 +28,8 @@
           vim.fn.jobstart({"xdg-open", url}, { detach = true })
           vim.fn.jobstart({'hyprctl', 'dispatch', 'focuswindow', 'class:brave-browser'}, { detach = true })
         end'';
-
-      ui = {
-        checkboxes = {
+      checkbox = {
+        order = {
           " " = {
             char = "󰄱";
             hl_group = "ObsidianTodo";

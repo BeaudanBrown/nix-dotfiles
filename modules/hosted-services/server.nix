@@ -1,4 +1,9 @@
-{ lib, config, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 let
   inherit (lib)
     mkOption
@@ -25,9 +30,18 @@ let
         {
           forceSSL = true;
           useACMEHost = s.domain;
+          # Allow larger uploads and long-running requests for proxied apps
+          extraConfig = ''
+            client_max_body_size 200m;
+          '';
           locations."/" = {
             proxyPass = "http://${s.upstreamHost}:${s.upstreamPort}";
             proxyWebsockets = s.webSockets;
+            extraConfig = ''
+              proxy_request_buffering off;
+              proxy_read_timeout 600s;
+              proxy_send_timeout 600s;
+            '';
           };
         }
         // (
@@ -72,6 +86,20 @@ let
     |> concatStringsSep "\n\n";
 
   headscaleSplit = tailServices |> map (s: nameValuePair s.domain [ tailIP ]) |> listToAttrs;
+
+  wait-for-tailscale-ip = pkgs.writeShellScript "wait-for-tailscale-ip" ''
+    i=0
+    until ip -4 addr show dev tailscale0 | grep -qw ${tailIP}; do
+      sleep 1
+      i=$((i+1))
+      [ $i -ge 120 ] && break
+    done
+
+    if [ $i -ge 120 ]; then
+      echo "Timed out waiting for tailscale IP ${tailIP}" >&2
+      exit 1
+    fi
+  '';
 in
 {
   options = {
@@ -128,6 +156,42 @@ in
     services.coredns = {
       enable = true;
       config = corednsConfig;
+    };
+
+    systemd.services.wait-for-tailscale-ip = {
+      description = "Wait for Tailscale to have ${tailIP}";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "tailscaled.service" ];
+      requires = [ "tailscaled.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = [ wait-for-tailscale-ip ];
+      };
+      # Add required binaries to PATH for ExecStart
+      path = [
+        pkgs.iproute2
+        pkgs.gnugrep
+        pkgs.coreutils
+      ];
+    };
+
+    systemd.services.coredns = {
+      requires = [
+        "wait-for-tailscale-ip.service"
+        "tailscaled.service"
+      ];
+      after = [
+        "wait-for-tailscale-ip.service"
+        "tailscaled.service"
+        "headscale.service"
+      ];
+      wants = [ "network-online.target" ];
+      serviceConfig = {
+        Restart = "on-failure";
+        RestartSec = "10s";
+        TimeoutStartSec = "5m";
+      };
     };
 
     sops.secrets."cloudflare/ddns_token" = {

@@ -25,6 +25,7 @@ in
       "zha"
       "google_translate"
       "smlight"
+      "wake_on_lan"
     ];
     config = {
       http = {
@@ -35,8 +36,18 @@ in
         ];
         use_x_forwarded_for = true;
       };
+      wake_on_lan = { };
       default_config = { };
       frontend = { };
+      switch = [
+        {
+          platform = "wake_on_lan";
+          name = "Biggin";
+          mac = "d4:5d:64:d0:bc:f1";
+          host = "192.168.68.107";
+          broadcast_address = "192.168.68.107";
+        }
+      ];
     };
   };
 }

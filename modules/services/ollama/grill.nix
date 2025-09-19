@@ -26,6 +26,8 @@
   services.ollama = {
     enable = true;
     acceleration = "rocm";
+    port = 11111;
+    # port = config.custom.ports.assigned.${portKey};
     loadModels = [
       "gpt-oss:20b"
     ];
@@ -36,7 +38,8 @@
   };
   services.nextjs-ollama-llm-ui = {
     enable = true;
-    hostname = "0.0.0.0";
-    ollamaUrl = "http://127.0.0.1:11434";
+    hostname = "127.0.0.1";
+    port = 11112;
+    ollamaUrl = "http://${config.services.ollama.host}:${toString config.services.ollama.port}";
   };
 }

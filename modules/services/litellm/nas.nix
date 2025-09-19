@@ -18,11 +18,17 @@ in
   services.litellm = {
     enable = true;
     port = config.custom.ports.assigned.${portKey};
-    environmentFile = config.sops.secrets.litellm.path;
+    environmentFile = config.sops.secrets."litellm/env".path;
     settings = {
       litellm_settings = {
         drop_params = true;
       };
+      # general_settings = {
+      #   # Use local Postgres over Unix socket with peer auth
+      #   database_url = "postgresql:///litellm?host=/run/postgresql";
+      #   database_connection_pool_limit = 50;
+      #   database_connection_timeout = 60;
+      # };
       model_list = [
         {
           model_name = "gpt-3.5-turbo";
@@ -90,22 +96,27 @@ in
       ];
     };
   };
-  sops.secrets.litellm = { };
+  sops.secrets."litellm/env" = { };
 
-  # TODO: Link this up with postgres
+  # Persist LiteLLM state in local Postgres via peer auth
   # users.users.litellm = {
   #   group = "litellm";
   #   isSystemUser = true;
   # };
   # users.groups.litellm = { };
 
-  # systemd.services.litellm.serviceConfig = {
-  #   DynamicUser = lib.mkForce false;
-  #   User = "litellm";
-  #   Group = "litellm";
+  # systemd.services.litellm = {
+  #   after = [ "postgresql.service" ];
+  #   requires = [ "postgresql.service" ];
+  #   serviceConfig = {
+  #     DynamicUser = lib.mkForce false;
+  #     User = "litellm";
+  #     Group = "litellm";
+  #   };
   # };
 
   # services.postgresql = {
+  #   enable = true;
   #   ensureUsers = [
   #     {
   #       name = "litellm";
