@@ -9,7 +9,7 @@ in
 {
   hm.programs.rofi = {
     enable = true;
-    package = pkgs.rofi-wayland;
+    package = pkgs.rofi;
     extraConfig = {
       show-icons = true;
       matching = "fuzzy";

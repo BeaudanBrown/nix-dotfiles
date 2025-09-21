@@ -101,9 +101,9 @@
           disable_splash_rendering = true;
           mouse_move_focuses_monitor = false;
         };
-        gestures = {
-          workspace_swipe = true;
-        };
+        gesture = [
+            "3, horizontal, workspace"
+        ];
         animations = {
           enabled = true;
           bezier = [

@@ -33,6 +33,7 @@
 
   hm.programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
     matchBlocks = {
       laptop = {
         hostname = "laptop.lan";
@@ -64,6 +65,12 @@
       m3 = {
         hostname = "m3.massive.org.au";
         user = "beaudanc";
+      };
+      "*" = {
+        forwardAgent = false;
+        serverAliveInterval = 0;
+        serverAliveCountMax = 3;
+        compression = false;
       };
     };
   };
