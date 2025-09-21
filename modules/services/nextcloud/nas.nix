@@ -1,15 +1,14 @@
 { config, ... }:
 {
-  # TODO: I think nextcloud is doing it itself
-  # hostedServices = [
-  #   {
-  #     domain = config.services.nextcloud.hostName;
-  #     upstreamPort = toString config.services.nextcloud.port;
-  #     webSockets = true;
-  #   }
-  # ];
-  services.cloudflare-dyndns.domains = [
-    config.services.nextcloud.hostName
+  hostedServices = [
+    {
+      domain = config.services.nextcloud.hostName;
+      doNginx = false;
+    }
+  ];
+
+  systemd.tmpfiles.rules = [
+    "d /var/lib/nextcloud 0700 nextcloud nextcloud - -"
   ];
 
   services.nextcloud = {
@@ -25,11 +24,6 @@
       adminpassFile = config.sops.secrets.nextcloud_admin_pass.path;
     };
     configureRedis = true;
-  };
-
-  services.nginx.virtualHosts.${config.services.nextcloud.hostName} = {
-    forceSSL = true;
-    enableACME = true;
   };
 
   sops.secrets.nextcloud_admin_pass = {
