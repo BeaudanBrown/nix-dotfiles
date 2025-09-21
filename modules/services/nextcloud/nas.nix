@@ -1,8 +1,11 @@
 { config, ... }:
+let
+  domain = "cloud.bepis.lol";
+in
 {
   hostedServices = [
     {
-      domain = config.services.nextcloud.hostName;
+      inherit domain;
       doNginx = false;
     }
   ];
@@ -11,22 +14,28 @@
     "d /var/lib/nextcloud 0700 nextcloud nextcloud - -"
   ];
 
+  services.nginx.virtualHosts.${config.services.nextcloud.hostName} = {
+    forceSSL = true;
+    useACMEHost = domain;
+  };
+
   services.nextcloud = {
     enable = true;
-    hostName = "cloud.bepis.lol";
+    hostName = domain;
     https = true;
     extraAppsEnable = true;
     extraApps = with config.services.nextcloud.package.packages.apps; {
       inherit richdocuments;
     };
+    database.createLocally = true;
     config = {
-      dbtype = "sqlite";
-      adminpassFile = config.sops.secrets.nextcloud_admin_pass.path;
+      dbtype = "pgsql";
+      adminpassFile = config.sops.secrets."nextcloud/admin_pass".path;
     };
     configureRedis = true;
   };
 
-  sops.secrets.nextcloud_admin_pass = {
+  sops.secrets."nextcloud/admin_pass" = {
     mode = "0600";
     owner = "nextcloud";
     group = "nextcloud";
