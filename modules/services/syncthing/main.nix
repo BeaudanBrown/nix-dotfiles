@@ -34,6 +34,10 @@
           id = "EJCNETP-BUV3ZI5-ADHABNE-OV3GPSW-LBTQ44J-73JW5G6-AUBM2CG-5E3YHA6";
           autoAcceptFolder = true;
         };
+        "t480" = {
+          id = "IP2ETPK-WVIYMUH-E4C4SF3-N55FC24-BBT4NFH-UYFD3LD-PPLVU3E-PL23UAM";
+          autoAcceptFolder = true;
+        };
       };
       folders = {
         "documents" = {
@@ -43,6 +47,7 @@
             "server"
             "grill"
             "laptop"
+            "t480"
           ];
         };
         "monash" = {
@@ -52,6 +57,7 @@
             "server"
             "grill"
             "laptop"
+            "t480"
           ];
         };
         "collab" = {
@@ -61,6 +67,7 @@
             "server"
             "grill"
             "laptop"
+            "t480"
             "lachy-thinkpad"
           ];
         };
