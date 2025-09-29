@@ -35,11 +35,12 @@ rec {
       roots,
       host,
       extraSpecialArgs ? { },
+      useHost ? true,
     }:
     let
       path = relativeToRoot "modules";
     in
-    (importHost { inherit host path; })
+    (if useHost then importHost { inherit host path; } else [ ])
     ++ (
       roots
       |> builtins.concatMap (

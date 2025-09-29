@@ -59,6 +59,7 @@
             ++ (lib.custom.importAll {
               inherit host;
               roots = [ "minimal" ];
+              useHost = false;
             });
           }
         );
@@ -68,6 +69,7 @@
         # host = newConfig "hostname" username"
         grill = newConfig "grill" "beau";
         laptop = newConfig "laptop" "beau";
+        t480 = newConfig "t480" "beau";
         nas = newConfig "nas" "beau";
       };
     };

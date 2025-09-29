@@ -26,6 +26,9 @@ let
     "class:(VirtualBox Manager)"
     "class:(org.qbittorrent.qBittorrent)"
     "class:(net.lutris.Lutris)"
+    "class:(@joplin/app-desktop)"
+    "class:(Github Desktop)"
+    "class:(com.obsproject.Studio)"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
     "class:(VirtualBox Machine)"

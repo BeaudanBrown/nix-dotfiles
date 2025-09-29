@@ -8,6 +8,8 @@ keys:
   - &beau_laptop age1rl4hv7d8j4wnpchqlswpvw9qtweq8ek2afcvaha6cyjr5fpv2f5s5wrk6s
   - &nas age19v6f4dtenths5ykglat3lmfnfw2wy6yx33um7qyjwzmwk7ndr5lsdrc2a0
   - &beau_nas age1xx2x7epqxfq8rusvxswtnxx8czx4z94fzlw0jq59ncgnzds9e95suzfh45
+  - &t480 age1kqxzfpwvsgq60py8t7ujz5qsmrrn469uzt2xkgun8jp9mdaraersyqeevs
+  - &beau_t480 age1hmusf4nthqdy2w5zgjqs05lhpeuef4g7uek4w95h2wvhupeevscqjeqwl0
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:
@@ -21,3 +23,5 @@ creation_rules:
           - *beau_laptop
           - *nas
           - *beau_nas
+          - *t480
+          - *beau_t480

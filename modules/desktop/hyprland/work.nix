@@ -102,7 +102,7 @@
           mouse_move_focuses_monitor = false;
         };
         gesture = [
-            "3, horizontal, workspace"
+          "3, horizontal, workspace"
         ];
         animations = {
           enabled = true;
@@ -127,7 +127,7 @@
             "windowsOut,1,2.5,easeinquint,slide"
 
             "windowsMove,1,5,easeoutquint"
-            "workspaces,1,2.6,easeoutquint,slidefadevert"
+            "workspaces,1,2.6,easeoutquint,slidefade"
           ];
         };
         binds = {
