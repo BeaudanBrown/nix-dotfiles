@@ -93,6 +93,8 @@
 
     systems.url = "github:nix-systems/default";
 
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
     flake-utils = {
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";

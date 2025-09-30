@@ -23,6 +23,7 @@ in
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t480
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
@@ -32,7 +33,7 @@ in
   hostSpec = {
     username = "beau";
     hostName = host;
-    tailIP = "100.64.0.6";
+    tailIP = "100.64.0.1";
     email = "beaudan.brown@gmail.com";
     wifi = true;
     userFullName = "Beaudan Brown";

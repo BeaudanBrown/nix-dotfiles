@@ -375,6 +375,7 @@ let
           green "Rebuilding nix-dotfiles on $target_hostname"
           # FIXME(bootstrap): This should probably only happen on devices that require it
           $ssh_cmd "cd $dotfiles_dir && nix-prefetch-url --name displaylink-610.zip https://www.synaptics.com/sites/default/files/exe_files/2024-10/DisplayLink%20USB%20Graphics%20Software%20for%20Ubuntu6.1-EXE.zip"
+          $ssh_cmd "cd $dotfiles_dir && nix-prefetch-url --name linuxx64-25.05.0.44.tar.gz https://send.bepis.lol/api/shares/citrix/files/a11fbff3-4c9b-4d28-a0e9-2307a71d0899"
           $ssh_cmd "cd $dotfiles_dir && sudo nixos-rebuild --impure --show-trace --flake .#$target_hostname switch"
         fi
       else
