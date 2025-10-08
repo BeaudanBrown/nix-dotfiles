@@ -59,9 +59,9 @@ in
           };
         }
         {
-          model_name = "claude-sonnet-4";
+          model_name = "claude-sonnet-4-5";
           litellm_params = {
-            model = "anthropic/claude-sonnet-4-20250514";
+            model = "anthropic/claude-sonnet-4-5";
             api_key = "os.environ/ANTHROPIC_API_KEY";
           };
         }
