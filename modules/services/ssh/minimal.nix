@@ -39,6 +39,10 @@
         hostname = "laptop.lan";
         user = "beau";
       };
+      roster = {
+        hostname = "45.79.238.145";
+        user = "beau";
+      };
       grill = {
         hostname = "grill.lan";
         user = "beau";

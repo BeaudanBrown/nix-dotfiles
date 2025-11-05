@@ -58,7 +58,7 @@
   keymaps = [
     {
       key = "<Leader>on";
-      action = '':ObsidianNew<CR>'';
+      action = '':Obsidian new<CR>'';
       mode = [ "n" ];
       options = {
         noremap = true;

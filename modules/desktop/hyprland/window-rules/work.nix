@@ -21,6 +21,7 @@ let
     "class:(Caprine)"
     "class:(discord)"
     "title:^(Spotify.*)"
+    "title:^(Immich.*)"
     "class:(teams-for-linux)"
     "class:^(libreoffice.*)$"
     "class:(VirtualBox Manager)"
@@ -29,6 +30,7 @@ let
     "class:(@joplin/app-desktop)"
     "class:(Github Desktop)"
     "class:(com.obsproject.Studio)"
+    "class:(vlc)"
   ];
   fullscreenWindows = builtins.map (x: "fullscreen, " + x) [
     "class:(VirtualBox Machine)"

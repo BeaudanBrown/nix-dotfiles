@@ -1,4 +1,8 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgsStable,
+  ...
+}:
 let
   domain = "pdf.bepis.lol";
   portKey = "docling";
@@ -16,7 +20,7 @@ in
 
   services.docling-serve = {
     enable = true;
-    package = pkgs.docling-serve.override {
+    package = pkgsStable.docling-serve.override {
       withUI = true;
       withTesserocr = true;
       withCPU = true;

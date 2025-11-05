@@ -34,6 +34,12 @@ in
         issuer = "https://auth.bepis.lol/application/o/headscale/";
         client_id = "FwfGvUzRKRPQWyFsV3PzKA0eh0T5qctUp8o0hpBL";
         client_secret_path = config.sops.secrets."headscale/authentik_secret".path;
+        scope = [
+          "openid"
+          "profile"
+          "email"
+        ];
+        user_claim = "email";
       };
     };
   };

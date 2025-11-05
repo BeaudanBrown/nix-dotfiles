@@ -15,7 +15,7 @@
     )
     // {
       "default.aichat" = {
-        source = ./gpt-5-mini.aichat;
+        source = ./claude-haiku-4-5.aichat;
         target = ".local/share/gpt/default.aichat";
       };
     };

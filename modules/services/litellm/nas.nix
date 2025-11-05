@@ -73,9 +73,9 @@ in
           };
         }
         {
-          model_name = "claude-3-5-haiku";
+          model_name = "claude-haiku-4-5";
           litellm_params = {
-            model = "anthropic/claude-3-5-haiku-20241022";
+            model = "anthropic/claude-haiku-4-5";
             api_key = "os.environ/ANTHROPIC_API_KEY";
           };
         }

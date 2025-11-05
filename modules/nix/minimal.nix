@@ -1,4 +1,8 @@
-{ ... }:
+{
+  pkgs,
+  nixpkgsStable,
+  ...
+}:
 {
   nixpkgs.config.allowUnfree = true;
   nix = {
@@ -14,5 +18,10 @@
         "@wheel"
       ];
     };
+  };
+
+  _module.args.pkgsStable = import nixpkgsStable {
+    inherit (pkgs) system;
+    config.allowUnfree = true;
   };
 }

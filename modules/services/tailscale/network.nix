@@ -15,4 +15,10 @@
     ];
   };
   sops.secrets."headscale/pre_auth" = { };
+
+  environment.shellAliases = {
+    exit-on = "sudo tailscale set --exit-node=nas";
+    exit-off = "sudo tailscale set --exit-node=";
+    exit-status = "tailscale status | grep -i 'exit node'";
+  };
 }
