@@ -100,8 +100,17 @@
       inputs.systems.follows = "systems";
     };
 
-    nix-ai-tools.url = "github:numtide/nix-ai-tools";
+    nix-ai-tools = {
+      url = "github:numtide/nix-ai-tools";
+      # inputs.nixpkgs.follows = "nixpkgsStable";
+    };
 
     authentik-nix.url = "github:nix-community/authentik-nix";
+
+    gp = {
+      # url = "github:yuezk/GlobalProtect-openconnect/v2.4.6";
+      url = "github:BeaudanBrown/GlobalProtect-openconnect?rev=e8287c2f8f6856bc6228b9750f732d4d5a1ece3c";
+      inputs.nixpkgs.follows = "nixpkgsStable";
+    };
   };
 }
