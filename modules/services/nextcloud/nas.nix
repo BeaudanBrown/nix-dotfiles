@@ -26,6 +26,7 @@ in
     extraAppsEnable = true;
     extraApps = with config.services.nextcloud.package.packages.apps; {
       inherit richdocuments;
+      inherit user_oidc;
     };
     database.createLocally = true;
     config = {
@@ -39,5 +40,10 @@ in
     mode = "0600";
     owner = "nextcloud";
     group = "nextcloud";
+  };
+  sops.secrets."headscale/authentik_secret" = {
+    mode = "0600";
+    owner = "headscale";
+    group = "headscale";
   };
 }
