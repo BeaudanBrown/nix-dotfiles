@@ -31,7 +31,6 @@ in
   });
 
   nix.settings.cores = 12;
-  hardware.bluetooth.enable = true;
   hardware.graphics = {
     enable = true;
     enable32Bit = true;

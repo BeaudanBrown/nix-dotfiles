@@ -1,6 +1,10 @@
-{ pkgs, ... }:
 {
-  environment.systemPackages = with pkgs; [
-    claude-code
+  pkgs,
+  inputs,
+  ...
+}:
+{
+  environment.systemPackages = [
+    inputs.nix-ai-tools.packages.${pkgs.system}.claude-code
   ];
 }

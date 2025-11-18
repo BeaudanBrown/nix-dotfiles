@@ -80,9 +80,8 @@ in
         };
         clock = {
           interval = 60;
-          tooltip = true;
-          format = "{:%I:%M%p}";
-          tooltip-format = "{:%a %d/%m/%Y}";
+          tooltip = false;
+          format = "{:%a %d/%m/%Y %I:%M%p}";
         };
         memory = {
           interval = 10;

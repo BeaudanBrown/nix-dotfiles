@@ -39,5 +39,20 @@ in
     userFullName = "Beaudan Brown";
   };
 
+  services.tlp = {
+    enable = true;
+    settings = {
+      # Internal battery (BAT0)
+      START_CHARGE_THRESH_BAT0 = 75;
+      STOP_CHARGE_THRESH_BAT0 = 80;
+
+      # External/removable battery (BAT1)
+      START_CHARGE_THRESH_BAT1 = 75;
+      STOP_CHARGE_THRESH_BAT1 = 80;
+    };
+  };
+
+  services.fwupd.enable = true;
+
   system.stateVersion = "25.05";
 }

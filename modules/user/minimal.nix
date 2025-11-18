@@ -25,7 +25,7 @@
       enable = true;
       createDirectories = true;
       documents = "${config.hostSpec.home}/documents";
-      download = "${config.hostSpec.username}/downloads";
+      download = "${config.hostSpec.home}/downloads";
       desktop = null;
       pictures = null;
       music = null;

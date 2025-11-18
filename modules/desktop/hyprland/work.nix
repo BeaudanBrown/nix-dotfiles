@@ -84,22 +84,12 @@
             tap-and-drag = true;
           };
         };
-        # TODO: Laptop only
-        device = [
-          {
-            name = "2-synaptics-touchpad";
-            sensitivity = 0.8;
-          }
-          {
-            name = "syna3091:00-06cb:82f5-touchpad";
-            sensitivity = 0.8;
-          }
-        ];
 
         misc = {
           disable_hyprland_logo = true;
           disable_splash_rendering = true;
           mouse_move_focuses_monitor = false;
+          enable_anr_dialog = false;
         };
         gesture = [
           "3, horizontal, workspace"

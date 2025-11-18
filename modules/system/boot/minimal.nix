@@ -4,8 +4,6 @@
     supportedFilesystems = [
       "ntfs"
     ];
-    # Issues with zfs in latest kernel
-    # kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "snd-intel-dspcfg.dsp_driver=1"
       "kvm.enable_virt_at_load=0"

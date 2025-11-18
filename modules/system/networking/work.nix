@@ -1,5 +1,19 @@
 { pkgs, config, ... }:
 {
+  nixpkgs.overlays = [
+    (final: prev: {
+      networkmanager-openconnect = prev.networkmanager-openconnect.overrideAttrs (oldAttrs: {
+        src = prev.fetchFromGitHub {
+          owner = "BeaudanBrown";
+          repo = "NetworkManager-openconnect";
+          rev = "97236002b74035d22631eff858b314923e417447";
+          hash = "sha256-96JOGxm2tEEpo26nsPnWJ93lIPNeLd4IZSnUIIBmnyo=";
+        };
+        nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ prev.autoreconfHook ];
+      });
+    })
+  ];
+
   environment.systemPackages = with pkgs; [
     networkmanager-openconnect
     networkmanagerapplet
@@ -30,18 +44,10 @@
             };
             ipv4 = {
               method = "auto";
-              route-metric = 600;
-              never-default = "true";
-              ignore-auto-dns = "false";
-              # dns-search = [ "~monash.edu" "~ad.monash.edu" ];
+              route-metric = "50";
             };
             ipv6 = {
-              addr-gen-mode = "stable-privacy";
-              method = "auto";
-              never-default = "true";
-              route-metric = 600;
-              ignore-auto-dns = "false";
-              # dns-search = [ "~monash.edu" "~ad.monash.edu" ];
+              method = "disabled";
             };
             proxy = { };
             vpn = {
@@ -50,7 +56,8 @@
               certsigs-flags = "0";
               cookie-flags = "2";
               disable_udp = "no";
-              enable_csd_trojan = "no";
+              enable_csd_trojan = "yes";
+              csd_wrapper = "${./hipreport.sh}";
               gateway = "vpn.gp.monash.edu/portal:prelogin-cookie";
               gateway-flags = "2";
               gwcert-flags = "2";
