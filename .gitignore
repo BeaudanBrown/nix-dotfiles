@@ -5,3 +5,4 @@ latest.iso
 .pre-commit-config.yaml
 AGENTS.md
 .claude
+.mcp.json
