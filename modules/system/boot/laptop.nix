@@ -5,8 +5,4 @@
   boot.blacklistedKernelModules = [
     "snd_soc_avs"
   ];
-
-  boot = {
-    supportedFilesystems = [ "zfs" ];
-  };
 }

@@ -24,7 +24,7 @@
     })
   ];
   services.ollama = {
-    enable = true;
+    enable = false;
     acceleration = "rocm";
     port = 11111;
     # port = config.custom.ports.assigned.${portKey};

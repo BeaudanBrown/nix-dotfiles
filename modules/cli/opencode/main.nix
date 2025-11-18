@@ -18,7 +18,7 @@
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
   hm.programs.opencode = {
-    enable = true;
+    enable = false;
     package = inputs.nix-ai-tools.packages.${pkgs.system}.opencode;
     rules = ''
       You are a helpful AI assistant focused on development tasks.
