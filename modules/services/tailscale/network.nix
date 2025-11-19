@@ -7,6 +7,7 @@
   };
   services.tailscale = {
     enable = true;
+    openFirewall = true;
     authKeyFile = config.sops.secrets."headscale/pre_auth".path;
     extraUpFlags = [
       "--login-server=https://hs.bepis.lol"

@@ -18,7 +18,7 @@ in
   ];
 
   services.pingvin-share = {
-    enable = true;
+    enable = false;
     frontend.port = config.custom.ports.assigned.${keyFrontend};
     backend.port = config.custom.ports.assigned.${keyBackend};
   };
