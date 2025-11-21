@@ -3,6 +3,9 @@
   config,
   ...
 }:
+let
+  get = pkgs.writeShellScriptBin "get" (builtins.readFile ./get.sh);
+in
 {
   environment.shellAliases = {
     sudo = "sudo ";
@@ -14,5 +17,6 @@
     nixos-rebuild = "nixos-rebuild --flake ${config.hostSpec.home}/documents/nix-dotfiles";
     df = "${pkgs.dysk}/bin/dysk";
     du = "du -h -d 1";
+    get = "${get}/bin/get";
   };
 }
