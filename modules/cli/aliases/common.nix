@@ -4,7 +4,10 @@
   ...
 }:
 let
-  get = pkgs.writeShellScriptBin "get" (builtins.readFile ./get.sh);
+  get = pkgs.writeShellApplication {
+    name = "get";
+    text = builtins.readFile ./get.sh;
+  };
 in
 {
   environment.shellAliases = {
