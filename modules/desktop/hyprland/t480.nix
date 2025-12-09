@@ -8,8 +8,8 @@
     input.sensitivity = (lib.mkForce 0.2);
     device = [
       {
-        name = "synaptics-tm3512-001";
-        sensitivity = 0.8;
+        name = "synps/2-synaptics-touchpad";
+        sensitivity = 1.6;
         accel_profile = "flat";
       }
     ];

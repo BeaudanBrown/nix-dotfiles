@@ -23,6 +23,7 @@ in
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.authentik-nix.nixosModules.default
+    inputs.copyparty.nixosModules.default
     inputs.home-manager.nixosModules.home-manager
   ]
   ++ (lib.custom.importAll {

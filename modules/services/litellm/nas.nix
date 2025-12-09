@@ -23,12 +23,6 @@ in
       litellm_settings = {
         drop_params = true;
       };
-      # general_settings = {
-      #   # Use local Postgres over Unix socket with peer auth
-      #   database_url = "postgresql:///litellm?host=/run/postgresql";
-      #   database_connection_pool_limit = 50;
-      #   database_connection_timeout = 60;
-      # };
       model_list = [
         {
           model_name = "gpt-3.5-turbo";
@@ -90,6 +84,13 @@ in
           model_name = "gemini-2.5-pro";
           litellm_params = {
             model = "gemini/gemini-2.5-pro-preview-05-06";
+            api_key = "os.environ/GOOGLE_API_KEY";
+          };
+        }
+        {
+          model_name = "gemini-3-pro-preview";
+          litellm_params = {
+            model = "gemini/gemini-3-pro-preview";
             api_key = "os.environ/GOOGLE_API_KEY";
           };
         }

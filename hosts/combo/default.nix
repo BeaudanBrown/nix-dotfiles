@@ -36,7 +36,5 @@ in
     userFullName = "Beaudan Brown";
   };
 
-  services.desktopManager.gnome.enable = true;
-
   system.stateVersion = "25.05";
 }

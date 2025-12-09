@@ -24,6 +24,9 @@
         checks = import ./lib/checks.nix { inherit inputs system pkgs; };
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
+          packages = with pkgs; [
+            nodejs
+          ];
         };
       }
     )
@@ -106,6 +109,8 @@
     };
 
     authentik-nix.url = "github:nix-community/authentik-nix";
+
+    copyparty.url = "github:9001/copyparty";
 
     gp = {
       # url = "github:yuezk/GlobalProtect-openconnect/v2.4.6";

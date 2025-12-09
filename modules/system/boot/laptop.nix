@@ -5,4 +5,11 @@
   boot.blacklistedKernelModules = [
     "snd_soc_avs"
   ];
+  boot = {
+    loader = {
+      grub = {
+        efiSupport = true;
+      };
+    };
+  };
 }

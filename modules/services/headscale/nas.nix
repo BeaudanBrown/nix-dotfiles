@@ -2,9 +2,13 @@
 let
   domain = "hs.bepis.lol";
   portKey = "headscale";
+  stunPort = 3478;
 in
 {
   custom.ports.requests = [ { key = portKey; } ];
+
+  # Open firewall for STUN (UDP) - required for DERP NAT traversal
+  networking.firewall.allowedUDPPorts = [ stunPort ];
 
   hostedServices = [
     {
@@ -27,7 +31,21 @@ in
       tls_cert_path = null;
       tls_key_path = null;
       derp = {
-        enabled = true;
+        urls = [ ];
+        paths = [ ];
+        auto_update_enabled = false;
+
+        # Enable built-in DERP server
+        server = {
+          enabled = true;
+          region_id = 999;
+          region_code = "headscale";
+          region_name = "Headscale Embedded DERP";
+          stun_listen_addr = "0.0.0.0:3478";
+          private_key_path = "/var/lib/headscale/derp_server_private.key";
+          automatically_add_embedded_derp_region = true;
+          verify_clients = true;
+        };
       };
       oidc = {
         only_start_if_oidc_is_available = true;

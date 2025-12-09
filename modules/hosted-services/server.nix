@@ -208,7 +208,7 @@ in
     ];
     services.cloudflare-dyndns = {
       enable = true;
-      proxied = true;
+      proxied = false; # Disabled to allow UDP traffic (required for Headscale DERP/STUN)
       apiTokenFile = config.sops.secrets."cloudflare/ddns_token".path;
       domains = cloudflareDomains;
     };
