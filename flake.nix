@@ -4,6 +4,7 @@
       self,
       nixpkgs,
       nixpkgsStable,
+      nixpkgsUnstable,
       flake-utils,
       ...
     }@inputs:
@@ -44,6 +45,7 @@
                 lib
                 host
                 nixpkgsStable
+                nixpkgsUnstable
                 ;
             };
             modules = [ ./hosts/${host} ];
@@ -62,17 +64,21 @@
   };
 
   inputs = {
-    nixpkgsStable.url = "github:NixOS/nixpkgs/nixos-25.05";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgsStable.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     nixvim.url = "github:nix-community/nixvim";
 
-    stylix.url = "github:danth/stylix";
+    stylix = {
+      url = "github:danth/stylix/release-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -116,6 +122,11 @@
       # url = "github:yuezk/GlobalProtect-openconnect/v2.4.6";
       url = "github:BeaudanBrown/GlobalProtect-openconnect?rev=e8287c2f8f6856bc6228b9750f732d4d5a1ece3c";
       inputs.nixpkgs.follows = "nixpkgsStable";
+    };
+
+    joan-flash = {
+      url = "github:BeaudanBrown/joan-tracker";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 }
