@@ -17,8 +17,9 @@
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
+  sops.secrets.context7 = { };
   hm.programs.opencode = {
-    enable = false;
+    enable = true;
     package = inputs.nix-ai-tools.packages.${pkgs.system}.opencode;
     rules = ''
       You are a helpful AI assistant focused on development tasks.
@@ -27,6 +28,22 @@
     '';
     settings = {
       provider = {
+        lite_google = {
+          npm = "@ai-sdk/openai-compatible";
+          name = "Google";
+          options = {
+            baseURL = "https://litellm.bepis.lol";
+            apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+          };
+          models = {
+            gemini-3-flash-preview = {
+              name = "gemini-3-flash-preview";
+            };
+            gemini-3-pro-preview = {
+              name = "gemini-3-pro-preview";
+            };
+          };
+        };
         lite_anthropic = {
           npm = "@ai-sdk/openai-compatible";
           name = "Anthropic";
@@ -35,8 +52,14 @@
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
           };
           models = {
+            claude-opus-4-5 = {
+              name = "claude-opus-4-5";
+            };
             claude-sonnet-4-5 = {
               name = "claude-sonnet-4-5";
+            };
+            claude-haiku-4-5 = {
+              name = "claude-haiku-4-5";
             };
           };
         };
@@ -48,6 +71,12 @@
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
           };
           models = {
+            "gpt-5.2" = {
+              name = "gpt-5.2";
+            };
+            gpt-5-1-codex = {
+              name = "gpt-5.1-codex-max";
+            };
             gpt-5 = {
               name = "gpt-5";
             };
@@ -58,13 +87,20 @@
         };
       };
       mcp = {
-        # TODO: Fix
-        # context7 = {
-        #   type = "remote";
-        #   url = "https://mcp.context7.com/mcp";
-        #   enabled = true;
-        # };
+        context7 = {
+          enabled = true;
+          type = "local";
+          command = [
+            "${pkgs.nodejs}/bin/npx"
+            "-y"
+            "@upstash/context7-mcp"
+          ];
+          environment = {
+            CONTEXT7_API_KEY = "$(cat ${config.sops.secrets.context7.path})";
+          };
+        };
         nixos = {
+          enabled = true;
           type = "local";
           command = [
             "nix"
@@ -72,7 +108,6 @@
             "github:utensils/mcp-nixos"
             "--"
           ];
-          enabled = true;
         };
       };
     };
