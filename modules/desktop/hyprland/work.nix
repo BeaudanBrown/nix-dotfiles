@@ -64,6 +64,11 @@
         general = {
           no_focus_fallback = true;
           gaps_out = 5;
+          layout = "master";
+        };
+
+        master = {
+          mfact = 0.5;
         };
 
         cursor = {

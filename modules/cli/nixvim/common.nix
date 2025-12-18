@@ -10,8 +10,8 @@ let
       pkgs.fetchFromGitHub {
         owner = "R-nvim";
         repo = "R.nvim";
-        rev = "382858fcf23aabbf47ff06279baf69d52260b939";
-        hash = "sha256-j2rXXO7246Nh8U6XyX43nNTbrire9ta9Ono9Yr+Eh9M=";
+        rev = "42b6321c771c902200ecd18791b4ca48e029a62e";
+        hash = "sha256-WhN2L5Uv/7HSm/nZHzJiDy3EAnZ2b8cDzG+D7xPvDUk=";
       }
       + "/nvimcom/";
   };

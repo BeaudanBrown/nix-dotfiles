@@ -1,6 +1,6 @@
 {
   pkgs,
-  nixpkgsStable,
+  nixpkgsUnstable,
   ...
 }:
 {
@@ -20,7 +20,7 @@
     };
   };
 
-  _module.args.pkgsStable = import nixpkgsStable {
+  _module.args.pkgsUnstable = import nixpkgsUnstable {
     inherit (pkgs) system;
     config.allowUnfree = true;
   };

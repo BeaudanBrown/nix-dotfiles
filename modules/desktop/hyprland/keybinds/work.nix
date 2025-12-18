@@ -40,17 +40,6 @@ let
     "9"
   ];
 
-  directions = rec {
-    left = "l";
-    right = "r";
-    up = "u";
-    down = "d";
-    h = left;
-    l = right;
-    k = up;
-    j = down;
-  };
-
   rofi_launch_dir = pkgs.writeShellApplication {
     name = "rofi_launch_dir";
     runtimeInputs = [
@@ -79,6 +68,7 @@ let
 
     # Basic binds
     "SUPER,x,exec,hyprlock"
+    "SUPERSHIFT,x,exec,systemctl hibernate"
     "SUPER,q,killactive"
     "SUPERSHIFT,e,exit"
     "SUPER,f,fullscreen,1"
@@ -89,8 +79,8 @@ let
     "SUPER,u,togglespecialworkspace"
     "SUPERSHIFT,u,movetoworkspacesilent,special"
 
-    # Switch back
     "SUPER,TAB,workspace,previous"
+    "SUPERSHIFT,TAB,workspace,m+1"
     "ALT,TAB,focusCurrentOrLast"
 
     # Media
@@ -98,12 +88,24 @@ let
     "SUPERSHIFT, p, exec, playerctl play-pause"
     "SUPER, period, exec, playerctl next"
     "SUPER, comma, exec, playerctl previous"
+
+    # Monitor switching
+    "SUPER, h, focusmonitor, +1"
+    "SUPERSHIFT, h, movewindow, mon:+1"
+    "SUPERALT, h, moveworkspacetomonitor, e+0 +1"
+
+    # Window focus
+    "SUPER, j, layoutmsg, cyclenext"
+    "SUPER, k, layoutmsg, cycleprev"
+    "SUPER, l, layoutmsg, focusmaster"
+
+    # Window movement
+    "SUPERSHIFT, j, layoutmsg, swapnext"
+    "SUPERSHIFT, k, layoutmsg, swapprev"
+    "SUPERSHIFT, l, layoutmsg, swapwithmaster"
   ]
   ++ map (n: "SUPER,${n},workspace,name:${n}") workspaces
-  ++ map (n: "SUPERSHIFT,${n},movetoworkspacesilent,name:${n}") workspaces
-  ++ lib.mapAttrsToList (k: d: "SUPER,${k},movefocus,${d}") directions
-  ++ lib.mapAttrsToList (k: d: "SUPERSHIFT,${k},movewindoworgroup,${d}") directions
-  ++ lib.mapAttrsToList (k: d: "SUPERALT,${k},moveworkspacetomonitor,e-0 ${d}") directions;
+  ++ map (n: "SUPERSHIFT,${n},movetoworkspacesilent,name:${n}") workspaces;
 in
 {
   hypr.launchers = [

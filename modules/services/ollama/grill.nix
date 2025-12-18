@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 {
   services.nginx.virtualHosts."llm.grill.lan" = {
     forceSSL = true;
@@ -25,7 +25,7 @@
   ];
   services.ollama = {
     enable = false;
-    acceleration = "rocm";
+    package = pkgs.ollama-rocm;
     port = 11111;
     # port = config.custom.ports.assigned.${portKey};
     loadModels = [

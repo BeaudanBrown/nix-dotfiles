@@ -2,7 +2,6 @@
   lib,
   inputs,
   host,
-  nixpkgsStable,
   ...
 }:
 let
@@ -25,10 +24,11 @@ in
     inputs.authentik-nix.nixosModules.default
     inputs.copyparty.nixosModules.default
     inputs.home-manager.nixosModules.home-manager
+    inputs.joan-flash.nixosModules.default
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
-    extraSpecialArgs = { inherit nixpkgsStable; };
+    extraSpecialArgs = { };
   });
 
   nix.settings.cores = 8;
