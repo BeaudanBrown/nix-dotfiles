@@ -11,8 +11,43 @@
       PermitRootLogin = "prohibit-password";
     };
   };
+
+  sops.secrets = {
+    "ssh/nas/pub" = { };
+    "ssh/grill/pub" = { };
+    "ssh/laptop/pub" = { };
+    "ssh/t480/pub" = { };
+  }
+  // {
+    "ssh/root/priv" = {
+      path = "/root/.ssh/id_ed25519";
+      mode = "0600";
+      owner = "root";
+      group = "root";
+    };
+    "ssh/root/pub" = {
+      path = "/root/.ssh/id_ed25519.pub";
+      mode = "0600";
+      owner = "root";
+      group = "root";
+    };
+    "ssh/${config.networking.hostName}/pub" = {
+      path = "${config.hostSpec.home}/.ssh/id_ed25519.pub";
+      mode = "0600";
+      owner = config.hostSpec.username;
+      inherit (config.users.users.${config.hostSpec.username}) group;
+    };
+    "ssh/${config.networking.hostName}/priv" = {
+      path = "${config.hostSpec.home}/.ssh/id_ed25519";
+      mode = "0600";
+      owner = config.hostSpec.username;
+      inherit (config.users.users.${config.hostSpec.username}) group;
+    };
+  };
+
   # TODO: Build this list from somewhere i.e. sops
   users.users.${config.hostSpec.username}.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIGq7BtN17qkaJce/2iMjrDvdfp6wloSYylzbZVJLSUu" # root
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBKkCzAuXbRvn9rtl2wgHIxNYN6A3YeJ/w04Itm7Ck3V beau@nas" # nas
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPBlx7O+cDYGgMExuOgIKQjUvOiSSQMIaHnwqpqUye8b beau@arch" # grill
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDi27VjcR3I1rSTHfp3JvOZw1HQv1fCSTjIiob4cLa6q JuiceSSH" # galaxy s9
@@ -22,14 +57,6 @@
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.ssh 0700 ${config.hostSpec.username} users - -"
   ];
-  sops.secrets = {
-    "ssh/${config.networking.hostName}/priv" = {
-      path = "${config.hostSpec.home}/.ssh/id_ed25519";
-      mode = "0600";
-      owner = config.hostSpec.username;
-      inherit (config.users.users.${config.hostSpec.username}) group;
-    };
-  };
 
   hm.programs.ssh = {
     enable = true;
