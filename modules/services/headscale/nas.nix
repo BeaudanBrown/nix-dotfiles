@@ -31,8 +31,6 @@ in
       tls_cert_path = null;
       tls_key_path = null;
       derp = {
-        urls = [ ];
-        paths = [ ];
         auto_update_enabled = false;
 
         # Enable built-in DERP server

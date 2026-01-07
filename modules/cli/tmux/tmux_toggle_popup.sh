@@ -13,22 +13,21 @@ Options
   -n, --new-window   Open a new tmux window inside <session> (no popup)
   -f, --force        Always run <command>, never detach first
   -k, --keep         Keep window/pane open after <command> exits
+  -u, --unique       Make the session name (likely) unique
 EOF
 	exit 1
 }
 
-# ------------------------------------------------------------
-# Option parsing ------------------------------------------------
-# ------------------------------------------------------------
-opts=$(getopt -o nfk -l new-window,force,keep -- "$@") || usage
+opts=$(getopt -o nfku -l new-window,force,keep,unique: -- "$@") || usage
 eval set -- "$opts"
 
-new_window=0 force=0 keep=0
+new_window=0 force=0 keep=0 unique_session=0
 while true; do
 	case $1 in
 	-n | --new-window) new_window=1 ;;
 	-f | --force) force=1 ;;
 	-k | --keep) keep=1 ;;
+	-u | --unique) unique_session=1 ;;
 	--)
 		shift
 		break
@@ -39,19 +38,21 @@ done
 
 [[ $# -ge 1 ]] || usage
 target="$1"
-shift
-cmd=${1-} # empty means "no command"
 
-# ------------------------------------------------------------
-# Small helpers ------------------------------------------------
-# ------------------------------------------------------------
+shift
+cmd=${1-}
+
 curr_session=$(tmux display-message -p '#{session_name}')
-cwd=$(tmux display-message -p -t default: '#{pane_current_path}') ||
-	die "Could not determine CWD from 'default' session"
+cwd=$(tmux display-message -p -t default: '#{pane_current_path}') || die "Could not determine CWD from 'default' session"
+
+if ((unique_session)); then
+	last_dir="${cwd##*/}"
+	target="$target:$last_dir"
+fi
 
 session_exists() { tmux has-session -t "$target" 2>/dev/null; }
 
-popup() { # popup "<string that is evaluated by -E>"
+popup() {
 	tmux display-popup -E -w 95% -h 95% "$*"
 }
 
@@ -61,39 +62,29 @@ new_session_cmd() {
 		"$target" "$cwd" "${extra:+ \"$extra\"}"
 }
 
-run_in_session() { # send $cmd to already-attached session
+run_in_session() {
 	[[ -n $cmd ]] || return
 	tmux send-keys -t "$target" C-c
 	sleep 0.1
 	tmux send-keys -t "$target" "$cmd" Enter
 }
 
-# remember last scratch name (unchanged behaviour)
 tmux set -gF '@last_scratch_name' "$target"
 
-# ------------------------------------------------------------
-# MAIN LOGIC --------------------------------------------------
-# ------------------------------------------------------------
-
-# 1) — "open a new window" mode --------------------------------
 if ((new_window)); then
-	# ensure we are attached to the right session (via popup)
 	if [[ $curr_session != "$target" ]]; then
 		[[ $curr_session != "default" ]] && tmux detach-client
 		popup "$(new_session_cmd)"
 	fi
-
-	# create the new window
 	if [[ -z $cmd ]]; then
 		tmux new-window -c "$cwd"
 	else
 		tail=${keep:+; exec $SHELL}
 		tmux new-window -c "$cwd" "$cmd$tail"
 	fi
-	exit # done
+	exit
 fi
 
-# 2) — "toggle" (detach) behaviour -----------------------------
 if ! ((force)); then
 	if [[ $curr_session == "$target" ]]; then
 		tmux detach-client
@@ -102,13 +93,11 @@ if ! ((force)); then
 	[[ $curr_session != "default" ]] && tmux detach-client
 fi
 
-# 3) — already inside session + --force => just run command ----
 if ((force)) && session_exists && [[ $curr_session == "$target" ]]; then
 	run_in_session
 	exit
 fi
 
-# 4) — open / create popup -------------------------------------
 extra=""
 if [[ -n $cmd ]]; then
 	extra=$cmd
@@ -116,7 +105,6 @@ if [[ -n $cmd ]]; then
 fi
 popup "$(new_session_cmd "$extra")"
 
-# 5) — after popup is open, maybe send command -----------------
 if ((force)) && session_exists; then
 	run_in_session
 fi

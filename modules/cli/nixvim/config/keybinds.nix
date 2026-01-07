@@ -244,5 +244,35 @@
         noremap = true;
       };
     }
+    {
+      key = "<Leader>oa";
+      action = '':lua require("opencode").ask("@this: ", { submit = true })<CR>'';
+      mode = [
+        "n"
+        "x"
+      ];
+      options = {
+        noremap = true;
+        silent = true;
+      };
+    }
+    {
+      key = "<Leader>os";
+      action = '':lua require("opencode").select()<CR>'';
+      mode = [ "n" ];
+      options = {
+        noremap = true;
+        silent = true;
+      };
+    }
+    {
+      key = "<Leader>oo";
+      action = '':lua require("opencode").toggle()<CR>'';
+      mode = [ "n" ];
+      options = {
+        noremap = true;
+        silent = true;
+      };
+    }
   ];
 }

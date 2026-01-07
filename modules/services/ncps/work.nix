@@ -9,6 +9,7 @@
       trusted-public-keys = [
         "cache.bepis.lol-1:RICGW/iQ761PR6QiMUwbOLcvKird8EHoDd/ylnDOGJY="
       ];
+      builders-use-substitutes = true;
     };
 
     buildMachines = [

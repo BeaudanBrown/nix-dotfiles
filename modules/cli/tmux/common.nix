@@ -120,7 +120,7 @@ in
 
           bind-key -n M-m run-shell "tmux_toggle_popup LLM LLM"
 
-          bind-key -n M-M run-shell "tmux_toggle_popup opencode opencode"
+          bind-key -n M-M run-shell "tmux_toggle_popup -u LLM opencode"
 
           bind-key -n M-o run-shell "tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
 

@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   plugins.lsp = {
     enable = true;
@@ -13,13 +13,29 @@
       htmx.enable = true;
       jsonls.enable = true;
       pyright.enable = true;
-      nixd.enable = true;
+      nixd = {
+        settings.formatting.command = [ "${pkgs.nixfmt}/bin/nixfmt" ];
+        enable = true;
+      };
       air = {
         enable = true;
       };
       r_language_server = {
         enable = true;
         package = null;
+      };
+      rust_analyzer = {
+        enable = true;
+        installCargo = true;
+        installRustc = true;
+        settings = {
+          check = {
+            command = "clippy";
+          };
+        };
+      };
+      ruff = {
+        enable = true;
       };
     };
     keymaps = {
@@ -33,6 +49,7 @@
         gd = "definition";
         gt = "type_definition";
         gI = "implementation";
+        "<localleader>f" = "format";
       };
     };
   };

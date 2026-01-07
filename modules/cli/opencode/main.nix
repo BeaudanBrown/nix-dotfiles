@@ -89,13 +89,9 @@
       mcp = {
         context7 = {
           enabled = true;
-          type = "local";
-          command = [
-            "${pkgs.nodejs}/bin/npx"
-            "-y"
-            "@upstash/context7-mcp"
-          ];
-          environment = {
+          type = "remote";
+          url = "https://mcp.context7.com/mcp";
+          headers = {
             CONTEXT7_API_KEY = "$(cat ${config.sops.secrets.context7.path})";
           };
         };

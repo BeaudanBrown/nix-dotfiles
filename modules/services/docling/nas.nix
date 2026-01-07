@@ -1,6 +1,6 @@
 {
   config,
-  pkgsStable,
+  pkgsUnstable,
   ...
 }:
 let
@@ -19,8 +19,8 @@ in
   ];
 
   services.docling-serve = {
-    enable = true;
-    package = pkgsStable.docling-serve.override {
+    enable = false;
+    package = pkgsUnstable.docling-serve.override {
       withUI = true;
       withTesserocr = true;
       withCPU = true;

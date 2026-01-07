@@ -10,5 +10,8 @@
     gnumake
     nh
     ncdu
+    lsof
+    curl
+    procps
   ];
 }

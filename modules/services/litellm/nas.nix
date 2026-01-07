@@ -16,7 +16,8 @@ in
       domain = litellmDomain;
       upstreamHost = config.services.litellm.host;
       upstreamPort = toString config.custom.ports.assigned.${portKey};
-      tailnet = true;
+      # Allow Joan to use
+      tailnet = false;
     }
   ];
 
