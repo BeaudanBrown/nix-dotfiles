@@ -29,7 +29,7 @@
     settings = {
       provider = {
         lite_google = {
-          npm = "@ai-sdk/openai-compatible";
+          npm = "@ai-sdk/google";
           name = "Google";
           options = {
             baseURL = "https://litellm.bepis.lol";
@@ -74,7 +74,7 @@
             "gpt-5.2" = {
               name = "gpt-5.2";
             };
-            gpt-5-1-codex = {
+            "gpt-5.1-codex-max" = {
               name = "gpt-5.1-codex-max";
             };
             gpt-5 = {

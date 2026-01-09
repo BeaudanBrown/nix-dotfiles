@@ -46,21 +46,21 @@ in
             {
               model_name = "gpt-5.2";
               litellm_params = {
-                model = "openai/gpt-5";
+                model = "openai/gpt-5.2";
                 api_key = "os.environ/OPENAI_API_KEY";
               };
             }
             {
               model_name = "gpt-5.1-codex-max";
               litellm_params = {
-                model = "openai/gpt-5";
+                model = "openai/gpt-5.1-codex-max";
                 api_key = "os.environ/OPENAI_API_KEY";
               };
             }
             {
               model_name = "gpt-5-mini";
               litellm_params = {
-                model = "openai/gpt-5";
+                model = "openai/gpt-5-mini";
                 api_key = "os.environ/OPENAI_API_KEY";
               };
             }
