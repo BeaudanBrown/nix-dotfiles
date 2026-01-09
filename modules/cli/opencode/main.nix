@@ -17,7 +17,7 @@
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
-  sops.secrets.context7 = { };
+
   hm.programs.opencode = {
     enable = true;
     package = inputs.nix-ai-tools.packages.${pkgs.system}.opencode;
@@ -87,14 +87,15 @@
         };
       };
       mcp = {
-        context7 = {
+        litellm = {
           enabled = true;
           type = "remote";
-          url = "https://mcp.context7.com/mcp";
+          url = "https://litellm.bepis.lol/mcp/";
           headers = {
-            CONTEXT7_API_KEY = "$(cat ${config.sops.secrets.context7.path})";
+            "x-litellm-api-key" = "Bearer {file:${config.sops.secrets.litellm_api.path}}";
           };
         };
+
         nixos = {
           enabled = true;
           type = "local";

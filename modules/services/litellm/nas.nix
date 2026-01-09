@@ -27,6 +27,18 @@ in
         litellm_config = {
           litellm_settings = {
             drop_params = true;
+            mcp_aliases = {
+              github = "github_mcp";
+            };
+          };
+          mcp_servers = {
+            github_mcp = {
+              url = "https://api.githubcopilot.com/mcp/";
+              transport = "http";
+              auth_type = "bearer_token";
+              auth_value = "os.environ/GITHUB_API_KEY";
+              allow_all_keys = true;
+            };
           };
           model_list = [
             {
@@ -112,6 +124,7 @@ in
       in
       {
         image = "docker.litellm.ai/berriai/litellm-database:main-stable";
+        pull = "always";
         autoStart = true;
         ports = [
           "127.0.0.1:${toString config.custom.ports.assigned.${portKey}}:4000"
