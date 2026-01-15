@@ -118,6 +118,20 @@ in
                 api_key = "os.environ/GOOGLE_API_KEY";
               };
             }
+            {
+              model_name = "gemini-2.5-flash-image";
+              litellm_params = {
+                model = "gemini/gemini-2.5-flash-image";
+                api_key = "os.environ/GOOGLE_API_KEY";
+              };
+            }
+            {
+              model_name = "gemini-3-pro-image-preview";
+              litellm_params = {
+                model = "gemini/gemini-3-pro-image-preview";
+                api_key = "os.environ/GOOGLE_API_KEY";
+              };
+            }
           ];
         };
         litellm_yaml = pkgs.writeText "config.yaml" (lib.generators.toYAML { } litellm_config);
