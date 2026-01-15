@@ -5,6 +5,7 @@
 {
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
+    "d ${config.hostSpec.home}/.local/state/syncthing 0700 ${config.hostSpec.username} users - -"
   ];
   users.users.${config.hostSpec.username}.extraGroups = [ "syncthing" ];
   systemd.services.syncthing.environment.STNODEFAULTFOLDER = "true"; # Don't create default ~/Sync folder
@@ -69,6 +70,16 @@
             "laptop"
             "t480"
             "lachy-thinkpad"
+          ];
+        };
+        "state-sync" = {
+          id = "state-sync";
+          path = "${config.hostSpec.home}/.local/state/syncthing";
+          devices = [
+            "server"
+            "grill"
+            "laptop"
+            "t480"
           ];
         };
       };
