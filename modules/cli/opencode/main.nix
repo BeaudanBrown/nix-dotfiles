@@ -17,6 +17,10 @@
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
+  sops.secrets.context7 = {
+    owner = config.hostSpec.username;
+    inherit (config.users.users.${config.hostSpec.username}) group;
+  };
 
   hm.programs.opencode = {
     enable = true;
@@ -95,6 +99,14 @@
             "x-litellm-api-key" = "Bearer {file:${config.sops.secrets.litellm_api.path}}";
           };
         };
+        context7 = {
+          enabled = true;
+          type = "remote";
+          url = "https://mcp.context7.com/mcp";
+          headers = {
+            CONTEXT7_API_KEY = "{file:${config.sops.secrets.context7.path}}";
+          };
+        };
 
         nixos = {
           enabled = true;
@@ -106,6 +118,15 @@
             "--"
           ];
         };
+
+        # nixos = {
+        #   enabled = true;
+        #   type = "local";
+        #   command = [
+        #     "${pkgs.uv}/bin/uvx"
+        #     "mcp-nixos"
+        #   ];
+        # };
       };
     };
   };

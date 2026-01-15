@@ -18,7 +18,7 @@ EOF
 	exit 1
 }
 
-opts=$(getopt -o nfku -l new-window,force,keep,unique: -- "$@") || usage
+opts=$(getopt -o nfku -l new-window,force,keep,unique -- "$@") || usage
 eval set -- "$opts"
 
 new_window=0 force=0 keep=0 unique_session=0
@@ -47,10 +47,10 @@ cwd=$(tmux display-message -p -t default: '#{pane_current_path}') || die "Could 
 
 if ((unique_session)); then
 	last_dir="${cwd##*/}"
-	target="$target:$last_dir"
+	target="$target-$last_dir"
 fi
 
-session_exists() { tmux has-session -t "$target" 2>/dev/null; }
+session_exists() { tmux has-session -t "=$target" 2>/dev/null; }
 
 popup() {
 	tmux display-popup -E -w 95% -h 95% "$*"
