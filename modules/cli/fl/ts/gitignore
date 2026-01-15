@@ -1,0 +1,27 @@
+.devenv/
+.direnv/
+.envrc
+.pre-commit-config.yaml
+
+# Node
+node_modules/
+# Build output
+dist/
+
+# Logs
+*.log
+
+# Env files
+.env
+
+# Lockfiles
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store

@@ -14,6 +14,9 @@
         export FL_PY_FLAKE="${./python/flake.nix}"
         export FL_PY_ENVRC="${./python/envrc}"
         export FL_PY_GITIGNORE="${./python/gitignore}"
+        export FL_TS_FLAKE="${./ts/flake.nix}"
+        export FL_TS_ENVRC="${./ts/envrc}"
+        export FL_TS_GITIGNORE="${./ts/gitignore}"
         ${builtins.readFile ./fl.sh}
       '';
     })
