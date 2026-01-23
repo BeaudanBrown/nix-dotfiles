@@ -31,6 +31,57 @@
       When working with Nix configurations, maintain consistency with existing patterns.
     '';
     settings = {
+      agent = {
+        general = {
+          disable = true;
+        };
+        explore = {
+          disable = true;
+        };
+        code-search = {
+          mode = "subagent";
+          description = "Specialized agent for searching the codebase and reading files. Use this for all retrieval tasks.";
+          model = "lite_google/gemini-3-flash-preview";
+          tools = {
+            glob = true;
+            grep = true;
+            read = true;
+            write = false;
+            edit = false;
+            bash = false;
+          };
+          prompt = ''
+            You are a Code Search Specialist. Your ONLY goal is to retrieve information.
+            - Use 'glob' to find file paths.
+            - Use 'grep' to search content.
+            - Use 'read' to inspect files.
+            - Return concise summaries or direct code snippets.
+            - NEVER attempt to modify code.
+          '';
+        };
+        build = {
+          mode = "primary";
+          model = "lite_anthropic/claude-sonnet-4-5";
+          tools = {
+            write = true;
+            edit = true;
+            bash = true;
+            code-search = true;
+          };
+          prompt = "You are the primary build agent. Delegate search tasks to @code-search to save context.";
+        };
+        plan = {
+          mode = "primary";
+          model = "lite_anthropic/claude-sonnet-4-5";
+          tools = {
+            write = false;
+            edit = false;
+            bash = false;
+            code-search = true;
+          };
+          prompt = "You are a software architect. Create detailed plans. Delegate research to @code-search.";
+        };
+      };
       provider = {
         lite_google = {
           npm = "@ai-sdk/google";
