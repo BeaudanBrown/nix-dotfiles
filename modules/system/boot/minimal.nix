@@ -10,13 +10,8 @@
     ];
     loader = {
       efi.canTouchEfiVariables = true;
-      grub = {
-        enable = true;
-        device = "nodev";
-        configurationLimit = 5;
-      };
       systemd-boot = {
-        enable = false;
+        enable = true;
         configurationLimit = 5;
       };
       timeout = lib.mkForce 1;

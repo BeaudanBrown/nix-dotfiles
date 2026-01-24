@@ -13,6 +13,16 @@ let
     ]);
 in
 {
+  hostedServices = [
+    {
+      domain = "sync.bepis.lol";
+      tailnet = true;
+      upstreamPort = "8384";
+    }
+  ];
+
+  services.syncthing.settings.gui.insecureSkipHostcheck = true;
+
   systemd.tmpfiles.rules = [
     "d /pool1/appdata/syncthing 0755 ${config.hostSpec.username} users - -"
   ]
