@@ -17,6 +17,7 @@
     "ssh/grill/pub" = { };
     "ssh/laptop/pub" = { };
     "ssh/t480/pub" = { };
+    "ssh/pi4/pub" = { };
   }
   // {
     "ssh/root/priv" = {
@@ -52,6 +53,7 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPBlx7O+cDYGgMExuOgIKQjUvOiSSQMIaHnwqpqUye8b beau@arch" # grill
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDi27VjcR3I1rSTHfp3JvOZw1HQv1fCSTjIiob4cLa6q JuiceSSH" # galaxy s9
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILiMXGI4mXg1Aw/gvx9LH5wEYMJ0M0ZgVKtoUZioaWfH beau@nixos" # laptop
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN3T4/Ob/aFlKn3aIX29r6LZ8baeMLWAQxQtXeV5g5Br beaudan.brown@gmail.com" # pi4
   ];
 
   systemd.tmpfiles.rules = [
@@ -78,15 +80,14 @@
         hostname = "nas.lan";
         user = "beau";
       };
+      pi4 = {
+        hostname = "pi4.lan";
+        user = "beau";
+      };
       pizero = {
         hostname = "192.168.1.103";
         user = "pi";
         port = 22;
-      };
-      pi4 = {
-        hostname = "192.168.1.122";
-        user = "beau";
-        port = 8023;
       };
       dad = {
         hostname = "slippers.beaudan.me";

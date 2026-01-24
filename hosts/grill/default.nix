@@ -70,4 +70,6 @@ in
   };
 
   system.stateVersion = "25.05";
+
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 }
