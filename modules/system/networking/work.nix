@@ -26,7 +26,6 @@
 
   networking = {
     networkmanager = {
-      dns = "systemd-resolved";
       plugins = [
         pkgs.networkmanager-openconnect
       ];
