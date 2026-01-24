@@ -9,6 +9,7 @@ let
     "minimal"
     "common"
     "network"
+    "client"
   ];
 in
 {

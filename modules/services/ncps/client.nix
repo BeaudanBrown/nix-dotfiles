@@ -16,7 +16,7 @@
       {
         hostName = "nas.lan";
         # TODO: Cross compilation?
-        system = "x86_64-linux";
+        system = "x86_64-linux,aarch64-linux";
         sshUser = "beau";
         protocol = "ssh-ng";
         maxJobs = 8;

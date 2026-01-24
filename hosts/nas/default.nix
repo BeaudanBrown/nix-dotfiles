@@ -34,6 +34,9 @@ in
     extraSpecialArgs = { };
   });
 
+  # Enable emulation for cross-compilation
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
   nix.settings.cores = 8;
 
   hostSpec = {

@@ -11,6 +11,7 @@ let
     "common"
     "gaming"
     "network" # Tailnet + Kitty etc
+    "client" # Network - server
     "main" # Main machines: desktop, laptop, server
     "work"
   ];
