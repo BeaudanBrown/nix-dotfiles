@@ -25,6 +25,9 @@ in
     inputs.copyparty.nixosModules.default
     inputs.home-manager.nixosModules.home-manager
     inputs.joan-flash.nixosModules.default
+    "${inputs.loom}/infra/nixos-modules/loom-server.nix"
+    "${inputs.loom}/infra/nixos-modules/loom-web.nix"
+    "${inputs.loom}/infra/nixos-modules/k3s.nix"
   ]
   ++ (lib.custom.importAll {
     inherit host roots;

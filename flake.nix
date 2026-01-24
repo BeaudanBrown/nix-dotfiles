@@ -128,5 +128,10 @@
       url = "github:BeaudanBrown/joan-tracker";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    loom = {
+      url = "github:ghuntley/loom";
+      inputs.nixpkgs.follows = "nixpkgsUnstable";
+    };
   };
 }
