@@ -8,6 +8,7 @@ let
   roots = [
     "minimal"
     "common"
+    "network"
   ];
 in
 {
@@ -33,7 +34,7 @@ in
   hostSpec = {
     username = "mikaerem";
     hostName = host;
-    # tailIP = "100.64.0.4";
+    tailIP = "100.64.0.12";
     email = "mccarm110@gmail.com";
     wifi = false;
     userFullName = "Mika";
