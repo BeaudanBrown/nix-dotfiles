@@ -22,12 +22,10 @@
   # TODO: get keys into the iso
   sops.secrets."wifi/home/ssid" = { };
   sops.secrets."wifi/home/psk" = { };
-  services.resolved.enable = true;
 
   networking = {
     networkmanager = {
       # TODO: This doesn't work on minimal install
-      dns = "systemd-resolved";
       plugins = [
         pkgs.networkmanager-openconnect
       ];

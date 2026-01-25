@@ -9,10 +9,13 @@ in
   hostedServices = [
     {
       inherit domain;
-      upstreamHost = "192.168.1.104";
+      # Brick tail IP
+      upstreamHost = "100.64.0.12";
+      dnsTarget = "100.64.0.12";
       upstreamPort = "80";
       tailnet = true;
-      webSockets = true;
+      webSockets = false;
+      doNginx = false;
     }
   ];
 }
