@@ -61,7 +61,7 @@
         };
         build = {
           mode = "primary";
-          model = "lite_anthropic/claude-sonnet-4-5";
+          model = "lite_google/gemini-3-pro-preview";
           tools = {
             write = true;
             edit = true;
@@ -72,7 +72,7 @@
         };
         plan = {
           mode = "primary";
-          model = "lite_anthropic/claude-sonnet-4-5";
+          model = "lite_anthropic/claude-opus-4-5";
           tools = {
             write = false;
             edit = false;

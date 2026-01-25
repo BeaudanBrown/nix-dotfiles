@@ -9,7 +9,7 @@
       "kvm.enable_virt_at_load=0"
     ];
     loader = {
-      efi.canTouchEfiVariables = true;
+      efi.canTouchEfiVariables = false;
       systemd-boot = {
         enable = true;
         configurationLimit = 5;

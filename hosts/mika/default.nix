@@ -8,8 +8,6 @@ let
   roots = [
     "minimal"
     "common"
-    "network"
-    "client"
   ];
 in
 {
@@ -21,20 +19,25 @@ in
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    # "${inputs.loom}/infra/nixos-modules/loom-server.nix"
+    # "${inputs.loom}/infra/nixos-modules/loom-web.nix"
+    # "${inputs.loom}/infra/nixos-modules/k3s.nix"
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
+    extraSpecialArgs = { };
   });
 
-  boot.loader.systemd-boot.enable = lib.mkForce false;
+  nix.settings.cores = 16;
 
   hostSpec = {
-    username = "beau";
+    username = "top";
     hostName = host;
+    # tailIP = "100.64.0.4";
     email = "beaudan.brown@gmail.com";
-    wifi = true;
+    wifi = false;
     userFullName = "Beaudan Brown";
   };
 
-  system.stateVersion = "25.05";
+  system.stateVersion = "25.11";
 }
