@@ -14,6 +14,8 @@ keys:
   - &beau_mika age1djnaxh6v3ppuwcumtfrtd4x590ala828znvwcdg8tk6drhejv5mqltpx84
   - &brick age1ntdsnyrcnwy700yny3syltatu0avep2jqn2c5z6e68vm9sntcppq6l0aan
   - &mikaerem_brick age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf
+  - &bottom age1qa9kz72cuwkm0z2svvmp5e3fdp3da6ru4gwwgempw38e05fqe9zqfct3vv
+  - &beau_bottom age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq
 creation_rules:
   - path_regex: secrets.yaml$
     key_groups:
@@ -33,3 +35,5 @@ creation_rules:
           - *beau_mika
           - *brick
           - *mikaerem_brick
+          - *bottom
+          - *beau_bottom

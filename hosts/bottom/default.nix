@@ -31,12 +31,15 @@ in
   nix.settings.cores = 16;
 
   hostSpec = {
-    username = "top";
+    username = "beau";
+    # username = "mikaerem";
     hostName = host;
-    # tailIP = "100.64.0.4";
-    email = "mccarm110@gmail.com";
+    tailIP = "100.64.0.13";
+    email = "beaudan.brown@gmail.com";
+    # email = "mccarm110@gmail.com";
     wifi = false;
-    userFullName = "Mika";
+    # userFullName = "Mika";
+    userFullName = "Beaudan Brown";
   };
 
   system.stateVersion = "25.11";

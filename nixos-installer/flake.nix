@@ -71,7 +71,8 @@
         laptop = newConfig "laptop" "beau";
         t480 = newConfig "t480" "beau";
         nas = newConfig "nas" "beau";
-        mika = newConfig "mika" "top";
+        bottom = newConfig "bottom" "beau";
+        # bottom = newConfig "bottom" "mikaerem";
         brick = newConfig "brick" "mikaerem";
       };
     };
