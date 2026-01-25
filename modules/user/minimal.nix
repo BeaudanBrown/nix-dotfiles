@@ -15,6 +15,10 @@
     hashedPassword = "$y$j9T$rxvMdBfBYR6YMFmQOTEl90$qAOeCeZFDuv8v6eFiqtjZGsL6yuB2e5mhi5dZt3Ts37";
   };
 
+  systemd.tmpfiles.rules = [
+    "d ${config.hostSpec.home}/.config 0755 ${config.hostSpec.username} users - -"
+  ];
+
   users.extraUsers.root = {
     inherit (config.users.users.${config.hostSpec.username}) hashedPassword;
     initialHashedPassword = lib.mkForce null;

@@ -2,6 +2,7 @@
 # User variables
 target_hostname=""
 target_ip=""
+iso_user="beau"
 target_user="${BOOTSTRAP_USERNAME}"
 ssh_port=22
 ssh_key="${BOOTSTRAP_HOME}/.ssh/id_ed25519"
@@ -229,6 +230,8 @@ if [ -z "$target_hostname" ] || [ -z "$target_ip" ] || [ -z "$ssh_key" ]; then
 	help_and_exit
 fi
 
+target_dotfiles_dir="/home/$target_user/documents/nix-dotfiles"
+
 # SSH commands
 ssh_cmd="ssh \
         -oControlPath=none \
@@ -290,7 +293,7 @@ function nixos_anywhere() {
 	if no_or_yes "Generate a new hardware config for this host? Yes if your nix-dotfiles doesn't have an entry for this host."; then
 		green "Generating hardware-configuration.nix on $target_hostname and adding it to the local nix-dotfiles."
 		$ssh_root_cmd "nixos-generate-config --no-filesystems --root /mnt"
-		$scp_cmd "$target_user"@"$target_ip":/mnt/etc/nixos/hardware-configuration.nix \
+		$scp_cmd "$iso_user"@"$target_ip":/mnt/etc/nixos/hardware-configuration.nix \
 			"${dotfiles_dir}"/hosts/"$target_hostname"/hardware.nix
 		git add "$dotfiles_dir/hosts/$target_hostname/hardware.nix"
 		repo_dirty=1
@@ -371,9 +374,9 @@ if yes_or_no "Do you want to copy your full nix-dotfiles and nix-secrets to $tar
 	if yes_or_no "Do you want to rebuild immediately?"; then
 		green "Rebuilding nix-dotfiles on $target_hostname"
 		# FIXME(bootstrap): This should probably only happen on devices that require it
-		$ssh_cmd "cd $dotfiles_dir && nix-prefetch-url --name displaylink-620.zip https://www.synaptics.com/sites/default/files/exe_files/2025-09/DisplayLink%20USB%20Graphics%20Software%20for%20Ubuntu6.2-EXE.zip"
-		$ssh_cmd "cd $dotfiles_dir && nix-prefetch-url --name linuxx64-25.05.0.44.tar.gz https://send.bepis.lol/api/shares/citrix/files/a11fbff3-4c9b-4d28-a0e9-2307a71d0899"
-		$ssh_cmd "cd $dotfiles_dir && sudo nixos-rebuild --impure --show-trace --flake .#$target_hostname switch"
+		$ssh_cmd "cd $target_dotfiles_dir && nix-prefetch-url --name displaylink-620.zip https://www.synaptics.com/sites/default/files/exe_files/2025-09/DisplayLink%20USB%20Graphics%20Software%20for%20Ubuntu6.2-EXE.zip"
+		$ssh_cmd "cd $target_dotfiles_dir && nix-prefetch-url --name linuxx64-25.05.0.44.tar.gz https://send.bepis.lol/api/shares/citrix/files/a11fbff3-4c9b-4d28-a0e9-2307a71d0899"
+		$ssh_cmd "cd $target_dotfiles_dir && sudo nixos-rebuild --impure --show-trace --flake .#$target_hostname switch"
 	fi
 else
 	echo

@@ -8,6 +8,7 @@
       flake-utils,
       ...
     }@inputs:
+    # TODO: Somewhere there is a sops thing making .config
     let
       inherit (self) outputs;
       # ========== Extend lib with lib.custom ==========
