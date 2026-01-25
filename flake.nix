@@ -26,9 +26,6 @@
         checks = import ./lib/checks.nix { inherit inputs system pkgs; };
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
-          packages = with pkgs; [
-            nodejs
-          ];
         };
       }
     )
