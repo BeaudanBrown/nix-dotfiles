@@ -31,7 +31,7 @@ in
   nix.settings.cores = 16;
 
   hostSpec = {
-    username = "top";
+    username = "mikaerem";
     hostName = host;
     # tailIP = "100.64.0.4";
     email = "mccarm110@gmail.com";

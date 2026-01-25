@@ -12,6 +12,7 @@
     };
   };
 
+  # TODO: SSH key population should NOT be minimal
   sops.secrets = {
     "ssh/nas/pub" = { };
     "ssh/grill/pub" = { };

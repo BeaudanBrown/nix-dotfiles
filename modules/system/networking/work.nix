@@ -26,6 +26,8 @@
 
   networking = {
     networkmanager = {
+      # TODO: This doesn't work on minimal install
+      dns = "systemd-resolved";
       plugins = [
         pkgs.networkmanager-openconnect
       ];
