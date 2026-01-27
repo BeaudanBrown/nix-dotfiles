@@ -30,10 +30,7 @@ let
     '')
     |> concatStringsSep "\n\n";
 
-  headscaleSplit =
-    tailServices
-    |> map (s: nameValuePair s.domain [ (if s.dnsTarget != null then s.dnsTarget else tailIP) ])
-    |> listToAttrs;
+  headscaleSplit = tailServices |> map (s: nameValuePair s.domain [ tailIP ]) |> listToAttrs;
 in
 {
   config = {

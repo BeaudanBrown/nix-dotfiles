@@ -53,6 +53,12 @@ let
   extraRules = [
     "size 40% 80%, class:(org.pwmt.zathura)"
   ];
+  noAnimationRules = [
+    "noanim, class:^(ueberzugpp_.*)$"
+    "noblur, class:^(ueberzugpp_.*)$"
+    "noshadow, class:^(ueberzugpp_.*)$"
+    "noborder, class:^(ueberzugpp_.*)$"
+  ];
 in
 {
   hm.wayland.windowManager.hyprland = {
@@ -68,6 +74,7 @@ in
       ++ tallWindows
       ++ largeWindows
       ++ extraRules
+      ++ noAnimationRules
       ++ onCursorWindows
       ++ rightClickWindows;
   };

@@ -20,17 +20,14 @@
     fileWidgetOptions = [
       "--prompt=GIT> "
       "--header=CTRL-G: toggle gitignore"
-      "--bind=ctrl-g:reload(fd --type f --hidden --follow --exclude .git --no-ignore)+change-prompt(ALL> )+change-header(CTRL-G: toggle gitignore)"
+      "--bind=ctrl-g:reload(${pkgs.fd}/bin/fd --type f --hidden --follow --exclude .git --no-ignore)+change-prompt(ALL> )+change-header(CTRL-G: toggle gitignore)"
     ];
 
     # Options for Alt+C (change directory widget)
     changeDirWidgetOptions = [
       "--prompt=GIT> "
       "--header=CTRL-G: toggle gitignore"
-      "--bind=ctrl-g:reload(fd --type d --hidden --follow --exclude .git --no-ignore)+change-prompt(ALL> )+change-header(CTRL-G: toggle gitignore)"
+      "--bind=ctrl-g:reload(${pkgs.fd}/bin/fd --type d --hidden --follow --exclude .git --no-ignore)+change-prompt(ALL> )+change-header(CTRL-G: toggle gitignore)"
     ];
   };
-
-  # Ensure fd is available
-  hm.home.packages = [ pkgs.fd ];
 }
