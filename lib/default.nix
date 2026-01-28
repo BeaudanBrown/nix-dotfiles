@@ -5,6 +5,18 @@ with lib;
 rec {
   relativeToRoot = lib.path.append ../.;
 
+  # SOPS helpers
+  # - Root-shared secret file: secrets/<root>.yaml
+  # - Module-derived secret file: secrets/<basename-of-module>.yaml
+  sopsRootFile = root: relativeToRoot "secrets/${root}.yaml";
+
+  sopsFileForModule =
+    moduleFile:
+    let
+      base = removeSuffix ".nix" (builtins.baseNameOf moduleFile);
+    in
+    relativeToRoot "secrets/${base}.yaml";
+
   importRecursive =
     { leaf, path }:
     let

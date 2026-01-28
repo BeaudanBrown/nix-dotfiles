@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   domain = "registry.bepis.lol";
   portKey = "docker-registry";
@@ -46,6 +46,7 @@ in
   };
 
   sops.secrets."docker-registry/htpasswd" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     # Keep it in /etc so it's available early and readable by nginx
     # path = "/etc/secrets/docker-registry/htpasswd";
     mode = "0640";

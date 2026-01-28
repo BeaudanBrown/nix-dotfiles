@@ -22,6 +22,10 @@ iso-install DRIVE: iso
 sync USER HOST PATH:
 	rsync -av --filter=':- .gitignore' -e "ssh -l {{USER}} -oport=22" . {{USER}}@{{HOST}}:{{PATH}}/nix-config
 
+# Generate .sops.yaml from hostSpecs
+gen-sops-yaml:
+  ./scripts/gen-sops-yaml.sh
+
 update-sops:
   sops updatekeys -y secrets.yaml
 

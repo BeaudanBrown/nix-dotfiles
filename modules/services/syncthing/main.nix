@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   ...
 }:
 {
@@ -92,6 +93,7 @@
     ];
   };
   sops.secrets."syncthing/${config.networking.hostName}/cert" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     path = "${config.hostSpec.home}/.config/syncthing/cert.pem";
     mode = "0400";
     owner = config.hostSpec.username;
@@ -100,6 +102,7 @@
   };
 
   sops.secrets."syncthing/${config.networking.hostName}/key" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     path = "${config.hostSpec.home}/.config/syncthing/key.pem";
     mode = "0400";
     owner = config.hostSpec.username;

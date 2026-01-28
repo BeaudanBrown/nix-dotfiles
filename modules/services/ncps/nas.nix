@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   domain = "cache.bepis.lol";
   portKey = "ncps";
@@ -45,6 +45,7 @@ in
   };
 
   sops.secrets."ncps" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0400";
     owner = "ncps";
     group = "ncps";

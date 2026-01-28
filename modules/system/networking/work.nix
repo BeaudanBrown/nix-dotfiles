@@ -1,4 +1,9 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 {
   nixpkgs.overlays = [
     (final: prev: {
@@ -20,8 +25,12 @@
     openconnect
   ];
   # TODO: get keys into the iso
-  sops.secrets."wifi/home/ssid" = { };
-  sops.secrets."wifi/home/psk" = { };
+  sops.secrets."wifi/home/ssid" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
+  sops.secrets."wifi/home/psk" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
 
   networking = {
     networkmanager = {

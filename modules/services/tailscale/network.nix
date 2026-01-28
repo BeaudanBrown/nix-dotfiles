@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   networking.firewall = {
     checkReversePath = "loose";
@@ -15,7 +15,9 @@
       "--accept-routes=true"
     ];
   };
-  sops.secrets."headscale/pre_auth" = { };
+  sops.secrets."headscale/pre_auth" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
 
   environment.shellAliases = {
     exit-on = "sudo tailscale set --exit-node=nas";

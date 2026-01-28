@@ -142,6 +142,10 @@ in
     '';
   };
 
-  sops.secrets."litellm/env" = { };
-  sops.secrets."litellm/db_env" = { };
+  sops.secrets."litellm/env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
+  sops.secrets."litellm/db_env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
 }

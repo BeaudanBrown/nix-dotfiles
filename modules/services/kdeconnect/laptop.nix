@@ -1,7 +1,8 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   sops.secrets = {
     "kdeconnect/${config.networking.hostName}" = {
+      sopsFile = lib.custom.sopsFileForModule __curPos.file;
       path = "${config.hostSpec.home}/.config/kdeconnect/trusted_devices";
       mode = "0644";
       owner = config.hostSpec.username;

@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -8,8 +9,8 @@
     systemPackages = [ pkgs.sops ];
   };
   sops = {
-    defaultSopsFile = lib.custom.relativeToRoot "secrets.yaml";
-    validateSopsFiles = false;
+    defaultSopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}.yaml";
+    validateSopsFiles = true;
     age = {
       # Key to use to derive age key
       sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];

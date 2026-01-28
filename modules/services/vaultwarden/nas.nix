@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   domain = "pw.bepis.lol";
   portKey = "vaultwarden";
@@ -27,6 +27,7 @@ in
   users.users.${config.hostSpec.username}.extraGroups = [ "vaultwarden" ];
 
   sops.secrets.vaultwarden = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     path = "/pool1/appdata/vaultwarden/rsa_key.pem";
     mode = "0600";
     owner = "vaultwarden";
