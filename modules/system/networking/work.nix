@@ -1,7 +1,5 @@
 {
   pkgs,
-  config,
-  lib,
   ...
 }:
 {
@@ -24,13 +22,6 @@
     networkmanagerapplet
     openconnect
   ];
-  # TODO: get keys into the iso
-  sops.secrets."wifi/home/ssid" = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-  };
-  sops.secrets."wifi/home/psk" = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-  };
 
   networking = {
     networkmanager = {
@@ -40,8 +31,6 @@
       ];
       ensureProfiles = {
         environmentFiles = [
-          config.sops.secrets."wifi/home/ssid".path
-          config.sops.secrets."wifi/home/psk".path
         ];
         profiles = {
           Monash = {
