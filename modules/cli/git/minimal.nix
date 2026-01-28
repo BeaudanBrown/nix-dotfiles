@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   ...
 }:
 {
@@ -18,6 +19,7 @@
   };
 
   sops.secrets."gh-hosts" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
     mode = "0600";

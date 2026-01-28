@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   nix = {
     optimise.automatic = true;
@@ -10,6 +10,7 @@
   };
 
   sops.secrets.nix-github-access = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0440";
   };
 

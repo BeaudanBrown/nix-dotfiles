@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   hostedServices = [
     {
@@ -15,5 +15,7 @@
       avatars = "attributes.avatar,gravatar,initials";
     };
   };
-  sops.secrets.authentik_env = { };
+  sops.secrets.authentik_env = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
 }

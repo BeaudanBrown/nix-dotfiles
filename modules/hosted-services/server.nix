@@ -153,6 +153,7 @@ in
     };
 
     sops.secrets."cloudflare/ddns_token" = {
+      sopsFile = lib.custom.sopsFileForModule __curPos.file;
       mode = "0600";
       owner = config.hostSpec.username;
       inherit (config.users.users.${config.hostSpec.username}) group;
@@ -169,7 +170,9 @@ in
       domains = cloudflareDomains;
     };
 
-    sops.secrets."cloudflare/env" = { };
+    sops.secrets."cloudflare/env" = {
+      sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    };
 
     security.acme = {
       acceptTerms = true;
