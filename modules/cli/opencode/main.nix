@@ -40,7 +40,7 @@
         };
         code-search = {
           mode = "subagent";
-          description = "Specialized agent for searching the codebase and reading files. Use this for all retrieval tasks.";
+          description = "Read-only code retrieval specialist. Use ONLY for searching files, reading content, and gathering context. CANNOT edit, write, or modify files. Returns information for you to use.";
           model = "lite_google/gemini-3-flash-preview";
           tools = {
             glob = true;
@@ -59,6 +59,26 @@
             - NEVER attempt to modify code.
           '';
         };
+        github = {
+          mode = "subagent";
+          description = "Git specialist. Handles commits (short messages), diffs, and logs. Use ONLY when explicitly asked.";
+          model = "lite_google/gemini-3-flash-preview";
+          tools = {
+            glob = false;
+            grep = false;
+            read = false;
+            write = false;
+            edit = false;
+            bash = true;
+          };
+          prompt = ''
+            You are a Git Operations Specialist.
+            - Use 'bash' for git commands (commit, diff, log, status).
+            - Commit messages MUST be concise (< 10 words).
+            - Analyze diffs and repo state.
+            - NEVER modify file contents directly.
+          '';
+        };
         build = {
           mode = "primary";
           model = "lite_google/gemini-3-pro-preview";
@@ -67,8 +87,9 @@
             edit = true;
             bash = true;
             code-search = true;
+            github = true;
           };
-          prompt = "You are the primary build agent. Delegate search tasks to @code-search to save context.";
+          prompt = "You are the primary build agent. Delegate code search to @code-search, it cannot make changes. Delegate git tasks to @github ONLY when asked.";
         };
         plan = {
           mode = "primary";
@@ -78,8 +99,14 @@
             edit = false;
             bash = false;
             code-search = true;
+            github = true;
           };
-          prompt = "You are a software architect. Create detailed plans. Delegate research to @code-search.";
+          prompt = ''
+            You are a software architect.
+                        - Create plans, never attempt to change any files.
+                        - Start each plan by first studying the existing code or specs, and then asking the user if you need clarification before you design a detailed plan.
+                        - Delegate code search to @code-search, it cannot make changes.
+                        - Use @github ONLY when asked and only for git information.'';
         };
       };
       provider = {
@@ -142,14 +169,16 @@
         };
       };
       mcp = {
-        litellm = {
+        github = {
           enabled = true;
-          type = "remote";
-          url = "https://litellm.bepis.lol/mcp/";
-          headers = {
-            "x-litellm-api-key" = "Bearer {file:${config.sops.secrets.litellm_api.path}}";
-          };
+          type = "local";
+          command = [
+            "${pkgs.bash}/bin/bash"
+            "-c"
+            "GITHUB_PERSONAL_ACCESS_TOKEN=$(${pkgs.gh}/bin/gh auth token) ${pkgs.github-mcp-server}/bin/github-mcp-server stdio"
+          ];
         };
+
         context7 = {
           enabled = true;
           type = "remote";

@@ -44,7 +44,7 @@ cat <<EOF
 	<hip-report-version>4</hip-report-version>
 	<categories>
 		<entry name="host-info">
-			<client-version>6.2.1-12</client-version>
+			<client-version>6.3.3</client-version>
 			<os>Linux Ubuntu 24.04.3 LTS</os>
 			<os-vendor>Linux</os-vendor>
 			<domain></domain>

@@ -27,34 +27,8 @@ in
         litellm_config = {
           litellm_settings = {
             drop_params = true;
-            mcp_aliases = {
-              github = "github_mcp";
-            };
-          };
-          mcp_servers = {
-            github_mcp = {
-              url = "https://api.githubcopilot.com/mcp/";
-              transport = "http";
-              auth_type = "bearer_token";
-              auth_value = "os.environ/GITHUB_API_KEY";
-              allow_all_keys = true;
-            };
           };
           model_list = [
-            {
-              model_name = "gpt-3.5-turbo";
-              litellm_params = {
-                model = "openai/gpt-3.5-turbo";
-                api_key = "os.environ/OPENAI_API_KEY";
-              };
-            }
-            {
-              model_name = "o3";
-              litellm_params = {
-                model = "openai/o3";
-                api_key = "os.environ/OPENAI_API_KEY";
-              };
-            }
             {
               model_name = "gpt-5.2";
               litellm_params = {
@@ -77,10 +51,10 @@ in
               };
             }
             {
-              model_name = "gpt-5";
+              model_name = "claude-haiku-4-5";
               litellm_params = {
-                model = "openai/gpt-5";
-                api_key = "os.environ/OPENAI_API_KEY";
+                model = "anthropic/claude-haiku-4-5";
+                api_key = "os.environ/ANTHROPIC_API_KEY";
               };
             }
             {
@@ -94,13 +68,6 @@ in
               model_name = "claude-opus-4-5";
               litellm_params = {
                 model = "anthropic/claude-opus-4-20250514";
-                api_key = "os.environ/ANTHROPIC_API_KEY";
-              };
-            }
-            {
-              model_name = "claude-haiku-4-5";
-              litellm_params = {
-                model = "anthropic/claude-haiku-4-5";
                 api_key = "os.environ/ANTHROPIC_API_KEY";
               };
             }
