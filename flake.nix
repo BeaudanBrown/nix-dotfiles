@@ -98,7 +98,7 @@
 
     fenix = {
       url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
 
     systems.url = "github:nix-systems/default";

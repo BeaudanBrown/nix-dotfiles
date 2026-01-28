@@ -201,7 +201,7 @@
     "fenix": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgsUnstable"
         ],
         "rust-analyzer-src": "rust-analyzer-src"
       },
