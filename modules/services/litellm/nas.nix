@@ -123,6 +123,9 @@ in
               litellm_params = {
                 model = "moonshot/kimi-k2.5-no-think";
                 api_key = "os.environ/MOONSHOT_API_KEY";
+                thinking = {
+                  type = "disabled";
+                };
               };
             }
           ];

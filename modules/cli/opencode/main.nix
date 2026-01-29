@@ -12,7 +12,7 @@
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
 
-  hm.programs.opencode = {
+  hm.primary.programs.opencode = {
     enable = true;
     package = inputs.nix-ai-tools.packages.${pkgs.system}.opencode;
     rules = ''
@@ -115,6 +115,10 @@
               interleaved = {
                 field = "reasoning_content";
               };
+              cost = {
+                input = 0.60;
+                output = 3.00;
+              };
             };
           };
         };
@@ -128,9 +132,17 @@
           models = {
             gemini-3-flash-preview = {
               name = "gemini-3-flash-preview";
+              cost = {
+                input = 0.50;
+                output = 3.00;
+              };
             };
             gemini-3-pro-preview = {
               name = "gemini-3-pro-preview";
+              cost = {
+                input = 2.00;
+                output = 12.00;
+              };
             };
           };
         };
@@ -144,12 +156,24 @@
           models = {
             claude-opus-4-5 = {
               name = "claude-opus-4-5";
+              cost = {
+                input = 5.00;
+                output = 25.00;
+              };
             };
             claude-sonnet-4-5 = {
               name = "claude-sonnet-4-5";
+              cost = {
+                input = 3.00;
+                output = 15.00;
+              };
             };
             claude-haiku-4-5 = {
               name = "claude-haiku-4-5";
+              cost = {
+                input = 1.00;
+                output = 5.00;
+              };
             };
           };
         };
@@ -163,12 +187,24 @@
           models = {
             "gpt-5.2" = {
               name = "gpt-5.2";
+              cost = {
+                input = 1.75;
+                output = 14.00;
+              };
             };
             "gpt-5.2-codex" = {
               name = "gpt-5.2-codex";
+              cost = {
+                input = 1.75;
+                output = 14.00;
+              };
             };
             gpt-5-mini = {
               name = "gpt-5-mini";
+              cost = {
+                input = 0.25;
+                output = 2.00;
+              };
             };
           };
         };
