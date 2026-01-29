@@ -13,7 +13,7 @@ rec {
   sopsFileForModule =
     moduleFile:
     let
-      base = removeSuffix ".nix" (builtins.baseNameOf moduleFile);
+      base = moduleFile |> builtins.baseNameOf |> removeSuffix ".nix";
     in
     relativeToRoot "secrets/${base}.yaml";
 
@@ -76,22 +76,22 @@ rec {
 
   concatListsFromPaths =
     childAttrName: paths:
-    builtins.concatLists (
-      builtins.map (
-        path:
-        let
-          expr = import path;
-        in
-        if
-          builtins.isAttrs expr
-          && builtins.hasAttr childAttrName expr
-          && builtins.typeOf (builtins.getAttr childAttrName expr) == "list"
-        then
-          builtins.getAttr childAttrName expr
-        else
-          [ ]
-      ) paths
-    );
+    paths
+    |> builtins.map (
+      path:
+      let
+        expr = import path;
+      in
+      if
+        builtins.isAttrs expr
+        && builtins.hasAttr childAttrName expr
+        && builtins.typeOf (builtins.getAttr childAttrName expr) == "list"
+      then
+        builtins.getAttr childAttrName expr
+      else
+        [ ]
+    )
+    |> builtins.concatLists;
 
   ## Create a NixOS module option.
   ##

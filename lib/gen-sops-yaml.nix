@@ -18,7 +18,7 @@ let
       [ ];
 
   # Extract all unique roots across all hosts
-  allRoots = lib.unique (lib.flatten (lib.mapAttrsToList (_: spec: spec.roots) hostSpecs));
+  allRoots = hostSpecs |> lib.mapAttrsToList (_: spec: spec.roots) |> lib.flatten |> lib.unique;
 
   # Build keys list with anchors for YAML
   # Format: { anchor = "hostname"; key = "age1..."; }
@@ -55,18 +55,19 @@ let
       key = masterKey;
     }
   ]
-  ++ (lib.flatten (lib.mapAttrsToList keysForHost hostSpecs));
+  ++ (hostSpecs |> lib.mapAttrsToList keysForHost |> lib.flatten);
 
   # Filter out null keys
-  validKeys = builtins.filter (k: k.key != null) allKeys;
+  validKeys = allKeys |> builtins.filter (k: k.key != null);
 
   # Get recipient anchors for hosts with a specific root
   # Only include hosts that have at least one valid key
   getRecipientsForRoot =
     root:
     let
-      recipients = lib.flatten (
-        lib.mapAttrsToList (
+      recipients =
+        hostSpecs
+        |> lib.mapAttrsToList (
           hostname: spec:
           if builtins.elem root spec.roots then
             (
@@ -75,8 +76,8 @@ let
             )
           else
             [ ]
-        ) hostSpecs
-      );
+        )
+        |> lib.flatten;
     in
     # Always include master key and NAS keys, plus any root-scoped keys
     lib.unique ([ "master" ] ++ nasRecipients ++ recipients);
@@ -105,10 +106,9 @@ let
   rootHasKeys =
     root:
     let
-      hostsWithRoot = lib.filter (hostname: builtins.elem root hostSpecs.${hostname}.roots) (
-        lib.attrNames hostSpecs
-      );
-      hostsWithKeys = lib.filter hostHasKeys hostsWithRoot;
+      hostsWithRoot =
+        hostSpecs |> lib.attrNames |> lib.filter (hostname: builtins.elem root hostSpecs.${hostname}.roots);
+      hostsWithKeys = hostsWithRoot |> lib.filter hostHasKeys;
     in
     (builtins.length hostsWithKeys) > 0;
 
@@ -133,8 +133,8 @@ let
   };
 
   # Filter hosts and roots to only those with valid keys
-  hostsWithKeys = lib.filter hostHasKeys (lib.attrNames hostSpecs);
-  rootsWithKeys = lib.filter rootHasKeys allRoots;
+  hostsWithKeys = hostSpecs |> lib.attrNames |> lib.filter hostHasKeys;
+  rootsWithKeys = allRoots |> lib.filter rootHasKeys;
 
   # All host rules (only for hosts with keys)
   hostRules = map hostRule hostsWithKeys;

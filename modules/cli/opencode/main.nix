@@ -110,6 +110,11 @@
           models = {
             "kimi-k2.5" = {
               name = "kimi-k2.5";
+              reasoning = true;
+              tool_call = true;
+              interleaved = {
+                field = "reasoning_content";
+              };
             };
           };
         };
@@ -159,11 +164,8 @@
             "gpt-5.2" = {
               name = "gpt-5.2";
             };
-            "gpt-5.1-codex-max" = {
-              name = "gpt-5.1-codex-max";
-            };
-            gpt-5 = {
-              name = "gpt-5";
+            "gpt-5.2-codex" = {
+              name = "gpt-5.2-codex";
             };
             gpt-5-mini = {
               name = "gpt-5-mini";
@@ -201,15 +203,6 @@
             "--"
           ];
         };
-
-        # nixos = {
-        #   enabled = true;
-        #   type = "local";
-        #   command = [
-        #     "${pkgs.uv}/bin/uvx"
-        #     "mcp-nixos"
-        #   ];
-        # };
       };
     };
   };

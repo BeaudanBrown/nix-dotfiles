@@ -42,7 +42,7 @@ let
   hexToNumber =
     s:
     let
-      chars = lib.take 8 (lib.stringToCharacters s);
+      chars = s |> lib.stringToCharacters |> lib.take 8;
     in
     foldl' (acc: c: acc * 16 + hexDigitValue c) 0 chars;
 
@@ -126,9 +126,9 @@ let
     in
     r // { inherit rangeName range; };
 
-  requests = map resolveReq cfg.requests;
+  requests = cfg.requests |> map resolveReq;
 
-  grouped = groupBy (r: r.rangeName) requests;
+  grouped = requests |> groupBy (r: r.rangeName);
 
   # Allocate per range
   perRangeAssignments = mapAttrsToList (
@@ -140,7 +140,7 @@ let
     allocateForRange { inherit reserved range reqs; }
   ) grouped;
 
-  mergedAssignments = builtins.foldl' (acc: asg: acc // asg) { } perRangeAssignments;
+  mergedAssignments = perRangeAssignments |> builtins.foldl' (acc: asg: acc // asg) { };
 
 in
 {

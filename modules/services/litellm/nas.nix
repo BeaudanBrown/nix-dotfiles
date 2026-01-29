@@ -25,7 +25,12 @@ in
     "litellm" =
       let
         litellm_config = {
+          general_settings = {
+            store_model_in_db = true;
+            store_prompts_in_spend_logs = true;
+          };
           litellm_settings = {
+            modify_params = true;
             drop_params = true;
           };
           model_list = [
@@ -103,6 +108,20 @@ in
               model_name = "kimi-k2.5";
               litellm_params = {
                 model = "moonshot/kimi-k2.5";
+                api_key = "os.environ/MOONSHOT_API_KEY";
+                thinking = {
+                  type = "enabled";
+                  budget_tokens = 8192;
+                };
+              };
+              model_info = {
+                supports_reasoning = true;
+              };
+            }
+            {
+              model_name = "kimi-k2.5-no-think";
+              litellm_params = {
+                model = "moonshot/kimi-k2.5-no-think";
                 api_key = "os.environ/MOONSHOT_API_KEY";
               };
             }

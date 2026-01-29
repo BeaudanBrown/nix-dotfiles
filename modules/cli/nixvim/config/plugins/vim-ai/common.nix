@@ -5,7 +5,6 @@
 }:
 {
   sops = {
-    # Which secrets to use, get stored by default in /run/secrets/<name>
     secrets = {
       litellm_api = {
         sopsFile = lib.custom.sopsFileForModule __curPos.file;

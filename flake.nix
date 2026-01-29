@@ -111,8 +111,8 @@
     };
 
     nix-ai-tools = {
-      url = "github:numtide/nix-ai-tools";
-      # inputs.nixpkgs.follows = "nixpkgsStable";
+      url = "github:numtide/llm-agents.nix";
+      inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
 
     authentik-nix.url = "github:nix-community/authentik-nix";

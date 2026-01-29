@@ -11,7 +11,7 @@
       allHostsData = import ../../modules/host-spec/all-hosts.nix;
       roots = allHostsData.hostSpecs.iso.roots;
     in
-    lib.flatten [
+    [
       "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
       inputs.home-manager.nixosModules.home-manager
@@ -20,7 +20,8 @@
         host = "iso";
         inherit roots;
       })
-    ];
+    ]
+    |> lib.flatten;
 
   environment.systemPackages = with pkgs; [
     vim
