@@ -22,7 +22,7 @@
     "AutofillAddressEnabled" = false;
   };
 
-  hm.xdg = {
+  hm.primary.xdg = {
     mimeApps = {
       enable = true;
       # to see available > ls /run/current-system/sw/share/applications/

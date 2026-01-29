@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  hm.programs.direnv = {
+  hm.primary.programs.direnv = {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;

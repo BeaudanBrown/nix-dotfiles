@@ -31,7 +31,7 @@
     };
   };
 
-  hm = {
+  hm.primary = {
     xdg.portal = {
       enable = true;
       config = {

@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.services.dunst = {
+  hm.primary.services.dunst = {
     enable = true;
   };
 }

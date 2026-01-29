@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.services.hypridle = {
+  hm.primary.services.hypridle = {
     enable = true;
     settings = {
       general = {

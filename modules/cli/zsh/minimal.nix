@@ -8,7 +8,7 @@
   programs.zsh.enable = true;
   environment.shells = [ pkgs.zsh ];
 
-  hm.programs.zsh = {
+  hm.primary.programs.zsh = {
     enable = true;
     syntaxHighlighting.enable = true;
     history.size = 10000;

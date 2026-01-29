@@ -1,7 +1,7 @@
 { ... }:
 {
   # nas: green theme (#2ecc71)
-  hm.programs.starship.settings = {
+  hm.primary.programs.starship.settings = {
     username = {
       style_user = "fg:#2ecc71";
       format = "[$user]($style)[@](fg:#2ecc71)";

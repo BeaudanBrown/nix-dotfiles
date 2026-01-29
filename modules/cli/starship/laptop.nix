@@ -1,7 +1,7 @@
 { ... }:
 {
   # laptop: magenta theme
-  hm.programs.starship.settings = {
+  hm.primary.programs.starship.settings = {
     username = {
       style_user = "fg:magenta";
       format = "[$user]($style)[@](fg:magenta)";

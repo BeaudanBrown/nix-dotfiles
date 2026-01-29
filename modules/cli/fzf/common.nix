@@ -1,6 +1,6 @@
 { pkgs, ... }:
 {
-  hm.programs.fzf = {
+  hm.primary.programs.fzf = {
     enable = true;
     enableZshIntegration = true;
 

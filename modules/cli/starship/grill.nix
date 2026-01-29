@@ -1,7 +1,7 @@
 { ... }:
 {
   # grill: orange theme (#ff6b35)
-  hm.programs.starship.settings = {
+  hm.primary.programs.starship.settings = {
     username = {
       style_user = "fg:#ff6b35";
       format = "[$user]($style)[@](fg:#ff6b35)";

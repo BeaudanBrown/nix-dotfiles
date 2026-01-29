@@ -41,7 +41,7 @@ in
     tmux_toggle_popup
   ];
 
-  hm.programs.tmux = {
+  hm.primary.programs.tmux = {
     enable = true;
     escapeTime = 0;
     historyLimit = 50000;

@@ -31,5 +31,5 @@
     };
   };
 
-  hm.stylix.enable = true;
+  hm.primary.stylix.enable = true;
 }

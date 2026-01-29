@@ -1,6 +1,6 @@
 { pkgs, ... }:
 {
-  hm.programs.yazi = {
+  hm.primary.programs.yazi = {
     enable = true;
     enableZshIntegration = true;
     settings = {
@@ -14,7 +14,7 @@
   };
 
   # Runtime dependencies for Yazi (previews, navigation)
-  hm.home.packages = with pkgs; [
+  hm.primary.home.packages = with pkgs; [
     ueberzugpp # Image preview support (X11/Wayland)
     chafa # Fallback terminal graphics
     ffmpegthumbnailer # Video thumbnails

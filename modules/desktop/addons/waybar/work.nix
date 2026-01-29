@@ -36,7 +36,7 @@ let
   ];
 in
 {
-  hm.programs.waybar = {
+  hm.primary.programs.waybar = {
     enable = true;
     style = ''
       .mainBar * {

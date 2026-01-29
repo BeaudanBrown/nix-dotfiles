@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  hm.programs.starship = {
+  hm.primary.programs.starship = {
     enable = true;
     enableZshIntegration = true;
 

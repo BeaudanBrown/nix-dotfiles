@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.services.kdeconnect = {
+  hm.primary.services.kdeconnect = {
     enable = true;
     indicator = true;
   };

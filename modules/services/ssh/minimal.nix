@@ -62,7 +62,7 @@
     "d ${config.hostSpec.home}/.ssh 0700 ${config.hostSpec.username} users - -"
   ];
 
-  hm.programs.ssh = {
+  hm.primary.programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
     matchBlocks = {

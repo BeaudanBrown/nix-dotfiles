@@ -1,7 +1,7 @@
 { ... }:
 {
   # pi4: purple theme (#9b59b6)
-  hm.programs.starship.settings = {
+  hm.primary.programs.starship.settings = {
     username = {
       style_user = "fg:#9b59b6";
       format = "[$user]($style)[@](fg:#9b59b6)";

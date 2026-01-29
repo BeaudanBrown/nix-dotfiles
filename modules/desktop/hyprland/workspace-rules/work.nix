@@ -17,6 +17,6 @@ let
     |> builtins.map (name: "name:" + name + ", monitor:DP-2");
 in
 {
-  hm.wayland.windowManager.hyprland.settings.workspace =
+  hm.primary.wayland.windowManager.hyprland.settings.workspace =
     leftMonitorWorkspaces ++ rightMonitorWorkspaces;
 }

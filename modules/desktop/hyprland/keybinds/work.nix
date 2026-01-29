@@ -22,9 +22,9 @@ let
         + (if title != null then " -t \"${title}\"" else "");
     in
     [
-      ''SUPER, ${key}, exec, ${appCmd}''
-      ''SUPERALT, ${key}, exec, ${appCmd} -p''
-      ''SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}''
+      "SUPER, ${key}, exec, ${appCmd}"
+      "SUPERALT, ${key}, exec, ${appCmd} -p"
+      "SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}"
     ];
 
   workspaces = [
@@ -170,7 +170,7 @@ in
     }
   ];
 
-  hm.wayland.windowManager.hyprland.settings = {
+  hm.primary.wayland.windowManager.hyprland.settings = {
     bindm = [
       "SUPER,mouse:272,movewindow"
       "SUPER,mouse:273,resizewindow"

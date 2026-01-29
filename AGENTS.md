@@ -111,15 +111,26 @@ lib.withConfig { bar = true; } (lib.enableFeature "foo" pkgs.example)
 - **Attributes**: camelCase (`myOption`)
 
 ### Home Manager Integration
-Always use the `hm.` shortcut, never raw paths:
+Always use the `hm.` shortcut with the appropriate scope, never raw paths:
 
 ```nix
-# ✅ Correct
-hm.programs.zsh.enable = true;
+# ✅ Correct - Primary user only (most common)
+hm.primary.programs.zsh.enable = true;
 
-# ❌ Wrong
+# ✅ Correct - All users (shared configuration)
+hm.all.programs.git.enable = true;
+
+# ✅ Correct - Specific user (when needed)
+hm.beau.programs.git.userEmail = "beau@example.com";
+
+# ❌ Wrong - Never use raw home-manager paths
 home-manager.users.beau.programs.zsh.enable = true;
 ```
+
+**Scope Reference:**
+- `hm.primary.*` - Configuration for the primary user only (first user in the host's users list)
+- `hm.all.*` - Configuration shared across all users on the host
+- `hm.<username>.*` - Per-user configuration for a specific user
 
 ### Module Header
 Use standard parameter format:
@@ -253,5 +264,6 @@ After documentation changes:
 
 1. Check host has `client` root in `all-hosts.nix`
 2. Edit files in `modules/desktop/<wm>/`
-3. Use `hm.` for user-level config (dotfiles, settings)
-4. Use root-level for system config (services, packages)
+3. Use `hm.primary.` for user-level config (dotfiles, settings, personal apps)
+4. Use `hm.all.` only for configuration that should apply to every user
+5. Use root-level for system config (services, packages)
