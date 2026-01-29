@@ -6,20 +6,6 @@
   ...
 }:
 {
-  sops.secrets.anthropic_api_key = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-    mode = "0600";
-    path = "${config.hostSpec.home}/.config/anthropic.token";
-    owner = config.hostSpec.username;
-    inherit (config.users.users.${config.hostSpec.username}) group;
-  };
-  sops.secrets.openai_api_key = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-    mode = "0600";
-    path = "${config.hostSpec.home}/.config/openai_api.token";
-    owner = config.hostSpec.username;
-    inherit (config.users.users.${config.hostSpec.username}) group;
-  };
   sops.secrets.context7 = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
