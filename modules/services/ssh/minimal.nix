@@ -82,6 +82,10 @@
         hostname = "nas.lan";
         user = "beau";
       };
+      brick = {
+        hostname = "brick.lan";
+        user = "mikaerem";
+      };
       pi4 = {
         hostname = "pi4.lan";
         user = "beau";

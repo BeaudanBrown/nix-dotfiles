@@ -37,9 +37,9 @@ in
               };
             }
             {
-              model_name = "gpt-5.1-codex-max";
+              model_name = "gpt-5.2-codex";
               litellm_params = {
-                model = "openai/gpt-5.1-codex-max";
+                model = "openai/gpt-5.2-codex";
                 api_key = "os.environ/OPENAI_API_KEY";
               };
             }
@@ -67,7 +67,7 @@ in
             {
               model_name = "claude-opus-4-5";
               litellm_params = {
-                model = "anthropic/claude-opus-4-20250514";
+                model = "claude-opus-4-5";
                 api_key = "os.environ/ANTHROPIC_API_KEY";
               };
             }
@@ -97,6 +97,13 @@ in
               litellm_params = {
                 model = "gemini/gemini-3-pro-image-preview";
                 api_key = "os.environ/GOOGLE_API_KEY";
+              };
+            }
+            {
+              model_name = "kimi-k2.5";
+              litellm_params = {
+                model = "moonshot/kimi-k2.5";
+                api_key = "os.environ/MOONSHOT_API_KEY";
               };
             }
           ];

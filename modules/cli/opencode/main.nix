@@ -114,6 +114,19 @@
         };
       };
       provider = {
+        lite_moonshot = {
+          npm = "@ai-sdk/openai-compatible";
+          name = "Moonshot";
+          options = {
+            baseURL = "https://litellm.bepis.lol";
+            apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+          };
+          models = {
+            "kimi-k2.5" = {
+              name = "kimi-k2.5";
+            };
+          };
+        };
         lite_google = {
           npm = "@ai-sdk/google";
           name = "Google";
