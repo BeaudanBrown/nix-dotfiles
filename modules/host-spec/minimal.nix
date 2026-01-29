@@ -1,4 +1,5 @@
 # Specifications For Differentiating Hosts
+# Supports multiple users per host with Home Manager for all users
 {
   config,
   pkgs,
@@ -6,23 +7,57 @@
   ...
 }:
 let
+  # Type for individual user specification
+  userSpecType = lib.types.submodule (
+    { config, ... }:
+    {
+      options = {
+        username = lib.mkOption {
+          type = lib.types.str;
+          description = "The username of the user";
+        };
+        email = lib.mkOption {
+          type = lib.types.str;
+          description = "The email of the user";
+        };
+        userFullName = lib.mkOption {
+          type = lib.types.str;
+          description = "The full name of the user";
+        };
+        ageUserKey = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          description = "The age public key for the user";
+        };
+        extraGroups = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [ ];
+          description = "Additional groups for this user";
+        };
+        uid = lib.mkOption {
+          type = lib.types.nullOr lib.types.int;
+          default = null;
+          description = "User ID (null for auto-assignment)";
+        };
+        home = lib.mkOption {
+          type = lib.types.str;
+          description = "Home directory for the user";
+          default = if pkgs.stdenv.isLinux then "/home/${config.username}" else "/Users/${config.username}";
+        };
+      };
+    }
+  );
+
+  # Type for host specification with multiple users
   hostSpecType = lib.types.submodule {
     options = {
       hostName = lib.mkOption {
         type = lib.types.str;
         description = "The hostname of the host";
       };
-      username = lib.mkOption {
-        type = lib.types.str;
-        description = "The username of the host";
-      };
-      email = lib.mkOption {
-        type = lib.types.str;
-        description = "The email of the user";
-      };
-      userFullName = lib.mkOption {
-        type = lib.types.str;
-        description = "The full name of the user";
+      users = lib.mkOption {
+        type = lib.types.listOf userSpecType;
+        description = "List of users for this host (first is primary)";
       };
       tailIP = lib.mkOption {
         type = lib.types.str;
@@ -47,16 +82,7 @@ let
       dotfiles = lib.mkOption {
         type = lib.types.str;
         description = "The location of the host dotfiles";
-        default = "${config.hostSpec.home}/documents/nix-dotfiles";
-      };
-      home = lib.mkOption {
-        type = lib.types.str;
-        description = "The home directory of the user";
-        default =
-          let
-            user = config.hostSpec.username;
-          in
-          if pkgs.stdenv.isLinux then "/home/${user}" else "/Users/${user}";
+        default = "${config.hostSpec.primaryUser.home}/documents/nix-dotfiles";
       };
       isBootstrap = lib.mkOption {
         type = lib.types.bool;
@@ -72,10 +98,38 @@ let
         default = null;
         description = "The age public key derived from the host's SSH key";
       };
+
+      # Convenience derived options (computed in config)
+      primaryUser = lib.mkOption {
+        type = userSpecType;
+        description = "The primary user (first in the users list)";
+      };
+      usernames = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        description = "List of all usernames on this host";
+      };
+
+      # Backward compatibility aliases
+      username = lib.mkOption {
+        type = lib.types.str;
+        description = "DEPRECATED: Use primaryUser.username";
+      };
+      email = lib.mkOption {
+        type = lib.types.str;
+        description = "DEPRECATED: Use primaryUser.email";
+      };
+      userFullName = lib.mkOption {
+        type = lib.types.str;
+        description = "DEPRECATED: Use primaryUser.userFullName";
+      };
       ageUserKey = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
-        description = "The age public key for the user (format: username_hostname)";
+        description = "DEPRECATED: Use primaryUser.ageUserKey";
+      };
+      home = lib.mkOption {
+        type = lib.types.str;
+        description = "DEPRECATED: Use primaryUser.home";
       };
     };
   };
@@ -83,33 +137,89 @@ let
   allHostsData = import ./all-hosts.nix;
 in
 {
-  options.hostSpecs = lib.mkOption {
-    type = lib.types.attrsOf hostSpecType;
-    description = "Specifications for all hosts in the fleet";
-    default = allHostsData.hostSpecs;
+  options = {
+    hostSpecs = lib.mkOption {
+      type = lib.types.attrsOf hostSpecType;
+      description = "Specifications for all hosts in the fleet";
+      default = allHostsData.hostSpecs;
+    };
+
+    thisHost = lib.mkOption {
+      type = lib.types.str;
+      description = "The hostname of this host (must match a key in hostSpecs)";
+    };
+
+    hostSpec = lib.mkOption {
+      type = hostSpecType;
+      description = "Convenience alias for the current host's specification";
+    };
+
+    # Home Manager configuration for all users
+    # Special keys:
+    #   - hm.all: Configuration shared across all users
+    #   - hm.primary: Configuration for the primary user (merged with hm.<primaryUsername>)
+    #   - hm.<username>: Per-user configuration
+    # Usage:
+    #   hm.all.programs.git.enable = true;        # All users get git
+    #   hm.beau.programs.git.userEmail = "...";   # Only beau gets this email
+    #   hm.primary.programs.zsh.enable = true;    # Primary user gets zsh
+    hm = lib.mkOption {
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
+      description = "Home Manager configuration. Use 'all' for shared, 'primary' for primary user, or '<username>' for specific users.";
+    };
   };
 
-  options.thisHost = lib.mkOption {
-    type = lib.types.str;
-    description = "The hostname of this host (must match a key in hostSpecs)";
-  };
+  config =
+    let
+      thisHostSpec = config.hostSpecs.${config.thisHost};
+      usersList = thisHostSpec.users;
+      primaryUserData = lib.head usersList;
 
-  options.hostSpec = lib.mkOption {
-    type = hostSpecType;
-    description = "Convenience alias for the current host's specification";
-  };
+      # Build the hostSpec with computed fields
+      computedHostSpec = thisHostSpec // {
+        primaryUser = primaryUserData;
+        usernames = map (u: u.username) usersList;
+        # Convenience aliases for primary user
+        username = primaryUserData.username;
+        email = primaryUserData.email;
+        userFullName = primaryUserData.userFullName;
+        ageUserKey = primaryUserData.ageUserKey;
+        home = primaryUserData.home;
+      };
 
-  options.hm = lib.mkOption {
-    type = lib.types.attrsOf lib.types.anything;
-    default = { };
-    description = "Shortcut to home-manager config";
-  };
+      # Primary user name
+      primaryUsername = computedHostSpec.primaryUser.username;
 
-  config = {
-    # Create the convenience alias pointing to this host's spec
-    hostSpec = config.hostSpecs.${config.thisHost};
+      # Get per-user HM configs (excluding 'all' and 'primary' keys)
+      perUserHmConfigs = lib.filterAttrs (n: v: n != "all" && n != "primary") config.hm;
 
-    # Home manager integration
-    home-manager.users.${config.hostSpec.username} = config.hm;
-  };
+      # Build home-manager.users configuration
+      # Each user gets their specific config merged with primary config if they're primary
+      hmUsersConfig = lib.genAttrs computedHostSpec.usernames (
+        username:
+        let
+          userSpecific = perUserHmConfigs.${username} or { };
+          # Primary user also merges hm.primary
+          primaryExtra = if username == primaryUsername then config.hm.primary or { } else { };
+        in
+        lib.mkMerge [
+          userSpecific
+          primaryExtra
+        ]
+      );
+    in
+    {
+      # Set the convenience alias
+      hostSpec = computedHostSpec;
+
+      # Home Manager integration
+      home-manager = {
+        # Shared modules apply to all users
+        sharedModules = [ (config.hm.all or { }) ];
+
+        # Per-user configurations
+        users = hmUsersConfig;
+      };
+    };
 }

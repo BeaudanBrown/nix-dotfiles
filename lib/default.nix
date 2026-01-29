@@ -153,4 +153,64 @@ rec {
     enable = false;
   };
 
+  # ═══════════════════════════════════════════════════════════
+  # Multi-User Secrets Helpers
+  # ═══════════════════════════════════════════════════════════
+
+  ## Create SOPS secrets for all users on a host.
+  ## Usage in a module:
+  ##   sops.secrets = lib.custom.sopsSecretForAllUsers config "ssh_key" {
+  ##     sopsFile = ./secrets.yaml;
+  ##     mode = "0600";
+  ##   };
+  ##
+  ## This creates secrets named: "<username>_ssh_key" for each user
+  sopsSecretForAllUsers =
+    config: secretName: secretConfig:
+    lib.listToAttrs (
+      map (
+        username:
+        lib.nameValuePair "${username}_${secretName}" (
+          secretConfig
+          // {
+            owner = username;
+            inherit (config.users.users.${username}) group;
+          }
+        )
+      ) config.hostSpec.usernames
+    );
+
+  ## Create SOPS secrets for specific users.
+  ## Usage in a module:
+  ##   sops.secrets = lib.custom.sopsSecretForUsers ["beau" "mikaerem"] "work_token" {
+  ##     sopsFile = ./work-secrets.yaml;
+  ##     mode = "0600";
+  ##   };
+  sopsSecretForUsers =
+    usernames: secretName: secretConfig:
+    lib.listToAttrs (
+      map (
+        username:
+        lib.nameValuePair "${username}_${secretName}" (
+          secretConfig
+          // {
+            owner = username;
+          }
+        )
+      ) usernames
+    );
+
+  ## Create SOPS secrets for the primary user only.
+  ## Usage in a module:
+  ##   sops.secrets = lib.custom.sopsSecretForPrimaryUser config "api_key" {
+  ##     sopsFile = ./secrets.yaml;
+  ##     mode = "0600";
+  ##   };
+  sopsSecretForPrimaryUser = config: secretName: secretConfig: {
+    "${config.hostSpec.primaryUser.username}_${secretName}" = secretConfig // {
+      owner = config.hostSpec.primaryUser.username;
+      inherit (config.users.users.${config.hostSpec.primaryUser.username}) group;
+    };
+  };
+
 }
