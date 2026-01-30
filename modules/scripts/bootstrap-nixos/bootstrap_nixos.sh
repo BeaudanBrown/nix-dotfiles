@@ -72,44 +72,76 @@ function no_or_yes() {
 
 ### SOPS helpers
 
-function sops_add_age_key() {
-	local keyname="$1"
-	local key="$2"
-	local sops_file="${3:-.sops.yaml}"
+# Update host spec JSON and regenerate .sops.yaml
+function update_host_spec() {
+	local hostname="$1"
+	local key_type="$2" # host or user
+	local key="$3"
+	local user="$4" # required if key_type is user
+	local json_file="${dotfiles_dir}/modules/host-spec/all-hosts.json"
+	local tmp_json="${temp}/all-hosts.json.tmp"
 
-	if [[ -n $(yq ".keys[] | select(anchor == \"$keyname\")" "${sops_file}") ]]; then
-		green "Updating existing ${keyname} key"
-		yq -i "(.keys[] | select(anchor == \"$keyname\")) = \"$key\"" "$sops_file"
-	else
-		green "Adding new ${keyname} key"
-		yq -i ".keys += [\"$key\"]
-      | .keys[-1] anchor = \"$keyname\"
-      | .creation_rules[].key_groups[].age += [\"${keyname}\"]
-      | .creation_rules[].key_groups[].age[-1] alias |= ." "$sops_file"
+	if [ ! -f "$json_file" ]; then
+		red "Error: $json_file not found."
+		exit 1
 	fi
-	repo_dirty=1
+
+	# Ensure host exists in JSON
+	if ! jq -e ".hostSpecs.\"$hostname\"" "$json_file" >/dev/null; then
+		yellow "Host '$hostname' not found in spec. Creating new entry..."
+		# Add basic host entry with defaults
+		jq ".hostSpecs.\"$hostname\" = {
+            hostName: \"$hostname\",
+            users: [],
+            roots: [\"minimal\"],
+            wifi: false,
+            ageHostKey: null
+        }" "$json_file" >"$tmp_json" && mv "$tmp_json" "$json_file"
+	fi
+
+	if [ "$key_type" == "host" ]; then
+		green "Updating host key for $hostname in all-hosts.json..."
+		jq ".hostSpecs.\"$hostname\".ageHostKey = \"$key\"" "$json_file" >"$tmp_json" && mv "$tmp_json" "$json_file"
+	elif [ "$key_type" == "user" ]; then
+		green "Updating user key for $user@$hostname in all-hosts.json..."
+		# Check if user exists
+		if jq -e ".hostSpecs.\"$hostname\".users[] | select(.username == \"$user\")" "$json_file" >/dev/null; then
+			# Update existing user
+			jq "(.hostSpecs.\"$hostname\".users[] | select(.username == \"$user\").ageUserKey) |= \"$key\"" "$json_file" >"$tmp_json" && mv "$tmp_json" "$json_file"
+		else
+			# Add new user
+			yellow "User '$user' not found in host spec. Adding..."
+			jq ".hostSpecs.\"$hostname\".users += [{
+                username: \"$user\",
+                email: \"${user}@example.com\",
+                userFullName: \"$user\",
+                ageUserKey: \"$key\"
+             }]" "$json_file" >"$tmp_json" && mv "$tmp_json" "$json_file"
+		fi
+	fi
+
+	# Regenerate .sops.yaml
+	green "Regenerating .sops.yaml..."
+	(cd "$dotfiles_dir" && just gen-sops-yaml)
 }
 
-# Generate a user age key, update the .sops.yaml entries, and return the key in age_secret_key
+# Generate a user age key, update all-hosts.json, and return the key
 # args: user, hostname
 function sops_generate_user_age_key() {
 	local target_user="$1"
 	local target_hostname="$2"
-	# local yaml_file="${3:-secrets.yaml}"
 	local key_name="${target_user}_${target_hostname}"
 
 	green "Age key does not exist. Generating."
 	age-keygen >"$temp"/user_age_key
 	readarray -t entries <"$temp/user_age_key"
 	public_key=$(echo "${entries[1]}" | awk '{print $NF}')
-	# age_secret_key=${entries[2]}
-
-	# sops decrypt $yaml_file > $yaml_file
-	# yq -i '.ssh.$target_hostname.pub = "$public_key\" | .ssh.$target_hostname.priv = "$age_secret_key" | .ssh.$target_hostname.priv style="literal"' {}
-	# sops encrypt $yaml_file > $yaml_file
 
 	green "Generated age key for ${key_name}"
-	sops_add_age_key "$key_name" "$public_key" "$dotfiles_dir/.sops.yaml"
+
+	# Update JSON and regenerate sops config
+	update_host_spec "$target_hostname" "user" "$public_key" "$target_user"
+
 	sync "$target_user" "$temp/user_age_key" "/home/$target_user/.config/sops/age/keys.txt"
 }
 
@@ -131,8 +163,8 @@ function sops_generate_host_age_key() {
 		exit 1
 	fi
 
-	green "Updating secrets/.sops.yaml"
-	sops_add_age_key "$target_hostname" "$host_age_key" "$dotfiles_dir/.sops.yaml"
+	green "Updating all-hosts.json with new host key..."
+	update_host_spec "$target_hostname" "host" "$host_age_key"
 }
 
 # Create a temp directory for generated host keys
@@ -359,7 +391,8 @@ fi
 
 if [[ $updated_age_keys == 1 ]]; then
 	cd "$dotfiles_dir" || exit
-	sops updatekeys "$dotfiles_dir/secrets.yaml"
+	green "Updating SOPS keys..."
+	just update-sops
 	repo_dirty=1
 	cd - || exit
 fi
@@ -395,6 +428,7 @@ if [[ $repo_dirty == 1 ]]; then
 		(pre-commit run --all-files 2>/dev/null || true) &&
 			git add "$dotfiles_dir/secrets.yaml" &&
 			git add "$dotfiles_dir/.sops.yaml" &&
+			git add "$dotfiles_dir/modules/host-spec/all-hosts.json" &&
 			(git commit -m "feat: init for $target_hostname" || true) &&
 			git push
 	fi

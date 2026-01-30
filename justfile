@@ -27,7 +27,14 @@ gen-sops-yaml:
   ./scripts/gen-sops-yaml.sh
 
 update-sops:
-  sops updatekeys -y secrets.yaml
+  @for file in secrets/*.yaml; do \
+    if sops --decrypt "$file" > /dev/null 2>&1; then \
+      echo "Updating keys for $file..."; \
+      sops updatekeys -y "$file"; \
+    else \
+      echo "Skipping $file (cannot decrypt)"; \
+    fi; \
+  done
 
 test-iso:
   qemu-system-x86_64 \

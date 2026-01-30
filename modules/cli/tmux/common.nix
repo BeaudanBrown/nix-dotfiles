@@ -105,7 +105,7 @@ in
             detach-client
           }
 
-          bind-key -n M-Enter run-shell "tmux_toggle_popup scratch"
+          bind-key -n M-Enter run-shell "tmux_toggle_popup htop btop"
 
           bind-key -n M-y run-shell "tmux_toggle_popup htop htop"
 

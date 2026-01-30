@@ -5,15 +5,21 @@ let
   hostSpecs = allHostsData.hostSpecs;
   masterKey = allHostsData.masterKey;
 
+  # Helper to get valid user keys from a host spec
+  getValidUsers =
+    spec:
+    if builtins.hasAttr "users" spec then builtins.filter (u: u.ageUserKey != null) spec.users else [ ];
+
   # Always include NAS host/user keys as a "live" admin decryptor for every file.
   # Master key remains a backup failsafe.
   nasRecipients =
     if builtins.hasAttr "nas" hostSpecs then
       let
         spec = hostSpecs.nas;
+        hostKey = if spec.ageHostKey != null then [ "nas" ] else [ ];
+        userKeys = map (u: "${u.username}_nas") (getValidUsers spec);
       in
-      (if spec.ageHostKey != null then [ "nas" ] else [ ])
-      ++ (if spec.ageUserKey != null then [ "${spec.username}_nas" ] else [ ])
+      hostKey ++ userKeys
     else
       [ ];
 
@@ -35,18 +41,12 @@ let
           ]
         else
           [ ];
-      userKey =
-        if spec.ageUserKey != null then
-          [
-            {
-              anchor = "${spec.username}_${hostname}";
-              key = spec.ageUserKey;
-            }
-          ]
-        else
-          [ ];
+      userKeys = map (u: {
+        anchor = "${u.username}_${hostname}";
+        key = u.ageUserKey;
+      }) (getValidUsers spec);
     in
-    hostKey ++ userKey;
+    hostKey ++ userKeys;
 
   # All keys with anchors (including master key)
   allKeys = [
@@ -72,7 +72,7 @@ let
           if builtins.elem root spec.roots then
             (
               (if spec.ageHostKey != null then [ hostname ] else [ ])
-              ++ (if spec.ageUserKey != null then [ "${spec.username}_${hostname}" ] else [ ])
+              ++ (map (u: "${u.username}_${hostname}") (getValidUsers spec))
             )
           else
             [ ]
@@ -89,7 +89,7 @@ let
       spec = hostSpecs.${hostname};
       hostRecipients =
         (if spec.ageHostKey != null then [ hostname ] else [ ])
-        ++ (if spec.ageUserKey != null then [ "${spec.username}_${hostname}" ] else [ ]);
+        ++ (map (u: "${u.username}_${hostname}") (getValidUsers spec));
     in
     # Always include master key and NAS keys, plus host-specific keys
     lib.unique ([ "master" ] ++ nasRecipients ++ hostRecipients);
@@ -100,7 +100,7 @@ let
     let
       spec = hostSpecs.${hostname};
     in
-    (spec.ageHostKey != null) || (spec.ageUserKey != null);
+    (spec.ageHostKey != null) || ((builtins.length (getValidUsers spec)) > 0);
 
   # Check if a root has any hosts with valid keys
   rootHasKeys =
