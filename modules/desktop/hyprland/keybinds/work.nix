@@ -66,6 +66,9 @@ let
     # Screenshot region to clipboard
     ", Print, exec, ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | wl-copy"
 
+    # Push-to-dictate
+    "SUPER, z, exec, stt-dictate toggle"
+
     # Basic binds
     "SUPER,x,exec,hyprlock"
     "SUPERSHIFT,x,exec,systemctl hibernate"
