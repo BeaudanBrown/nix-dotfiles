@@ -21,6 +21,10 @@
       When working with Nix configurations, maintain consistency with existing patterns.
     '';
     settings = {
+      # Default model with high reasoning (kimi-k2.5 variants: toggle with Ctrl+T)
+      model = "lite_moonshot/kimi-k2.5";
+      # Small model for lightweight tasks (titles, summaries)
+      small_model = "lite_openai/gpt-5-mini";
       agent = {
         general = {
           disable = true;
@@ -71,7 +75,7 @@
         };
         build = {
           mode = "primary";
-          model = "lite_google/gemini-3-pro-preview";
+          model = "lite_moonshot/kimi-k2.5";
           tools = {
             write = true;
             edit = true;
@@ -106,6 +110,7 @@
           options = {
             baseURL = "https://litellm.bepis.lol";
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+            includeUsage = true;
           };
           models = {
             "kimi-k2.5" = {
@@ -128,6 +133,7 @@
           options = {
             baseURL = "https://litellm.bepis.lol";
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+            includeUsage = true;
           };
           models = {
             gemini-3-flash-preview = {
@@ -139,6 +145,7 @@
             };
             gemini-3-pro-preview = {
               name = "gemini-3-pro-preview";
+              reasoning = true;
               cost = {
                 input = 2.00;
                 output = 12.00;
@@ -152,10 +159,12 @@
           options = {
             baseURL = "https://litellm.bepis.lol";
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+            includeUsage = true;
           };
           models = {
             claude-opus-4-5 = {
               name = "claude-opus-4-5";
+              reasoning = true;
               cost = {
                 input = 5.00;
                 output = 25.00;
@@ -163,6 +172,7 @@
             };
             claude-sonnet-4-5 = {
               name = "claude-sonnet-4-5";
+              reasoning = true;
               cost = {
                 input = 3.00;
                 output = 15.00;
@@ -183,10 +193,12 @@
           options = {
             baseURL = "https://litellm.bepis.lol";
             apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+            includeUsage = true;
           };
           models = {
             "gpt-5.2" = {
               name = "gpt-5.2";
+              reasoning = true;
               cost = {
                 input = 1.75;
                 output = 14.00;
@@ -201,6 +213,7 @@
             };
             gpt-5-mini = {
               name = "gpt-5-mini";
+              reasoning = true;
               cost = {
                 input = 0.25;
                 output = 2.00;
