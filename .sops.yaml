@@ -4,6 +4,7 @@ keys:
   - &beau_bottom age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq
   - &brick age1ntdsnyrcnwy700yny3syltatu0avep2jqn2c5z6e68vm9sntcppq6l0aan
   - &mikaerem_brick age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf
+  - &beau_brick age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf
   - &grill age16sjq2pmrasnvu447v2qry399tqc45ua8jsc5zv8cwm7vq02lkspsurtu6g
   - &beau_grill age1k3fhza4mhr8a5dl3n508m88lcnyy4lnqrfwaz3svdzecq33hzqsq77p7dv
   - &laptop age1ta8989w025p3yzxdyan8827a0l05hagm6ac4g9dfnl6xwwmupacsxz3kd0
@@ -32,6 +33,7 @@ creation_rules:
           - *beau_nas
           - *brick
           - *mikaerem_brick
+          - *beau_brick
   - path_regex: secrets/grill\.yaml$
     key_groups:
       - age:
@@ -80,6 +82,7 @@ creation_rules:
           - *beau_bottom
           - *brick
           - *mikaerem_brick
+          - *beau_brick
           - *grill
           - *beau_grill
           - *laptop
@@ -98,6 +101,7 @@ creation_rules:
           - *beau_bottom
           - *brick
           - *mikaerem_brick
+          - *beau_brick
           - *grill
           - *beau_grill
           - *laptop
@@ -112,8 +116,11 @@ creation_rules:
           - *master
           - *nas
           - *beau_nas
+          - *bottom
+          - *beau_bottom
           - *brick
           - *mikaerem_brick
+          - *beau_brick
           - *grill
           - *beau_grill
           - *laptop
@@ -130,6 +137,7 @@ creation_rules:
           - *beau_nas
           - *brick
           - *mikaerem_brick
+          - *beau_brick
   - path_regex: secrets/client\.yaml$
     key_groups:
       - age:

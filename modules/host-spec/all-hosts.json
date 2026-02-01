@@ -121,7 +121,7 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1xxxxxxx"
+          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf"
         }
       ],
       "tailIP": "100.64.0.12",
@@ -149,7 +149,8 @@
       "ageHostKey": "age1qa9kz72cuwkm0z2svvmp5e3fdp3da6ru4gwwgempw38e05fqe9zqfct3vv",
       "roots": [
         "minimal",
-        "common"
+        "common",
+        "network"
       ]
     },
     "iso": {
