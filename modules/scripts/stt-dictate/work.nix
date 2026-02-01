@@ -11,6 +11,7 @@
         wtype
         libnotify
         coreutils
+        util-linux
       ];
       text = ''
         set -euo pipefail
@@ -28,7 +29,7 @@
 
         PID_FILE="$XDG_RUNTIME_DIR/stt-dictate.pid"
         WAV="$XDG_RUNTIME_DIR/stt-dictate.wav"
-        LOCKDIR="$XDG_RUNTIME_DIR/stt-dictate.lock"
+        LOCKFILE="$XDG_RUNTIME_DIR/stt-dictate.lock"
 
         notify() {
           local msg="$1"
@@ -36,11 +37,24 @@
         }
 
         with_lock() {
-          if ! mkdir "$LOCKDIR" 2>/dev/null; then
+          # Use kernel-managed locking to avoid stale lock directories.
+          # Backwards-compat: previous versions used a lock *directory* at this path.
+          if [ -d "$LOCKFILE" ]; then
+            if ! rmdir "$LOCKFILE" 2>/dev/null; then
+              notify "Busy"
+              exit 0
+            fi
+          fi
+          exec 9>"$LOCKFILE"
+          if ! flock -n 9; then
             notify "Busy"
             exit 0
           fi
-          trap 'rmdir "$LOCKDIR" 2>/dev/null || true' EXIT
+        }
+
+        unlock() {
+          # Closing the FD releases the flock.
+          exec 9>&- 2>/dev/null || true
         }
 
         is_alive() {
@@ -58,7 +72,7 @@
           notify "Recording…"
 
           # pw-record sample formats are like: s16 (not s16le)
-          pw-record --rate 16000 --channels 1 --format s16 "$WAV" 2>"$rec_log" &
+          ( exec 9>&-; exec pw-record --rate 16000 --channels 1 --format s16 "$WAV" 2>"$rec_log" ) &
           local pid=$!
           echo "$pid" > "$PID_FILE"
 
@@ -78,7 +92,7 @@
           fi
         }
 
-        stop_recording_and_transcribe() {
+        stop_recording() {
           local pid
           pid="$(cat "$PID_FILE" 2>/dev/null || true)"
           if [ -z "$pid" ] || ! is_alive "$pid"; then
@@ -113,7 +127,9 @@
             notify "Error: no audio captured"
             exit 1
           fi
+        }
 
+        transcribe_and_paste() {
           notify "Transcribing…"
 
           resp="$(
@@ -161,7 +177,11 @@
             if [ -f "$PID_FILE" ]; then
               pid="$(cat "$PID_FILE" 2>/dev/null || true)"
               if [ -n "$pid" ] && is_alive "$pid"; then
-                stop_recording_and_transcribe
+                # Stop recording under lock, then release it so we don't block
+                # subsequent toggles while transcribing.
+                stop_recording
+                unlock
+                transcribe_and_paste
               else
                 rm -f "$PID_FILE"
                 start_recording
@@ -169,6 +189,9 @@
             else
               start_recording
             fi
+
+            # If we didn't already unlock above, unlock now.
+            unlock
             ;;
           *)
             echo "unknown command: $cmd" >&2

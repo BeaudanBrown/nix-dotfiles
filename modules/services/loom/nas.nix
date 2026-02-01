@@ -32,16 +32,10 @@ let
 
   registrySecretName = "tailscale-auth";
 
-  pnpmShimOverlay = final: prev: {
-    fetchPnpmDeps = prev.pnpm_9.fetchDeps;
-    pnpmConfigHook = prev.pnpm_9.configHook;
-  };
-
   system = pkgs.stdenv.hostPlatform.system;
 
   pkgsLoom = pkgsUnstable.extend (
     lib.composeManyExtensions [
-      pnpmShimOverlay
       (import "${inputs.loom}/infra/pkgs" { })
     ]
   );

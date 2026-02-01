@@ -69,6 +69,9 @@ let
     # Push-to-dictate
     "SUPER, z, exec, stt-dictate toggle"
 
+    # Push-to-assistant (STT → LLM → TTS + paste)
+    "SUPERSHIFT, z, exec, stt-assist toggle"
+
     # Basic binds
     "SUPER,x,exec,hyprlock"
     "SUPERSHIFT,x,exec,systemctl hibernate"

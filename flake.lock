@@ -587,11 +587,11 @@
         "systems": "systems_2"
       },
       "locked": {
-        "lastModified": 1765423429,
-        "narHash": "sha256-3azg1u7uy6/xqS5fWYdB8e4IiiQTE4f8x6PpLU5e85A=",
+        "lastModified": 1769671469,
+        "narHash": "sha256-p92NPbJIu3RuKMhkpqQEHpGp1THKx7BkHaL/1yznZeA=",
         "owner": "BeaudanBrown",
         "repo": "joan-tracker",
-        "rev": "007a1231596deeca2806455c90672868502d3f40",
+        "rev": "5081a2ee4cd34885585c36dde86fbb1465c783d8",
         "type": "github"
       },
       "original": {
