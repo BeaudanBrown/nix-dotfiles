@@ -26,7 +26,7 @@ in
     extraSpecialArgs = { };
   });
 
-  nix.settings.cores = 16;
+  nix.settings.cores = 48;
 
   thisHost = host;
 
