@@ -19,6 +19,7 @@ let
       "class:(nas)"
       "class:(laptop)"
       "class:(grill)"
+      "class:(bottom)"
       "class:(signal)"
       "class:(brave-browser)"
       "class:(Slack)"

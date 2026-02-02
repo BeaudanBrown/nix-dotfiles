@@ -174,6 +174,12 @@ in
       workspace = "nas";
       class = "nas";
     }
+    {
+      key = "t";
+      app = "kitty --class=bottom ssh bottom";
+      workspace = "bottom";
+      class = "bottom";
+    }
   ];
 
   hm.primary.wayland.windowManager.hyprland.settings = {

@@ -1,4 +1,9 @@
-{ lib, ... }:
+{ config, lib, ... }:
+let
+  hostName = config.networking.hostName or "unknown";
+  hostHash = builtins.hashString "sha256" hostName;
+  hostColor = "#${builtins.substring 0 6 hostHash}";
+in
 {
   hm.primary.programs.starship = {
     enable = true;
@@ -6,7 +11,7 @@
 
     settings = {
       # Overall format matching oh-my-posh layout
-      # Note: username/hostname colors and @ sign are set per-host
+      # Note: username/hostname colors and @ sign default to a host-derived color
       format = lib.concatStrings [
         "$username"
         "$hostname"
@@ -25,14 +30,22 @@
       # Username (always shown) - color set per-host
       username = {
         show_always = true;
-        # style_user will be overridden per-host
+        style_user = lib.mkDefault "fg:${hostColor}";
+        format = lib.mkDefault "[$user]($style)[@](fg:${hostColor})";
       };
 
       # Hostname (always shown) - color set per-host
       hostname = {
         ssh_only = false;
         format = "[$hostname]($style)";
-        # style will be overridden per-host
+        style = lib.mkDefault "fg:${hostColor}";
+      };
+
+      # Prompt character (defaults to host-derived color)
+      character = {
+        success_symbol = lib.mkDefault "[❯](bold ${hostColor})";
+        error_symbol = lib.mkDefault "[❯](bold red)";
+        vimcmd_symbol = lib.mkDefault "[❮](bold ${hostColor})";
       };
 
       # Directory (full path like oh-my-posh "style": "full")
