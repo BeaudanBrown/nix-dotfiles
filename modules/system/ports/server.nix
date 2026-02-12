@@ -27,5 +27,8 @@
 
     # Authentik application (authentik-nix)
     9000
+
+    # Prometheus Node Exporter
+    9100
   ];
 }

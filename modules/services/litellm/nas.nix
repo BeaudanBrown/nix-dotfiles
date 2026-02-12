@@ -77,6 +77,13 @@ in
               };
             }
             {
+              model_name = "claude-opus-4-6";
+              litellm_params = {
+                model = "claude-opus-4-6";
+                api_key = "os.environ/ANTHROPIC_API_KEY";
+              };
+            }
+            {
               model_name = "gemini-3-flash-preview";
               litellm_params = {
                 model = "gemini/gemini-3-flash-preview";

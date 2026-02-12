@@ -73,6 +73,27 @@
             - NEVER modify file contents directly.
           '';
         };
+        build-tests = {
+          mode = "subagent";
+          description = "Build/test runner. Executes nix build/check/test commands and summarizes results with relevant error snippets.";
+          model = "lite_openai/gpt-5-mini";
+          tools = {
+            glob = false;
+            grep = false;
+            read = false;
+            write = false;
+            edit = false;
+            bash = true;
+          };
+          prompt = ''
+            You are a build/test runner.
+            - Use 'bash' to run build/test commands (e.g., nix build, nix flake check).
+            - Summarize success or failure succinctly.
+            - On failure, include only the minimal relevant error snippets and the failing step.
+            - Keep output brief to preserve the primary agent's context window.
+            - NEVER modify files or suggest edits.
+          '';
+        };
         build = {
           mode = "primary";
           model = "lite_moonshot/kimi-k2.5";
@@ -83,11 +104,11 @@
             code-search = true;
             github = true;
           };
-          prompt = "You are the primary build agent. Delegate code search to @code-search, it cannot make changes. Delegate git tasks to @github ONLY when asked.";
+          prompt = "You are the primary build agent. Delegate code search to @code-search, it cannot make changes. Delegate build/test commands to @build-tests to keep context clear. Delegate git tasks to @github ONLY when asked.";
         };
         plan = {
           mode = "primary";
-          model = "lite_anthropic/claude-opus-4-5";
+          model = "lite_anthropic/claude-opus-4-6";
           tools = {
             write = false;
             edit = false;
@@ -164,6 +185,14 @@
           models = {
             claude-opus-4-5 = {
               name = "claude-opus-4-5";
+              reasoning = true;
+              cost = {
+                input = 5.00;
+                output = 25.00;
+              };
+            };
+            claude-opus-4-6 = {
+              name = "claude-opus-4-6";
               reasoning = true;
               cost = {
                 input = 5.00;
