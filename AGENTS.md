@@ -186,6 +186,14 @@ nixos_nix with:
 
 See [specs/tooling.md](specs/tooling.md) for complete command reference.
 
+## Opencode Agent Usage
+
+Use the dedicated opencode subagents to keep the primary model's context clean:
+
+- **@build-tests**: Run build/test commands (e.g., `nix build`, `nix flake check`) and return a short success/failure summary with only the relevant error snippets.
+- **@code-search**: Read-only code lookup (glob/grep/read).
+- **@github**: Git operations when explicitly requested.
+
 ## Security Constraints
 
 ### Absolute Rules

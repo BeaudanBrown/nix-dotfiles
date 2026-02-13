@@ -42,6 +42,7 @@ in
     historyLimit = 50000;
     keyMode = "vi";
     terminal = "tmux-256color";
+    focusEvents = true;
     plugins = with pkgs.tmuxPlugins; [
       catppuccin
       extrakto

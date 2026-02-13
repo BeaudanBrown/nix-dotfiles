@@ -37,6 +37,7 @@ let
       "class:(Github Desktop)"
       "class:(com.obsproject.Studio)"
       "class:(vlc)"
+      "class:(org.freecad.FreeCAD)"
     ]
     |> builtins.map (x: "tile, " + x);
   fullscreenWindows =

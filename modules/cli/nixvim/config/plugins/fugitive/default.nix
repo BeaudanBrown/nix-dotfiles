@@ -59,6 +59,21 @@
           map_split('=', "<Plug>fugitive:=")
           map_split('>', "<Plug>fugitive:>")
           map_split('<', "<Plug>fugitive:<")
+
+          -- Map Enter to open file and close fugitive window
+          vim.keymap.set('n', '<CR>', function()
+            local line = vim.fn.line('.')
+            -- Get the fugitive buffer number before opening
+            local fugitive_buf = vim.api.nvim_get_current_buf()
+            -- Execute the default fugitive enter behavior (open file)
+            vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Plug>fugitive:Edit', true, true, true), 'm', false)
+            -- Schedule the buffer close after the file opens
+            vim.schedule(function()
+              if vim.api.nvim_buf_is_valid(fugitive_buf) then
+                vim.api.nvim_buf_delete(fugitive_buf, { force = false })
+              end
+            end)
+          end, { buffer = buf, desc = 'Open file and close fugitive' })
         end)
       end,
     })

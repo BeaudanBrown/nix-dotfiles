@@ -3,14 +3,33 @@
   inputs,
   lib,
   pkgs,
+  pkgsUnstable,
   ...
 }:
+let
+  rag-mcp = pkgsUnstable.writers.writePython3Bin "rag-mcp" {
+    libraries = with pkgsUnstable.python3Packages; [
+      fastmcp
+      openai
+      qdrant-client
+    ];
+    doCheck = false;
+  } (builtins.readFile ./rag-mcp.py);
+  ragSshTarget = "${config.hostSpec.username}@nas";
+in
 {
   sops.secrets.context7 = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
   };
+
+  environment.systemPackages = [
+    inputs.nix-ai-tools.packages.${pkgs.system}.amp
+    rag-mcp
+    pkgs.openssh
+    pkgs.rsync
+  ];
 
   hm.primary.programs.opencode = {
     enable = true;
@@ -279,6 +298,16 @@
             "run"
             "github:utensils/mcp-nixos"
             "--"
+          ];
+        };
+
+        rag = {
+          enabled = true;
+          type = "local";
+          command = [
+            "${pkgs.bash}/bin/bash"
+            "-c"
+            "RAG_QDRANT_URL=https://qdrant.bepis.lol RAG_QDRANT_HOST=qdrant.bepis.lol RAG_QDRANT_PORT=443 RAG_QDRANT_HTTPS=1 RAG_QDRANT_TIMEOUT=120 RAG_COLLECTION=rag_chunks RAG_EMBEDDING_MODEL=text-embedding-3-small LITELLM_BASE_URL=https://litellm.bepis.lol/v1 LITELLM_API_KEY_FILE=${config.sops.secrets.litellm_api.path} RAG_SSH_TARGET=${ragSshTarget} RAG_NAS_PROJECTS_ROOT=/pool1/appdata/rag/projects RAG_TRIGGER_CMD=\"RAG_STATE_FILE=/pool1/appdata/rag/state.json rag-indexer --scan\" ${rag-mcp}/bin/rag-mcp"
           ];
         };
       };

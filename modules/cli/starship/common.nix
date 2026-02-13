@@ -41,12 +41,11 @@ in
         style = lib.mkDefault "fg:${hostColor}";
       };
 
-      # Prompt character (defaults to host-derived color)
-      character = {
-        success_symbol = lib.mkDefault "[❯](bold ${hostColor})";
-        error_symbol = lib.mkDefault "[❯](bold red)";
-        vimcmd_symbol = lib.mkDefault "[❮](bold ${hostColor})";
-      };
+      # # Prompt character (defaults to host-derived color)
+      # character = {
+      #   success_symbol = lib.mkDefault "[❯](bold ${hostColor})";
+      #   error_symbol = lib.mkDefault "[❯](bold red)";
+      # };
 
       # Directory (full path like oh-my-posh "style": "full")
       directory = {

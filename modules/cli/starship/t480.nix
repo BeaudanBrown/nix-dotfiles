@@ -7,10 +7,9 @@
       format = "[$user]($style)[@](fg:magenta)";
     };
     hostname.style = "fg:magenta";
-    character = {
-      success_symbol = "[❯](bold magenta)";
-      error_symbol = "[❯](bold red)";
-      vimcmd_symbol = "[❮](bold magenta)";
-    };
+    # character = {
+    #   success_symbol = "[❯](bold magenta)";
+    #   error_symbol = "[❯](bold red)";
+    # };
   };
 }

@@ -10,7 +10,8 @@
     character = {
       success_symbol = "[❯](bold magenta)";
       error_symbol = "[❯](bold red)";
-      vimcmd_symbol = "[❮](bold magenta)";
+      # vimcmd_symbol causes delays in tmux popups due to vi-mode detection
+      # vimcmd_symbol = "[❮](bold magenta)";
     };
   };
 }
