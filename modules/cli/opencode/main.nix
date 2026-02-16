@@ -3,20 +3,8 @@
   inputs,
   lib,
   pkgs,
-  pkgsUnstable,
   ...
 }:
-let
-  rag-mcp = pkgsUnstable.writers.writePython3Bin "rag-mcp" {
-    libraries = with pkgsUnstable.python3Packages; [
-      fastmcp
-      openai
-      qdrant-client
-    ];
-    doCheck = false;
-  } (builtins.readFile ./rag-mcp.py);
-  ragSshTarget = "${config.hostSpec.username}@nas";
-in
 {
   sops.secrets.context7 = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
@@ -26,9 +14,6 @@ in
 
   environment.systemPackages = [
     inputs.nix-ai-tools.packages.${pkgs.system}.amp
-    rag-mcp
-    pkgs.openssh
-    pkgs.rsync
   ];
 
   hm.primary.programs.opencode = {
@@ -208,6 +193,8 @@ in
               cost = {
                 input = 5.00;
                 output = 25.00;
+                cache_read = 0.50;
+                cache_write = 6.25;
               };
             };
             claude-opus-4-6 = {
@@ -216,6 +203,8 @@ in
               cost = {
                 input = 5.00;
                 output = 25.00;
+                cache_read = 0.50;
+                cache_write = 6.25;
               };
             };
             claude-sonnet-4-5 = {
@@ -224,6 +213,8 @@ in
               cost = {
                 input = 3.00;
                 output = 15.00;
+                cache_read = 0.30;
+                cache_write = 3.75;
               };
             };
             claude-haiku-4-5 = {
@@ -231,6 +222,8 @@ in
               cost = {
                 input = 1.00;
                 output = 5.00;
+                cache_read = 0.10;
+                cache_write = 1.25;
               };
             };
           };
@@ -250,6 +243,8 @@ in
               cost = {
                 input = 1.75;
                 output = 14.00;
+                cache_read = 0.4375; # 50% of input (automatic, no write surcharge)
+                cache_write = 1.75;
               };
             };
             "gpt-5.2-codex" = {
@@ -257,6 +252,8 @@ in
               cost = {
                 input = 1.75;
                 output = 14.00;
+                cache_read = 0.4375;
+                cache_write = 1.75;
               };
             };
             gpt-5-mini = {
@@ -265,12 +262,28 @@ in
               cost = {
                 input = 0.25;
                 output = 2.00;
+                cache_read = 0.0625;
+                cache_write = 0.25;
               };
             };
           };
         };
       };
       mcp = {
+        "local-rag" = {
+          enabled = true;
+          type = "local";
+          timeout = 1200000;
+          command = [
+            "${pkgs.bash}/bin/bash"
+            "-c"
+            "PATH=${pkgs.nodejs}/bin:$PATH npx -y mcp-local-rag"
+          ];
+          environment = {
+            BASE_DIR = config.hostSpec.home;
+          };
+        };
+
         github = {
           enabled = true;
           type = "local";
@@ -303,12 +316,8 @@ in
 
         rag = {
           enabled = true;
-          type = "local";
-          command = [
-            "${pkgs.bash}/bin/bash"
-            "-c"
-            "RAG_QDRANT_URL=https://qdrant.bepis.lol RAG_QDRANT_HOST=qdrant.bepis.lol RAG_QDRANT_PORT=443 RAG_QDRANT_HTTPS=1 RAG_QDRANT_TIMEOUT=120 RAG_COLLECTION=rag_chunks RAG_EMBEDDING_MODEL=text-embedding-3-small LITELLM_BASE_URL=https://litellm.bepis.lol/v1 LITELLM_API_KEY_FILE=${config.sops.secrets.litellm_api.path} RAG_SSH_TARGET=${ragSshTarget} RAG_NAS_PROJECTS_ROOT=/pool1/appdata/rag/projects RAG_TRIGGER_CMD=\"RAG_STATE_FILE=/pool1/appdata/rag/state.json rag-indexer --scan\" ${rag-mcp}/bin/rag-mcp"
-          ];
+          type = "remote";
+          url = "https://rag-mcp.bepis.lol/sse";
         };
       };
     };
