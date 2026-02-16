@@ -2,7 +2,6 @@
   config,
   inputs,
   pkgs,
-  pkgsUnstable,
   lib,
   ...
 }:
@@ -34,7 +33,7 @@ let
 
   system = pkgs.stdenv.hostPlatform.system;
 
-  pkgsLoom = pkgsUnstable.extend (
+  pkgsLoom = pkgs.unstable.extend (
     lib.composeManyExtensions [
       (import "${inputs.loom}/infra/pkgs" { })
     ]

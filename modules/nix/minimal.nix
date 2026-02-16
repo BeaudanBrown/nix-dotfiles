@@ -1,5 +1,4 @@
 {
-  pkgs,
   nixpkgsUnstable,
   ...
 }:
@@ -20,8 +19,14 @@
     };
   };
 
-  _module.args.pkgsUnstable = import nixpkgsUnstable {
-    inherit (pkgs) system;
-    config.allowUnfree = true;
-  };
+  # Expose nixpkgs-unstable as pkgs.unstable.* via overlay.
+  # Individual modules add packages to this namespace by appending their own overlays.
+  nixpkgs.overlays = [
+    (final: prev: {
+      unstable = import nixpkgsUnstable {
+        inherit (prev) system;
+        config.allowUnfree = true;
+      };
+    })
+  ];
 }

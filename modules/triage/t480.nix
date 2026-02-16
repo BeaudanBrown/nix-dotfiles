@@ -1,9 +1,9 @@
 {
-  pkgsUnstable,
+  pkgs,
   ...
 }:
 {
   environment.systemPackages = [
-    pkgsUnstable.freecad
+    pkgs.unstable.freecad
   ];
 }

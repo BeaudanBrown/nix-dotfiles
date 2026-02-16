@@ -1,7 +1,7 @@
 {
   config,
   lib,
-  pkgsUnstable,
+  pkgs,
   ...
 }:
 let
@@ -24,7 +24,7 @@ in
 
   services.open-webui = {
     enable = true;
-    package = pkgsUnstable.open-webui;
+    package = pkgs.unstable.open-webui;
 
     host = "127.0.0.1";
     port = config.custom.ports.assigned.${portKey};

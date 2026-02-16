@@ -1,6 +1,6 @@
-{ inputs, pkgsUnstable, ... }:
+{ inputs, pkgs, ... }:
 let
-  pkgsLoom = pkgsUnstable.extend (import "${inputs.loom}/infra/pkgs" { });
+  pkgsLoom = pkgs.unstable.extend (import "${inputs.loom}/infra/pkgs" { });
 in
 {
   environment.systemPackages = [
