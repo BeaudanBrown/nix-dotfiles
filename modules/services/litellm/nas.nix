@@ -7,6 +7,26 @@
 let
   litellmDomain = "litellm.bepis.lol";
   portKey = "litellm";
+
+  # Anthropic prompt caching: mark system prompt and conversation tail as
+  # cache breakpoints.  Everything from the start of the prompt up to each
+  # breakpoint becomes a cacheable prefix:
+  #   • system  – AGENTS.md, persona, tool schemas — identical across turns
+  #              AND across conversations in the same project (cross-convo
+  #              cache hits at 0.1× base input cost).
+  #   • last    – extends the cached prefix as the conversation grows so the
+  #              full history is read from cache on every subsequent turn.
+  # OpenAI/Google models cache automatically (no injection needed).
+  anthropicCachePoints = [
+    {
+      location = "message";
+      role = "system";
+    }
+    {
+      location = "message";
+      index = -1;
+    }
+  ];
 in
 {
   custom.ports.requests = [ { key = portKey; } ];
@@ -39,6 +59,7 @@ in
               litellm_params = {
                 model = "openai/gpt-5.2";
                 api_key = "os.environ/OPENAI_API_KEY";
+                # OpenAI caches automatically — no injection points needed
               };
             }
             {
@@ -60,6 +81,7 @@ in
               litellm_params = {
                 model = "anthropic/claude-haiku-4-5";
                 api_key = "os.environ/ANTHROPIC_API_KEY";
+                cache_control_injection_points = anthropicCachePoints;
               };
             }
             {
@@ -67,6 +89,7 @@ in
               litellm_params = {
                 model = "anthropic/claude-sonnet-4-5";
                 api_key = "os.environ/ANTHROPIC_API_KEY";
+                cache_control_injection_points = anthropicCachePoints;
               };
             }
             {
@@ -74,6 +97,7 @@ in
               litellm_params = {
                 model = "claude-opus-4-5";
                 api_key = "os.environ/ANTHROPIC_API_KEY";
+                cache_control_injection_points = anthropicCachePoints;
               };
             }
             {
@@ -81,6 +105,7 @@ in
               litellm_params = {
                 model = "claude-opus-4-6";
                 api_key = "os.environ/ANTHROPIC_API_KEY";
+                cache_control_injection_points = anthropicCachePoints;
               };
             }
             {
@@ -88,6 +113,8 @@ in
               litellm_params = {
                 model = "gemini/gemini-3-flash-preview";
                 api_key = "os.environ/GOOGLE_API_KEY";
+                # Gemini context caching uses a different API — injection points
+                # are not the right mechanism here (requires explicit caching API calls)
               };
             }
             {

@@ -17,30 +17,62 @@ rec {
     in
     relativeToRoot "secrets/${base}.yaml";
 
+  # Recursively find all files named `leaf` under `path`.
+  # Retained for local use (e.g. scanning a plugin directory for default.nix).
   importRecursive =
     { leaf, path }:
     let
-      _scanPathsRec =
+      scanRec =
         _path:
         (if (builtins.pathExists (_path + "/${leaf}")) then [ (_path + "/${leaf}") ] else [ ])
         ++ (
           builtins.readDir _path
           |> lib.attrsets.filterAttrs (_: type: type == "directory")
           |> lib.mapAttrsToList (name: _: _path + "/${name}")
-          |> builtins.concatMap _scanPathsRec
+          |> builtins.concatMap scanRec
         );
     in
     builtins.readDir path
     |> lib.attrsets.filterAttrs (_: type: type == "directory")
     |> lib.mapAttrsToList (name: _: path + "/${name}")
-    |> builtins.concatMap _scanPathsRec;
+    |> builtins.concatMap scanRec;
 
-  importHost =
-    { host, path }:
-    importRecursive {
-      inherit path;
-      leaf = "${host}.nix";
-    };
+  # Single-pass recursive scan of a directory tree.
+  # Returns an attrset mapping nix filename stems to lists of paths:
+  #   { minimal = [ ./modules/nix/minimal.nix ./modules/cli/git/minimal.nix ... ];
+  #     common  = [ ./modules/cli/tmux/common.nix ... ];
+  #     grill   = [ ./modules/services/ollama/grill.nix ... ]; }
+  buildImportMap =
+    path:
+    let
+      scanRec =
+        _path:
+        let
+          entries = builtins.readDir _path;
+          files =
+            entries
+            |> lib.attrsets.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name)
+            |> lib.mapAttrsToList (
+              name: _: {
+                key = lib.removeSuffix ".nix" name;
+                path = _path + "/${name}";
+              }
+            );
+          subdirs =
+            entries
+            |> lib.attrsets.filterAttrs (_: type: type == "directory")
+            |> lib.mapAttrsToList (name: _: _path + "/${name}")
+            |> builtins.concatMap scanRec;
+        in
+        files ++ subdirs;
+    in
+    builtins.readDir path
+    |> lib.attrsets.filterAttrs (_: type: type == "directory")
+    |> lib.mapAttrsToList (name: _: path + "/${name}")
+    |> builtins.concatMap scanRec
+    |> builtins.foldl' (
+      acc: entry: acc // { ${entry.key} = (acc.${entry.key} or [ ]) ++ [ entry.path ]; }
+    ) { };
 
   importAll =
     {
@@ -50,29 +82,20 @@ rec {
       useHost ? true,
     }:
     let
-      path = relativeToRoot "modules";
+      importMap = buildImportMap (relativeToRoot "modules");
+      hostFiles = if useHost then importMap.${host} or [ ] else [ ];
+      rootFiles = roots |> builtins.concatMap (r: importMap.${r} or [ ]);
     in
-    (if useHost then importHost { inherit host path; } else [ ])
-    ++ (
-      roots
-      |> builtins.concatMap (
-        category:
-        # Normal modules
-        (importRecursive {
-          inherit path;
-          leaf = "${category}.nix";
-        })
-        # Home manager configuration
-        ++ [
-          {
-            home-manager = {
-              inherit extraSpecialArgs;
-              backupFileExtension = "backup";
-            };
-          }
-        ]
-      )
-    );
+    hostFiles
+    ++ rootFiles
+    ++ [
+      {
+        home-manager = {
+          inherit extraSpecialArgs;
+          backupFileExtension = "backup";
+        };
+      }
+    ];
 
   concatListsFromPaths =
     childAttrName: paths:
