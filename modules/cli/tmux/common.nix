@@ -12,8 +12,8 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "ofirgall";
       repo = "tmux-window-name";
-      rev = "master"; # Or specific commit hash
-      hash = "sha256-klS3MoGQnEiUa9RldKGn7D9yxw/9OXbfww43Wi1lV/w=";
+      rev = "master";
+      hash = "sha256-/ImZy4VijniRtWxrf89XRdKK+bpAOttP4ZtgPNoSrHI=";
     };
     nativeBuildInputs = [ pkgs.makeWrapper ];
     rtpFilePath = "tmux_window_name.tmux";

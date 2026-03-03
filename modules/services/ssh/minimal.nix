@@ -47,7 +47,6 @@
         user = "beau";
       };
       brick = {
-        hostname = "brick.lan";
         user = "mikaerem";
       };
       pi4 = {

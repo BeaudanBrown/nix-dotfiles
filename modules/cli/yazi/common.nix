@@ -14,16 +14,18 @@
   };
 
   # Runtime dependencies for Yazi (previews, navigation)
-  hm.primary.home.packages = with pkgs; [
-    ueberzugpp # Image preview support (X11/Wayland)
-    chafa # Fallback terminal graphics
-    ffmpegthumbnailer # Video thumbnails
-    imagemagick # Image decoding/manipulation
-    poppler-utils # PDF previews
-    unar # Archive previews
-    jq # JSON previews
-    fd # Fast file search
-    ripgrep # Code search
-    zoxide # Smart directory jumping
-  ];
+  hm.primary = {
+    home.packages = with pkgs; [
+      ueberzugpp # Image preview support (X11/Wayland)
+      chafa # Fallback terminal graphics
+      ffmpegthumbnailer # Video thumbnails
+      imagemagick # Image decoding/manipulation
+      poppler-utils # PDF previews
+      unar # Archive previews
+      jq # JSON previews
+      fd # Fast file search
+      ripgrep # Code search
+      zoxide # Smart directory jumping
+    ];
+  };
 }

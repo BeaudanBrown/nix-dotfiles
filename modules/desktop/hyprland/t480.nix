@@ -8,7 +8,7 @@
     input = {
       sensitivity = (lib.mkForce 0.2);
       touchpad = {
-        scroll_factor = (lib.mkForce 1);
+        scroll_factor = (lib.mkForce 0.6);
       };
     };
     device = [
