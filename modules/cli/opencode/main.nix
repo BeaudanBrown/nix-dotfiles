@@ -5,7 +5,38 @@
   pkgs,
   ...
 }:
+let
+  # All model names available through the LiteLLM proxy (single source of truth).
+  litellmModelNames = config.custom.litellm.models;
+
+  # Model names referenced by opencode provider configs below.  Kept in
+  # sync manually but validated by the assertion — if you add a model to
+  # a provider block, add its litellm name here too.
+  opencodeModelNames = [
+    "kimi-k2.5"
+    "gemini-3-flash-preview"
+    "gemini-3.1-pro-preview"
+    "claude-opus-4-5"
+    "claude-opus-4-6"
+    "claude-sonnet-4-6"
+    "claude-haiku-4-5"
+    "m3"
+    "gpt-5.2"
+    "gpt-5.3-codex"
+    "gpt-5-mini"
+  ];
+in
 {
+  # Catch model drift: every model referenced in opencode providers must
+  # exist in the litellm catalog.  Evaluates at build time so mismatches
+  # are caught before deploy, not at runtime.
+  assertions = lib.optionals (litellmModelNames != [ ]) (
+    map (name: {
+      assertion = builtins.elem name litellmModelNames;
+      message = "opencode provider references model '${name}' which is not in custom.litellm.models";
+    }) opencodeModelNames
+  );
+
   sops.secrets.context7 = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
@@ -14,6 +45,8 @@
 
   environment.systemPackages = [
     inputs.nix-ai-tools.packages.${pkgs.system}.amp
+    inputs.nix-ai-tools.packages.${pkgs.system}.gemini-cli
+    inputs.nix-ai-tools.packages.${pkgs.system}.codex
   ];
 
   hm.primary.programs.opencode = {
@@ -25,28 +58,59 @@
       When working with Nix configurations, maintain consistency with existing patterns.
     '';
     settings = {
-      # Default model with high reasoning (kimi-k2.5 variants: toggle with Ctrl+T)
       model = "lite_moonshot/kimi-k2.5";
-      # Small model for lightweight tasks (titles, summaries)
       small_model = "lite_openai/gpt-5-mini";
+
+      # Disable ALL MCP tools globally - agents must explicitly enable what they need
+      tools = {
+        "local-rag_*" = false;
+        "github_*" = false;
+        "context7_*" = false;
+        "nixos_*" = false;
+        "rag_*" = false;
+      };
+
       agent = {
+        # Disable default agents
         general = {
           disable = true;
         };
         explore = {
           disable = true;
         };
+
+        # Minimal agent for non-interactive/scripting use - no MCPs
+        minimal = {
+          mode = "primary";
+          description = "Minimal agent for scripting with no external MCPs to avoid context pollution";
+          model = "lite_openai/gpt-5-mini";
+          tools = {
+            # Core file operations only
+            write = true;
+            edit = true;
+            read = true;
+            glob = true;
+            grep = true;
+            bash = true;
+            # Just context7 enabled
+            "context7_*" = false;
+          };
+          prompt = "You are a minimal agent for non-interactive tasks. Work with local files only. Do not use external MCP servers.";
+        };
+
         code-search = {
           mode = "subagent";
           description = "Read-only code retrieval specialist. Use ONLY for searching files, reading content, and gathering context. CANNOT edit, write, or modify files. Returns information for you to use.";
           model = "lite_google/gemini-3-flash-preview";
           tools = {
+            # Core tools only - no MCPs needed for code search
             glob = true;
             grep = true;
             read = true;
             write = false;
             edit = false;
             bash = false;
+            "context7_*" = true;
           };
           prompt = ''
             You are a Code Search Specialist. Your ONLY goal is to retrieve information.
@@ -57,36 +121,31 @@
             - NEVER attempt to modify code.
           '';
         };
+
         github = {
           mode = "subagent";
           description = "Git specialist. Handles commits (short messages), diffs, and logs. Use ONLY when explicitly asked.";
           model = "lite_google/gemini-3-flash-preview";
           tools = {
-            glob = false;
-            grep = false;
-            read = false;
-            write = false;
-            edit = false;
+            # Enable GitHub MCP for this agent
+            "github_*" = true;
             bash = true;
           };
           prompt = ''
             You are a Git Operations Specialist.
             - Use 'bash' for git commands (commit, diff, log, status).
+            - Use GitHub MCP tools for GitHub operations.
             - Commit messages MUST be concise (< 10 words).
             - Analyze diffs and repo state.
             - NEVER modify file contents directly.
           '';
         };
+
         build-tests = {
           mode = "subagent";
           description = "Build/test runner. Executes nix build/check/test commands and summarizes results with relevant error snippets.";
           model = "lite_openai/gpt-5-mini";
           tools = {
-            glob = false;
-            grep = false;
-            read = false;
-            write = false;
-            edit = false;
             bash = true;
           };
           prompt = ''
@@ -98,6 +157,7 @@
             - NEVER modify files or suggest edits.
           '';
         };
+
         build = {
           mode = "primary";
           model = "lite_moonshot/kimi-k2.5";
@@ -105,11 +165,16 @@
             write = true;
             edit = true;
             bash = true;
-            code-search = true;
-            github = true;
+            code-search = true; # Delegation to subagent
+            github = true; # Delegation to subagent
+            # Enable specific MCPs for the build agent
+            "nixos_*" = true; # For Nix operations
+            "context7_*" = true;
+            "github_*" = true;
           };
           prompt = "You are the primary build agent. Delegate code search to @code-search, it cannot make changes. Delegate build/test commands to @build-tests to keep context clear. Delegate git tasks to @github ONLY when asked.";
         };
+
         plan = {
           mode = "primary";
           model = "lite_anthropic/claude-opus-4-6";
@@ -119,15 +184,20 @@
             bash = false;
             code-search = true;
             github = true;
+            # Enable research MCPs for planning
+            "context7_*" = true; # For library documentation
+            "rag_*" = true; # For general knowledge
           };
           prompt = ''
             You are a software architect.
-                        - Create plans, never attempt to change any files.
-                        - Start each plan by first studying the existing code or specs, and then asking the user if you need clarification before you design a detailed plan.
-                        - Delegate code search to @code-search, it cannot make changes.
-                        - Use @github ONLY when asked and only for git information.'';
+            - Create plans, never attempt to change any files.
+            - Start each plan by first studying the existing code or specs, and then asking the user if you need clarification before you design a detailed plan.
+            - Delegate code search to @code-search, it cannot make changes.
+            - Use @github ONLY when asked and only for git information.
+          '';
         };
       };
+
       provider = {
         lite_moonshot = {
           npm = "@ai-sdk/openai-compatible";
@@ -152,6 +222,22 @@
             };
           };
         };
+        lite_zai = {
+          npm = "@ai-sdk/openai-compatible";
+          name = "lite_zai";
+          options = {
+            baseURL = "https://litellm.bepis.lol";
+            apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+          };
+          models = {
+            glm-5 = {
+              name = "glm-5";
+            };
+            "glm-4.7-flash" = {
+              name = "glm-4.7-flash";
+            };
+          };
+        };
         lite_google = {
           npm = "@ai-sdk/google";
           name = "Google";
@@ -168,8 +254,8 @@
                 output = 3.00;
               };
             };
-            gemini-3-pro-preview = {
-              name = "gemini-3-pro-preview";
+            "gemini-3.1-pro-preview" = {
+              name = "gemini-3.1-pro-preview";
               reasoning = true;
               cost = {
                 input = 2.00;
@@ -207,8 +293,8 @@
                 cache_write = 6.25;
               };
             };
-            claude-sonnet-4-5 = {
-              name = "claude-sonnet-4-5";
+            claude-sonnet-4-6 = {
+              name = "claude-sonnet-4-6";
               reasoning = true;
               cost = {
                 input = 3.00;
@@ -225,6 +311,20 @@
                 cache_read = 0.10;
                 cache_write = 1.25;
               };
+            };
+          };
+        };
+        m3 = {
+          npm = "@ai-sdk/openai-compatible";
+          name = "M3";
+          options = {
+            baseURL = "https://litellm.bepis.lol";
+            apiKey = "{file:${config.sops.secrets.litellm_api.path}}";
+          };
+          models = {
+            "m3" = {
+              name = "m3";
+              reasoning = true;
             };
           };
         };
@@ -247,8 +347,8 @@
                 cache_write = 1.75;
               };
             };
-            "gpt-5.2-codex" = {
-              name = "gpt-5.2-codex";
+            "gpt-5.3-codex" = {
+              name = "gpt-5.3-codex";
               cost = {
                 input = 1.75;
                 output = 14.00;

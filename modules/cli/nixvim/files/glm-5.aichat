@@ -1,5 +1,6 @@
 [chat-options]
-model=gpt-5
+model=glm-5
+stream=0
 temperature=1
 max_completion_tokens=25000
 request_timeout=240
