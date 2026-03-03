@@ -14,6 +14,12 @@ in
   options.services.loom-k3s.privateRegistry = {
     enable = mkEnableOption "Enable self-hosted registry secret";
 
+    secretName = mkOption {
+      type = types.str;
+      default = "custom-registry-secret";
+      description = "Name of the Kubernetes docker-registry secret to create.";
+    };
+
     server = mkOption {
       type = types.str;
       default = "registry.example.com";
@@ -56,13 +62,13 @@ in
         done
 
         # Clean up old secret
-        kubectl --kubeconfig=${cfg.kubeconfigPath} delete secret custom-registry-secret \
+        kubectl --kubeconfig=${cfg.kubeconfigPath} delete secret ${cfg.privateRegistry.secretName} \
           -n loom-weavers --ignore-not-found=true
 
         # Create new secret
         PASS=$(cat ${cfg.privateRegistry.passwordFile})
 
-        kubectl --kubeconfig=${cfg.kubeconfigPath} create secret docker-registry custom-registry-secret \
+        kubectl --kubeconfig=${cfg.kubeconfigPath} create secret docker-registry ${cfg.privateRegistry.secretName} \
           --namespace=loom-weavers \
           --docker-server=${cfg.privateRegistry.server} \
           --docker-username=${cfg.privateRegistry.username} \
