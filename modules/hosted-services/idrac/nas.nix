@@ -15,6 +15,7 @@ in
       tailnet = true;
       webSockets = false;
       doNginx = false;
+      doACME = false;
     }
   ];
 }

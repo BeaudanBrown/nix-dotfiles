@@ -20,7 +20,7 @@ let
       set -euo pipefail
 
       prompt_file=".loom/codex-prompt.md"
-      sandbox_mode="workspace-write"
+      sandbox_mode="danger-full-access"
       approval_policy="never"
       model=""
 
@@ -51,12 +51,14 @@ let
       done
 
       auth_b64="$(base64 -w0 < ${config.sops.secrets."loom/codex_auth_json".path})"
+      github_bot_pat_b64="$(base64 -w0 < ${config.sops.secrets."loom/github_bot_pat".path})"
 
       jq -n \
         --arg prompt_file "$prompt_file" \
         --arg sandbox_mode "$sandbox_mode" \
         --arg approval_policy "$approval_policy" \
         --arg auth_b64 "$auth_b64" \
+        --arg github_bot_pat_b64 "$github_bot_pat_b64" \
         --arg model "$model" \
         '
           {
@@ -64,7 +66,8 @@ let
             LOOM_CODEX_PROMPT_FILE: $prompt_file,
             LOOM_CODEX_SANDBOX_MODE: $sandbox_mode,
             LOOM_CODEX_APPROVAL_POLICY: $approval_policy,
-            LOOM_CODEX_AUTH_JSON_B64: $auth_b64
+            LOOM_CODEX_AUTH_JSON_B64: $auth_b64,
+            LOOM_GITHUB_BOT_PAT_B64: $github_bot_pat_b64
           }
           + (if $model == "" then {} else { LOOM_CODEX_MODEL: $model } end)
         '
@@ -76,6 +79,7 @@ let
       coreutils
       git
       jq
+      gnused
     ];
     text = ''
       set -euo pipefail
@@ -83,11 +87,13 @@ let
       server_url="https://${webDomain}"
       image="${registryServer}/loom/weaver:latest"
       prompt_file=".loom/codex-prompt.md"
-      sandbox_mode="workspace-write"
+      sandbox_mode="danger-full-access"
       approval_policy="never"
       model=""
       org=""
       repo_override=""
+      feature=""
+      base_override=""
       branch_override=""
       ttl=""
 
@@ -125,6 +131,14 @@ let
             repo_override="$2"
             shift 2
             ;;
+          --feature)
+            feature="$2"
+            shift 2
+            ;;
+          --base)
+            base_override="$2"
+            shift 2
+            ;;
           --branch)
             branch_override="$2"
             shift 2
@@ -135,7 +149,7 @@ let
             ;;
           *)
             echo "Unknown argument: $1" >&2
-            echo "Usage: loom-codex-weaver [--server-url URL] [--image IMAGE] [--prompt-file PATH] [--sandbox MODE] [--approval POLICY] [--model MODEL] [--org ORG] [--repo URL] [--branch NAME] [--ttl HOURS]" >&2
+            echo "Usage: loom-codex-weaver [--server-url URL] [--image IMAGE] [--prompt-file PATH] [--sandbox MODE] [--approval POLICY] [--model MODEL] [--org ORG] [--repo URL] [--feature NAME] [--base NAME] [--branch NAME] [--ttl HOURS]" >&2
             exit 1
             ;;
         esac
@@ -148,14 +162,38 @@ let
 
       cd "$repo_root"
 
-      if [ -n "$branch_override" ]; then
-        branch="$branch_override"
-      else
-        branch="$(git branch --show-current)"
-        if [ -z "$branch" ]; then
-          echo "Current checkout is detached; pass --branch explicitly." >&2
+      current_branch="$(git branch --show-current)"
+      if [ -z "$current_branch" ]; then
+        echo "Current checkout is detached; pass --base or --branch explicitly." >&2
+        exit 1
+      fi
+
+      sanitize_feature() {
+        local value
+        value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+        value="''${value// /-}"
+        value="''${value//\//-}"
+        value="$(printf '%s' "$value" | tr -cs '[:alnum:]._-' '-')"
+        value="$(printf '%s' "$value" | sed -e 's/^-*//' -e 's/-*$//')"
+        if [ -z "$value" ]; then
+          echo "Feature name resolves to an empty branch slug." >&2
           exit 1
         fi
+        printf '%s\n' "$value"
+      }
+
+      if [ -n "$base_override" ]; then
+        base_branch="$base_override"
+      else
+        base_branch="$current_branch"
+      fi
+
+      if [ -n "$branch_override" ]; then
+        work_branch="$branch_override"
+      elif [ -n "$feature" ]; then
+        work_branch="weaver/$(sanitize_feature "$feature")"
+      else
+        work_branch="weaver/$current_branch"
       fi
 
       normalize_repo_url() {
@@ -223,8 +261,9 @@ let
         weaver
         new
         --image "$image"
-        --repo "$repo_url"
-        --branch "$branch"
+        -e "LOOM_UPSTREAM_REPO=$repo_url"
+        -e "LOOM_BASE_BRANCH=$base_branch"
+        -e "LOOM_WORK_BRANCH=$work_branch"
       )
 
       if [ -n "$org" ]; then
@@ -277,7 +316,18 @@ in
     ./patch.nix
   ];
 
+  hostedServices = [
+    {
+      domain = webDomain;
+      upstreamPort = toString config.custom.ports.assigned.${webPortKey};
+      tailnet = true;
+      doNginx = false;
+      doACME = false;
+    }
+  ];
+
   environment.systemPackages = [
+    pkgsLoom.loom-cli
     codexWeaver
     codexWeaverEnv
     push-weaver
@@ -343,6 +393,11 @@ in
       };
 
       "loom/codex_auth_json" = {
+        owner = config.hostSpec.username;
+        inherit (config.users.users.${config.hostSpec.username}) group;
+      };
+
+      "loom/github_bot_pat" = {
         owner = config.hostSpec.username;
         inherit (config.users.users.${config.hostSpec.username}) group;
       };
@@ -477,5 +532,31 @@ in
     acmeEmail = config.hostSpec.email;
     acmeDnsProvider = "cloudflare";
     acmeDnsCredentialsFile = config.sops.secrets."cloudflare/dns_api_token".path;
+  };
+
+  services.nginx.virtualHosts.${webDomain}.listen = lib.mkForce [
+    {
+      addr = config.hostSpec.tailIP;
+      port = 80;
+      ssl = false;
+    }
+    {
+      addr = config.hostSpec.tailIP;
+      port = 443;
+      ssl = true;
+    }
+  ];
+
+  systemd.services.loom-server = {
+    after = [
+      "k3s.service"
+      "k3s-loom-namespace.service"
+      "k3s-kubeconfig-permissions.service"
+    ];
+    requires = [
+      "k3s.service"
+      "k3s-loom-namespace.service"
+      "k3s-kubeconfig-permissions.service"
+    ];
   };
 }

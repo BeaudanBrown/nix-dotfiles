@@ -55,6 +55,7 @@ let
 
   acmeCerts =
     services
+    |> filter (s: s.doACME)
     |> map (
       s:
       nameValuePair s.domain {
@@ -116,6 +117,11 @@ in
                 type = types.bool;
                 default = true;
                 description = "If false, don't do nginx conf.";
+              };
+              doACME = mkOption {
+                type = types.bool;
+                default = true;
+                description = "If false, don't create an ACME certificate entry for this domain.";
               };
               dnsTarget = mkOption {
                 type = types.nullOr types.str;
