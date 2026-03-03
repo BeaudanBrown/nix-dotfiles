@@ -8,6 +8,7 @@
         export FL_R_ENVRC="${./r/envrc}"
         export FL_R_LINTR="${./r/lintr}"
         export FL_R_GITIGNORE="${./r/gitignore}"
+        export FL_R_TARGETS="${./r/_targets.R}"
         export FL_GO_FLAKE="${./go/flake.nix}"
         export FL_GO_ENVRC="${./go/envrc}"
         export FL_GO_GITIGNORE="${./go/gitignore}"

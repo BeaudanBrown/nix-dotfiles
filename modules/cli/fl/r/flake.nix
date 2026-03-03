@@ -32,7 +32,7 @@
             hooks = {
               air-fmt = {
                 enable = true;
-                entry = "${pkgs.air}/bin/air format";
+                entry = "${pkgs.air-formatter}/bin/air format";
                 files = ".*\.[rR]$";
               };
             };
@@ -56,6 +56,10 @@
             ])
             ++ (with rPackages; [
               targets
+              tarchetypes
+              crew
+              future
+              qs2
               languageserver
               dotenv
             ]);
