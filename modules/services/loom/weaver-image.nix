@@ -13,6 +13,7 @@
   devenv,
   direnv,
   dive,
+  findutils,
   gh,
   git,
   jq,
@@ -151,6 +152,26 @@ let
       printf '%s\n' "$path"
     }
 
+    resolve_workspace_path() {
+      local input_path="$1"
+
+      if [[ "$input_path" = /* ]]; then
+        printf '%s\n' "$input_path"
+      else
+        printf '%s/%s\n' "$workspace" "$input_path"
+      fi
+    }
+
+    refresh_submodules() {
+      if [ ! -f .gitmodules ]; then
+        return 0
+      fi
+
+      echo "Syncing git submodules..."
+      ${git}/bin/git submodule sync --recursive
+      ${git}/bin/git submodule update --init --recursive
+    }
+
     upstream_slug="$(normalize_github_slug "$upstream_repo")"
     upstream_owner="''${upstream_slug%%/*}"
     repo_name="''${upstream_slug#*/}"
@@ -172,9 +193,20 @@ let
       ${gh}/bin/gh repo fork "$upstream_slug" --remote=false --clone=false >/dev/null
     fi
 
-    rm -rf "$workspace"
+    if [ -e "$workspace" ] && [ ! -d "$workspace" ]; then
+      echo "Workspace path exists but is not a directory: $workspace" >&2
+      exit 1
+    fi
+
+    mkdir -p "$workspace"
+    if [ ! -w "$workspace" ]; then
+      echo "Workspace directory is not writable: $workspace" >&2
+      exit 1
+    fi
+
+    ${findutils}/bin/find "$workspace" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
     echo "Cloning fork $fork_slug into $workspace..."
-    ${git}/bin/git clone "$fork_url" "$workspace"
+    ${git}/bin/git clone --recurse-submodules "$fork_url" "$workspace"
 
     cd "$workspace"
     ${git}/bin/git remote set-url origin "$fork_url"
@@ -203,6 +235,8 @@ let
       echo "Base branch '$base_branch' was not found on upstream or origin." >&2
       exit 1
     fi
+
+    refresh_submodules
 
     echo "GitHub fork workspace ready."
     echo "  upstream: $upstream_url"
@@ -275,12 +309,17 @@ let
           echo "Cloning $LOOM_REPO..."
 
           if [ -n "''${LOOM_BRANCH:-}" ]; then
-            ${git}/bin/git clone --branch "$LOOM_BRANCH" --single-branch "$LOOM_REPO" "$workspace"
+            ${git}/bin/git clone --recurse-submodules --branch "$LOOM_BRANCH" --single-branch "$LOOM_REPO" "$workspace"
           else
-            ${git}/bin/git clone "$LOOM_REPO" "$workspace"
+            ${git}/bin/git clone --recurse-submodules "$LOOM_REPO" "$workspace"
           fi
 
           cd "$workspace"
+          if [ -f .gitmodules ]; then
+            echo "Syncing git submodules..."
+            ${git}/bin/git submodule sync --recursive
+            ${git}/bin/git submodule update --init --recursive
+          fi
           echo "Cloning complete."
           echo ""
         else
