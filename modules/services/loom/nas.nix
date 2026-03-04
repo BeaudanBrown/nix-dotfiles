@@ -9,8 +9,10 @@ let
   portKey = "loom";
   webDomain = "loom.bepis.lol";
   webPortKey = "loom-web";
+  internalCacheServiceName = "loom-cache";
   registryServer = "registry.bepis.lol";
   weaverImage = pkgs.callPackage ./weaver-image.nix {
+    cacheSubstituter = "http://${internalCacheServiceName}.loom-weavers.svc.cluster.local:${toString config.custom.ports.assigned.ncps}";
     codex = inputs.nix-ai-tools.packages.${pkgs.system}.codex;
     loom-cli = pkgsLoom.loom-cli;
   };
@@ -62,6 +64,8 @@ in
     { key = portKey; }
     { key = webPortKey; }
   ];
+
+  networking.firewall.interfaces.cni0.allowedTCPPorts = [ config.hostSpec.sshPort ];
 
   # fileSystems."/var/lib/rancher/k3s" = {
   #   device = "/var/k3s-nvme";

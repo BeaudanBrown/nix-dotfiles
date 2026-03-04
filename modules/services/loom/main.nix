@@ -8,6 +8,10 @@
 let
   webDomain = "loom.bepis.lol";
   registryServer = "registry.bepis.lol";
+  defaultGithubForkOwner = "BeaudanBotline";
+  defaultNixBuilderHost = "loom-builder.loom-weavers.svc.cluster.local";
+  defaultNixBuilderSystems = "x86_64-linux,aarch64-linux";
+  defaultNixBuilderSupportedFeatures = "benchmark,big-parallel,kvm,nixos-test";
 
   pkgsLoom = pkgs.unstable.extend (
     lib.composeManyExtensions [
@@ -25,14 +29,24 @@ let
       set -euo pipefail
 
       prompt_file=".loom/codex-prompt.md"
+      mode="interactive"
+      branch_policy="rebase"
       sandbox_mode="danger-full-access"
       approval_policy="never"
-      model=""
+      model="gpt-5.3-codex"
 
       while [ "$#" -gt 0 ]; do
         case "$1" in
           --prompt-file)
             prompt_file="$2"
+            shift 2
+            ;;
+          --mode)
+            mode="$2"
+            shift 2
+            ;;
+          --branch-policy)
+            branch_policy="$2"
             shift 2
             ;;
           --sandbox)
@@ -49,7 +63,7 @@ let
             ;;
           *)
             echo "Unknown argument: $1" >&2
-            echo "Usage: loom-codex-weaver-env [--prompt-file PATH] [--sandbox MODE] [--approval POLICY] [--model MODEL]" >&2
+            echo "Usage: loom-codex-weaver-env [--prompt-file PATH] [--mode interactive|exec] [--branch-policy rebase|reset|reuse-as-is] [--sandbox MODE] [--approval POLICY] [--model MODEL]" >&2
             exit 1
             ;;
         esac
@@ -57,22 +71,45 @@ let
 
       auth_b64="$(base64 -w0 < ${config.sops.secrets."loom/codex_auth_json".path})"
       github_bot_pat_b64="$(base64 -w0 < ${config.sops.secrets."loom/github_bot_pat".path})"
+      nix_builder_ssh_key_b64="$(base64 -w0 < ${
+        config.sops.secrets."ssh/${config.networking.hostName}/priv".path
+      })"
 
       jq -n \
         --arg prompt_file "$prompt_file" \
+        --arg mode "$mode" \
+        --arg branch_policy "$branch_policy" \
         --arg sandbox_mode "$sandbox_mode" \
         --arg approval_policy "$approval_policy" \
         --arg auth_b64 "$auth_b64" \
         --arg github_bot_pat_b64 "$github_bot_pat_b64" \
+        --arg nix_builder_host "${defaultNixBuilderHost}" \
+        --arg nix_builder_user "${config.hostSpec.username}" \
+        --arg nix_builder_port "${toString config.hostSpec.sshPort}" \
+        --arg nix_builder_systems "${defaultNixBuilderSystems}" \
+        --arg nix_builder_max_jobs "8" \
+        --arg nix_builder_speed_factor "2" \
+        --arg nix_builder_supported_features "${defaultNixBuilderSupportedFeatures}" \
+        --arg nix_builder_ssh_key_b64 "$nix_builder_ssh_key_b64" \
         --arg model "$model" \
         '
           {
             LOOM_WEAVER_TOOL: "codex",
             LOOM_CODEX_PROMPT_FILE: $prompt_file,
+            LOOM_CODEX_MODE: $mode,
+            LOOM_WORK_BRANCH_POLICY: $branch_policy,
             LOOM_CODEX_SANDBOX_MODE: $sandbox_mode,
             LOOM_CODEX_APPROVAL_POLICY: $approval_policy,
             LOOM_CODEX_AUTH_JSON_B64: $auth_b64,
-            LOOM_GITHUB_BOT_PAT_B64: $github_bot_pat_b64
+            LOOM_GITHUB_BOT_PAT_B64: $github_bot_pat_b64,
+            LOOM_NIX_BUILDER_HOST: $nix_builder_host,
+            LOOM_NIX_BUILDER_USER: $nix_builder_user,
+            LOOM_NIX_BUILDER_PORT: $nix_builder_port,
+            LOOM_NIX_BUILDER_SYSTEMS: $nix_builder_systems,
+            LOOM_NIX_BUILDER_MAX_JOBS: $nix_builder_max_jobs,
+            LOOM_NIX_BUILDER_SPEED_FACTOR: $nix_builder_speed_factor,
+            LOOM_NIX_BUILDER_SUPPORTED_FEATURES: $nix_builder_supported_features,
+            LOOM_NIX_BUILDER_SSH_KEY_B64: $nix_builder_ssh_key_b64
           }
           + (if $model == "" then {} else { LOOM_CODEX_MODEL: $model } end)
         '
@@ -93,10 +130,13 @@ let
       server_url="https://${webDomain}"
       image="${registryServer}/loom/weaver:latest"
       prompt_file=".loom/codex-prompt.md"
+      mode="interactive"
+      branch_policy="rebase"
       sandbox_mode="danger-full-access"
       approval_policy="never"
-      model=""
-      org=""
+      model="gpt-5.3-codex"
+      loom_org=""
+      fork_owner="${defaultGithubForkOwner}"
       repo_override=""
       feature=""
       base_override=""
@@ -117,6 +157,14 @@ let
             prompt_file="$2"
             shift 2
             ;;
+          --mode)
+            mode="$2"
+            shift 2
+            ;;
+          --branch-policy)
+            branch_policy="$2"
+            shift 2
+            ;;
           --sandbox)
             sandbox_mode="$2"
             shift 2
@@ -130,7 +178,11 @@ let
             shift 2
             ;;
           --org)
-            org="$2"
+            loom_org="$2"
+            shift 2
+            ;;
+          --fork-owner)
+            fork_owner="$2"
             shift 2
             ;;
           --repo)
@@ -155,11 +207,16 @@ let
             ;;
           *)
             echo "Unknown argument: $1" >&2
-            echo "Usage: loom-codex-weaver [--server-url URL] [--image IMAGE] [--prompt-file PATH] [--sandbox MODE] [--approval POLICY] [--model MODEL] [--org ORG] [--repo URL] [--feature NAME] [--base NAME] [--branch NAME] [--ttl HOURS]" >&2
+            echo "Usage: loom-codex-weaver [--server-url URL] [--image IMAGE] [--prompt-file PATH] [--mode interactive|exec] [--branch-policy rebase|reset|reuse-as-is] [--sandbox MODE] [--approval POLICY] [--model MODEL] [--org ORG] [--fork-owner OWNER] [--repo URL] [--feature NAME] [--base NAME] [--branch NAME] [--ttl HOURS]" >&2
             exit 1
             ;;
         esac
       done
+
+      if [ -z "$fork_owner" ]; then
+        echo "Fork owner must not be empty." >&2
+        exit 1
+      fi
 
       repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || {
         echo "loom-codex-weaver must be run inside a git repository." >&2
@@ -253,6 +310,8 @@ let
       env_cmd=(
         ${codexWeaverEnv}/bin/loom-codex-weaver-env
         --prompt-file "$prompt_file"
+        --mode "$mode"
+        --branch-policy "$branch_policy"
         --sandbox "$sandbox_mode"
         --approval "$approval_policy"
       )
@@ -270,10 +329,11 @@ let
         -e "LOOM_UPSTREAM_REPO=$repo_url"
         -e "LOOM_BASE_BRANCH=$base_branch"
         -e "LOOM_WORK_BRANCH=$work_branch"
+        -e "LOOM_GITHUB_FORK_OWNER=$fork_owner"
       )
 
-      if [ -n "$org" ]; then
-        cmd+=(--org "$org")
+      if [ -n "$loom_org" ]; then
+        cmd+=(--org "$loom_org")
       fi
 
       if [ -n "$ttl" ]; then
