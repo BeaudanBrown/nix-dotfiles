@@ -251,6 +251,12 @@ After documentation changes:
 - Use repo-local workstream files for technical handoff, not the coordinator repo.
 - Once a workstream is complete and durable lessons are reflected in repo docs or specs, remove the `.loom/workstreams/<workstream>/` directory.
 
+## Learning Capture
+
+- Record workstream-specific resume details in `.loom/workstreams/<workstream>/handoff.md`.
+- Record longer active debug trails in `.loom/workstreams/<workstream>/history.md`.
+- Promote any stable repo-wide commands, module patterns, or infra constraints into this file or the relevant spec once they are likely to matter again.
+
 ## Quick Start for Common Tasks
 
 ### Adding a New Package
