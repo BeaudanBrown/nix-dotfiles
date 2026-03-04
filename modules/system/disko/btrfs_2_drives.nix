@@ -34,10 +34,6 @@
                 "/rootfs" = {
                   mountpoint = "/";
                 };
-                "/home" = {
-                  mountOptions = [ "compress=zstd" ];
-                  mountpoint = "/home";
-                };
                 "/nix" = {
                   mountOptions = [
                     "compress=zstd"
@@ -56,7 +52,6 @@
       };
     };
 
-    # --- Drive 2 (Storage/Data) ---
     secondary = {
       type = "disk";
       device = secondDeviceName;
@@ -66,9 +61,21 @@
           data = {
             size = "100%";
             content = {
-              type = "filesystem";
-              format = "ext4";
-              mountpoint = "/mnt/data";
+              type = "btrfs";
+              extraArgs = [ "-f" ];
+              subvolumes = {
+                "/home" = {
+                  mountpoint = "/home";
+                  mountOptions = [ "compress=zstd" ];
+                };
+                "/var_lib" = {
+                  mountpoint = "/var/lib";
+                  mountOptions = [
+                    "compress=zstd"
+                    "noatime"
+                  ];
+                };
+              };
             };
           };
         };

@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   domain = "cloud.bepis.lol";
 in
@@ -37,11 +37,13 @@ in
   };
 
   sops.secrets."nextcloud/admin_pass" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0600";
     owner = "nextcloud";
     group = "nextcloud";
   };
   sops.secrets."headscale/authentik_secret" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0600";
     owner = "headscale";
     group = "headscale";

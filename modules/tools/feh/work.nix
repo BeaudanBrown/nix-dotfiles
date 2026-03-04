@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  hm.programs.feh = {
+  hm.primary.programs.feh = {
     enable = true;
     keybindings = {
       prev_img = [
@@ -17,7 +17,7 @@
   };
 
   # Ensure keep-zoom-vp is enabled by default via a theme named 'feh'
-  hm.home.file.".config/feh/themes" = {
+  hm.primary.home.file.".config/feh/themes" = {
     text = ''
       feh --keep-zoom-vp
     '';

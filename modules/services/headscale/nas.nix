@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   domain = "hs.bepis.lol";
   portKey = "headscale";
@@ -61,11 +61,13 @@ in
   };
   # Client secret key generated through authentik
   sops.secrets."headscale/authentik_secret" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0600";
     owner = "headscale";
     group = "headscale";
   };
   sops.secrets."headscale/noise" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     path = "/var/lib/headscale/noise_private.key";
     mode = "0600";
     owner = "headscale";

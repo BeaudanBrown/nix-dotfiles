@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.programs.waybar.settings.mainBar.output = [
+  hm.primary.programs.waybar.settings.mainBar.output = [
     "eDP-1"
   ];
 }

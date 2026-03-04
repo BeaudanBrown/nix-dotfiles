@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   ...
 }:
 {
@@ -7,8 +8,8 @@
     enable = true;
     config = {
       user = {
-        name = config.hostSpec.userFullName;
-        email = config.hostSpec.email;
+        name = config.hostSpec.primaryUser.userFullName;
+        email = config.hostSpec.primaryUser.email;
         defaultBranch = "main";
       };
       alias = {
@@ -17,7 +18,9 @@
     };
   };
 
+  # GitHub CLI secrets for all users
   sops.secrets."gh-hosts" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
     mode = "0600";
@@ -28,7 +31,7 @@
     "d ${config.hostSpec.home}/.config/gh 0700 ${config.hostSpec.username} users - -"
   ];
 
-  hm.programs.gh = {
+  hm.primary.programs.gh = {
     enable = true;
     settings = {
       git_protocol = "ssh";

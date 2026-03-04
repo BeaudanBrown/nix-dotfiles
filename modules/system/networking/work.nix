@@ -1,4 +1,7 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  ...
+}:
 {
   nixpkgs.overlays = [
     (final: prev: {
@@ -19,22 +22,15 @@
     networkmanagerapplet
     openconnect
   ];
-  # TODO: get keys into the iso
-  sops.secrets."wifi/home/ssid" = { };
-  sops.secrets."wifi/home/psk" = { };
-  services.resolved.enable = true;
 
   networking = {
     networkmanager = {
       # TODO: This doesn't work on minimal install
-      dns = "systemd-resolved";
       plugins = [
         pkgs.networkmanager-openconnect
       ];
       ensureProfiles = {
         environmentFiles = [
-          config.sops.secrets."wifi/home/ssid".path
-          config.sops.secrets."wifi/home/psk".path
         ];
         profiles = {
           Monash = {

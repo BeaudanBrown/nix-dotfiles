@@ -1,6 +1,7 @@
 {
   config,
-  pkgsUnstable,
+  lib,
+  pkgs,
   ...
 }:
 let
@@ -23,7 +24,7 @@ in
 
   services.open-webui = {
     enable = true;
-    package = pkgsUnstable.open-webui;
+    package = pkgs.unstable.open-webui;
 
     host = "127.0.0.1";
     port = config.custom.ports.assigned.${portKey};
@@ -45,5 +46,7 @@ in
 
   # `services.open-webui` uses `DynamicUser = true`, so there is no stable
   # `open-webui` user to chown secrets to. systemd reads `EnvironmentFile=` as root.
-  sops.secrets.openwebui = { };
+  sops.secrets.openwebui = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
 }

@@ -23,11 +23,11 @@
           path = "~/documents/vault/main";
         }
       ];
-      follow_url_func = ''
-        function(url)
-          vim.fn.jobstart({"xdg-open", url}, { detach = true })
-          vim.fn.jobstart({'hyprctl', 'dispatch', 'focuswindow', 'class:brave-browser'}, { detach = true })
-        end'';
+      # follow_url_func = ''
+      #   function(url)
+      #     vim.fn.jobstart({"xdg-open", url}, { detach = true })
+      #     vim.fn.jobstart({'hyprctl', 'dispatch', 'focuswindow', 'class:brave-browser'}, { detach = true })
+      #   end'';
       checkbox = {
         order = {
           " " = {
@@ -58,7 +58,7 @@
   keymaps = [
     {
       key = "<Leader>on";
-      action = '':Obsidian new<CR>'';
+      action = ":Obsidian new<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;

@@ -1,6 +1,9 @@
-{ inputs, ... }:
+{ inputs, pkgs, ... }:
+let
+  pkgsLoom = pkgs.unstable.extend (import "${inputs.loom}/infra/pkgs" { });
+in
 {
   environment.systemPackages = [
-    inputs.loom.packages.x86_64-linux.loom-cli
+    pkgsLoom.loom-cli
   ];
 }

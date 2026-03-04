@@ -5,10 +5,8 @@
   ...
 }:
 let
-  roots = [
-    "minimal"
-    "common"
-  ];
+  allHostsData = import ../../modules/host-spec/all-hosts.nix;
+  roots = allHostsData.hostSpecs.${host}.roots;
 in
 {
   imports = [
@@ -30,14 +28,7 @@ in
 
   nix.settings.cores = 16;
 
-  hostSpec = {
-    username = "mikaerem";
-    hostName = host;
-    # tailIP = "100.64.0.4";
-    email = "mccarm110@gmail.com";
-    wifi = false;
-    userFullName = "Mika";
-  };
+  thisHost = host;
 
   system.stateVersion = "25.11";
 }

@@ -1,6 +1,5 @@
 {
   pkgs,
-  lib,
   ...
 }:
 let
@@ -9,29 +8,25 @@ let
 
   tmux-window-name = pkgs.tmuxPlugins.mkTmuxPlugin {
     pluginName = "tmux-window-name";
-    version = "2024-03-08";
+    version = "unstable-2025-01-05";
     src = pkgs.fetchFromGitHub {
       owner = "ofirgall";
       repo = "tmux-window-name";
-      rev = "9a75967ced4f3925de0714e96395223aa7e2b4ad";
-      sha256 = "sha256-klS3MoGQnEiUa9RldKGn7D9yxw/9OXbfww43Wi1lV/w=";
+      rev = "master";
+      hash = "sha256-/ImZy4VijniRtWxrf89XRdKK+bpAOttP4ZtgPNoSrHI=";
     };
     nativeBuildInputs = [ pkgs.makeWrapper ];
     rtpFilePath = "tmux_window_name.tmux";
     postInstall = ''
-      for f in tmux_window_name.tmux scripts/rename_session_windows.py; do
-        wrapProgram $target/$f \
-          --prefix PATH : ${
-            lib.makeBinPath [
-              (pkgs.python3.withPackages (
-                p: with p; [
-                  libtmux
-                  pip
-                ]
-              ))
-            ]
-          }
-      done
+      substituteInPlace $target/tmux_window_name.tmux \
+        --replace-fail 'CURRENT_DIR="$( cd "$( dirname "''${BASH_SOURCE[0]}" )" && pwd )"' "CURRENT_DIR=$target"
+      chmod +x $target/scripts/*.py
+      wrapProgram "$target/scripts/rename_session_windows.py" \
+        --prefix PATH : ${
+          pkgs.lib.makeBinPath [
+            (pkgs.python3.withPackages (p: [ p.libtmux ]))
+          ]
+        }
     '';
   };
 in
@@ -41,12 +36,13 @@ in
     tmux_toggle_popup
   ];
 
-  hm.programs.tmux = {
+  hm.primary.programs.tmux = {
     enable = true;
     escapeTime = 0;
     historyLimit = 50000;
     keyMode = "vi";
     terminal = "tmux-256color";
+    focusEvents = true;
     plugins = with pkgs.tmuxPlugins; [
       catppuccin
       extrakto
@@ -105,7 +101,7 @@ in
             detach-client
           }
 
-          bind-key -n M-Enter run-shell "tmux_toggle_popup scratch"
+          bind-key -n M-Enter run-shell "tmux_toggle_popup htop \"${pkgs.btop}/bin/btop -u 500\""
 
           bind-key -n M-y run-shell "tmux_toggle_popup htop htop"
 

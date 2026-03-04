@@ -5,12 +5,8 @@
   ...
 }:
 let
-  roots = [
-    "minimal"
-    "common"
-    "network"
-    "client"
-  ];
+  allHostsData = import ../../modules/host-spec/all-hosts.nix;
+  roots = allHostsData.hostSpecs.${host}.roots;
 in
 {
   imports = [
@@ -28,13 +24,7 @@ in
 
   boot.loader.systemd-boot.enable = lib.mkForce false;
 
-  hostSpec = {
-    username = "beau";
-    hostName = host;
-    email = "beaudan.brown@gmail.com";
-    wifi = true;
-    userFullName = "Beaudan Brown";
-  };
+  thisHost = host;
 
   system.stateVersion = "25.05";
 }

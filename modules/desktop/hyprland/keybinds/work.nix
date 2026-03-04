@@ -22,9 +22,9 @@ let
         + (if title != null then " -t \"${title}\"" else "");
     in
     [
-      ''SUPER, ${key}, exec, ${appCmd}''
-      ''SUPERALT, ${key}, exec, ${appCmd} -p''
-      ''SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}''
+      "SUPER, ${key}, exec, ${appCmd}"
+      "SUPERALT, ${key}, exec, ${appCmd} -p"
+      "SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}"
     ];
 
   workspaces = [
@@ -65,6 +65,12 @@ let
 
     # Screenshot region to clipboard
     ", Print, exec, ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | wl-copy"
+
+    # Push-to-dictate
+    "SUPER, z, exec, stt-dictate toggle"
+
+    # Push-to-assistant (STT → LLM → TTS + paste)
+    "SUPERSHIFT, z, exec, stt-assist toggle"
 
     # Basic binds
     "SUPER,x,exec,hyprlock"
@@ -168,9 +174,15 @@ in
       workspace = "nas";
       class = "nas";
     }
+    {
+      key = "t";
+      app = "kitty --class=bottom ssh bottom";
+      workspace = "bottom";
+      class = "bottom";
+    }
   ];
 
-  hm.wayland.windowManager.hyprland.settings = {
+  hm.primary.wayland.windowManager.hyprland.settings = {
     bindm = [
       "SUPER,mouse:272,movewindow"
       "SUPER,mouse:273,resizewindow"

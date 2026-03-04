@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.programs.watson = {
+  hm.primary.programs.watson = {
     enable = true;
   };
 

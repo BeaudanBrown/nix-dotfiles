@@ -9,6 +9,7 @@
     unzip
     gnumake
     nh
+    nix-fast-build
     ncdu
     lsof
     curl

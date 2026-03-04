@@ -4,6 +4,7 @@
     enable = true;
     image = ./bg.png;
     base16Scheme = "${pkgs.base16-schemes}/share/themes/kanagawa.yaml";
+    # base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
 
     targets = {
       grub.enable = false;
@@ -31,5 +32,5 @@
     };
   };
 
-  hm.stylix.enable = true;
+  hm.primary.stylix.enable = true;
 }

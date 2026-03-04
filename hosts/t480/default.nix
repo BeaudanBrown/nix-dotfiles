@@ -6,15 +6,8 @@
   ...
 }:
 let
-  roots = [
-    "minimal"
-    "common"
-    "gaming"
-    "network" # Tailnet + Kitty etc
-    "client" # Network - server
-    "main" # Main machines: desktop, laptop, server
-    "work"
-  ];
+  allHostsData = import ../../modules/host-spec/all-hosts.nix;
+  roots = allHostsData.hostSpecs.${host}.roots;
 in
 {
   imports = [
@@ -32,14 +25,7 @@ in
     extraSpecialArgs = { inherit nixpkgsStable; };
   });
 
-  hostSpec = {
-    username = "beau";
-    hostName = host;
-    tailIP = "100.64.0.1";
-    email = "beaudan.brown@gmail.com";
-    wifi = true;
-    userFullName = "Beaudan Brown";
-  };
+  thisHost = host;
 
   services.tlp = {
     enable = true;

@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   users.users.${config.hostSpec.username}.extraGroups = [ "docker" ];
   virtualisation = {
@@ -15,6 +15,7 @@
   ];
 
   sops.secrets."docker-registry/config" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0600";
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;

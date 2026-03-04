@@ -6,27 +6,28 @@
   ...
 }:
 {
-  imports = lib.flatten [
-    "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-    "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-    inputs.home-manager.nixosModules.home-manager
-    inputs.sops-nix.nixosModules.sops
-    (lib.custom.importAll {
-      host = "iso";
-      roots = [ "minimal" ];
-    })
-  ];
+  imports =
+    let
+      allHostsData = import ../../modules/host-spec/all-hosts.nix;
+      roots = allHostsData.hostSpecs.iso.roots;
+    in
+    [
+      "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+      "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+      inputs.home-manager.nixosModules.home-manager
+      inputs.sops-nix.nixosModules.sops
+      (lib.custom.importAll {
+        host = "iso";
+        inherit roots;
+      })
+    ]
+    |> lib.flatten;
 
   environment.systemPackages = with pkgs; [
     vim
   ];
 
-  hostSpec = {
-    hostName = "iso";
-    username = "beau";
-    email = "beaudan.brown@gmail.com";
-    userFullName = "Beaudan Brown";
-  };
+  thisHost = "iso";
 
   # The default compression-level is (6) and takes too long on some machines (>30m). 3 takes <2m
   isoImage.squashfsCompression = "zstd -Xcompression-level 3";

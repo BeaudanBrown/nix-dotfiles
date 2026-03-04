@@ -19,8 +19,9 @@ case "$1" in
 	cp "$FL_R_ENVRC" ./.envrc
 	cp "$FL_R_LINTR" ./.lintr
 	cp "$FL_R_GITIGNORE" ./.gitignore
-	chmod 644 ./.gitignore ./.lintr ./flake.nix ./.envrc
-	git add ./.gitignore ./flake.nix ./.envrc
+	cp "$FL_R_TARGETS" ./_targets.R
+	chmod 644 ./.gitignore ./.lintr ./flake.nix ./.envrc ./_targets.R
+	git add ./.gitignore ./flake.nix ./.envrc ./_targets.R
 	;;
 "go")
 	echo "Setting up Go environment..."

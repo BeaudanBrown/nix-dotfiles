@@ -1,5 +1,5 @@
 { pkgs, ... }:
 {
   # Issues with zfs in latest kernel
-  boot.kernelPackages = pkgs.linuxPackages_6_17;
+  boot.kernelPackages = pkgs.linuxPackages_6_18;
 }

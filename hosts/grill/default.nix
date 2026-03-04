@@ -7,15 +7,8 @@
   ...
 }:
 let
-  roots = [
-    "minimal"
-    "common"
-    "network" # Tailnet + Kitty etc
-    "client" # Network - server
-    "main" # Main machines: desktop, laptop, server
-    "work"
-    "gaming"
-  ];
+  allHostsData = import ../../modules/host-spec/all-hosts.nix;
+  roots = allHostsData.hostSpecs.${host}.roots;
 in
 {
   imports = [
@@ -60,14 +53,7 @@ in
 
   nixpkgs.config.rocmSupport = true;
 
-  hostSpec = {
-    username = "beau";
-    hostName = host;
-    tailIP = "100.64.0.5";
-    email = "beaudan.brown@gmail.com";
-    wifi = true;
-    userFullName = "Beaudan Brown";
-  };
+  thisHost = host;
 
   system.stateVersion = "25.05";
 

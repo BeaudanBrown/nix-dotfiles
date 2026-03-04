@@ -2,5 +2,5 @@
 {
   services.blueman.enable = true;
 
-  hm.services.blueman-applet.enable = true;
+  hm.primary.services.blueman-applet.enable = true;
 }

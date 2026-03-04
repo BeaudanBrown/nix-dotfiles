@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.xdg = {
+  hm.primary.xdg = {
     mimeApps = {
       enable = true;
       # to see available > ls /run/current-system/sw/share/applications/
@@ -12,7 +12,7 @@
     };
   };
 
-  hm.programs.zathura = {
+  hm.primary.programs.zathura = {
     enable = true;
     mappings = {
       "J" = "zoom out";

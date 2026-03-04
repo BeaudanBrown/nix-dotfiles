@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -10,6 +11,7 @@ in
 {
   custom.ports.requests = [ { key = portKey; } ];
   sops.secrets.bookstack = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     path = "${config.services.bookstack.dataDir}/bookstack_key";
     mode = "0600";
     owner = config.services.bookstack.user;

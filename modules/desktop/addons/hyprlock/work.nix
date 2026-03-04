@@ -1,6 +1,6 @@
 { ... }:
 {
-  hm.programs.hyprlock = {
+  hm.primary.programs.hyprlock = {
     enable = true;
     settings = {
       general = {
@@ -14,7 +14,7 @@
         size = "300, 50";
         outline_thickness = 0;
         fade_on_empty = false;
-        placeholder_text = ''Password:'';
+        placeholder_text = "Password:";
         dots_spacing = 0.3;
         dots_center = true;
         position = "0, -440";

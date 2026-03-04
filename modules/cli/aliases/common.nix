@@ -13,7 +13,8 @@ in
   environment.shellAliases = {
     sudo = "sudo ";
     nc = "vim ~/documents/nix-dotfiles";
-    nr = ''${pkgs.nh}/bin/nh os switch "${config.hostSpec.dotfiles}"'';
+    # nr = ''${pkgs.nix-fast-build}/bin/nix-fast-build --flake "${config.hostSpec.dotfiles}#nixosConfigurations.${config.hostSpec.hostName}.config.system.build.toplevel" && ${pkgs.nh}/bin/nh os switch "${config.hostSpec.dotfiles}" --accept-flake-config'';
+    nr = ''${pkgs.nh}/bin/nh os switch "${config.hostSpec.dotfiles}" --accept-flake-config'';
     ls = "${pkgs.eza}/bin/eza -lh --group-directories-first";
     cat = "${pkgs.bat}/bin/bat";
     shutup = "sudo shutdown now";

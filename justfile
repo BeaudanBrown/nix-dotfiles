@@ -22,8 +22,19 @@ iso-install DRIVE: iso
 sync USER HOST PATH:
 	rsync -av --filter=':- .gitignore' -e "ssh -l {{USER}} -oport=22" . {{USER}}@{{HOST}}:{{PATH}}/nix-config
 
+# Generate .sops.yaml from hostSpecs
+gen-sops-yaml:
+  ./scripts/gen-sops-yaml.sh
+
 update-sops:
-  sops updatekeys -y secrets.yaml
+  @for file in secrets/*.yaml; do \
+    if sops --decrypt "$file" > /dev/null 2>&1; then \
+      echo "Updating keys for $file..."; \
+      sops updatekeys -y "$file"; \
+    else \
+      echo "Skipping $file (cannot decrypt)"; \
+    fi; \
+  done
 
 test-iso:
   qemu-system-x86_64 \

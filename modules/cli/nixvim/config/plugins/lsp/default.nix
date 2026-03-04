@@ -9,6 +9,10 @@
       vim.keymap.del('n', 'gri')
     '';
     servers = {
+      hls = {
+        enable = true;
+        packageFallback = true;
+      };
       gopls.enable = true;
       htmx.enable = true;
       jsonls.enable = true;

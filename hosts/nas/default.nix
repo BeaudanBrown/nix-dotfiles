@@ -5,13 +5,8 @@
   ...
 }:
 let
-  roots = [
-    "minimal"
-    "common"
-    "network" # Tailnet + Kitty etc
-    "main" # Main machines: desktop, laptop, server
-    "server"
-  ];
+  allHostsData = import ../../modules/host-spec/all-hosts.nix;
+  roots = allHostsData.hostSpecs.${host}.roots;
 in
 {
   imports = [
@@ -39,14 +34,7 @@ in
 
   nix.settings.cores = 8;
 
-  hostSpec = {
-    username = "beau";
-    hostName = host;
-    tailIP = "100.64.0.4";
-    email = "beaudan.brown@gmail.com";
-    wifi = true;
-    userFullName = "Beaudan Brown";
-  };
+  thisHost = host;
 
   system.stateVersion = "25.05";
 }

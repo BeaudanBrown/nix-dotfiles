@@ -3,7 +3,7 @@
   ...
 }:
 {
-  hm.programs.rbw = {
+  hm.primary.programs.rbw = {
     enable = true;
     settings = {
       base_url = "https://pw.bepis.lol";

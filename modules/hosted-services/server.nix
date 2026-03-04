@@ -10,7 +10,6 @@ let
     types
     nameValuePair
     listToAttrs
-    concatStringsSep
     filter
     ;
 
@@ -18,8 +17,6 @@ let
   tailIP = config.hostSpec.tailIP;
 
   publicServices = services |> filter (s: !s.tailnet);
-
-  tailServices = services |> filter (s: s.tailnet);
 
   nginxVhosts =
     services
@@ -58,6 +55,7 @@ let
 
   acmeCerts =
     services
+    |> filter (s: s.doACME)
     |> map (
       s:
       nameValuePair s.domain {
@@ -69,23 +67,6 @@ let
     |> listToAttrs;
 
   cloudflareDomains = publicServices |> map (s: s.domain);
-
-  corednsConfig =
-    tailServices
-    |> map (s: ''
-      ${s.domain}:53 {
-        bind ${tailIP}
-        hosts {
-          ${tailIP} ${s.domain}
-          ttl 60
-        }
-        log
-        errors
-      }
-    '')
-    |> concatStringsSep "\n\n";
-
-  headscaleSplit = tailServices |> map (s: nameValuePair s.domain [ tailIP ]) |> listToAttrs;
 
   wait-for-tailscale-ip = pkgs.writeShellScript "wait-for-tailscale-ip" ''
     i=0
@@ -137,6 +118,16 @@ in
                 default = true;
                 description = "If false, don't do nginx conf.";
               };
+              doACME = mkOption {
+                type = types.bool;
+                default = true;
+                description = "If false, don't create an ACME certificate entry for this domain.";
+              };
+              dnsTarget = mkOption {
+                type = types.nullOr types.str;
+                default = null;
+                description = "IP address to point DNS to. Defaults to host's tailIP.";
+              };
             };
           }
         )
@@ -148,15 +139,6 @@ in
 
   config = {
     services.nginx.virtualHosts = nginxVhosts;
-
-    services.headscale.settings.dns = {
-      nameservers.split = headscaleSplit;
-    };
-
-    services.coredns = {
-      enable = true;
-      config = corednsConfig;
-    };
 
     systemd.services.wait-for-tailscale-ip = {
       description = "Wait for Tailscale to have ${tailIP}";
@@ -176,33 +158,14 @@ in
       ];
     };
 
-    systemd.services.coredns = {
-      requires = [
-        "wait-for-tailscale-ip.service"
-        "tailscaled.service"
-      ];
-      after = [
-        "wait-for-tailscale-ip.service"
-        "tailscaled.service"
-        "headscale.service"
-      ];
-      wants = [ "network-online.target" ];
-      serviceConfig = {
-        Restart = "on-failure";
-        RestartSec = "10s";
-        TimeoutStartSec = "5m";
-      };
-    };
-
     sops.secrets."cloudflare/ddns_token" = {
+      sopsFile = lib.custom.sopsFileForModule __curPos.file;
       mode = "0600";
       owner = config.hostSpec.username;
       inherit (config.users.users.${config.hostSpec.username}) group;
     };
 
-    networking.firewall.interfaces.tailscale0.allowedUDPPorts = [ 53 ];
     networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
-      53
       80
       443
     ];
@@ -213,7 +176,9 @@ in
       domains = cloudflareDomains;
     };
 
-    sops.secrets."cloudflare/env" = { };
+    sops.secrets."cloudflare/env" = {
+      sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    };
 
     security.acme = {
       acceptTerms = true;

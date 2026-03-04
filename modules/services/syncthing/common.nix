@@ -46,11 +46,11 @@ in
       let
         # 1. Calculate parent directories for Targets (in Syncthing folder)
         targetDirs = map (item: "${syncRoot}/${getParent item.target}") cfg;
-        uniqueTargetDirs = lib.unique (lib.filter (d: d != syncRoot) targetDirs);
+        uniqueTargetDirs = targetDirs |> lib.filter (d: d != syncRoot) |> lib.unique;
 
         # 2. Calculate parent directories for Sources (in Home folder)
         sourceDirs = map (item: "${home}/${getParent item.source}") cfg;
-        uniqueSourceDirs = lib.unique (lib.filter (d: d != home) sourceDirs);
+        uniqueSourceDirs = sourceDirs |> lib.filter (d: d != home) |> lib.unique;
 
         # Helper to generate Directory rules
         mkDirRule = dir: "d ${dir} 0700 ${user} users - -";

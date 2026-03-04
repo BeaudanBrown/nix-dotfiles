@@ -4,8 +4,8 @@
 }:
 {
   environment.shellAliases = {
-    htop = ''${pkgs.btop}/bin/btop -u 500'';
+    htop = "${pkgs.btop}/bin/btop -u 500";
   };
 
-  hm.programs.btop.enable = true;
+  hm.primary.programs.btop.enable = true;
 }

@@ -7,7 +7,7 @@ let
   inherit (config.home-manager.users.${config.hostSpec.username}.lib.formats.rasi) mkLiteral;
 in
 {
-  hm.programs.rofi = {
+  hm.primary.programs.rofi = {
     enable = true;
     package = pkgs.rofi;
     extraConfig = {

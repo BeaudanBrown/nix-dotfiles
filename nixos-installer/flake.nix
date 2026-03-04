@@ -31,38 +31,25 @@
       # This mkHost is way better: https://github.com/linyinfeng/dotfiles/blob/8785bdb188504cfda3daae9c3f70a6935e35c4df/flake/hosts.nix#L358
       newConfig =
         host: user:
-        (
-          let
-            spec = {
-              username = user;
-              hostName = host;
-              email = "beaudan.brown@gmail.com";
-              # TODO: make this configurable?
-              wifi = true;
-              userFullName = "Beaudan Brown";
-              isBootstrap = true;
-            };
-          in
-          lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = minimalSpecialArgs;
-            modules = [
-              inputs.disko.nixosModules.disko
-              inputs.home-manager.nixosModules.home-manager
-              inputs.sops-nix.nixosModules.sops
-              (lib.custom.relativeToRoot "modules/system/disko/${host}.nix")
-              (lib.custom.relativeToRoot "hosts/${host}/hardware.nix")
-              {
-                hostSpec = spec;
-              }
-            ]
-            ++ (lib.custom.importAll {
-              inherit host;
-              roots = [ "minimal" ];
-              useHost = false;
-            });
-          }
-        );
+        (lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = minimalSpecialArgs;
+          modules = [
+            inputs.disko.nixosModules.disko
+            inputs.home-manager.nixosModules.home-manager
+            inputs.sops-nix.nixosModules.sops
+            (lib.custom.relativeToRoot "modules/system/disko/${host}.nix")
+            (lib.custom.relativeToRoot "hosts/${host}/hardware.nix")
+            {
+              thisHost = host;
+            }
+          ]
+          ++ (lib.custom.importAll {
+            inherit host;
+            roots = [ "minimal" ];
+            useHost = false;
+          });
+        });
     in
     {
       nixosConfigurations = {
@@ -71,7 +58,8 @@
         laptop = newConfig "laptop" "beau";
         t480 = newConfig "t480" "beau";
         nas = newConfig "nas" "beau";
-        mika = newConfig "mika" "top";
+        bottom = newConfig "bottom" "beau";
+        # bottom = newConfig "bottom" "mikaerem";
         brick = newConfig "brick" "mikaerem";
       };
     };

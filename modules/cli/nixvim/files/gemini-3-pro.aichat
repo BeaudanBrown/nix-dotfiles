@@ -1,5 +1,0 @@
-[chat-options]
-model=gemini-3-pro-preview
-request_timeout=120
-
->>> user

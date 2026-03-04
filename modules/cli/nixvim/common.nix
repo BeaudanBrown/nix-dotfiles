@@ -37,7 +37,7 @@ in
 
   programs.nixvim = (import ./config/nixvim.nix specialArgs);
 
-  hm.home.file.".Rprofile" =
+  hm.primary.home.file.".Rprofile" =
     let
       profile = ''
         options(browser = "brave")
