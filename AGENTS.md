@@ -245,6 +245,12 @@ After documentation changes:
 2. Verify code examples are accurate
 3. Run `nix flake check` (good practice)
 
+## Coordinator Workstreams
+
+- When this repo is used as a coordinator-managed execution target, put active workstream files under `.loom/workstreams/<workstream>/`.
+- Use repo-local workstream files for technical handoff, not the coordinator repo.
+- Once a workstream is complete and durable lessons are reflected in repo docs or specs, remove the `.loom/workstreams/<workstream>/` directory.
+
 ## Quick Start for Common Tasks
 
 ### Adding a New Package
