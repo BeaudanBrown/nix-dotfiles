@@ -16,26 +16,16 @@ in
     inputs.nixvim.nixosModules.nixvim
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
-    inputs.authentik-nix.nixosModules.default
-    inputs.copyparty.nixosModules.default
     inputs.home-manager.nixosModules.home-manager
-    inputs.joan-flash.nixosModules.default
-    inputs.openclaw.nixosModules.openclaw-gateway
-    "${inputs.loom}/infra/nixos-modules/loom-server.nix"
-    "${inputs.loom}/infra/nixos-modules/loom-web.nix"
-    "${inputs.loom}/infra/nixos-modules/k3s.nix"
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
     extraSpecialArgs = { };
   });
 
-  # Enable emulation for cross-compilation
-  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-
-  nix.settings.cores = 8;
+  nix.settings.cores = 2;
 
   thisHost = host;
 
-  system.stateVersion = "25.05";
+  system.stateVersion = "25.11";
 }

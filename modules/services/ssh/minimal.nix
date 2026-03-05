@@ -46,6 +46,10 @@
         hostname = "nas.lan";
         user = "beau";
       };
+      agent = {
+        hostname = "agent";
+        user = "beau";
+      };
       brick = {
         user = "mikaerem";
       };

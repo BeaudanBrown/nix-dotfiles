@@ -153,6 +153,24 @@
         "network"
       ]
     },
+    "agent": {
+      "hostName": "agent",
+      "users": [
+        {
+          "username": "beau",
+          "email": "beaudan.brown@gmail.com",
+          "userFullName": "Beaudan Brown",
+          "ageUserKey": null
+        }
+      ],
+      "wifi": false,
+      "ageHostKey": null,
+      "roots": [
+        "minimal",
+        "common",
+        "network"
+      ]
+    },
     "iso": {
       "hostName": "iso",
       "users": [

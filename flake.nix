@@ -3,7 +3,6 @@
     {
       self,
       nixpkgs,
-      nixpkgsStable,
       nixpkgsUnstable,
       flake-utils,
       ...
@@ -42,7 +41,6 @@
                 outputs
                 lib
                 host
-                nixpkgsStable
                 nixpkgsUnstable
                 ;
             };
@@ -62,7 +60,6 @@
   };
 
   inputs = {
-    nixpkgsStable.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -71,7 +68,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixvim.url = "github:nix-community/nixvim";
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     stylix = {
       url = "github:danth/stylix/release-25.11";
@@ -98,28 +98,25 @@
       inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
 
-    systems.url = "github:nix-systems/default";
-
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
-    flake-utils = {
-      url = "github:numtide/flake-utils";
-      inputs.systems.follows = "systems";
-    };
+    systems.url = "github:nix-systems/default";
+
+    flake-utils.url = "github:numtide/flake-utils";
 
     nix-ai-tools = {
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
 
-    authentik-nix.url = "github:nix-community/authentik-nix";
+    authentik-nix = {
+      url = "github:nix-community/authentik-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    copyparty.url = "github:9001/copyparty";
-
-    gp = {
-      # url = "github:yuezk/GlobalProtect-openconnect/v2.4.6";
-      url = "github:BeaudanBrown/GlobalProtect-openconnect?rev=e8287c2f8f6856bc6228b9750f732d4d5a1ece3c";
-      inputs.nixpkgs.follows = "nixpkgsStable";
+    copyparty = {
+      url = "github:9001/copyparty";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     joan-flash = {
@@ -129,6 +126,13 @@
 
     loom = {
       url = "github:ghuntley/loom";
+      inputs.nixpkgs.follows = "nixpkgsUnstable";
+    };
+
+    complix.url = "github:BeaudanBrown/complix";
+
+    openclaw = {
+      url = "github:openclaw/nix-openclaw";
       inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
   };
