@@ -1,5 +1,17 @@
 { config, ... }:
+let
+  portKey = "atuin";
+  nasTailIP = config.hostSpecs.nas.tailIP;
+in
 {
+  custom.ports = {
+    requests = [
+      {
+        key = portKey;
+      }
+    ];
+  };
+
   hm.primary = {
     programs.atuin = {
       enable = true;
@@ -8,7 +20,7 @@
       settings = {
         auto_sync = true;
         sync_frequency = "5m";
-        sync_address = "http://100.64.0.4:8888";
+        sync_address = "http://${nasTailIP}:${toString config.custom.ports.assigned.${portKey}}";
         search_mode = "fuzzy";
         filter_mode = "global";
       };
