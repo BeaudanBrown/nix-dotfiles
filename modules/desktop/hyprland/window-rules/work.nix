@@ -16,6 +16,7 @@ let
   tilingWindows =
     [
       "class:(kitty)"
+      "class:(agent)"
       "class:(nas)"
       "class:(laptop)"
       "class:(grill)"

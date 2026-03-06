@@ -19,7 +19,10 @@ in
     enable = true;
     logLevel = "info";
     server = {
-      addr = "127.0.0.1:${toString config.custom.ports.assigned.${portKey}}";
+      # Bind broadly on the host so k3s pods can reach the cache via a
+      # cluster-local Service. Tailnet clients still use the existing nginx
+      # proxy and cache.bepis.lol path.
+      addr = "0.0.0.0:${toString config.custom.ports.assigned.${portKey}}";
     };
     cache = {
       hostName = domain;
@@ -43,6 +46,8 @@ in
       ];
     };
   };
+
+  networking.firewall.interfaces.cni0.allowedTCPPorts = [ config.custom.ports.assigned.${portKey} ];
 
   sops.secrets."ncps" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;

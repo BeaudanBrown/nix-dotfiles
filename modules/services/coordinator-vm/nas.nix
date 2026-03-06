@@ -92,7 +92,7 @@ in
         <currentMemory unit='MiB'>5120</currentMemory>
         <vcpu placement='static'>2</vcpu>
         <cpu mode='host-passthrough' check='none'/>
-        <os>
+        <os firmware='efi'>
           <type arch='x86_64' machine='q35'>hvm</type>
           <boot dev='hd'/>
           <boot dev='cdrom'/>

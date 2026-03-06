@@ -2,7 +2,6 @@
   lib,
   inputs,
   host,
-  nixpkgsStable,
   ...
 }:
 let
@@ -21,7 +20,7 @@ in
   ]
   ++ (lib.custom.importAll {
     inherit host roots;
-    extraSpecialArgs = { inherit nixpkgsStable; };
+    extraSpecialArgs = { };
   });
 
   thisHost = host;

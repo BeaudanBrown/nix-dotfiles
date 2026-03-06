@@ -67,10 +67,10 @@ in
 
   networking.firewall.interfaces.cni0.allowedTCPPorts = [ config.hostSpec.sshPort ];
 
-  # fileSystems."/var/lib/rancher/k3s" = {
-  #   device = "/var/k3s-nvme";
-  #   options = [ "bind" ];
-  # };
+  # Keep ephemeral k3s state on the root NVMe rather than the ZFS /var/lib dataset.
+  systemd.tmpfiles.rules = [
+    "d /var/k3s-nvme 0755 root root - -"
+  ];
 
   sops.secrets = lib.mkIf config.services.loom-server.enable (
     lib.mapAttrs (_: secret: secret // { sopsFile = lib.custom.sopsFileForModule __curPos.file; }) {
@@ -183,7 +183,9 @@ in
   services.k3s = {
     extraFlags = lib.mkForce (toString [
       "--bind-address=0.0.0.0"
+      "--data-dir=/var/k3s-nvme"
       "--disable=traefik"
+      "--disable=metrics-server"
       "--tls-san=${config.hostSpec.tailIP}"
       "--tls-san=nas"
     ]);

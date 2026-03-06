@@ -175,6 +175,12 @@ in
       class = "nas";
     }
     {
+      key = "a";
+      app = "kitty --class=agent ssh agent";
+      workspace = "agent";
+      class = "agent";
+    }
+    {
       key = "t";
       app = "kitty --class=bottom ssh bottom";
       workspace = "bottom";

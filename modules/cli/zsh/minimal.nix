@@ -11,7 +11,6 @@
   hm.primary.programs.zsh = {
     enable = true;
     syntaxHighlighting.enable = true;
-    history.size = 10000;
     defaultKeymap = "viins";
     dotDir = "${config.hostSpec.home}/.config/zsh";
     plugins = [

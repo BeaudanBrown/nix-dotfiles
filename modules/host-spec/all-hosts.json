@@ -164,7 +164,7 @@
         }
       ],
       "wifi": false,
-      "ageHostKey": null,
+      "ageHostKey": "age1vu3gyv2apum0qszxmtermc5v6gr97f8j4kqkghvtjnzvfzx4k36q8426pd",
       "roots": [
         "minimal",
         "common",
