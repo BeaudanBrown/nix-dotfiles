@@ -1,5 +1,6 @@
 keys:
   - &master age1rundnwzcmw8wltfxdlrhelrkh5m8t80mej4jhfq6prr9k99uxg8qgqvjfw
+  - &agent age1vu3gyv2apum0qszxmtermc5v6gr97f8j4kqkghvtjnzvfzx4k36q8426pd
   - &bottom age1qa9kz72cuwkm0z2svvmp5e3fdp3da6ru4gwwgempw38e05fqe9zqfct3vv
   - &beau_bottom age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq
   - &brick age1ntdsnyrcnwy700yny3syltatu0avep2jqn2c5z6e68vm9sntcppq6l0aan
@@ -17,6 +18,13 @@ keys:
   - &beau_t480 age10wvkj53rafjcgvvvtmlyx858h2h67jcph8wtp4yp38u00q46uplq2smw3f
 
 creation_rules:
+  - path_regex: secrets/agent\.yaml$
+    key_groups:
+      - age:
+          - *master
+          - *nas
+          - *beau_nas
+          - *agent
   - path_regex: secrets/bottom\.yaml$
     key_groups:
       - age:
@@ -78,6 +86,7 @@ creation_rules:
           - *master
           - *nas
           - *beau_nas
+          - *agent
           - *bottom
           - *beau_bottom
           - *brick
@@ -97,6 +106,7 @@ creation_rules:
           - *master
           - *nas
           - *beau_nas
+          - *agent
           - *bottom
           - *beau_bottom
           - *brick
@@ -116,6 +126,7 @@ creation_rules:
           - *master
           - *nas
           - *beau_nas
+          - *agent
           - *bottom
           - *beau_bottom
           - *brick
