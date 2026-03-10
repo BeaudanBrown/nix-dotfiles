@@ -2,7 +2,7 @@
 
 ## Overview
 
-Secrets are managed using [SOPS](https://github.com/getsops/sops) with Age encryption. This allows secrets to be stored encrypted in the repository and decrypted at build/runtime on authorized hosts.
+Secrets are managed using [SOPS](https://github.com/getsops/sops) with Age encryption. Encrypted secret files and `.sops.yaml` live in the private `sops-secrets` repository, while this repo references them through helper functions and a flake input.
 
 **⚠️ CRITICAL: Agents must NEVER directly interact with secrets or SOPS commands.**
 
@@ -14,22 +14,35 @@ Secrets are managed using [SOPS](https://github.com/getsops/sops) with Age encry
 | Tell user to create/edit secrets          | ✅ Yes |
 | Tell user to run `just update-sops`       | ✅ Yes |
 | Run `sops` CLI commands                   | ❌ **NEVER** |
-| Read `.sops.yaml`                         | ❌ **NEVER** |
-| Read files in `secrets/` directory        | ❌ **NEVER** |
+| Access the private `sops-secrets` repo directly | ❌ **NEVER** |
+| Read `.sops.yaml` in the private secrets repo | ❌ **NEVER** |
+| Read files in the private secrets repo        | ❌ **NEVER** |
 | Display or log any key material           | ❌ **NEVER** |
+
+Agents must never inspect, list, grep, cat, or otherwise access the private `sops-secrets` repository itself. They may only instruct the user which commands to run there.
 
 ## Directory Structure
 
-```
-secrets/
-├── common.yaml           # Secrets for common root
-├── work.yaml             # Secrets for work root
-├── server.yaml           # Secrets for server root
-├── <module-name>.yaml    # Module-specific secrets
-└── ...
+Private repo layout:
+
+```text
+sops-secrets/
+├── .sops.yaml
+└── secrets/
+    ├── common.yaml
+    ├── work.yaml
+    ├── server.yaml
+    ├── <module-name>.yaml
+    └── ...
 ```
 
 ## Referencing Secrets in Modules
+
+Use the consumer to decide where a secret should live:
+
+- If the consumer is a user-space tool managed by Home Manager, prefer HM `sops-nix`.
+- If the consumer is a NixOS service or other system-owned configuration, keep it in NixOS `sops-nix`.
+- A path under `/home/...` does not by itself mean the secret should move to Home Manager.
 
 ### Basic Pattern
 
@@ -54,7 +67,7 @@ secrets/
 { config, lib, ... }:
 {
   sops.secrets.database-password = {
-    sopsFile = lib.custom.sopsRootFile "server";  # → secrets/server.yaml
+    sopsFile = lib.custom.sopsRootFile "server";  # → private repo: secrets/server.yaml
   };
 }
 ```
@@ -65,7 +78,7 @@ secrets/
 { config, lib, ... }:
 {
   # If this file is modules/services/nginx/common.nix
-  # This resolves to secrets/common.yaml
+  # This resolves to private repo: secrets/common.yaml
   sops.secrets.nginx-cert = {
     sopsFile = lib.custom.sopsFileForModule ./common.nix;
   };
@@ -99,10 +112,10 @@ The helper functions map to secret files as follows:
 
 | Helper                                  | Resolves To             |
 |-----------------------------------------|-------------------------|
-| `sopsRootFile "common"`                 | `secrets/common.yaml`   |
-| `sopsRootFile "work"`                   | `secrets/work.yaml`     |
-| `sopsFileForModule ./common.nix`        | `secrets/common.yaml`   |
-| `sopsFileForModule ./myservice.nix`     | `secrets/myservice.yaml`|
+| `sopsRootFile "common"`                 | `sops-secrets/secrets/common.yaml`   |
+| `sopsRootFile "work"`                   | `sops-secrets/secrets/work.yaml`     |
+| `sopsFileForModule ./common.nix`        | `sops-secrets/secrets/common.yaml`   |
+| `sopsFileForModule ./myservice.nix`     | `sops-secrets/secrets/myservice.yaml`|
 
 ## Common Patterns
 
@@ -181,7 +194,7 @@ Agents should instruct users to perform these actions:
 
 Tell the user:
 > "Please add the secret to the appropriate SOPS file by running:
-> `sops secrets/<filename>.yaml`
+> `cd /home/beau/documents/projects/sops-secrets && sops secrets/<filename>.yaml`
 > and adding a key named `<key-name>` with your secret value."
 
 ### Updating SOPS Configuration
@@ -209,9 +222,9 @@ Tell the user:
 
 When secrets aren't working, guide users to check:
 
-1. **Secret file exists**: `secrets/<name>.yaml` must exist
+1. **Secret file exists**: `sops-secrets/secrets/<name>.yaml` must exist
 2. **Key exists in file**: The YAML key path must match
-3. **Host has access**: Host's age key must be in `.sops.yaml` recipients
+3. **Host has access**: Host's age key must be in the private repo's `.sops.yaml` recipients
 4. **SOPS config updated**: `just gen-sops-yaml` may need to be run
 
 ## Security Best Practices

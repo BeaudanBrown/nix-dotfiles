@@ -88,7 +88,6 @@ in
       before = [ "syncthing.service" ];
       after = [
         "systemd-tmpfiles-setup.service"
-        "local-fs.target"
       ];
     }) cfg;
   };

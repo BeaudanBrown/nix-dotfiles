@@ -18,17 +18,17 @@
     };
   };
 
-  # GitHub CLI secrets for all users
-  sops.secrets."gh-hosts" = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-    owner = config.hostSpec.username;
-    inherit (config.users.users.${config.hostSpec.username}) group;
-    mode = "0600";
-    path = "${config.hostSpec.home}/.config/gh/hosts.yml";
-  };
-
-  systemd.tmpfiles.rules = [
-    "d ${config.hostSpec.home}/.config/gh 0700 ${config.hostSpec.username} users - -"
+  hmModules.primary = [
+    (
+      { config, ... }:
+      {
+        sops.secrets."gh-hosts" = {
+          sopsFile = lib.custom.sopsFileForModule __curPos.file;
+          mode = "0600";
+          path = "${config.home.homeDirectory}/.config/gh/hosts.yml";
+        };
+      }
+    )
   ];
 
   hm.primary.programs.gh = {

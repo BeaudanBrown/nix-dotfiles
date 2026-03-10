@@ -4,17 +4,17 @@ set -euo pipefail
 # Script to generate .sops.yaml from centralized hostSpecs
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TARGET_REPO="${1:-/home/beau/documents/projects/sops-secrets}"
+TARGET_FILE="$TARGET_REPO/.sops.yaml"
 
 cd "$REPO_ROOT"
 
-# Check if .sops.yaml already exists
-if [[ -f .sops.yaml ]]; then
-	echo "⚠️  .sops.yaml already exists. Skipping generation."
-	echo "To regenerate, delete .sops.yaml first."
-	exit 0
+if [[ ! -d $TARGET_REPO ]]; then
+	echo "Target repo does not exist: $TARGET_REPO" >&2
+	exit 1
 fi
 
-echo "Generating .sops.yaml from hostSpecs..."
+echo "Generating .sops.yaml from hostSpecs into $TARGET_FILE..."
 
 # Use nix eval to get the config structure as JSON
 # Fix: Use flake's nixpkgs instead of <nixpkgs> to avoid NIX_PATH dependency
@@ -51,6 +51,6 @@ KEYS=$(echo "$CONFIG_JSON" | jq -r '.keys[] | to_entries[] | "&\(.key) \(.value)
 		echo "      - age:"
 		echo "$AGE_KEYS" | tr ',' '\n' | sed 's/^[[:space:]]*\*/          - */' | sed 's/[[:space:]]*$//'
 	done
-} >.sops.yaml
+} >"$TARGET_FILE"
 
 echo "✓ Generated .sops.yaml"

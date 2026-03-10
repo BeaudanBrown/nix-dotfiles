@@ -13,7 +13,14 @@
       # ========== Extend lib with lib.custom ==========
       # NOTE: This approach allows lib.custom to propagate into hm
       # see: https://github.com/nix-community/home-manager/pull/3454
-      lib = nixpkgs.lib.extend (self: super: { custom = import ./lib { inherit (nixpkgs) lib; }; });
+      lib = nixpkgs.lib.extend (
+        self: super: {
+          custom = import ./lib {
+            inherit (nixpkgs) lib;
+            inherit inputs;
+          };
+        }
+      );
     in
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -22,6 +29,9 @@
       in
       {
         formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
+        packages = {
+          generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
+        };
         checks = import ./lib/checks.nix { inherit inputs system pkgs; };
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
@@ -81,6 +91,11 @@
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    sopsSecrets = {
+      url = "git+ssh://git@github.com/BeaudanBrown/sops-secrets.git?shallow=1";
+      flake = false;
     };
 
     disko = {

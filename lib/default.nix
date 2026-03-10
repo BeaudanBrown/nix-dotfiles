@@ -1,21 +1,24 @@
 {
   lib,
+  inputs,
 }:
 with lib;
 rec {
   relativeToRoot = lib.path.append ../.;
+  secretsRoot = inputs.sopsSecrets;
+  secretsDir = secretsRoot + "/secrets";
 
   # SOPS helpers
   # - Root-shared secret file: secrets/<root>.yaml
   # - Module-derived secret file: secrets/<basename-of-module>.yaml
-  sopsRootFile = root: relativeToRoot "secrets/${root}.yaml";
+  sopsRootFile = root: secretsDir + "/${root}.yaml";
 
   sopsFileForModule =
     moduleFile:
     let
       base = moduleFile |> builtins.baseNameOf |> removeSuffix ".nix";
     in
-    relativeToRoot "secrets/${base}.yaml";
+    secretsDir + "/${base}.yaml";
 
   # Recursively find all files named `leaf` under `path`.
   # Retained for local use (e.g. scanning a plugin directory for default.nix).

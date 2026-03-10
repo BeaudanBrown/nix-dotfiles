@@ -1,12 +1,18 @@
 { config, lib, ... }:
+let
+  secretName = "kdeconnect/${config.networking.hostName}";
+in
 {
-  sops.secrets = {
-    "kdeconnect/${config.networking.hostName}" = {
-      sopsFile = lib.custom.sopsFileForModule __curPos.file;
-      path = "${config.hostSpec.home}/.config/kdeconnect/trusted_devices";
-      mode = "0644";
-      owner = config.hostSpec.username;
-      inherit (config.users.users.${config.hostSpec.username}) group;
-    };
-  };
+  hmModules.primary = [
+    (
+      { config, ... }:
+      {
+        sops.secrets.${secretName} = {
+          sopsFile = lib.custom.sopsFileForModule __curPos.file;
+          path = "${config.home.homeDirectory}/.config/kdeconnect/trusted_devices";
+          mode = "0644";
+        };
+      }
+    )
+  ];
 }

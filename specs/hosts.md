@@ -170,7 +170,7 @@ Ask the user to:
 1. Generate host age key on the target machine
 2. Generate user age key for the primary user
 3. Add the public keys to the `all-hosts.nix` entry
-4. Run `just gen-sops-yaml` to update SOPS configuration
+4. Run `just gen-sops-yaml` to update the private secrets repo's `.sops.yaml`
 
 ### Step 5: Build and Test
 

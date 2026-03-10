@@ -6,22 +6,6 @@ let
   atuinSessionPath = "${config.hostSpec.home}/.local/share/atuin/session";
 in
 {
-  sops.secrets."atuin/key" = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-    path = atuinKeyPath;
-    mode = "0600";
-    owner = config.hostSpec.username;
-    inherit (config.users.users.${config.hostSpec.username}) group;
-  };
-
-  sops.secrets."atuin/session" = {
-    sopsFile = lib.custom.sopsFileForModule __curPos.file;
-    path = atuinSessionPath;
-    mode = "0600";
-    owner = config.hostSpec.username;
-    inherit (config.users.users.${config.hostSpec.username}) group;
-  };
-
   custom.ports = {
     requests = [
       {
@@ -30,10 +14,30 @@ in
     ];
   };
 
+  hmModules.primary = [
+    (
+      { config, ... }:
+      {
+        sops.secrets."atuin/key" = {
+          sopsFile = lib.custom.sopsFileForModule __curPos.file;
+          path = "${config.home.homeDirectory}/.local/share/atuin/key";
+          mode = "0600";
+        };
+
+        sops.secrets."atuin/session" = {
+          sopsFile = lib.custom.sopsFileForModule __curPos.file;
+          path = "${config.home.homeDirectory}/.local/share/atuin/session";
+          mode = "0600";
+        };
+      }
+    )
+  ];
+
   hm.primary = {
     programs.atuin = {
       enable = true;
       enableZshIntegration = true;
+      flags = [ "--disable-up-arrow" ];
       daemon.enable = true;
       settings = {
         auto_sync = true;

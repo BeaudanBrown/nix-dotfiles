@@ -4,6 +4,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 let
@@ -168,6 +169,12 @@ in
       default = { };
       description = "Home Manager configuration. Use 'all' for shared, 'primary' for primary user, or '<username>' for specific users.";
     };
+
+    hmModules = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.listOf lib.types.anything);
+      default = { };
+      description = "Extra Home Manager modules. Use 'all' for shared modules, 'primary' for the primary user, or '<username>' for specific users.";
+    };
   };
 
   config =
@@ -191,8 +198,9 @@ in
       # Primary user name
       primaryUsername = computedHostSpec.primaryUser.username;
 
-      # Get per-user HM configs (excluding 'all' and 'primary' keys)
+      # Get per-user HM configs/modules (excluding 'all' and 'primary' keys)
       perUserHmConfigs = lib.filterAttrs (n: v: n != "all" && n != "primary") config.hm;
+      perUserHmModules = lib.filterAttrs (n: v: n != "all" && n != "primary") config.hmModules;
 
       # Build home-manager.users configuration
       # Each user gets their specific config merged with primary config if they're primary
@@ -202,8 +210,14 @@ in
           userSpecific = perUserHmConfigs.${username} or { };
           # Primary user also merges hm.primary
           primaryExtra = if username == primaryUsername then config.hm.primary or { } else { };
+          userImports =
+            (perUserHmModules.${username} or [ ])
+            ++ lib.optionals (username == primaryUsername) (config.hmModules.primary or [ ]);
         in
         lib.mkMerge [
+          {
+            imports = userImports;
+          }
           userSpecific
           primaryExtra
         ]
@@ -216,7 +230,17 @@ in
       # Home Manager integration
       home-manager = {
         # Shared modules apply to all users
-        sharedModules = [ (config.hm.all or { }) ];
+        sharedModules = [
+          inputs.sops-nix.homeManagerModules.sops
+          (config.hm.all or { })
+          (
+            { config, ... }:
+            {
+              sops.age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
+            }
+          )
+        ]
+        ++ (config.hmModules.all or [ ]);
 
         # Per-user configurations
         users = hmUsersConfig;

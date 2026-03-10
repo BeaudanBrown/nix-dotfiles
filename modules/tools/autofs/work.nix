@@ -6,14 +6,9 @@
 }:
 {
   sops = {
-    # Which secrets to use, get stored by default in /run/secrets/<name>
     secrets = {
       smbcredentials = {
         sopsFile = lib.custom.sopsFileForModule __curPos.file;
-        # Other username is bcam0018
-        path = "${config.hostSpec.home}/.config/smbcredentials";
-        owner = config.hostSpec.username;
-        inherit (config.users.users.${config.hostSpec.username}) group;
         mode = "0600";
       };
     };

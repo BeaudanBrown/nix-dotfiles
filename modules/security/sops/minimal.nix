@@ -9,7 +9,7 @@
     systemPackages = [ pkgs.sops ];
   };
   sops = {
-    defaultSopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}.yaml";
+    defaultSopsFile = lib.custom.sopsRootFile config.networking.hostName;
     validateSopsFiles = true;
     age = {
       # Key to use to derive age key

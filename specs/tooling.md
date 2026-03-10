@@ -49,8 +49,8 @@ Some hosts have convenience wrappers:
 | Command              | Description                                          |
 |----------------------|------------------------------------------------------|
 | `just age-key`       | Generate a new Age key pair                          |
-| `just gen-sops-yaml` | Regenerate `.sops.yaml` from host-spec data          |
-| `just update-sops`   | Re-encrypt all secrets with current key set          |
+| `just gen-sops-yaml` | Regenerate `.sops.yaml` in the private `sops-secrets` repo |
+| `just update-sops`   | Re-encrypt secrets in the private `sops-secrets` repo |
 
 **Note**: Agents should instruct users to run these commands rather than running them directly.
 

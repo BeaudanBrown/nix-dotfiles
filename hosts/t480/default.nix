@@ -1,13 +1,8 @@
 {
-  lib,
   inputs,
   host,
   ...
 }:
-let
-  allHostsData = import ../../modules/host-spec/all-hosts.nix;
-  roots = allHostsData.hostSpecs.${host}.roots;
-in
 {
   imports = [
     ./hardware.nix
@@ -18,11 +13,14 @@ in
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t480
+    {
+      home-manager = {
+        extraSpecialArgs = { };
+        backupFileExtension = "backup";
+      };
+    }
   ]
-  ++ (lib.custom.importAll {
-    inherit host roots;
-    extraSpecialArgs = { };
-  });
+  ++ (import ../../generated/imports/t480.nix);
 
   thisHost = host;
 

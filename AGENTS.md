@@ -20,7 +20,7 @@ This is a **flake-based NixOS fleet management** repository with a modular archi
 | `/modules/`          | Reusable modules organized by category               |
 | `/modules/host-spec/`| Central host registry (`all-hosts.nix`)              |
 | `/lib/`              | Custom library functions                             |
-| `/secrets/`          | SOPS-encrypted secrets (DO NOT ACCESS)               |
+| Private `sops-secrets` repo | Encrypted SOPS files and `.sops.yaml`        |
 | `/specs/`            | Detailed technical specifications                    |
 | `/nixos-installer/`  | Custom installer flake                               |
 
@@ -210,16 +210,19 @@ Use the dedicated opencode subagents to keep the primary model's context clean:
 | Reference `config.sops.secrets.*.path` | ✅ Yes |
 | Tell user to run secret commands    | ✅ Yes |
 | Run `sops` CLI commands             | ❌ **NEVER** |
-| Read `.sops.yaml`                   | ❌ **NEVER** |
-| Read files in `secrets/`            | ❌ **NEVER** |
+| Access the private `sops-secrets` repo directly | ❌ **NEVER** |
+| Read `.sops.yaml` in the private secrets repo | ❌ **NEVER** |
+| Read files in the private secrets repo        | ❌ **NEVER** |
 | Display any key material            | ❌ **NEVER** |
 
 ### When Secrets Are Needed
 
 Instruct the user to:
-1. Create/edit secrets: `sops secrets/<file>.yaml`
+1. Create/edit secrets: `cd /home/beau/documents/projects/sops-secrets && sops secrets/<file>.yaml`
 2. Update SOPS config: `just gen-sops-yaml`
 3. Re-encrypt after key changes: `just update-sops`
+
+The agent must never inspect, list, grep, cat, or otherwise access the private `sops-secrets` repository itself. Only instruct the user which commands to run there.
 
 See [specs/secrets.md](specs/secrets.md) for patterns.
 
