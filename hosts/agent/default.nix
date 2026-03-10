@@ -25,7 +25,7 @@ in
 
   nix.settings.cores = 2;
 
-  fileSystems."/home/beau" = {
+  fileSystems."/home/beau/host" = {
     device = "host-agent";
     fsType = "virtiofs";
   };

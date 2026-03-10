@@ -93,6 +93,13 @@ Name your file after the root it should be imported for:
 - Use `nixfmt-rfc-style` (auto-enforced by pre-commit)
 - Run `nix flake check` to validate
 
+### Required Validation
+- Do not report a Nix change as done until you have run at least one relevant validation command, or explicitly stated that you did not run validation.
+- For host-specific changes, prefer a targeted build such as `nix build .#nixosConfigurations.<host>.config.system.build.toplevel`.
+- For broader changes, use `nix flake check`.
+- If you edit shell code inside a Nix indented string, escape shell parameter expansions like `${1:-default}` as `''${1:-default}` so Nix does not parse them as interpolation.
+- When validation is skipped or blocked, say so clearly before claiming completion.
+
 ### Pipe Operator
 Use the `pipe` experimental feature for improved readability. Prefer pipes over deeply nested function calls:
 

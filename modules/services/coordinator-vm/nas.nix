@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -8,10 +9,180 @@ let
   vmStorageRoot = "/home/agent-vm";
   sharedHostDir = "/home/beau/agent";
   sharedMountTag = "host-agent";
+  shareRegistryDir = "/var/lib/agent-share";
+  shareRegistryPath = "${shareRegistryDir}/registry.tsv";
   vmDiskPath = "${vmStorageRoot}/${vmName}.qcow2";
   vmXmlPath = "${vmStorageRoot}/${vmName}.xml";
   installIsoPath = "${vmStorageRoot}/nixos-minimal.iso";
   installIsoUrl = "https://channels.nixos.org/nixos-25.05/latest-nixos-minimal-x86_64-linux.iso";
+  agentShare = pkgs.writeShellApplication {
+    name = "agent-share";
+    runtimeInputs = with pkgs; [
+      coreutils
+      gawk
+      gnugrep
+      util-linux
+    ];
+    text = ''
+      set -euo pipefail
+
+      registry_dir=${lib.escapeShellArg shareRegistryDir}
+      registry_path=${lib.escapeShellArg shareRegistryPath}
+      shared_root=${lib.escapeShellArg sharedHostDir}
+
+      mkdir -p "$registry_dir" "$shared_root"
+      touch "$registry_path"
+
+      usage() {
+        cat <<'EOF'
+      Usage:
+        agent-share add <source-path> [name]
+        agent-share remove <name>
+        agent-share list
+        agent-share restore
+
+      Notes:
+        - `add` persists the mapping and bind-mounts it immediately.
+        - `name` defaults to the basename of <source-path>.
+        - Run as root, e.g. `sudo agent-share add ~/documents/projects/foo`.
+      EOF
+      }
+
+      escape_regex() {
+        printf '%s' "$1" | sed 's/[][(){}.^$*+?|\\/]/\\\\&/g'
+      }
+
+      ensure_target_dir() {
+        local target="$1"
+        mkdir -p "$target"
+      }
+
+      mount_share() {
+        local source="$1"
+        local target="$2"
+        ensure_target_dir "$target"
+
+        if mountpoint -q "$target"; then
+          local current_source
+          current_source="$(findmnt -n -o SOURCE --target "$target" || true)"
+          if [ "$current_source" = "$source" ]; then
+            return 0
+          fi
+          echo "error: $target is already mounted from $current_source" >&2
+          exit 1
+        fi
+
+        mount --bind "$source" "$target"
+      }
+
+      remove_registry_entry() {
+        local name="$1"
+        local escaped_name
+        escaped_name="$(escape_regex "$name")"
+        local tmp
+        tmp="$(mktemp)"
+        grep -Ev "^''${escaped_name}	" "$registry_path" > "$tmp" || true
+        mv "$tmp" "$registry_path"
+      }
+
+      add_share() {
+        local source_input="$1"
+        local name="''${2:-$(basename "$source_input")}"
+        local source
+        source="$(realpath -e "$source_input")"
+        local target="$shared_root/$name"
+
+        if [ ! -d "$source" ]; then
+          echo "error: source must be an existing directory: $source" >&2
+          exit 1
+        fi
+
+        if printf '%s' "$name" | grep -q '/'; then
+          echo "error: share name must not contain '/': $name" >&2
+          exit 1
+        fi
+
+        local existing
+        existing="$(awk -F '\t' -v key="$name" '$1 == key { print $2; exit }' "$registry_path")"
+        if [ -n "$existing" ] && [ "$existing" != "$source" ]; then
+          echo "error: share name '$name' already points to $existing" >&2
+          exit 1
+        fi
+
+        mount_share "$source" "$target"
+
+        if [ -z "$existing" ]; then
+          printf '%s\t%s\n' "$name" "$source" >> "$registry_path"
+        fi
+
+        echo "shared $source at $target"
+      }
+
+      remove_share() {
+        local name="$1"
+        local target="$shared_root/$name"
+
+        remove_registry_entry "$name"
+
+        if mountpoint -q "$target"; then
+          umount "$target"
+        fi
+
+        rmdir "$target" 2>/dev/null || true
+        echo "removed share $name"
+      }
+
+      list_shares() {
+        if [ ! -s "$registry_path" ]; then
+          echo "no agent shares configured"
+          return 0
+        fi
+
+        while IFS=$'\t' read -r name source; do
+          [ -n "$name" ] || continue
+          printf '%s\t%s\t%s\n' "$name" "$source" "$shared_root/$name"
+        done < "$registry_path"
+      }
+
+      restore_shares() {
+        while IFS=$'\t' read -r name source; do
+          [ -n "$name" ] || continue
+          [ -n "$source" ] || continue
+
+          if [ ! -d "$source" ]; then
+            echo "warning: skipping missing source for $name: $source" >&2
+            continue
+          fi
+
+          mount_share "$source" "$shared_root/$name"
+        done < "$registry_path"
+      }
+
+      command="''${1:-}"
+      case "$command" in
+        add)
+          [ "$#" -ge 2 ] || { usage; exit 1; }
+          add_share "$2" "''${3:-}"
+          ;;
+        remove)
+          [ "$#" -eq 2 ] || { usage; exit 1; }
+          remove_share "$2"
+          ;;
+        list)
+          [ "$#" -eq 1 ] || { usage; exit 1; }
+          list_shares
+          ;;
+        restore)
+          [ "$#" -eq 1 ] || { usage; exit 1; }
+          restore_shares
+          ;;
+        *)
+          usage
+          exit 1
+          ;;
+      esac
+    '';
+  };
 in
 {
   virtualisation.libvirtd.enable = true;
@@ -23,6 +194,7 @@ in
     (writeShellScriptBin "agent-vm-console" ''
       exec ${libvirt}/bin/virsh console ${vmName}
     '')
+    agentShare
     (writeShellScriptBin "agent-vm-reset" ''
       set -euo pipefail
       ${libvirt}/bin/virsh destroy ${vmName} >/dev/null 2>&1 || true
@@ -39,13 +211,39 @@ in
 
   systemd.tmpfiles.rules = [
     "d ${sharedHostDir} 0700 beau users - -"
+    "d ${shareRegistryDir} 0755 root root - -"
+    "f ${shareRegistryPath} 0644 root root - -"
     "d ${vmStorageRoot} 0750 root root - -"
   ];
+
+  systemd.services.agent-share-restore = {
+    description = "Restore persistent bind mounts exposed to the agent VM";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "agent-vm-ensure.service" ];
+    after = [ "local-fs.target" ];
+    wants = [ "local-fs.target" ];
+    path = with pkgs; [
+      agentShare
+      coreutils
+      gawk
+      gnugrep
+      util-linux
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      set -euo pipefail
+      ${agentShare}/bin/agent-share restore
+    '';
+  };
 
   # Ensures a persistent libvirt VM exists and is started.
   systemd.services.agent-vm-ensure = {
     description = "Ensure libvirt VM '${vmName}' is defined and running";
     after = [
+      "agent-share-restore.service"
       "libvirtd.service"
       "network-online.target"
     ];
