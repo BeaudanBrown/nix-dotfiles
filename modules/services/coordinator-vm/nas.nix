@@ -7,6 +7,7 @@ let
   vmName = "agent";
   vmStorageRoot = "/home/agent-vm";
   sharedHostDir = "/home/beau/agent";
+  sharedMountTag = "host-agent";
   vmDiskPath = "${vmStorageRoot}/${vmName}.qcow2";
   vmXmlPath = "${vmStorageRoot}/${vmName}.xml";
   installIsoPath = "${vmStorageRoot}/nixos-minimal.iso";
@@ -122,8 +123,8 @@ in
           </disk>
           <filesystem type='mount' accessmode='passthrough'>
             <driver type='virtiofs'/>
-            <source dir='/home/beau/agent'/>
-            <target dir='host-agent'/>
+            <source dir='${sharedHostDir}'/>
+            <target dir='${sharedMountTag}'/>
           </filesystem>
           <interface type='network'>
             <source network='default'/>

@@ -25,6 +25,11 @@ in
 
   nix.settings.cores = 2;
 
+  fileSystems."/home/beau" = {
+    device = "host-agent";
+    fsType = "virtiofs";
+  };
+
   thisHost = host;
 
   system.stateVersion = "25.11";
