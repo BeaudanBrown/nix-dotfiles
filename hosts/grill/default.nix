@@ -1,15 +1,10 @@
 {
-  lib,
   inputs,
   config,
   host,
   pkgs,
   ...
 }:
-let
-  allHostsData = import ../../modules/host-spec/all-hosts.nix;
-  roots = allHostsData.hostSpecs.${host}.roots;
-in
 {
   imports = [
     ./hardware.nix
@@ -20,9 +15,7 @@ in
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
   ]
-  ++ (lib.custom.importAll {
-    inherit host roots;
-  });
+  ++ (import ../../generated/imports/grill.nix);
 
   nix.settings.cores = 12;
   hardware.graphics = {

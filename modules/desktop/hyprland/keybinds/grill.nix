@@ -3,9 +3,9 @@
   hypr.launchers = [
     {
       key = "o";
-      app = "kitty --class=laptop ssh laptop";
-      workspace = "laptop";
-      class = "laptop";
+      app = "kitty --class=t480 ssh t480";
+      workspace = "t480";
+      class = "t480";
     }
   ];
 }
