@@ -2,7 +2,9 @@
 default:
   @just --list
 
-sops_repo := "/home/beau/documents/projects/sops-secrets"
+sops_host := "nas"
+sops_repo := "/home/beau/sops-secrets"
+sops_dotfiles_repo := "/home/beau/documents/nix-dotfiles"
 
 # Update the flake
 update:
@@ -26,37 +28,17 @@ sync USER HOST PATH:
 
 # Generate .sops.yaml from hostSpecs
 gen-sops-yaml:
-  ./scripts/gen-sops-yaml.sh {{sops_repo}}
-  @git -C {{sops_repo}} add .sops.yaml
-  @if ! git -C {{sops_repo}} diff --cached --quiet; then \
-    git -C {{sops_repo}} commit -m "Regenerate .sops.yaml"; \
-    git -C {{sops_repo}} push; \
-    nix flake lock --update-input sopsSecrets; \
-  else \
-    echo "No .sops.yaml changes to commit"; \
-  fi
+  @ssh {{sops_host}} 'cd {{sops_dotfiles_repo}} && ./scripts/gen-sops-yaml.sh {{sops_repo}}'
+  @ssh {{sops_host}} 'cd {{sops_repo}} && git add .sops.yaml && if ! git diff --cached --quiet; then git commit -m "Regenerate .sops.yaml"; git push; else echo "No .sops.yaml changes to commit"; fi'
+  @nix flake lock --update-input sopsSecrets
 
 # Generate explicit import list for a host (inventory/explicit-imports -> generated/imports/<host>.nix)
 gen-imports HOST:
   nix run .#generate-host-imports -- {{HOST}} --repo .
 
 update-sops:
-  @cd {{sops_repo}} && for file in secrets/*.yaml; do \
-    if sops --decrypt "$file" > /dev/null 2>&1; then \
-      echo "Updating keys for $file..."; \
-      sops updatekeys -y "$file"; \
-    else \
-      echo "Skipping $file (cannot decrypt)"; \
-    fi; \
-  done
-  @git -C {{sops_repo}} add secrets .sops.yaml
-  @if ! git -C {{sops_repo}} diff --cached --quiet; then \
-    git -C {{sops_repo}} commit -m "Update SOPS secrets"; \
-    git -C {{sops_repo}} push; \
-    nix flake lock --update-input sopsSecrets; \
-  else \
-    echo "No secret changes to commit"; \
-  fi
+  @ssh {{sops_host}} 'cd {{sops_repo}} && for file in secrets/*.yaml; do if sops --decrypt "$file" > /dev/null 2>&1; then echo "Updating keys for $file..."; sops updatekeys -y "$file"; else echo "Skipping $file (cannot decrypt)"; fi; done && git add secrets .sops.yaml && if ! git diff --cached --quiet; then git commit -m "Update SOPS secrets"; git push; else echo "No secret changes to commit"; fi'
+  @nix flake lock --update-input sopsSecrets
 
 test-iso:
   qemu-system-x86_64 \

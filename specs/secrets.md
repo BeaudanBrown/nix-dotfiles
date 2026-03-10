@@ -194,7 +194,7 @@ Agents should instruct users to perform these actions:
 
 Tell the user:
 > "Please add the secret to the appropriate SOPS file by running:
-> `cd /home/beau/documents/projects/sops-secrets && sops secrets/<filename>.yaml`
+> `ssh nas 'cd /home/beau/sops-secrets && sops secrets/<filename>.yaml'`
 > and adding a key named `<key-name>` with your secret value."
 
 ### Updating SOPS Configuration

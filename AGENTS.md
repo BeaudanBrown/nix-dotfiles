@@ -218,7 +218,7 @@ Use the dedicated opencode subagents to keep the primary model's context clean:
 ### When Secrets Are Needed
 
 Instruct the user to:
-1. Create/edit secrets: `cd /home/beau/documents/projects/sops-secrets && sops secrets/<file>.yaml`
+1. Create/edit secrets: `ssh nas 'cd /home/beau/sops-secrets && sops secrets/<file>.yaml'`
 2. Update SOPS config: `just gen-sops-yaml`
 3. Re-encrypt after key changes: `just update-sops`
 

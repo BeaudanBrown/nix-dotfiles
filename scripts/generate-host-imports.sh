@@ -42,7 +42,10 @@ nix_expr="$(
   let
     flake = builtins.getFlake (toString ./.);
     lib = flake.inputs.nixpkgs.lib;
-    custom = import ./lib { inherit lib; };
+    custom = import ./lib {
+      inherit lib;
+      inputs = flake.inputs;
+    };
     rootGraph = import ./inventory/explicit-imports/root-graph.nix;
     hostTargets = import ./inventory/explicit-imports/host-targets.nix;
     host = builtins.getEnv "TARGET_HOST";

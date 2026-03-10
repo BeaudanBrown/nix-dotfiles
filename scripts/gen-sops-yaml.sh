@@ -4,14 +4,20 @@ set -euo pipefail
 # Script to generate .sops.yaml from centralized hostSpecs
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-TARGET_REPO="${1:-/home/beau/documents/projects/sops-secrets}"
-TARGET_FILE="$TARGET_REPO/.sops.yaml"
+TARGET="${1:--}"
 
 cd "$REPO_ROOT"
 
-if [[ ! -d $TARGET_REPO ]]; then
-	echo "Target repo does not exist: $TARGET_REPO" >&2
-	exit 1
+if [[ $TARGET == "-" ]]; then
+	TARGET_FILE=/dev/stdout
+else
+	TARGET_REPO="$TARGET"
+	TARGET_FILE="$TARGET_REPO/.sops.yaml"
+
+	if [[ ! -d $TARGET_REPO ]]; then
+		echo "Target repo does not exist: $TARGET_REPO" >&2
+		exit 1
+	fi
 fi
 
 echo "Generating .sops.yaml from hostSpecs into $TARGET_FILE..."
