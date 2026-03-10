@@ -6,22 +6,19 @@
   ...
 }:
 {
-  imports =
-    let
-      allHostsData = import ../../modules/host-spec/all-hosts.nix;
-      roots = allHostsData.hostSpecs.iso.roots;
-    in
-    [
-      "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-      "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-      inputs.home-manager.nixosModules.home-manager
-      inputs.sops-nix.nixosModules.sops
-      (lib.custom.importAll {
-        host = "iso";
-        inherit roots;
-      })
-    ]
-    |> lib.flatten;
+  imports = [
+    "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+    "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+    inputs.home-manager.nixosModules.home-manager
+    inputs.sops-nix.nixosModules.sops
+    {
+      home-manager = {
+        extraSpecialArgs = { };
+        backupFileExtension = "backup";
+      };
+    }
+  ]
+  ++ (import ../../generated/imports/iso.nix);
 
   environment.systemPackages = with pkgs; [
     vim

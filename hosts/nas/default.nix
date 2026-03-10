@@ -1,13 +1,8 @@
 {
-  lib,
   inputs,
   host,
   ...
 }:
-let
-  allHostsData = import ../../modules/host-spec/all-hosts.nix;
-  roots = allHostsData.hostSpecs.${host}.roots;
-in
 {
   imports = [
     ./hardware.nix
@@ -24,11 +19,14 @@ in
     "${inputs.loom}/infra/nixos-modules/loom-server.nix"
     "${inputs.loom}/infra/nixos-modules/loom-web.nix"
     "${inputs.loom}/infra/nixos-modules/k3s.nix"
+    {
+      home-manager = {
+        extraSpecialArgs = { };
+        backupFileExtension = "backup";
+      };
+    }
   ]
-  ++ (lib.custom.importAll {
-    inherit host roots;
-    extraSpecialArgs = { };
-  });
+  ++ (import ../../generated/imports/nas.nix);
 
   # Enable emulation for cross-compilation
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];

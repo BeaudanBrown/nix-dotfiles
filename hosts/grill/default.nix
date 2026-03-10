@@ -14,6 +14,12 @@
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    {
+      home-manager = {
+        extraSpecialArgs = { };
+        backupFileExtension = "backup";
+      };
+    }
   ]
   ++ (import ../../generated/imports/grill.nix);
 

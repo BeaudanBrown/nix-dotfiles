@@ -32,7 +32,7 @@ if [[ ! -d $repo_root ]]; then
 	exit 1
 fi
 
-repo_root="$(cd "$repo_root" && pwd)"
+repo_root="$(cd "$repo_root" && pwd -P)"
 
 out_dir="$repo_root/generated/imports"
 out_file="$out_dir/$host.nix"
@@ -75,7 +75,11 @@ nix_expr="$(
       in
       roots: lib.unique (builtins.concatMap (visit [ ]) roots);
 
-    effectiveRoots = resolveRoots hostCfg.roots;
+    effectiveRoots =
+      if (hostCfg.resolveGraph or true) then
+        resolveRoots hostCfg.roots
+      else
+        hostCfg.roots;
     importMap = custom.buildImportMap ./modules;
 
     sortPaths = paths: builtins.sort (a: b: a < b) (map toString paths);

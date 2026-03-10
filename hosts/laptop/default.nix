@@ -1,13 +1,8 @@
 {
-  lib,
   inputs,
   host,
   ...
 }:
-let
-  allHostsData = import ../../modules/host-spec/all-hosts.nix;
-  roots = allHostsData.hostSpecs.${host}.roots;
-in
 {
   imports = [
     ./hardware.nix
@@ -17,11 +12,14 @@ in
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    {
+      home-manager = {
+        extraSpecialArgs = { };
+        backupFileExtension = "backup";
+      };
+    }
   ]
-  ++ (lib.custom.importAll {
-    inherit host roots;
-    extraSpecialArgs = { };
-  });
+  ++ (import ../../generated/imports/laptop.nix);
 
   thisHost = host;
 
