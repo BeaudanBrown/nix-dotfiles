@@ -23,7 +23,6 @@
   ../../modules/cli/fzf/common.nix
   ../../modules/cli/misc/common.nix
   ../../modules/cli/nixvim/common.nix
-  ../../modules/cli/nixvim/config/plugins/obsidian/common.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/common.nix
   ../../modules/cli/nixvim/files/common.nix
   ../../modules/cli/starship/common.nix

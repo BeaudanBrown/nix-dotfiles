@@ -1,7 +1,7 @@
 { ... }:
 {
   plugins.obsidian = {
-    enable = true;
+    enable = false;
     # TODO: Make this work properly
     # luaConfig.post = ''
     #   require("obsidian").setup {

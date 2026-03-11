@@ -155,12 +155,13 @@
     },
     "agent": {
       "hostName": "agent",
+      "dotfiles": "/home/beau/host/nix-dotfiles",
       "users": [
         {
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": null
+          "ageUserKey": "age1vl99ax4yjzfd9pyzgej0gc9nd59q9eqvmrvl9up7mufn2d9m2g8sqcs2vt"
         }
       ],
       "wifi": false,
