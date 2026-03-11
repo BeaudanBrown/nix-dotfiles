@@ -3,6 +3,7 @@
 # Do not edit manually.
 [
   ../../modules/nix/agent.nix
+  ../../modules/user/agent.nix
   ../../modules/cli/git/minimal.nix
   ../../modules/cli/htop/minimal.nix
   ../../modules/cli/misc/minimal.nix

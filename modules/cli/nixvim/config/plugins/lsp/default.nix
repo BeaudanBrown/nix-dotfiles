@@ -11,6 +11,7 @@
     servers = {
       hls = {
         enable = true;
+        installGhc = true;
         packageFallback = true;
       };
       gopls.enable = true;
