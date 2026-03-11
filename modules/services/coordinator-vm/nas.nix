@@ -36,14 +36,14 @@ let
       usage() {
         cat <<'EOF'
       Usage:
-        agent-share add <source-path> [name]
-        agent-share remove <name>
+        agent-share add <source-path> <agent-path>
+        agent-share remove <agent-path>
         agent-share list
         agent-share restore
 
       Notes:
         - `add` persists the mapping and bind-mounts it immediately.
-        - `name` defaults to the basename of <source-path>.
+        - `agent-path` is relative to the agent home shared root.
         - Run as root, e.g. `sudo agent-share add ~/documents/projects/foo`.
       EOF
       }
@@ -55,6 +55,25 @@ let
       ensure_target_dir() {
         local target="$1"
         mkdir -p "$target"
+      }
+
+      ensure_agent_path() {
+        local agent_path="$1"
+
+        if [ -z "$agent_path" ]; then
+          echo "error: agent path must not be empty" >&2
+          exit 1
+        fi
+
+        if [ "$agent_path" = "." ] || [ "$agent_path" = ".." ]; then
+          echo "error: invalid agent path: $agent_path" >&2
+          exit 1
+        fi
+
+        if printf '%s' "$agent_path" | grep -Eq '^/|(^|/)\.\.(/|$)'; then
+          echo "error: agent path must be relative to the agent home: $agent_path" >&2
+          exit 1
+        fi
       }
 
       mount_share() {
@@ -87,49 +106,48 @@ let
 
       add_share() {
         local source_input="$1"
-        local name="''${2:-$(basename "$source_input")}"
+        local agent_path="$2"
         local source
         source="$(realpath -e "$source_input")"
-        local target="$shared_root/$name"
+        local target="$shared_root/$agent_path"
 
         if [ ! -d "$source" ]; then
           echo "error: source must be an existing directory: $source" >&2
           exit 1
         fi
 
-        if printf '%s' "$name" | grep -q '/'; then
-          echo "error: share name must not contain '/': $name" >&2
-          exit 1
-        fi
+        ensure_agent_path "$agent_path"
 
         local existing
-        existing="$(awk -F '\t' -v key="$name" '$1 == key { print $2; exit }' "$registry_path")"
+        existing="$(awk -F '\t' -v key="$agent_path" '$1 == key { print $2; exit }' "$registry_path")"
         if [ -n "$existing" ] && [ "$existing" != "$source" ]; then
-          echo "error: share name '$name' already points to $existing" >&2
+          echo "error: agent path '$agent_path' already points to $existing" >&2
           exit 1
         fi
 
         mount_share "$source" "$target"
 
         if [ -z "$existing" ]; then
-          printf '%s\t%s\n' "$name" "$source" >> "$registry_path"
+          printf '%s\t%s\n' "$agent_path" "$source" >> "$registry_path"
         fi
 
         echo "shared $source at $target"
       }
 
       remove_share() {
-        local name="$1"
-        local target="$shared_root/$name"
+        local agent_path="$1"
+        local target="$shared_root/$agent_path"
 
-        remove_registry_entry "$name"
+        ensure_agent_path "$agent_path"
+
+        remove_registry_entry "$agent_path"
 
         if mountpoint -q "$target"; then
           umount "$target"
         fi
 
         rmdir "$target" 2>/dev/null || true
-        echo "removed share $name"
+        echo "removed share $agent_path"
       }
 
       list_shares() {
@@ -138,31 +156,31 @@ let
           return 0
         fi
 
-        while IFS=$'\t' read -r name source; do
-          [ -n "$name" ] || continue
-          printf '%s\t%s\t%s\n' "$name" "$source" "$shared_root/$name"
+        while IFS=$'\t' read -r agent_path source; do
+          [ -n "$agent_path" ] || continue
+          printf '%s\t%s\t%s\n' "$agent_path" "$source" "$shared_root/$agent_path"
         done < "$registry_path"
       }
 
       restore_shares() {
-        while IFS=$'\t' read -r name source; do
-          [ -n "$name" ] || continue
+        while IFS=$'\t' read -r agent_path source; do
+          [ -n "$agent_path" ] || continue
           [ -n "$source" ] || continue
 
           if [ ! -d "$source" ]; then
-            echo "warning: skipping missing source for $name: $source" >&2
+            echo "warning: skipping missing source for $agent_path: $source" >&2
             continue
           fi
 
-          mount_share "$source" "$shared_root/$name"
+          mount_share "$source" "$shared_root/$agent_path"
         done < "$registry_path"
       }
 
       command="''${1:-}"
       case "$command" in
         add)
-          [ "$#" -ge 2 ] || { usage; exit 1; }
-          add_share "$2" "''${3:-}"
+          [ "$#" -eq 3 ] || { usage; exit 1; }
+          add_share "$2" "$3"
           ;;
         remove)
           [ "$#" -eq 2 ] || { usage; exit 1; }
