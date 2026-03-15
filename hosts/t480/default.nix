@@ -12,6 +12,7 @@
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs.nix-index-database.nixosModules.default
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t480
     {
       home-manager = {

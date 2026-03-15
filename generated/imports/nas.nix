@@ -91,6 +91,7 @@
   ../../modules/services/docker/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
+  ../../modules/triage/main.nix
   ../../modules/hosted-services/server.nix
   ../../modules/system/ports/server.nix
 ]
