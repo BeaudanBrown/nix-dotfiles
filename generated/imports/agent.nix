@@ -2,7 +2,9 @@
 # Effective roots: minimal, common, network
 # Do not edit manually.
 [
+  ../../modules/cli/codex/agent.nix
   ../../modules/nix/agent.nix
+  ../../modules/tools/direnv/agent.nix
   ../../modules/user/agent.nix
   ../../modules/cli/git/minimal.nix
   ../../modules/cli/htop/minimal.nix
