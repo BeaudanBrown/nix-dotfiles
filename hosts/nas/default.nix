@@ -20,6 +20,8 @@
     "${inputs.loom}/infra/nixos-modules/loom-server.nix"
     "${inputs.loom}/infra/nixos-modules/loom-web.nix"
     "${inputs.loom}/infra/nixos-modules/k3s.nix"
+    ../../modules/cli/beads/main.nix
+    ../../modules/services/beads/nas.nix
     {
       home-manager = {
         extraSpecialArgs = { };

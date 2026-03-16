@@ -4,6 +4,21 @@
   ...
 }:
 {
+  hm.primary.home.file."documents/.stignore".text = ''
+    # Keep all repo-local Beads runtime state host-local. Syncthing does not
+    # propagate .stignore itself, so Nix installs this on each host.
+    **/.beads
+    **/.beads/**
+  '';
+
+  syncedState = [
+    {
+      source = ".codex/skills";
+      target = "codex/skills";
+      type = "directory";
+    }
+  ];
+
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
     "d ${config.hostSpec.home}/.local/state/syncthing 0700 ${config.hostSpec.username} users - -"

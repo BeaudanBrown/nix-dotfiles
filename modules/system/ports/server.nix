@@ -19,6 +19,9 @@
     3001
     3002
 
+    # Central Dolt SQL server for Beads
+    3307
+
     # Immich machine-learning service (static within module)
     3003
 
