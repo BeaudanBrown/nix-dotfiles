@@ -135,7 +135,7 @@
     };
 
     art-domain = {
-      url = "git+file:///home/beau/documents/projects/lit";
+      url = "github:apitchford/lit";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

@@ -11,15 +11,15 @@
       "locked": {
         "lastModified": 1774006889,
         "narHash": "sha256-ZMLcrHXEdJreTNXNfXpPKONpSLRhxrlPcnfRlEhGWuQ=",
-        "ref": "refs/heads/main",
+        "owner": "apitchford",
+        "repo": "lit",
         "rev": "2b0d39be4fc183a815e9eb67d23f7299da3a4215",
-        "revCount": 5,
-        "type": "git",
-        "url": "file:///home/beau/documents/projects/lit"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/beau/documents/projects/lit"
+        "owner": "apitchford",
+        "repo": "lit",
+        "type": "github"
       }
     },
     "authentik-go": {
