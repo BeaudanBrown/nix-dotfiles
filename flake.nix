@@ -134,6 +134,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    art-domain = {
+      url = "git+file:///home/beau/documents/projects/lit";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     joan-flash = {
       url = "github:BeaudanBrown/joan-tracker";
       inputs.nixpkgs.follows = "nixpkgs";
