@@ -32,7 +32,7 @@ HOST_ID="deadbeef-dead-beef-dead-beefdeadbeef"
 
 cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<hip-report>
+<hip-report name="hip-report">
 	<md5-sum>$MD5</md5-sum>
 	<user-name>$USER</user-name>
 	<domain></domain>
@@ -44,8 +44,8 @@ cat <<EOF
 	<hip-report-version>4</hip-report-version>
 	<categories>
 		<entry name="host-info">
-			<client-version>6.3.3</client-version>
-			<os>Linux Ubuntu 24.04.3 LTS</os>
+			<client-version>6.3.3-638</client-version>
+			<os>Linux Ubuntu 24.04.4 LTS</os>
 			<os-vendor>Linux</os-vendor>
 			<domain></domain>
 			<host-name>ubuntu</host-name>
@@ -67,7 +67,7 @@ cat <<EOF
 			<list>
 				<entry>
 					<ProductInfo>
-						<Prod vendor="Cisco Systems, Inc." name="ClamAV" version="1.0.5" defver="27818" engver="" datemon="$MONTH" dateday="$DAY" dateyear="$YEAR" prodType="3" osType="1"/>
+						<Prod vendor="Cisco Systems, Inc." name="ClamAV" version="1.4.3" defver="27948" engver="" datemon="$MONTH" dateday="$DAY" dateyear="$YEAR" prodType="3" osType="1"/>
 						<real-time-protection>yes</real-time-protection>
 						<last-full-scan-time>n/a</last-full-scan-time>
 					</ProductInfo>

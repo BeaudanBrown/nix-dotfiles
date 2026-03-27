@@ -21,7 +21,7 @@
     autoMaster =
       let
         cifsConf = pkgs.writeText "auto.cifs" ''
-          /s -fstype=cifs,credentials=${config.sops.secrets.smbcredentials.path},uid=1000,gid=1000,iocharset=utf8,sec=ntlmssp,_netdev,soft,nounix,cache=strict,vers=3.0,actimeo=60 ://ad.monash.edu/shared
+          /s -fstype=cifs,credentials=${config.sops.secrets.smbcredentials.path},uid=1000,gid=1000,iocharset=utf8,sec=ntlmssp,_netdev,nounix,cache=strict,vers=3.0,actimeo=60 ://ad.monash.edu/shared/Epi-Dementia
         '';
       in
       ''

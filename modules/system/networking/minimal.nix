@@ -1,5 +1,9 @@
 { config, ... }:
 {
+  environment.etc."gai.conf".text = ''
+    precedence ::ffff:0:0/96  100
+  '';
+
   users.users.${config.hostSpec.username}.extraGroups = [ "networkmanager" ];
   services.resolved = {
     enable = true;
