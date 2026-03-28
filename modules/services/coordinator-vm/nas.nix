@@ -11,6 +11,8 @@ let
   sharedMountTag = "host-agent";
   shareRegistryDir = "/var/lib/agent-share";
   shareRegistryPath = "${shareRegistryDir}/registry.tsv";
+  guestVisibleStateDir = "${sharedHostDir}/.pi-hub";
+  guestVisibleSharesPath = "${guestVisibleStateDir}/shares.json";
   vmDiskPath = "${vmStorageRoot}/${vmName}.qcow2";
   vmXmlPath = "${vmStorageRoot}/${vmName}.xml";
   installIsoPath = "${vmStorageRoot}/nixos-minimal.iso";
@@ -21,6 +23,7 @@ let
       coreutils
       gawk
       gnugrep
+      jq
       util-linux
     ];
     text = ''
@@ -29,8 +32,11 @@ let
       registry_dir=${lib.escapeShellArg shareRegistryDir}
       registry_path=${lib.escapeShellArg shareRegistryPath}
       shared_root=${lib.escapeShellArg sharedHostDir}
+      guest_state_dir=${lib.escapeShellArg guestVisibleStateDir}
+      guest_shares_path=${lib.escapeShellArg guestVisibleSharesPath}
+      guest_shared_root='/home/beau/host'
 
-      mkdir -p "$registry_dir" "$shared_root"
+      mkdir -p "$registry_dir" "$shared_root" "$guest_state_dir"
       touch "$registry_path"
 
       usage() {
@@ -74,6 +80,57 @@ let
           echo "error: agent path must be relative to the agent home: $agent_path" >&2
           exit 1
         fi
+
+        if printf '%s' "$agent_path" | grep -Eq '^\.pi-hub(/|$)'; then
+          echo "error: agent path uses reserved namespace .pi-hub: $agent_path" >&2
+          exit 1
+        fi
+      }
+
+      sync_guest_manifest() {
+        local tmp_json
+        local first_entry=1
+
+        tmp_json="$(mktemp)"
+        printf '[\n' > "$tmp_json"
+
+        while IFS=$'\t' read -r agent_path source; do
+          [ -n "$agent_path" ] || continue
+          [ -n "$source" ] || continue
+
+          local host_path="$shared_root/$agent_path"
+          local guest_path="$guest_shared_root/$agent_path"
+          local entry
+
+          entry="$(
+            jq -cn \
+              --arg agentPath "$agent_path" \
+              --arg sourcePath "$source" \
+              --arg hostPath "$host_path" \
+              --arg guestPath "$guest_path" \
+              '{
+                agentPath: $agentPath,
+                sourcePath: $sourcePath,
+                hostPath: $hostPath,
+                guestPath: $guestPath
+              }'
+          )"
+
+          if [ "$first_entry" -eq 1 ]; then
+            printf '  %s' "$entry" >> "$tmp_json"
+            first_entry=0
+          else
+            printf ',\n  %s' "$entry" >> "$tmp_json"
+          fi
+        done < "$registry_path"
+
+        if [ "$first_entry" -eq 0 ]; then
+          printf '\n]\n' >> "$tmp_json"
+        else
+          printf ']\n' >> "$tmp_json"
+        fi
+
+        mv "$tmp_json" "$guest_shares_path"
       }
 
       mount_share() {
@@ -131,6 +188,8 @@ let
           printf '%s\t%s\n' "$agent_path" "$source" >> "$registry_path"
         fi
 
+        sync_guest_manifest
+
         echo "shared $source at $target"
       }
 
@@ -147,6 +206,7 @@ let
         fi
 
         rmdir "$target" 2>/dev/null || true
+        sync_guest_manifest
         echo "removed share $agent_path"
       }
 
@@ -174,7 +234,11 @@ let
 
           mount_share "$source" "$shared_root/$agent_path"
         done < "$registry_path"
+
+        sync_guest_manifest
       }
+
+      sync_guest_manifest
 
       command="''${1:-}"
       case "$command" in
@@ -229,6 +293,7 @@ in
 
   systemd.tmpfiles.rules = [
     "d ${sharedHostDir} 0700 beau users - -"
+    "d ${guestVisibleStateDir} 0755 root root - -"
     "d ${shareRegistryDir} 0755 root root - -"
     "f ${shareRegistryPath} 0644 root root - -"
     "d ${vmStorageRoot} 0750 root root - -"
