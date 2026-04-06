@@ -160,5 +160,27 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    beads = {
+      url = "github:BeaudanBrown/beads";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    invoice-ai = {
+      url = "github:BeaudanBrown/invoice-ai";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    pi-harness = {
+      url = "github:BeaudanBrown/pi-harness";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nix-ai-tools.follows = "nix-ai-tools";
+    };
+
+    connection = {
+      url = "git+ssh://git@github.com/BeaudanBrown/the-past-connection-mvp.git?ref=refs/heads/feature/public-content-projection-path&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 }
