@@ -95,16 +95,39 @@ Keep `.beads/metadata.json` only if the repo still needs local Beads identity/co
 
 ## Syncthing
 
-Do not sync live Dolt runtime state. The `documents` Syncthing folder should install a local `.stignore` that excludes:
+The `documents` Syncthing folder should sync only the stable repo-local Beads
+files such as `.beads/metadata.json`, `.beads/config.yaml`, `.beads/.gitignore`,
+`.beads/README.md`, and `.beads/hooks/`.
+
+Do not sync live Dolt runtime state. The generated local `.stignore` should
+exclude host-local Beads artifacts including:
 
 - `.beads/dolt/`
-- `.beads/dolt-server.port`
-- `.beads/dolt-server.lock`
+- `.beads/dolt-access.lock`
+- `.beads/*.lock`
+- `.beads/daemon.*`
+- `.beads/interactions.jsonl`
+- `.beads/.beads-credential-key`
+- `.beads/.local_version`
+- `.beads/redirect`
+- `.beads/export-state/`
+- `.beads/ephemeral.sqlite3*`
+- `.beads/dolt-server.pid`
 - `.beads/dolt-server.log`
+- `.beads/dolt-server.lock`
+- `.beads/dolt-server.port`
+- `.beads/*.corrupt.backup/`
+- `.beads/backup/`
+- `.beads/.env`
 
 If any host later uses Beads shared-server mode locally, also exclude:
 
 - `~/.beads/shared-server/`
+
+This only prevents host-local runtime files from being copied around. It does
+not make `bd init --force` safe: on these hosts, `bd` is wrapped to talk to the
+shared NAS Dolt server, so a forced init targets the central project database
+used by every host.
 
 ## Validation
 

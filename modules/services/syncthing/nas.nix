@@ -21,7 +21,16 @@ in
     }
   ];
 
-  services.syncthing.settings.gui.insecureSkipHostcheck = true;
+  services.syncthing = {
+    settings = {
+      gui.insecureSkipHostcheck = true;
+      devices = {
+        "reuben" = {
+          id = "YKK6IIA-4KIDKID-UIJ7WF7-ZVFHMAE-4YSXXRG-M434Y46-537RI3E-U2MSDQE";
+        };
+      };
+    };
+  };
 
   systemd.tmpfiles.rules = [
     "d /pool1/appdata/syncthing 0755 ${config.hostSpec.username} users - -"
