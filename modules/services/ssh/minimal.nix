@@ -20,6 +20,7 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDi27VjcR3I1rSTHfp3JvOZw1HQv1fCSTjIiob4cLa6q JuiceSSH" # galaxy s9
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILiMXGI4mXg1Aw/gvx9LH5wEYMJ0M0ZgVKtoUZioaWfH beau@nixos" # laptop
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN3T4/Ob/aFlKn3aIX29r6LZ8baeMLWAQxQtXeV5g5Br beaudan.brown@gmail.com" # pi4
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL472wjBWlBbL8yLBSwPXorccKJ4JZcfmtEO7iqVTfo1 beau@t480" # agent/t480 key
   ];
 
   systemd.tmpfiles.rules = [
@@ -30,6 +31,10 @@
     enable = true;
     enableDefaultConfig = false;
     matchBlocks = {
+      t480 = {
+        hostname = "t480.lan";
+        user = "beau";
+      };
       laptop = {
         hostname = "laptop.lan";
         user = "beau";
@@ -50,7 +55,7 @@
         hostname = "agent";
         user = "beau";
       };
-      brick = {
+      mcbrick = {
         user = "mikaerem";
       };
       pi4 = {

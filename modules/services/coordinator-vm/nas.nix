@@ -17,6 +17,59 @@ let
   vmXmlPath = "${vmStorageRoot}/${vmName}.xml";
   installIsoPath = "${vmStorageRoot}/nixos-minimal.iso";
   installIsoUrl = "https://channels.nixos.org/nixos-25.05/latest-nixos-minimal-x86_64-linux.iso";
+  agentVmXml = ''
+    <domain type='kvm'>
+      <name>agent</name>
+      <memory unit='MiB'>8192</memory>
+      <currentMemory unit='MiB'>8192</currentMemory>
+      <vcpu placement='static'>6</vcpu>
+      <cpu mode='host-passthrough' check='none'/>
+      <os firmware='efi'>
+        <type arch='x86_64' machine='q35'>hvm</type>
+        <boot dev='hd'/>
+        <boot dev='cdrom'/>
+      </os>
+      <features>
+        <acpi/>
+        <apic/>
+      </features>
+      <memoryBacking>
+        <source type='memfd'/>
+        <access mode='shared'/>
+      </memoryBacking>
+      <on_poweroff>destroy</on_poweroff>
+      <on_reboot>restart</on_reboot>
+      <on_crash>restart</on_crash>
+      <devices>
+        <disk type='file' device='disk'>
+          <driver name='qemu' type='qcow2' discard='unmap'/>
+          <source file='/home/agent-vm/agent.qcow2'/>
+          <target dev='vda' bus='virtio'/>
+        </disk>
+        <disk type='file' device='cdrom'>
+          <driver name='qemu' type='raw'/>
+          <source file='/home/agent-vm/nixos-minimal.iso'/>
+          <target dev='sda' bus='sata'/>
+          <readonly/>
+        </disk>
+        <filesystem type='mount' accessmode='passthrough'>
+          <driver type='virtiofs'/>
+          <source dir='${sharedHostDir}'/>
+          <target dir='${sharedMountTag}'/>
+        </filesystem>
+        <interface type='network'>
+          <source network='default'/>
+          <model type='virtio'/>
+        </interface>
+        <console type='pty'/>
+        <serial type='pty'/>
+        <graphics type='vnc' autoport='yes' listen='127.0.0.1'/>
+        <rng model='virtio'>
+          <backend model='random'>/dev/urandom</backend>
+        </rng>
+      </devices>
+    </domain>
+  '';
   agentShare = pkgs.writeShellApplication {
     name = "agent-share";
     runtimeInputs = with pkgs; [
@@ -133,6 +186,24 @@ let
         mv "$tmp_json" "$guest_shares_path"
       }
 
+      safe_unmount() {
+        local path="$1"
+
+          if ! mountpoint -q "$path"; then
+            return 0
+          fi
+
+          if ! umount "$path"; then
+            echo "warning: hard umount failed for $path; trying lazy unmount" >&2
+            if ! umount -l "$path"; then
+              echo "error: unable to unmount stale bind mount at $path" >&2
+              return 1
+            fi
+          fi
+
+          return 0
+      }
+
       mount_share() {
         local source="$1"
         local target="$2"
@@ -144,8 +215,10 @@ let
           if [ "$current_source" = "$source" ]; then
             return 0
           fi
-          echo "error: $target is already mounted from $current_source" >&2
-          exit 1
+          echo "warning: $target is already mounted from $current_source, remounting from $source" >&2
+          if ! safe_unmount "$target"; then
+            return 1
+          fi
         fi
 
         mount --bind "$source" "$target"
@@ -202,7 +275,9 @@ let
         remove_registry_entry "$agent_path"
 
         if mountpoint -q "$target"; then
-          umount "$target"
+          if ! safe_unmount "$target"; then
+            echo "warning: could not unmount $target during share removal; continuing" >&2
+          fi
         fi
 
         rmdir "$target" 2>/dev/null || true
@@ -232,7 +307,9 @@ let
             continue
           fi
 
-          mount_share "$source" "$shared_root/$agent_path"
+          if ! mount_share "$source" "$shared_root/$agent_path"; then
+            echo "warning: failed to restore share $agent_path from $source; continuing" >&2
+          fi
         done < "$registry_path"
 
         sync_guest_manifest
@@ -284,6 +361,53 @@ in
       rm -f "${vmDiskPath}"
       rm -f "${vmXmlPath}"
       echo "agent VM reset. Rebuild nas to reprovision."
+    '')
+    (writeShellScriptBin "agent-vm-reconfigure" ''
+      set -euo pipefail
+
+      if [ ! -f "${vmDiskPath}" ]; then
+        echo "agent VM disk not found: ${vmDiskPath}" >&2
+        echo "Use: sudo agent-vm-reset, then deploy nas to recreate disk, then rerun this command." >&2
+        exit 1
+      fi
+
+      cat > "${vmXmlPath}" <<'EOF'
+      ${agentVmXml}
+      EOF
+
+      if ${libvirt}/bin/virsh dominfo "${vmName}" >/dev/null 2>&1; then
+        if ${libvirt}/bin/virsh domstate "${vmName}" | grep -q running; then
+          echo "agent VM is running; applying updated XML with controlled restart (disk preserved)."
+          if ${libvirt}/bin/virsh shutdown "${vmName}" >/dev/null 2>&1; then
+            i=0
+            while [ "$i" -lt 30 ]; do
+              if ! ${libvirt}/bin/virsh domstate "${vmName}" | grep -q "running"; then
+                break
+              fi
+              sleep 1
+              i=$((i + 1))
+            done
+            if ${libvirt}/bin/virsh domstate "${vmName}" | grep -q "running"; then
+              echo "graceful shutdown timed out; forcing destroy."
+              ${libvirt}/bin/virsh destroy "${vmName}" >/dev/null 2>&1 || true
+            fi
+          else
+            ${libvirt}/bin/virsh destroy "${vmName}" >/dev/null 2>&1 || true
+          fi
+        fi
+
+        # Redefine the persistent domain cleanly so repeated reconfigure runs are idempotent.
+        ${libvirt}/bin/virsh undefine "${vmName}" --keep-nvram >/dev/null 2>&1 \
+          || ${libvirt}/bin/virsh undefine "${vmName}" >/dev/null 2>&1
+        ${libvirt}/bin/virsh define "${vmXmlPath}"
+        ${libvirt}/bin/virsh start "${vmName}"
+      else
+        ${libvirt}/bin/virsh define "${vmXmlPath}"
+        ${libvirt}/bin/virsh start "${vmName}"
+      fi
+
+      ${libvirt}/bin/virsh autostart "${vmName}"
+      echo "agent VM reconfigured from updated XML (${vmXmlPath})."
     '')
     cloud-utils
     libvirt
@@ -368,57 +492,7 @@ in
       fi
 
       cat > "${vmXmlPath}" <<'EOF'
-      <domain type='kvm'>
-        <name>agent</name>
-        <memory unit='MiB'>5120</memory>
-        <currentMemory unit='MiB'>5120</currentMemory>
-        <vcpu placement='static'>2</vcpu>
-        <cpu mode='host-passthrough' check='none'/>
-        <os firmware='efi'>
-          <type arch='x86_64' machine='q35'>hvm</type>
-          <boot dev='hd'/>
-          <boot dev='cdrom'/>
-        </os>
-        <features>
-          <acpi/>
-          <apic/>
-        </features>
-        <memoryBacking>
-          <source type='memfd'/>
-          <access mode='shared'/>
-        </memoryBacking>
-        <on_poweroff>destroy</on_poweroff>
-        <on_reboot>restart</on_reboot>
-        <on_crash>restart</on_crash>
-        <devices>
-          <disk type='file' device='disk'>
-            <driver name='qemu' type='qcow2' discard='unmap'/>
-            <source file='/home/agent-vm/agent.qcow2'/>
-            <target dev='vda' bus='virtio'/>
-          </disk>
-          <disk type='file' device='cdrom'>
-            <driver name='qemu' type='raw'/>
-            <source file='/home/agent-vm/nixos-minimal.iso'/>
-            <target dev='sda' bus='sata'/>
-            <readonly/>
-          </disk>
-          <filesystem type='mount' accessmode='passthrough'>
-            <driver type='virtiofs'/>
-            <source dir='${sharedHostDir}'/>
-            <target dir='${sharedMountTag}'/>
-          </filesystem>
-          <interface type='network'>
-            <source network='default'/>
-            <model type='virtio'/>
-          </interface>
-          <console type='pty'/>
-          <serial type='pty'/>
-          <graphics type='vnc' autoport='yes' listen='127.0.0.1'/>
-          <rng model='virtio'>
-            <backend model='random'>/dev/urandom</backend>
-          </rng>
-        </devices>
-      </domain>
+      ${agentVmXml}
       EOF
 
       if virsh dominfo "${vmName}" >/dev/null 2>&1; then

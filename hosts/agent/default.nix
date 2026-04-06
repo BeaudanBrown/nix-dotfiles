@@ -12,6 +12,7 @@
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs."pi-harness".nixosModules.pi-harness
     {
       home-manager = {
         extraSpecialArgs = { };
@@ -21,7 +22,7 @@
   ]
   ++ (import ../../generated/imports/agent.nix);
 
-  nix.settings.cores = 2;
+  nix.settings.cores = 6;
 
   fileSystems."/home/beau/host" = {
     device = "host-agent";

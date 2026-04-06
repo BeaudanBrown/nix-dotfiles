@@ -28,7 +28,11 @@
     fsType = "vfat";
   };
 
-  swapDevices = [ ];
+  swapDevices = [
+    {
+      device = "/swapfile";
+    }
+  ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }

@@ -14,6 +14,7 @@
     inputs.home-manager.nixosModules.home-manager
     inputs.nix-index-database.nixosModules.default
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t480
+    inputs."pi-harness".nixosModules.pi-harness
     {
       home-manager = {
         extraSpecialArgs = { };
