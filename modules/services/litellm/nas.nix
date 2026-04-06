@@ -7,6 +7,8 @@
 let
   litellmDomain = "litellm.bepis.lol";
   portKey = "litellm";
+  dataRoot = "/var/lib/litellm";
+  chatgptTokenDir = "${dataRoot}/chatgpt-auth";
 
   # Anthropic prompt caching: mark system prompt and conversation tail as
   # cache breakpoints.  Everything from the start of the prompt up to each
@@ -78,6 +80,33 @@ let
       litellm_params = {
         model = "openai/gpt-5-mini";
         api_key = "os.environ/OPENAI_API_KEY";
+      };
+    }
+    {
+      model_name = "sub-gpt-5.4";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-5.4";
+      };
+    }
+    {
+      model_name = "sub-gpt-5.4-pro";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-5.4-pro";
+      };
+    }
+    {
+      model_name = "sub-gpt-5.3-codex-spark";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-5.3-codex-spark";
       };
     }
     {
@@ -171,6 +200,14 @@ in
 {
   custom.ports.requests = [ { key = portKey; } ];
 
+  systemd.tmpfiles.rules = [
+    "d ${dataRoot} 0700 root root - -"
+    # LiteLLM stores the ChatGPT OAuth tokens on disk after device auth.
+    # Persist them outside the container so rebuilds and image pulls do not
+    # force a fresh login.
+    "d ${chatgptTokenDir} 0700 root root - -"
+  ];
+
   # Expose model names to other modules (openclaw, opencode, etc.).
   custom.litellm.models = map (m: m.model_name) modelList;
 
@@ -218,11 +255,14 @@ in
           STORE_MODEL_IN_DB = "False";
           HOST = "127.0.0.1";
           PORT = toString config.custom.ports.assigned.${portKey};
+          CHATGPT_TOKEN_DIR = chatgptTokenDir;
+          CHATGPT_AUTH_FILE = "auth.json";
         };
         environmentFiles = [
           config.sops.secrets."litellm/env".path
         ];
         volumes = [
+          "${chatgptTokenDir}:${chatgptTokenDir}"
           "${litellm_yaml}:/app/config.yaml:ro"
           "/var/run/postgresql:/var/run/postgresql"
         ];
