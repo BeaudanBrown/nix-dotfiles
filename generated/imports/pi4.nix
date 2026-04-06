@@ -24,7 +24,6 @@
   ../../modules/cli/fzf/common.nix
   ../../modules/cli/misc/common.nix
   ../../modules/cli/nixvim/common.nix
-  ../../modules/cli/nixvim/config/plugins/obsidian/common.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/common.nix
   ../../modules/cli/nixvim/files/common.nix
   ../../modules/cli/starship/common.nix
@@ -43,6 +42,7 @@
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/apps/kitty/network.nix
+  ../../modules/cli/pi-harness/network.nix
   ../../modules/services/tailscale/network.nix
   ../../modules/services/ncps/client.nix
 ]
