@@ -169,6 +169,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    ihp-roster = {
+      url = "github:BeaudanBrown/ihp-roster";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.systems.follows = "systems";
+    };
+
     pi-harness = {
       url = "github:BeaudanBrown/pi-harness";
       inputs.nixpkgs.follows = "nixpkgs";
