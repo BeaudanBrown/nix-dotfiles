@@ -1967,16 +1967,21 @@
         "systems": "systems_11"
       },
       "locked": {
-        "path": "IHP",
-        "type": "path"
+        "lastModified": 1774436719,
+        "narHash": "sha256-RbOo7R9UXEhJWX8My4XxCdn2YIXyHWBxbpbbSG0H5fk=",
+        "ref": "refs/heads/master",
+        "rev": "df3922d1a7166b131674efa3d3555ed7195ddf70",
+        "revCount": 7086,
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/digitallyinduced/ihp.git"
       },
       "original": {
-        "path": "IHP",
-        "type": "path"
-      },
-      "parent": [
-        "ihp-roster"
-      ]
+        "rev": "df3922d1a7166b131674efa3d3555ed7195ddf70",
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/digitallyinduced/ihp.git"
+      }
     },
     "ihp-boilerplate": {
       "inputs": {
@@ -2180,10 +2185,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1775557873,
-        "narHash": "sha256-Ul4DXgjwjGMf0QjYaSJDkwagOMKzP0oP9q38iXio3Rw=",
+        "lastModified": 1775559119,
+        "narHash": "sha256-pk6UHcVtBDbeMl/4uIaRQVVDqi4501r6Nbapyw5Ybp4=",
         "ref": "refs/heads/roster",
-        "rev": "aff281e6e3d5689e8e77ee320113d18eee81d5d7",
+        "rev": "2bf58ccf59b6c6e8f11065770c54808f4508b540",
         "shallow": true,
         "submodules": true,
         "type": "git",
