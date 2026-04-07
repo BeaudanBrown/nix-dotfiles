@@ -3,7 +3,6 @@
     {
       self,
       nixpkgs,
-      nixpkgsUnstable,
       flake-utils,
       ...
     }@inputs:
@@ -45,13 +44,12 @@
         |> map (host: {
           name = host;
           value = nixpkgs.lib.nixosSystem {
-            specialArgs = {
+            specialArgs = inputs // {
               inherit
                 inputs
                 outputs
                 lib
                 host
-                nixpkgsUnstable
                 ;
             };
             modules = [ ./hosts/${host} ];
