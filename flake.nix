@@ -170,7 +170,7 @@
     };
 
     ihp-roster = {
-      url = "github:BeaudanBrown/ihp-roster";
+      url = "git+ssh://git@github.com/BeaudanBrown/ihp-roster.git?ref=refs/heads/roster&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.systems.follows = "systems";
     };
