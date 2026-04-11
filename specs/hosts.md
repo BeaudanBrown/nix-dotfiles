@@ -15,11 +15,12 @@ The flake automatically discovers hosts by scanning the `/hosts/` directory - an
 | grill    | Primary desktop      | beau       | minimal, common, network, client, main, work, gaming     |
 | t480     | ThinkPad T480 laptop | beau       | minimal, common, network, client, main, work, gaming     |
 | laptop   | Standard laptop      | beau       | minimal, common, network, main, work                     |
-| nas      | Home server/NAS      | beau       | minimal, common, network, main, server                   |
+| nas      | Home server/NAS      | beau       | minimal, common, network, main, server, client           |
 | pi4      | Raspberry Pi 4       | beau       | minimal, common, network, client                         |
 | brick    | Remote server        | mikaerem   | minimal, common, network, server                         |
 | bottom   | Minimal node         | beau       | minimal, common                                          |
-| agent    | Coordinator VM       | beau       | minimal, common, network                                 |
+| agent    | Coordinator VM       | beau       | minimal, common, network, client                         |
+| rozzy    | Linode app host      | beau       | minimal, common                                          |
 | iso      | Installer image      | nixos      | minimal                                                  |
 
 ## Host Directory Structure

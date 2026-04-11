@@ -39,6 +39,10 @@
         hostname = "laptop.lan";
         user = "beau";
       };
+      rozzy = {
+        hostname = "172.105.188.232";
+        user = "beau";
+      };
       roster = {
         hostname = "45.79.238.145";
         user = "beau";

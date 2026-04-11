@@ -4,6 +4,7 @@
       "minimal"
       "common"
       "network"
+      "client"
     ];
     includeHostStem = true;
     resolveGraph = false;
@@ -60,6 +61,7 @@
       "network"
       "main"
       "server"
+      "client"
     ];
     includeHostStem = true;
     resolveGraph = false;
@@ -71,6 +73,15 @@
       "common"
       "network"
       "client"
+    ];
+    includeHostStem = true;
+    resolveGraph = false;
+  };
+
+  rozzy = {
+    roots = [
+      "minimal"
+      "common"
     ];
     includeHostStem = true;
     resolveGraph = false;

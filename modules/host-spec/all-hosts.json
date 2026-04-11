@@ -42,7 +42,8 @@
         "common",
         "network",
         "main",
-        "server"
+        "server",
+        "client"
       ]
     },
     "laptop": {
@@ -150,7 +151,8 @@
       "roots": [
         "minimal",
         "common",
-        "network"
+        "network",
+        "client"
       ]
     },
     "agent": {
@@ -169,7 +171,25 @@
       "roots": [
         "minimal",
         "common",
-        "network"
+        "network",
+        "client"
+      ]
+    },
+    "rozzy": {
+      "hostName": "rozzy",
+      "users": [
+        {
+          "username": "beau",
+          "email": "beaudan.brown@gmail.com",
+          "userFullName": "Beaudan Brown",
+          "ageUserKey": "age1ttxsxcfkd9txnry4lfupfakj4tszjq5e69qs5yayxlsk3pxjqejqhpu5zz"
+        }
+      ],
+      "wifi": false,
+      "ageHostKey": "age1kfy4vd3hpsf0ctyhr5l0y98m2hfdv8gh068n2akaejramkelmylqgwvyql",
+      "roots": [
+        "minimal",
+        "common"
       ]
     },
     "iso": {
