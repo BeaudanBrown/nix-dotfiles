@@ -92,6 +92,15 @@ let
       };
     }
     {
+      model_name = "sub-gpt-5.4-mini";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-5.4-mini";
+      };
+    }
+    {
       model_name = "sub-gpt-5.4-pro";
       model_info = {
         mode = "responses";

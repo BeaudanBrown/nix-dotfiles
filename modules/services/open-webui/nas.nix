@@ -35,6 +35,14 @@ in
       OPENAI_API_BASE_URL = "http://127.0.0.1:${
         toString config.custom.ports.assigned.${litellmPortKey}
       }/v1";
+      ENABLE_WEB_SEARCH = "True";
+      ENABLE_SEARCH_QUERY_GENERATION = "True";
+      WEB_SEARCH_ENGINE = "duckduckgo";
+      WEB_SEARCH_RESULT_COUNT = "5";
+      WEB_SEARCH_CONCURRENT_REQUESTS = "1";
+      WEB_LOADER_CONCURRENT_REQUESTS = "5";
+      WEB_LOADER_TIMEOUT = "15";
+      WEB_FETCH_MAX_CONTENT_LENGTH = "20000";
       ENABLE_IMAGE_GENERATION = "True";
       IMAGE_GENERATION_ENGINE = "openai";
       IMAGE_GENERATION_MODEL = "gemini-2.5-flash-image";

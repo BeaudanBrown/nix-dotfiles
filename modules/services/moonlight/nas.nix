@@ -21,6 +21,10 @@ in
     "d ${dataRoot}/data 0755 root root - -"
   ];
 
+  sops.secrets."docker-registry/pass" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
+
   virtualisation.podman.enable = true;
   virtualisation.oci-containers.containers.moonlight = {
     image = "registry.bepis.lol/moonlight:2026-03-23";

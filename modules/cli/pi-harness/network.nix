@@ -19,43 +19,24 @@ let
           };
           models = [
             {
-              id = "gpt-5.2";
+              id = "sub-gpt-5.4";
+              api = "openai-responses";
               reasoning = true;
             }
             {
-              id = "gpt-5.3-codex";
+              id = "sub-gpt-5.4-mini";
+              api = "openai-responses";
               reasoning = true;
             }
             {
-              id = "gpt-5-mini";
+              id = "sub-gpt-5.4-pro";
+              api = "openai-responses";
               reasoning = true;
             }
             {
-              id = "claude-haiku-4-5";
+              id = "sub-gpt-5.3-codex-spark";
+              api = "openai-responses";
               reasoning = true;
-            }
-            {
-              id = "claude-sonnet-4-6";
-              reasoning = true;
-            }
-            {
-              id = "claude-opus-4-6";
-              reasoning = true;
-            }
-            {
-              id = "gemini-3-flash-preview";
-              reasoning = true;
-            }
-            {
-              id = "gemini-3.1-pro-preview";
-              reasoning = true;
-            }
-            {
-              id = "kimi-k2.5";
-              reasoning = true;
-            }
-            {
-              id = "m3";
             }
           ];
         };

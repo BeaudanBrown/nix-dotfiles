@@ -2185,12 +2185,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1775559119,
-        "narHash": "sha256-pk6UHcVtBDbeMl/4uIaRQVVDqi4501r6Nbapyw5Ybp4=",
+        "lastModified": 1775791103,
+        "narHash": "sha256-NCKbDLC4M7oVoWdLgbJruVJw+GNYx76gY1y8wzaxvGM=",
         "ref": "refs/heads/roster",
-        "rev": "2bf58ccf59b6c6e8f11065770c54808f4508b540",
+        "rev": "46f43b81952b75dba1f192bf57243eeada72c120",
         "shallow": true,
-        "submodules": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/ihp-roster.git"
       },
@@ -3869,10 +3868,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1774824667,
-        "narHash": "sha256-W4N9Oa3mu2Vze76VrIXRjKXljr1mVS9Hr3OkwWQWeDY=",
+        "lastModified": 1775904112,
+        "narHash": "sha256-idiS7oT+Qy5RT9D8KIdTinrtFTBjQp1PdkusVF5wajk=",
         "ref": "refs/heads/main",
-        "rev": "51d3bb76fff3f57b7995677679f03745b8b6c5cd",
+        "rev": "c6cb20134bbc160ed59e342cdc20a5b1761e44ec",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"
