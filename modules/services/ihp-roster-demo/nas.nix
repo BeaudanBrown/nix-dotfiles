@@ -15,6 +15,19 @@ in
 
   custom.ports.requests = [ { key = portKey; } ];
 
+  sops.secrets."ihp-roster-demo/bootstrap-password" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    restartUnits = [ "bootstrap-account.service" ];
+  };
+
+  sops.secrets."ihp-roster-demo/env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    restartUnits = [
+      "app.service"
+      "worker.service"
+    ];
+  };
+
   hostedServices = [
     {
       inherit domain;
@@ -47,6 +60,23 @@ in
     databaseUrl = "postgresql://${databaseUser}@/${databaseName}?host=/var/run/postgresql";
     managePostgres = false;
     configureNginx = false;
+
+    # Secret file placeholder for email delivery settings. Expected keys:
+    # MAIL_FROM=...
+    # SMTP_HOST=...
+    # SMTP_PORT=...
+    # SMTP_ENCRYPTION=...
+    # SMTP_USER=...
+    # SMTP_PASSWORD=...
+    # RESEND_API_KEY=... (reserved for an eventual Resend transport switch)
+    environmentFile = config.sops.secrets."ihp-roster-demo/env".path;
+
+    bootstrap = {
+      enable = true;
+      email = "beaudan.brown@gmail.com";
+      passwordFile = config.sops.secrets."ihp-roster-demo/bootstrap-password".path;
+      venueName = "Rozzy";
+    };
 
     # Let IHP generate /var/ihp/session.aes on first boot until this is wired through sops-nix.
     sessionSecret = "";

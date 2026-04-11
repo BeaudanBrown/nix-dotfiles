@@ -44,6 +44,7 @@
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/apps/kitty/network.nix
+  ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/services/tailscale/network.nix
   ../../modules/cli/beads/client.nix

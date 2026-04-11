@@ -51,12 +51,11 @@
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/apps/kitty/network.nix
+  ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/services/tailscale/network.nix
   ../../modules/cli/atuin/main.nix
-  ../../modules/cli/beads/main.nix
   ../../modules/cli/claude_code/main.nix
-  ../../modules/cli/opencode/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
@@ -94,6 +93,7 @@
   ../../modules/services/deskflow/work.nix
   ../../modules/services/dunst/work.nix
   ../../modules/services/kdeconnect/work.nix
+  ../../modules/services/lan-mouse/work.nix
   ../../modules/services/loom/work.nix
   ../../modules/services/printing/work.nix
   ../../modules/services/samba/work.nix

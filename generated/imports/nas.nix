@@ -24,7 +24,9 @@
   ../../modules/services/docling/nas.nix
   ../../modules/services/headscale/nas.nix
   ../../modules/services/home-assistant/nas.nix
+  ../../modules/services/ihp-roster-demo/nas.nix
   ../../modules/services/immich/nas.nix
+  ../../modules/services/invoice-ai/nas.nix
   ../../modules/services/invoiceshelf/nas.nix
   ../../modules/services/jitsi-meet/nas.nix
   ../../modules/services/litellm/nas.nix
@@ -87,11 +89,11 @@
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/apps/kitty/network.nix
+  ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/services/tailscale/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/claude_code/main.nix
-  ../../modules/cli/opencode/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix

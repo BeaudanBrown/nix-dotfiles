@@ -44,10 +44,10 @@ in
   };
 
   environment.systemPackages = [
-    inputs.nix-ai-tools.packages.${pkgs.system}.amp
-    inputs.nix-ai-tools.packages.${pkgs.system}.gemini-cli
+    # inputs.nix-ai-tools.packages.${pkgs.system}.amp
+    # inputs.nix-ai-tools.packages.${pkgs.system}.gemini-cli
     inputs.nix-ai-tools.packages.${pkgs.system}.codex
-    inputs.nix-ai-tools.packages.${pkgs.system}.pi
+    # inputs.nix-ai-tools.packages.${pkgs.system}.pi
   ];
 
   hm.primary.programs.opencode = {

@@ -104,9 +104,29 @@ json_payload="$(
 	TARGET_HOST="$host" nix eval --json --impure --expr "$nix_expr"
 )"
 
-selected_count="$(jq '.selected | length' <<<"$json_payload")"
+declare -A tracked_module_files=()
+while IFS= read -r -d '' tracked_path; do
+	if [[ $tracked_path == modules/*.nix ]]; then
+		tracked_module_files["$tracked_path"]=1
+	fi
+done < <(git -C "$repo_root" ls-files -z -- modules)
+
+selected_paths=()
+while IFS= read -r abs_path; do
+	if [[ $abs_path != "$repo_root/"* ]]; then
+		echo "Resolved path is outside repo root: $abs_path" >&2
+		exit 1
+	fi
+
+	rel_path="${abs_path#"$repo_root"/}"
+	if [[ -n ${tracked_module_files["$rel_path"]+x} ]]; then
+		selected_paths+=("$rel_path")
+	fi
+done < <(jq -r '.selected[]' <<<"$json_payload")
+
+selected_count="${#selected_paths[@]}"
 if [[ $selected_count -eq 0 ]]; then
-	echo "No imports resolved for host '$host'. Refusing to write empty generated file." >&2
+	echo "No tracked imports resolved for host '$host'. Refusing to write empty generated file." >&2
 	exit 1
 fi
 
@@ -119,13 +139,7 @@ tmp_file="$(mktemp)"
 	echo "# Do not edit manually."
 	echo "["
 
-	jq -r '.selected[]' <<<"$json_payload" | while IFS= read -r abs_path; do
-		if [[ $abs_path != "$repo_root/"* ]]; then
-			echo "Resolved path is outside repo root: $abs_path" >&2
-			exit 1
-		fi
-
-		rel_path="${abs_path#"$repo_root"/}"
+	for rel_path in "${selected_paths[@]}"; do
 		echo "  ../../$rel_path"
 	done
 

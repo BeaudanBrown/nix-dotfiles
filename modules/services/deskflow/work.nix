@@ -96,7 +96,7 @@ in
 
       serviceConfig = {
         ExecStart = ''
-          ${cfg.package}/bin/deskflow-core client ${cfg.serverAddress}
+          ${cfg.package}/bin/deskflow-core client --no-daemon --name ${lib.escapeShellArg cfg.screenName} ${lib.escapeShellArg cfg.serverAddress}
         '';
         Restart = "always";
         RestartSec = 3;
@@ -112,7 +112,7 @@ in
 
       serviceConfig = {
         ExecStart = ''
-          ${cfg.package}/bin/deskflow-core server -s ${config.hostSpec.home}/.config/Deskflow/deskflow-server.conf
+          ${cfg.package}/bin/deskflow-core server --no-daemon --name ${lib.escapeShellArg cfg.screenName} --address ${lib.escapeShellArg ":${toString cfg.port}"} --config ${lib.escapeShellArg "${config.hostSpec.home}/.config/Deskflow/deskflow-server.conf"}
         '';
         Restart = "always";
         RestartSec = 3;
