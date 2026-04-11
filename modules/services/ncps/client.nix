@@ -14,7 +14,7 @@
 
     buildMachines = [
       {
-        hostName = "nas.lan";
+        hostName = "nas";
         # TODO: Cross compilation?
         systems = [
           "x86_64-linux"

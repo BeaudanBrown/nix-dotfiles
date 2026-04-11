@@ -16,7 +16,7 @@
       excludeShellChecks = [ "SC2029" ];
       text = ''
         mac_address=$(cat ${config.sops.secrets.bottom_mac.path})
-        ssh brick "wakeonlan '$mac_address'"
+        ssh mcbrick "wakeonlan '$mac_address'"
       '';
     })
   ];

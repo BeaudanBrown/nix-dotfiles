@@ -235,6 +235,12 @@
           require('r.send').cmd(string.format('targets::tar_read(%s)', target))
         end, vim.tbl_extend("force", opts, { desc = "targets: Read target under cursor" }))
 
+        -- Read first dynamic branch under cursor: <leader>tR
+        vim.keymap.set("n", "<leader>tR", function()
+          local target = vim.fn.expand('<cword>')
+          require('r.send').cmd(string.format('%s <- targets::tar_read(%s, branches = 1)', target, target))
+        end, vim.tbl_extend("force", opts, { desc = "targets: Read first branch under cursor" }))
+
         -- Visualize targets pipeline: <leader>tv
         vim.keymap.set("n", "<leader>tv", function()
           require('r.send').cmd('targets::tar_visnetwork()')

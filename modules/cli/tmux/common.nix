@@ -38,7 +38,7 @@ in
 
   hm.primary.programs.tmux = {
     enable = true;
-    escapeTime = 0;
+    escapeTime = 25;
     historyLimit = 50000;
     keyMode = "vi";
     terminal = "tmux-256color";
@@ -62,8 +62,12 @@ in
           bind C-u copy-mode -u
 
           set -g set-clipboard on
-          set -as terminal-features ',xterm-kitty:clipboard'
+          set -g extended-keys on
+          set -g extended-keys-format xterm
+          set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
+          set -as terminal-features ',xterm-kitty:clipboard:extkeys'
           set -g allow-passthrough on
+          set -g @override_copy_command 'tmux load-buffer -w -'
 
           bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
           bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane
