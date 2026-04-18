@@ -22,6 +22,7 @@ let
   userGroup = config.users.users.${cfg.user}.group;
   checkoutDir = "${cfg.stateDir}/checkout";
   frontendBuildDir = "${cfg.stateDir}/build";
+  backupDir = "${cfg.stateDir}/backups";
 
   bootstrapScript = pkgs.writeShellApplication {
     name = "the-past-connection-demo-bootstrap";
@@ -46,6 +47,8 @@ let
         run ${lib.escapeShellArg checkoutDir}#demo-bootstrap -- \
         --repo-root ${lib.escapeShellArg checkoutDir} \
         --public-supabase-url ${lib.escapeShellArg "https://${cfg.supabaseDomain}"} \
+        --seed-mode once \
+        --seed-marker ${lib.escapeShellArg "${cfg.stateDir}/demo-seeded"} \
         --output-dir ${lib.escapeShellArg frontendBuildDir}
     '';
   };
@@ -60,6 +63,38 @@ let
         run ${lib.escapeShellArg checkoutDir}#demo-serve -- \
         --root ${lib.escapeShellArg "${frontendBuildDir}/dist"} \
         --port ${lib.escapeShellArg (toString cfg.frontendPort)}
+    '';
+  };
+
+  backupScript = pkgs.writeShellApplication {
+    name = "the-past-connection-demo-backup";
+    runtimeInputs = [
+      config.nix.package
+      pkgs.bash
+      pkgs.coreutils
+      pkgs.findutils
+    ];
+    text = ''
+      set -euo pipefail
+
+      if [ ! -d ${lib.escapeShellArg checkoutDir} ]; then
+        echo "Demo checkout not found: ${checkoutDir}" >&2
+        exit 1
+      fi
+
+      mkdir -p ${lib.escapeShellArg backupDir}
+      timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+      schema_dump=${lib.escapeShellArg backupDir}/"supabase-$timestamp.schema.sql"
+      data_dump=${lib.escapeShellArg backupDir}/"supabase-$timestamp.data.sql"
+
+      cd ${lib.escapeShellArg checkoutDir}
+      ${getExe config.nix.package} --extra-experimental-features "nix-command flakes" \
+        develop .#default -c bash -lc \
+        'supabase db dump --local --file "$1" && supabase db dump --local --data-only --use-copy --file "$2"' \
+        bash "$schema_dump" "$data_dump"
+
+      find ${lib.escapeShellArg backupDir} -type f -name 'supabase-*.sql' -mtime +${toString cfg.backupRetentionDays} -delete
+      echo "Wrote $schema_dump and $data_dump"
     '';
   };
 in
@@ -103,6 +138,18 @@ in
       description = "Optional environment file for demo-specific settings such as admin seed credentials.";
     };
 
+    backupRetentionDays = mkOption {
+      type = types.ints.positive;
+      default = 14;
+      description = "Number of days to retain local Supabase dump files for the hosted demo.";
+    };
+
+    backupOnCalendar = mkOption {
+      type = types.str;
+      default = "daily";
+      description = "systemd calendar expression for hosted demo Supabase backups.";
+    };
+
     frontendPort = mkOption {
       type = types.port;
       default = 17284;
@@ -135,6 +182,7 @@ in
         "d ${cfg.stateDir} 0750 ${cfg.user} ${userGroup} - -"
         "d ${checkoutDir} 0750 ${cfg.user} ${userGroup} - -"
         "d ${frontendBuildDir} 0750 ${cfg.user} ${userGroup} - -"
+        "d ${backupDir} 0750 ${cfg.user} ${userGroup} - -"
         "d ${cfg.stateDir}/npm-cache 0750 ${cfg.user} ${userGroup} - -"
         "d ${cfg.stateDir}/.local 0750 ${cfg.user} ${userGroup} - -"
         "d ${cfg.stateDir}/.cache 0750 ${cfg.user} ${userGroup} - -"
@@ -194,6 +242,41 @@ in
           ExecStart = getExe serveScript;
           Restart = "on-failure";
           RestartSec = "10s";
+        };
+      };
+
+      systemd.services.the-past-connection-demo-backup = {
+        description = "Back up The Past Connection hosted demo Supabase database";
+        after = [
+          "the-past-connection-demo-bootstrap.service"
+          "docker.service"
+        ];
+        requires = [
+          "the-past-connection-demo-bootstrap.service"
+          "docker.service"
+        ];
+        serviceConfig = {
+          Type = "oneshot";
+          User = cfg.user;
+          Group = userGroup;
+          WorkingDirectory = cfg.stateDir;
+          Environment = [
+            "HOME=${cfg.stateDir}"
+            "XDG_CACHE_HOME=${cfg.stateDir}/.cache"
+            "XDG_STATE_HOME=${cfg.stateDir}/.local/state"
+            "XDG_DATA_HOME=${cfg.stateDir}/.local/share"
+          ];
+          ExecStart = getExe backupScript;
+          TimeoutStartSec = "30min";
+        };
+      };
+
+      systemd.timers.the-past-connection-demo-backup = {
+        description = "Run The Past Connection hosted demo Supabase backup";
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnCalendar = cfg.backupOnCalendar;
+          Persistent = true;
         };
       };
     })

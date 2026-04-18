@@ -437,10 +437,10 @@
         "nixpkgs-unstable": "nixpkgs-unstable"
       },
       "locked": {
-        "lastModified": 1775449183,
-        "narHash": "sha256-KwZdmal0Sj0oXbuLi1UttZI3QdoQQmBu9uV7Z6XGbj0=",
+        "lastModified": 1776472735,
+        "narHash": "sha256-FRYoWKLttbaZ9npOgILMsLRb5hPN51vRbC1ZK2qvYV4=",
         "ref": "refs/heads/feature/public-content-projection-path",
-        "rev": "573efb0a210124ab726cf8d6550434b03a45d27f",
+        "rev": "2975526f8e9dffdcb317875506ba5bec8b64b1df",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/the-past-connection-mvp.git"
