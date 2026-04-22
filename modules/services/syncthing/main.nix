@@ -49,14 +49,6 @@
     **/.beads/bd.db
   '';
 
-  #syncedState = [
-  #  {
-  #    source = ".codex/skills";
-  #    target = "codex/skills";
-  #    type = "directory";
-  #  }
-  #];
-
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
     "d ${config.hostSpec.home}/.local/state/syncthing 0700 ${config.hostSpec.username} users - -"

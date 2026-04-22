@@ -1,6 +1,7 @@
 {
   inputs,
   host,
+  pkgs,
   ...
 }:
 {
@@ -10,7 +11,6 @@
     inputs.sops-nix.nixosModules.sops
     inputs.nixvim.nixosModules.nixvim
     inputs.stylix.nixosModules.stylix
-    inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
     {
       home-manager = {
@@ -23,9 +23,17 @@
 
   services.qemuGuest.enable = true;
 
-  nix.settings.cores = 4;
+  nix.settings.cores = 2;
 
   thisHost = host;
+
+  environment.systemPackages = with pkgs; [
+    wget
+    tree
+    inetutils
+    mtr
+    sysstat
+  ];
 
   system.stateVersion = "25.11";
 }

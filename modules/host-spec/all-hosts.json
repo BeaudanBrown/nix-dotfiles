@@ -177,6 +177,7 @@
     },
     "rozzy": {
       "hostName": "rozzy",
+      "dotfiles": "/home/beau/nix-dotfiles",
       "users": [
         {
           "username": "beau",

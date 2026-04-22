@@ -22,7 +22,7 @@ in
     ls = "${pkgs.eza}/bin/eza -lh --group-directories-first";
     cat = "${pkgs.bat}/bin/bat";
     shutup = "sudo shutdown now";
-    nixos-rebuild = "nixos-rebuild --flake ${config.hostSpec.home}/documents/nix-dotfiles";
+    nixos-rebuild = "nixos-rebuild --flake ${config.hostSpec.dotfiles}";
     df = "${pkgs.dysk}/bin/dysk";
     du = "du -h -d 1";
     get = "${get}/bin/get";

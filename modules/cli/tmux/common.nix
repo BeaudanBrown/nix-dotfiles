@@ -46,7 +46,7 @@ in
     plugins = with pkgs.tmuxPlugins; [
       catppuccin
       extrakto
-      tmux-window-name
+      # tmux-window-name
       yank
     ];
     extraConfig = # bash
