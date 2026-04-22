@@ -13,6 +13,22 @@ in
 {
   imports = [ inputs.ihp-roster.nixosModules.default ];
 
+  services.nginx = {
+    enable = true;
+    proxyTimeout = "240s";
+    recommendedGzipSettings = true;
+    recommendedOptimisation = true;
+    recommendedProxySettings = true;
+    recommendedTlsSettings = true;
+  };
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [
+      80
+      443
+    ];
+  };
+
   custom.ports.requests = [ { key = portKey; } ];
 
   sops.secrets."rozzy/bootstrap-password" = {
@@ -38,6 +54,7 @@ in
   ];
 
   services.postgresql = {
+    enable = true;
     ensureUsers = [
       {
         name = databaseUser;
