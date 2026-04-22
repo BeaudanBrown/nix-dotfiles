@@ -5,22 +5,22 @@
   ...
 }:
 let
-  domain = "rozzy.bepis.lol";
-  portKey = "ihp-roster-demo";
-  databaseName = "ihp_roster";
-  databaseUser = "ihp_roster";
+  domain = "bepis.lol";
+  portKey = "rozzy";
+  databaseName = "rozzy";
+  databaseUser = "rozzy";
 in
 {
   imports = [ inputs.ihp-roster.nixosModules.default ];
 
   custom.ports.requests = [ { key = portKey; } ];
 
-  sops.secrets."ihp-roster-demo/bootstrap-password" = {
+  sops.secrets."rozzy/bootstrap-password" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     restartUnits = [ "bootstrap-account.service" ];
   };
 
-  sops.secrets."ihp-roster-demo/env" = {
+  sops.secrets."rozzy/env" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     restartUnits = [
       "app.service"
@@ -69,12 +69,12 @@ in
     # SMTP_USER=...
     # SMTP_PASSWORD=...
     # RESEND_API_KEY=... (reserved for an eventual Resend transport switch)
-    environmentFile = config.sops.secrets."ihp-roster-demo/env".path;
+    environmentFile = config.sops.secrets."rozzy/env".path;
 
     bootstrap = {
       enable = true;
       email = "beaudan.brown@gmail.com";
-      passwordFile = config.sops.secrets."ihp-roster-demo/bootstrap-password".path;
+      passwordFile = config.sops.secrets."rozzy/bootstrap-password".path;
       venueName = "Rozzy";
     };
 

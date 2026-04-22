@@ -2,6 +2,8 @@
 # Effective roots: minimal, common
 # Do not edit manually.
 [
+  ../../modules/hosted-services/rozzy.nix
+  ../../modules/services/rozzy/rozzy.nix
   ../../modules/system/boot/rozzy.nix
   ../../modules/system/networking/rozzy.nix
   ../../modules/cli/git/minimal.nix
