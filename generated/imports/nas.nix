@@ -24,7 +24,6 @@
   ../../modules/services/docling/nas.nix
   ../../modules/services/headscale/nas.nix
   ../../modules/services/home-assistant/nas.nix
-  ../../modules/services/ihp-roster-demo/nas.nix
   ../../modules/services/immich/nas.nix
   ../../modules/services/invoice-ai/nas.nix
   ../../modules/services/invoiceshelf/nas.nix
@@ -43,7 +42,6 @@
   ../../modules/services/stt/nas.nix
   ../../modules/services/syncthing/nas.nix
   ../../modules/services/tailscale/nas.nix
-  ../../modules/services/the-past-connection-demo/nas.nix
   ../../modules/services/vaultwarden/nas.nix
   ../../modules/services/voice-assistant/nas.nix
   ../../modules/services/wastebin/nas.nix
@@ -60,10 +58,8 @@
   ../../modules/nix/minimal.nix
   ../../modules/security/sops/minimal.nix
   ../../modules/services/ssh/minimal.nix
-  ../../modules/system/boot/minimal.nix
   ../../modules/system/fonts/minimal.nix
   ../../modules/system/locale/minimal.nix
-  ../../modules/system/networking/minimal.nix
   ../../modules/user/minimal.nix
   ../../modules/apps/misc/common.nix
   ../../modules/cli/aliases/common.nix
@@ -71,35 +67,36 @@
   ../../modules/cli/fzf/common.nix
   ../../modules/cli/misc/common.nix
   ../../modules/cli/nixvim/common.nix
-  ../../modules/cli/nixvim/config/plugins/vim-ai/common.nix
-  ../../modules/cli/nixvim/files/common.nix
   ../../modules/cli/starship/common.nix
   ../../modules/cli/tmux/common.nix
   ../../modules/cli/yazi/common.nix
-  ../../modules/hardware/audio/common.nix
   ../../modules/nix/common.nix
-  ../../modules/scripts/bottom_wol/common.nix
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
-  ../../modules/services/blueman/common.nix
-  ../../modules/services/litellm/common.nix
   ../../modules/services/ssh/common.nix
-  ../../modules/services/syncthing/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/apps/kitty/network.nix
+  ../../modules/cli/beads/network.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
-  ../../modules/services/tailscale/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/claude_code/main.nix
+  ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
+  ../../modules/cli/nixvim/files/main.nix
+  ../../modules/hardware/audio/main.nix
+  ../../modules/scripts/bottom_wol/main.nix
+  ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
+  ../../modules/services/litellm/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
+  ../../modules/system/boot/main.nix
+  ../../modules/system/networking/main.nix
   ../../modules/triage/main.nix
   ../../modules/hosted-services/server.nix
   ../../modules/system/ports/server.nix
-  ../../modules/cli/beads/client.nix
   ../../modules/services/ncps/client.nix
+  ../../modules/services/tailscale/client.nix
 ]
