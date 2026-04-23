@@ -190,6 +190,7 @@
       "ageHostKey": "age1kfy4vd3hpsf0ctyhr5l0y98m2hfdv8gh068n2akaejramkelmylqgwvyql",
       "roots": [
         "minimal",
+        "client",
         "common"
       ]
     },
