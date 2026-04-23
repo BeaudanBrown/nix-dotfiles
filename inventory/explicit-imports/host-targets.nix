@@ -82,6 +82,7 @@
     roots = [
       "minimal"
       "common"
+      "client"
     ];
     includeHostStem = true;
     resolveGraph = false;

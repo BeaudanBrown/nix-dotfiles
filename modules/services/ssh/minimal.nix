@@ -21,6 +21,7 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILiMXGI4mXg1Aw/gvx9LH5wEYMJ0M0ZgVKtoUZioaWfH beau@nixos" # laptop
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN3T4/Ob/aFlKn3aIX29r6LZ8baeMLWAQxQtXeV5g5Br beaudan.brown@gmail.com" # pi4
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL472wjBWlBbL8yLBSwPXorccKJ4JZcfmtEO7iqVTfo1 beau@t480" # agent/t480 key
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOBYWJcI/KdO1Nile/OUEaFuwVannPk7PJMG5P+i9inb beau@nixos" # rozzy
   ];
 
   systemd.tmpfiles.rules = [
