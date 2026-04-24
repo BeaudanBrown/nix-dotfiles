@@ -18,7 +18,7 @@ let
       "class:(kitty)"
       "class:(agent)"
       "class:(nas)"
-      "class:(laptop)"
+      "class:(t480)"
       "class:(grill)"
       "class:(bottom)"
       "class:(signal)"
