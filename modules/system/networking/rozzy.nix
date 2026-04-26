@@ -8,5 +8,6 @@
     useDHCP = false;
     interfaces.eth0.useDHCP = true;
     hostName = config.hostSpec.hostName;
+    enableIPv6 = false;
   };
 }

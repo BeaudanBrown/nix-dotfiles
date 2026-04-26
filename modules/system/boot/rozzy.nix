@@ -4,6 +4,7 @@
     kernelParams = [
       "console=ttyS0,19200n8"
       "net.ifnames=0"
+      "ipv6.disable=1"
     ];
     loader = {
       systemd-boot.enable = lib.mkForce false;
@@ -20,6 +21,7 @@
       };
       timeout = lib.mkOverride 60 10;
     };
+
     kernel.sysctl = {
       "net.ipv6.conf.all.disable_ipv6" = 1;
       "net.ipv6.conf.default.disable_ipv6" = 1;
