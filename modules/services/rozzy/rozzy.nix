@@ -26,7 +26,7 @@ let
 
       if [ "''${1:-}" != "$confirmation_flag" ]; then
         echo "Usage: rozzy-reset-database $confirmation_flag" >&2
-        echo "This destroys and recreates the local Rozzy database, then runs schema load, migrations, and bootstrap." >&2
+        echo "This destroys and recreates the local Rozzy database, then loads the schema and bootstrap account." >&2
         exit 64
       fi
 
@@ -65,14 +65,12 @@ let
       echo "[rozzy-reset] loading schema"
       systemctl start loadSchema.service
 
-      echo "[rozzy-reset] running migrations"
-      systemctl start migrate.service
-
       echo "[rozzy-reset] running bootstrap account seed"
       systemctl start bootstrap-account.service
 
       echo "[rozzy-reset] starting application units"
       systemctl start app.socket
+      systemctl start app.service
       systemctl start worker.service
 
       echo "[rozzy-reset] checking resulting database shape"
@@ -83,7 +81,7 @@ let
         | grep -qx t
 
       echo "[rozzy-reset] complete"
-      systemctl --no-pager --plain status app.socket worker.service bootstrap-account.service migrate.service loadSchema.service >/dev/null
+      systemctl --no-pager --plain status app.socket app.service worker.service bootstrap-account.service loadSchema.service >/dev/null
     '';
   };
 in
@@ -214,6 +212,7 @@ in
     serviceUser = databaseUser;
     createServiceUser = true;
     managePostgres = false;
+    enableMigrations = false;
     configureNginx = false;
 
     # Secret file placeholder for email delivery settings. Expected keys:
