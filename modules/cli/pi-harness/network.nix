@@ -6,6 +6,7 @@
   ...
 }:
 let
+  piHarnessPackage = inputs.pi-harness.packages.${pkgs.system}.default;
   piModelsFile = pkgs.writeText "pi-models.json" (
     builtins.toJSON {
       providers = {
@@ -52,14 +53,18 @@ in
     mode = "0400";
   };
 
-  environment.systemPackages = [
-    inputs.pi-harness.packages.${pkgs.system}.default
-  ];
-
   hm.primary.home.file.".pi/agent/models.json".source = piModelsFile;
 
   services.pi-harness = {
     enable = true;
-    package = inputs.pi-harness.packages.${pkgs.system}.default;
+    package = piHarnessPackage;
+  };
+
+  hm.primary.home.file = {
+    ".pi/agent/settings.json".source = "${piHarnessPackage}/share/pi-harness/agent/settings.json";
+    ".pi/agent/extensions".source = "${piHarnessPackage}/share/pi-harness/agent/extensions";
+    ".pi/agent/skills".source = "${piHarnessPackage}/share/pi-harness/agent/skills";
+    ".pi/agent/prompts".source = "${piHarnessPackage}/share/pi-harness/agent/prompts";
+    ".pi/agent/themes".source = "${piHarnessPackage}/share/pi-harness/agent/themes";
   };
 }
