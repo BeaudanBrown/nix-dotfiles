@@ -34,6 +34,7 @@
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
+  ../../modules/apps/kitty/client.nix
   ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
 ]
