@@ -32,9 +32,10 @@ in
 
   custom.ports.requests = [ { key = portKey; } ];
 
-  sops.secrets."rozzy/bootstrap-password" = {
+  sops.secrets."rozzy/bootstrap-account" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     restartUnits = [ "bootstrap-account.service" ];
+    mode = "0400";
   };
 
   sops.secrets."rozzy/env" = {
@@ -149,9 +150,7 @@ in
 
     bootstrap = {
       enable = true;
-      email = "beaudan.brown@gmail.com";
-      passwordFile = config.sops.secrets."rozzy/bootstrap-password".path;
-      venueName = "Rozzy";
+      secretFile = config.sops.secrets."rozzy/bootstrap-account".path;
     };
 
     # Let IHP generate /var/ihp/session.aes on first boot until this is wired through sops-nix.
