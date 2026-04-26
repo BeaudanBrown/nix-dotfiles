@@ -10,6 +10,82 @@ let
   portKey = "rozzy";
   databaseName = "rozzy";
   databaseUser = "rozzy";
+  resetDatabaseScript = pkgs.writeShellApplication {
+    name = "rozzy-reset-database";
+    runtimeInputs = [
+      config.services.postgresql.package
+      pkgs.coreutils
+      pkgs.gnugrep
+      pkgs.systemd
+      pkgs.util-linux
+    ];
+    text = ''
+      set -euo pipefail
+
+      confirmation_flag="--yes-i-understand-this-destroys-rozzy-data"
+
+      if [ "''${1:-}" != "$confirmation_flag" ]; then
+        echo "Usage: rozzy-reset-database $confirmation_flag" >&2
+        echo "This destroys and recreates the local Rozzy database, then runs schema load, migrations, and bootstrap." >&2
+        exit 64
+      fi
+
+      if [ "$(id -u)" -ne 0 ]; then
+        echo "rozzy-reset-database must be run as root." >&2
+        exit 1
+      fi
+
+      database_name=${lib.escapeShellArg databaseName}
+      database_user=${lib.escapeShellArg databaseUser}
+      postgres_db=postgres
+      units=(
+        app.socket
+        app.service
+        worker.service
+        bootstrap-account.service
+        migrate.service
+        loadSchema.service
+      )
+
+      echo "[rozzy-reset] stopping Rozzy application units"
+      systemctl stop "''${units[@]}" || true
+      systemctl reset-failed "''${units[@]}" || true
+
+      echo "[rozzy-reset] terminating database sessions"
+      runuser -u postgres -- psql "$postgres_db" \
+        --set=ON_ERROR_STOP=1 \
+        --quiet \
+        --command="SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$database_name' AND pid <> pg_backend_pid();" \
+        >/dev/null
+
+      echo "[rozzy-reset] recreating database"
+      runuser -u postgres -- dropdb --if-exists "$database_name"
+      runuser -u postgres -- createdb --owner "$database_user" "$database_name"
+
+      echo "[rozzy-reset] loading schema"
+      systemctl start loadSchema.service
+
+      echo "[rozzy-reset] running migrations"
+      systemctl start migrate.service
+
+      echo "[rozzy-reset] running bootstrap account seed"
+      systemctl start bootstrap-account.service
+
+      echo "[rozzy-reset] starting application units"
+      systemctl start app.socket
+      systemctl start worker.service
+
+      echo "[rozzy-reset] checking resulting database shape"
+      runuser -u "$database_user" -- psql "$database_name" \
+        --tuples-only \
+        --no-align \
+        --command="SELECT to_regclass('public.app_jobs') IS NOT NULL;" \
+        | grep -qx t
+
+      echo "[rozzy-reset] complete"
+      systemctl --no-pager --plain status app.socket worker.service bootstrap-account.service migrate.service loadSchema.service >/dev/null
+    '';
+  };
 in
 {
   imports = [ inputs.ihp-roster.nixosModules.default ];
@@ -64,6 +140,8 @@ in
       webSockets = true;
     }
   ];
+
+  environment.systemPackages = [ resetDatabaseScript ];
 
   services.postgresql = {
     enable = true;
