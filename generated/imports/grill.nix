@@ -48,7 +48,6 @@
   ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
   ../../modules/cli/atuin/main.nix
-  ../../modules/cli/claude_code/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
   ../../modules/hardware/audio/main.nix

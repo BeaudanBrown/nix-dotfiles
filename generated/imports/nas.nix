@@ -77,12 +77,10 @@
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
-  ../../modules/apps/kitty/network.nix
   ../../modules/cli/beads/network.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/cli/atuin/main.nix
-  ../../modules/cli/claude_code/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
   ../../modules/hardware/audio/main.nix
@@ -97,6 +95,7 @@
   ../../modules/triage/main.nix
   ../../modules/hosted-services/server.nix
   ../../modules/system/ports/server.nix
+  ../../modules/apps/kitty/client.nix
   ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
 ]

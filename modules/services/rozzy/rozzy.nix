@@ -2,6 +2,7 @@
   config,
   inputs,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -44,6 +45,16 @@ in
     ];
   };
 
+  sops.secrets."rozzy/restic-env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    mode = "0400";
+  };
+
+  sops.secrets."rozzy/restic-password" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    mode = "0400";
+  };
+
   hostedServices = [
     {
       inherit domain;
@@ -55,6 +66,7 @@ in
 
   services.postgresql = {
     enable = true;
+    enableTCPIP = false;
     ensureUsers = [
       {
         name = databaseUser;
@@ -62,9 +74,54 @@ in
       }
     ];
     ensureDatabases = [ databaseName ];
-    authentication = lib.mkAfter ''
-      local ${databaseName} ${databaseUser} trust
+    authentication = lib.mkForce ''
+      local all postgres peer
+      local ${databaseName} ${databaseUser} peer
+      local all all reject
     '';
+  };
+
+  services.restic.backups.rozzy-postgres = {
+    initialize = true;
+    repository = "s3:https://sg-sin-1.linodeobjects.com/rozzy-backups/rozzy-postgres";
+    environmentFile = config.sops.secrets."rozzy/restic-env".path;
+    passwordFile = config.sops.secrets."rozzy/restic-password".path;
+
+    command = [
+      "${pkgs.util-linux}/bin/runuser"
+      "-u"
+      databaseUser
+      "--"
+      "${config.services.postgresql.package}/bin/pg_dump"
+      "--format=custom"
+      "--no-owner"
+      "--no-acl"
+      databaseName
+    ];
+
+    extraBackupArgs = [
+      "--stdin-filename"
+      "rozzy.pgcustom"
+      "--tag"
+      "postgres"
+      "--tag"
+      "ihp-roster"
+    ];
+
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+      RandomizedDelaySec = "30m";
+    };
+
+    pruneOpts = [
+      "--keep-daily 14"
+      "--keep-weekly 8"
+      "--keep-monthly 24"
+      "--group-by tags"
+    ];
+
+    checkOpts = [ "--read-data-subset=1G" ];
   };
 
   services.ihpRoster = {
@@ -75,6 +132,8 @@ in
     databaseName = databaseName;
     databaseUser = databaseUser;
     databaseUrl = "postgresql://${databaseUser}@/${databaseName}?host=/var/run/postgresql";
+    serviceUser = databaseUser;
+    createServiceUser = true;
     managePostgres = false;
     configureNginx = false;
 
