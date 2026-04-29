@@ -153,26 +153,6 @@
         "type": "github"
       }
     },
-    "beads": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1774672289,
-        "narHash": "sha256-/0Fc2J2L0PtBMxdG7GU0GOlhgE5Fca/QVllEj5Snfbk=",
-        "owner": "BeaudanBrown",
-        "repo": "beads",
-        "rev": "29593c44c9d62e7a9df236ae69d85ddb861a7267",
-        "type": "github"
-      },
-      "original": {
-        "owner": "BeaudanBrown",
-        "repo": "beads",
-        "type": "github"
-      }
-    },
     "blueprint": {
       "inputs": {
         "nixpkgs": [
@@ -3656,7 +3636,6 @@
       "inputs": {
         "art-domain": "art-domain",
         "authentik-nix": "authentik-nix",
-        "beads": "beads",
         "complix": "complix",
         "copyparty": "copyparty",
         "disko": "disko",

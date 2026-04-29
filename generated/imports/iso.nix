@@ -11,9 +11,7 @@
   ../../modules/nix/minimal.nix
   ../../modules/security/sops/minimal.nix
   ../../modules/services/ssh/minimal.nix
-  ../../modules/system/boot/minimal.nix
   ../../modules/system/fonts/minimal.nix
   ../../modules/system/locale/minimal.nix
-  ../../modules/system/networking/minimal.nix
   ../../modules/user/minimal.nix
 ]

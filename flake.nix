@@ -30,6 +30,7 @@
         formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
         packages = {
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
+          ticket = pkgs.callPackage ./packages/ticket.nix { };
         };
         checks = import ./lib/checks.nix { inherit inputs system pkgs; };
         devShells.default = pkgs.mkShell {
@@ -156,11 +157,6 @@
 
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    beads = {
-      url = "github:BeaudanBrown/beads";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

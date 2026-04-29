@@ -13,10 +13,10 @@
   ../../modules/nix/nas.nix
   ../../modules/services/atuin/nas.nix
   ../../modules/services/authentik/nas.nix
-  ../../modules/services/beads/nas.nix
   ../../modules/services/bookstack/nas.nix
   ../../modules/services/chhoto-url/nas.nix
   ../../modules/services/collabora/nas.nix
+  ../../modules/services/container-registry-auth/nas.nix
   ../../modules/services/coordinator-vm/nas.nix
   ../../modules/services/copyparty/nas.nix
   ../../modules/services/docker-registry-ui/nas.nix
@@ -37,6 +37,7 @@
   ../../modules/services/nextcloud/nas.nix
   ../../modules/services/nginx/nas.nix
   ../../modules/services/open-webui/nas.nix
+  ../../modules/services/overleaf/nas.nix
   ../../modules/services/rag/nas.nix
   ../../modules/services/send/nas.nix
   ../../modules/services/stt/nas.nix
@@ -77,12 +78,12 @@
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
-  ../../modules/cli/beads/network.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
+  ../../modules/cli/ticket/main.nix
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
   ../../modules/services/blueman/main.nix

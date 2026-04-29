@@ -39,7 +39,6 @@
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
-  ../../modules/cli/beads/network.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/apps/kitty/client.nix
@@ -48,6 +47,7 @@
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
+  ../../modules/cli/ticket/main.nix
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
   ../../modules/services/blueman/main.nix

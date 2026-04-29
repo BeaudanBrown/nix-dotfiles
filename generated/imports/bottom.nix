@@ -12,10 +12,8 @@
   ../../modules/nix/minimal.nix
   ../../modules/security/sops/minimal.nix
   ../../modules/services/ssh/minimal.nix
-  ../../modules/system/boot/minimal.nix
   ../../modules/system/fonts/minimal.nix
   ../../modules/system/locale/minimal.nix
-  ../../modules/system/networking/minimal.nix
   ../../modules/user/minimal.nix
   ../../modules/apps/misc/common.nix
   ../../modules/cli/aliases/common.nix
@@ -23,24 +21,16 @@
   ../../modules/cli/fzf/common.nix
   ../../modules/cli/misc/common.nix
   ../../modules/cli/nixvim/common.nix
-  ../../modules/cli/nixvim/config/plugins/vim-ai/common.nix
-  ../../modules/cli/nixvim/files/common.nix
   ../../modules/cli/starship/common.nix
   ../../modules/cli/tmux/common.nix
   ../../modules/cli/yazi/common.nix
-  ../../modules/hardware/audio/common.nix
   ../../modules/nix/common.nix
-  ../../modules/scripts/bottom_wol/common.nix
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
-  ../../modules/services/blueman/common.nix
-  ../../modules/services/litellm/common.nix
   ../../modules/services/ssh/common.nix
-  ../../modules/services/syncthing/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
-  ../../modules/apps/kitty/network.nix
+  ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
-  ../../modules/services/tailscale/network.nix
 ]

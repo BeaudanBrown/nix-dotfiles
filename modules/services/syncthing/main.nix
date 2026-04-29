@@ -4,51 +4,6 @@
   ...
 }:
 {
-  hm.primary.home.file."documents/.stignore".text = ''
-    # Keep only stable repo-local Beads config synced. Runtime state, caches,
-    # credentials, backups, and local version markers stay host-local.
-    # Syncthing does not propagate .stignore itself, so Nix installs this on
-    # each host.
-    **/.beads/dolt
-    **/.beads/dolt/**
-    **/.beads/dolt-access.lock
-    **/.beads/bd.sock
-    **/.beads/bd.sock.startlock
-    **/.beads/sync-state.json
-    **/.beads/last-touched
-    **/.beads/.exclusive-lock
-    **/.beads/daemon.*
-    **/.beads/interactions.jsonl
-    **/.beads/push-state.json
-    **/.beads/*.lock
-    **/.beads/.beads-credential-key
-    **/.beads/.local_version
-    **/.beads/redirect
-    **/.beads/.sync.lock
-    **/.beads/export-state
-    **/.beads/export-state/**
-    **/.beads/ephemeral.sqlite3
-    **/.beads/ephemeral.sqlite3-journal
-    **/.beads/ephemeral.sqlite3-wal
-    **/.beads/ephemeral.sqlite3-shm
-    **/.beads/dolt-server.pid
-    **/.beads/dolt-server.log
-    **/.beads/dolt-server.lock
-    **/.beads/dolt-server.port
-    **/.beads/*.corrupt.backup
-    **/.beads/*.corrupt.backup/**
-    **/.beads/backup
-    **/.beads/backup/**
-    **/.beads/.env
-    **/.beads/*.db
-    **/.beads/*.db?*
-    **/.beads/*.db-journal
-    **/.beads/*.db-wal
-    **/.beads/*.db-shm
-    **/.beads/db.sqlite
-    **/.beads/bd.db
-  '';
-
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
     "d ${config.hostSpec.home}/.local/state/syncthing 0700 ${config.hostSpec.username} users - -"
