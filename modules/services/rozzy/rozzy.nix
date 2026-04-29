@@ -22,7 +22,7 @@ let
     text = ''
       set -euo pipefail
 
-      confirmation_flag="--yes-i-understand-this-destroys-rozzy-data"
+      confirmation_flag="--danger"
 
       if [ "''${1:-}" != "$confirmation_flag" ]; then
         echo "Usage: rozzy-reset-database $confirmation_flag" >&2
