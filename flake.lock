@@ -2132,6 +2132,8 @@
         ],
         "ihp": "ihp",
         "nixpkgs": [
+          "ihp-roster",
+          "ihp",
           "nixpkgs"
         ],
         "playwright": "playwright",

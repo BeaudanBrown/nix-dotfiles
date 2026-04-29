@@ -62,9 +62,11 @@
   nixConfig = {
     extra-substituters = [
       "https://nix-community.cachix.org/"
+      "https://digitallyinduced.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "digitallyinduced.cachix.org-1:y+wQvrnxQ+PdEsCt91rmvv39qRCYzEgGQaldK26hCKE="
     ];
   };
 
@@ -167,7 +169,6 @@
 
     ihp-roster = {
       url = "git+ssh://git@github.com/BeaudanBrown/ihp-roster.git?ref=refs/heads/roster&shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
       inputs.systems.follows = "systems";
     };
 
