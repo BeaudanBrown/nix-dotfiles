@@ -10,6 +10,7 @@ let
   portKey = "rozzy";
   databaseName = "rozzy";
   databaseUser = "rozzy";
+  rosterPackage = inputs.ihp-roster.packages.${pkgs.system}.default;
   resetDatabaseScript = pkgs.writeShellApplication {
     name = "rozzy-reset-database";
     runtimeInputs = [
@@ -23,10 +24,24 @@ let
       set -euo pipefail
 
       confirmation_flag="--danger"
+      seed_dev=0
+      seed_args=()
 
       if [ "''${1:-}" != "$confirmation_flag" ]; then
-        echo "Usage: rozzy-reset-database $confirmation_flag" >&2
+        echo "Usage: rozzy-reset-database $confirmation_flag [--seed-dev [seed-options...]]" >&2
         echo "This destroys and recreates the local Rozzy database, then loads the schema and bootstrap account." >&2
+        echo "With --seed-dev, it then replaces the bootstrap data with dummy development fixture data." >&2
+        exit 64
+      fi
+      shift
+
+      if [ "''${1:-}" = "--seed-dev" ]; then
+        seed_dev=1
+        shift
+        seed_args=("$@")
+      elif [ "$#" -gt 0 ]; then
+        echo "Unsupported reset option: $1" >&2
+        echo "Usage: rozzy-reset-database $confirmation_flag [--seed-dev [seed-options...]]" >&2
         exit 64
       fi
 
@@ -37,6 +52,9 @@ let
 
       database_name=${lib.escapeShellArg databaseName}
       database_user=${lib.escapeShellArg databaseUser}
+      database_url=${lib.escapeShellArg "postgresql://${databaseUser}@/${databaseName}?host=/var/run/postgresql"}
+      app_base_url=${lib.escapeShellArg "https://${domain}"}
+      dev_reference_data=${lib.escapeShellArg "${inputs.ihp-roster}/Application/Support/Seed/DevReferenceData.sql"}
       postgres_db=postgres
       units=(
         app.socket
@@ -68,10 +86,19 @@ let
       echo "[rozzy-reset] running bootstrap account seed"
       systemctl start bootstrap-account.service
 
-      echo "[rozzy-reset] starting application units"
-      systemctl start app.socket
-      systemctl start app.service
-      systemctl start worker.service
+      if [ "$seed_dev" = "1" ]; then
+        echo "[rozzy-reset] loading dev reference data"
+        runuser -u "$database_user" -- psql "$database_url" \
+          --set=ON_ERROR_STOP=1 \
+          --file "$dev_reference_data"
+
+        echo "[rozzy-reset] running development seed"
+        runuser -u "$database_user" -- env \
+          DATABASE_URL="$database_url" \
+          IHP_TELEMETRY_DISABLED=1 \
+          APP_BASE_URL="$app_base_url" \
+          ${rosterPackage}/bin/SeedDev "''${seed_args[@]}"
+      fi
 
       echo "[rozzy-reset] checking resulting database shape"
       runuser -u "$database_user" -- psql "$database_name" \
@@ -79,6 +106,11 @@ let
         --no-align \
         --command="SELECT to_regclass('public.app_jobs') IS NOT NULL;" \
         | grep -qx t
+
+      echo "[rozzy-reset] starting application units"
+      systemctl start app.socket
+      systemctl start app.service
+      systemctl start worker.service
 
       echo "[rozzy-reset] complete"
       systemctl --no-pager --plain status app.socket app.service worker.service bootstrap-account.service loadSchema.service >/dev/null
