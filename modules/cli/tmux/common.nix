@@ -1,44 +1,23 @@
 {
+  config,
   pkgs,
   ...
 }:
 let
   llm = import ./new_gpt_chat.nix { inherit pkgs; };
+  nr = import ../aliases/nr.nix { inherit pkgs config; };
   tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
-
-  tmux-window-name = pkgs.tmuxPlugins.mkTmuxPlugin {
-    pluginName = "tmux-window-name";
-    version = "unstable-2025-01-05";
-    src = pkgs.fetchFromGitHub {
-      owner = "ofirgall";
-      repo = "tmux-window-name";
-      rev = "master";
-      hash = "sha256-/ImZy4VijniRtWxrf89XRdKK+bpAOttP4ZtgPNoSrHI=";
-    };
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    rtpFilePath = "tmux_window_name.tmux";
-    postInstall = ''
-      substituteInPlace $target/tmux_window_name.tmux \
-        --replace-fail 'CURRENT_DIR="$( cd "$( dirname "''${BASH_SOURCE[0]}" )" && pwd )"' "CURRENT_DIR=$target"
-      chmod +x $target/scripts/*.py
-      wrapProgram "$target/scripts/rename_session_windows.py" \
-        --prefix PATH : ${
-          pkgs.lib.makeBinPath [
-            (pkgs.python3.withPackages (p: [ p.libtmux ]))
-          ]
-        }
-    '';
-  };
 in
 {
   environment.systemPackages = [
     llm
+    nr
     tmux_toggle_popup
   ];
 
   hm.primary.programs.tmux = {
     enable = true;
-    escapeTime = 25;
+    escapeTime = 0;
     historyLimit = 50000;
     keyMode = "vi";
     terminal = "tmux-256color";
@@ -62,10 +41,12 @@ in
           bind C-u copy-mode -u
 
           set -g set-clipboard on
-          set -g extended-keys on
-          set -g extended-keys-format xterm
+          set -g extended-keys always
+          set -g extended-keys-format csi-u
           set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
           set -as terminal-features ',xterm-kitty:clipboard:extkeys'
+          set-environment -g ESCDELAY 25
+          set-environment -g KEYTIMEOUT 1
           set -g allow-passthrough on
           set -g @override_copy_command 'tmux load-buffer -w -'
 
@@ -100,23 +81,19 @@ in
           set -gF '@last_scratch_name' scratch
 
           bind-key -n M-Space if-shell -F '#{==:#{session_name},default}' {
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
+            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux -T extkeys new-session -A -s #{@last_scratch_name} "'
           } {
             detach-client
           }
 
-          bind-key -n M-Enter run-shell "tmux_toggle_popup htop \"${pkgs.btop}/bin/btop -u 500\""
-
-          bind-key -n M-y run-shell "tmux_toggle_popup htop htop"
-
-          bind-key -n M-b run-shell "tmux_toggle_popup build"
-          bind-key -n M-B run-shell "tmux_toggle_popup build -n"
+          bind-key -n M-Enter run-shell "tmux_toggle_popup scratch"
+          bind-key -n M-S-Enter run-shell "tmux_toggle_popup -n scratch"
 
           bind-key -n M-r \
-                run-shell "tmux_toggle_popup -k rebuild nr"
+                run-shell "tmux_toggle_popup -k --split-right '${pkgs.btop}/bin/btop -u 500' rebuild"
 
           bind-key -n M-R \
-                run-shell "tmux_toggle_popup -f rebuild nr"
+                run-shell "tmux_toggle_popup -f rebuild '${nr}/bin/nr'"
 
           bind-key -n M-m run-shell "tmux_toggle_popup LLM LLM"
 
@@ -132,7 +109,7 @@ in
               run-shell 'tmux new-session -d -s #{@last_scratch_name}'
             }
             run-shell 'tmux break-pane -t "#{@last_scratch_name}"'
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
+            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux -T extkeys new-session -A -s #{@last_scratch_name} "'
           }
 
           bind -n M-| if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
@@ -145,7 +122,7 @@ in
               run-shell 'tmux new-session -d -s #{@last_scratch_name}'
             }
             run-shell 'tmux break-pane -s "#S:#I.#P" -t "#{@last_scratch_name}"'
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
+            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux -T extkeys new-session -A -s #{@last_scratch_name} "'
           }
       '';
   };

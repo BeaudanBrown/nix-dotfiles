@@ -21,6 +21,7 @@
       }
     ];
     sessionVariables = {
+      ESCDELAY = 25;
       KEYTIMEOUT = 1;
     };
 
@@ -75,7 +76,7 @@
           bindkey '^P' fzf-open-file-or-dir
 
           if [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]]; then
-            tmux new -A -s default &> /dev/null
+            tmux -T extkeys new -A -s default &> /dev/null
           fi
 
           DIRENV_CONFIG="${
