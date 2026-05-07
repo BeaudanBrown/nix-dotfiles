@@ -18,6 +18,7 @@ let
       "class:(kitty)"
       "class:(agent)"
       "class:(nas)"
+      "class:(rozzy)"
       "class:(t480)"
       "class:(grill)"
       "class:(bottom)"

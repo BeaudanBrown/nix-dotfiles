@@ -181,6 +181,12 @@ in
       class = "agent";
     }
     {
+      key = "r";
+      app = "kitty --class=rozzy ssh rozzy";
+      workspace = "rozzy";
+      class = "rozzy";
+    }
+    {
       key = "t";
       app = "kitty --class=bottom ssh bottom";
       workspace = "bottom";

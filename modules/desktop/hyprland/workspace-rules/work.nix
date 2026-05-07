@@ -5,6 +5,7 @@ let
       "kitty"
       "Slack"
       "agent"
+      "rozzy"
     ]
     |> builtins.map (name: "name:" + name + ", monitor:DP-1");
   rightMonitorWorkspaces =
