@@ -47,6 +47,10 @@ in
     };
   };
 
+  services.nginx.virtualHosts.${domain}.extraConfig = lib.mkForce ''
+    client_max_body_size 0;
+  '';
+
   networking.firewall.interfaces.cni0.allowedTCPPorts = [ config.custom.ports.assigned.${portKey} ];
 
   sops.secrets."ncps" = {
