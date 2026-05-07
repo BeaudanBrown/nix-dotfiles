@@ -32,7 +32,8 @@ sops-secrets/
     ├── common.yaml
     ├── work.yaml
     ├── server.yaml
-    ├── <module-name>.yaml
+    ├── nas.yaml
+    ├── <root-or-host>.yaml
     └── ...
 ```
 
@@ -43,6 +44,7 @@ Use the consumer to decide where a secret should live:
 - If the consumer is a user-space tool managed by Home Manager, prefer HM `sops-nix`.
 - If the consumer is a NixOS service or other system-owned configuration, keep it in NixOS `sops-nix`.
 - A path under `/home/...` does not by itself mean the secret should move to Home Manager.
+- Always set `sopsFile` with `lib.custom.sopsFileForModule __curPos.file` from the module that consumes the secret. Do not point one module at another root secret file with `sopsRootFile`; the helper keeps the secret locked to the module's root-specific SOPS file.
 
 ### Basic Pattern
 
@@ -51,7 +53,7 @@ Use the consumer to decide where a secret should live:
 {
   # Declare the secret
   sops.secrets.my-api-key = {
-    sopsFile = lib.custom.sopsFileForModule ./common.nix;
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
   };
 
   # Use the secret path in configuration
@@ -61,26 +63,15 @@ Use the consumer to decide where a secret should live:
 }
 ```
 
-### Using Root-Based Secret Files
+### Module-Locked Secret Files
 
 ```nix
 { config, lib, ... }:
 {
-  sops.secrets.database-password = {
-    sopsFile = lib.custom.sopsRootFile "server";  # → private repo: secrets/server.yaml
-  };
-}
-```
-
-### Using Module-Based Secret Files
-
-```nix
-{ config, lib, ... }:
-{
-  # If this file is modules/services/nginx/common.nix
-  # This resolves to private repo: secrets/common.yaml
+  # If this file is modules/services/nginx/common.nix,
+  # this resolves to the common root secret file.
   sops.secrets.nginx-cert = {
-    sopsFile = lib.custom.sopsFileForModule ./common.nix;
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
   };
 }
 ```
@@ -89,7 +80,7 @@ Use the consumer to decide where a secret should live:
 
 ```nix
 sops.secrets.my-secret = {
-  sopsFile = lib.custom.sopsRootFile "common";
+  sopsFile = lib.custom.sopsFileForModule __curPos.file;
 
   # Optional: Override the key path in the YAML file
   key = "path/to/key/in/yaml";
@@ -112,10 +103,12 @@ The helper functions map to secret files as follows:
 
 | Helper                                  | Resolves To             |
 |-----------------------------------------|-------------------------|
-| `sopsRootFile "common"`                 | `sops-secrets/secrets/common.yaml`   |
-| `sopsRootFile "work"`                   | `sops-secrets/secrets/work.yaml`     |
-| `sopsFileForModule ./common.nix`        | `sops-secrets/secrets/common.yaml`   |
-| `sopsFileForModule ./myservice.nix`     | `sops-secrets/secrets/myservice.yaml`|
+| `sopsFileForModule __curPos.file` from `common.nix` | `sops-secrets/secrets/common.yaml` |
+| `sopsFileForModule __curPos.file` from `work.nix` | `sops-secrets/secrets/work.yaml` |
+| `sopsFileForModule __curPos.file` from `server.nix` | `sops-secrets/secrets/server.yaml` |
+| `sopsFileForModule __curPos.file` from `modules/services/myservice/nas.nix` | `sops-secrets/secrets/nas.yaml` |
+
+`sopsRootFile` is reserved for low-level helpers such as the global sops module default. Feature modules should not use it for service secrets.
 
 ## Common Patterns
 
@@ -125,7 +118,7 @@ The helper functions map to secret files as follows:
 { config, lib, ... }:
 {
   sops.secrets.myservice-env = {
-    sopsFile = lib.custom.sopsRootFile "server";
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
   };
 
   services.myservice = {
@@ -141,7 +134,7 @@ The helper functions map to secret files as follows:
 { config, lib, ... }:
 {
   sops.secrets.ssh-private-key = {
-    sopsFile = lib.custom.sopsRootFile "common";
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
     path = "/home/${config.hostSpec.username}/.ssh/id_ed25519";
     mode = "0600";
@@ -155,7 +148,7 @@ The helper functions map to secret files as follows:
 { config, lib, ... }:
 {
   sops.secrets.postgres-password = {
-    sopsFile = lib.custom.sopsRootFile "server";
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = "postgres";
   };
 
@@ -175,7 +168,7 @@ The helper functions map to secret files as follows:
 { config, lib, ... }:
 {
   sops.secrets.api-key = {
-    sopsFile = lib.custom.sopsRootFile "work";
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
   };
 

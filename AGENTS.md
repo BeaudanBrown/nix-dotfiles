@@ -224,6 +224,8 @@ Instruct the user to:
 
 The agent must never inspect, list, grep, cat, or otherwise access the private `sops-secrets` repository itself. Only instruct the user which commands to run there.
 
+When declaring module secrets, always set `sopsFile = lib.custom.sopsFileForModule __curPos.file;`. Do not use `sopsRootFile` from feature modules to reach across root secret files; `sopsFileForModule` is the repo convention that keeps secrets tied to the consuming module's root-specific SOPS file.
+
 See [specs/secrets.md](specs/secrets.md) for patterns.
 
 ## Maintenance Protocol

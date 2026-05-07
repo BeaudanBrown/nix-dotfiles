@@ -28,15 +28,17 @@ let
         requires = [ "docker-hub-login.service" ];
       }
     );
+
+  sopsInstallService = lib.optional config.sops.useSystemdActivation "sops-install-secrets.service";
 in
 {
   sops.secrets."docker-hub/username" = {
-    sopsFile = lib.custom.sopsRootFile "server";
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0400";
   };
 
   sops.secrets."docker-hub/password" = {
-    sopsFile = lib.custom.sopsRootFile "server";
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0400";
   };
 
@@ -44,8 +46,8 @@ in
     docker-hub-login = {
       description = "Log in to Docker Hub for root Podman pulls";
       wantedBy = [ "multi-user.target" ];
-      after = [ "sops-nix.service" ];
-      requires = [ "sops-nix.service" ];
+      after = sopsInstallService;
+      requires = sopsInstallService;
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
