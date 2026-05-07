@@ -179,5 +179,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nix-ai-tools.follows = "nix-ai-tools";
     };
+
+    sdm845-linux = {
+      url = "git+https://codeberg.org/sdm845/linux.git?rev=77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae";
+      #url = "git+file:///home/beau/documents/projects/oneplus/nixos-sdm845/sdm845-linux";
+      flake = false;
+    };
   };
 }

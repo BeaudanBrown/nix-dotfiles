@@ -23,7 +23,7 @@
     ./oneplus-fajita/system.nix
   ];
 
-  thisHost = host;
+  #thisHost = host;
 
   nixpkgs.overlays = [
     (final: prev: {

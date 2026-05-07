@@ -2453,9 +2453,7 @@
         "blueprint": "blueprint",
         "bun2nix": "bun2nix",
         "flake-parts": "flake-parts_10",
-        "nixpkgs": [
-          "nixpkgsUnstable"
-        ],
+        "nixpkgs": "nixpkgs_11",
         "systems": "systems_16",
         "treefmt-nix": "treefmt-nix_2"
       },
@@ -2568,7 +2566,7 @@
     },
     "nix-steipete-tools": {
       "inputs": {
-        "nixpkgs": "nixpkgs_12"
+        "nixpkgs": "nixpkgs_13"
       },
       "locked": {
         "lastModified": 1773561580,
@@ -3051,6 +3049,22 @@
     },
     "nixpkgs_11": {
       "locked": {
+        "lastModified": 1778124196,
+        "narHash": "sha256-pYEytCNic/czazbV9r3tbQ6BZzqRBg/41x2dIC5ymOo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "68a8af93ff4297686cb68880845e61e5e2e41d92",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_12": {
+      "locked": {
         "lastModified": 1776734388,
         "narHash": "sha256-vl3dkhlE5gzsItuHoEMVe+DlonsK+0836LIRDnm6MXQ=",
         "owner": "NixOS",
@@ -3065,7 +3079,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_12": {
+    "nixpkgs_13": {
       "locked": {
         "lastModified": 1767364772,
         "narHash": "sha256-fFUnEYMla8b7UKjijLnMe+oVFOz6HjijGGNS1l7dYaQ=",
@@ -3651,12 +3665,13 @@
         "nix-ai-tools": "nix-ai-tools",
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
-        "nixpkgs": "nixpkgs_11",
+        "nixpkgs": "nixpkgs_12",
         "nixpkgsUnstable": "nixpkgsUnstable",
         "nixvim": "nixvim",
         "openclaw": "openclaw",
         "pi-harness": "pi-harness",
         "pre-commit-hooks": "pre-commit-hooks_6",
+        "sdm845-linux": "sdm845-linux",
         "sops-nix": "sops-nix_2",
         "sopsSecrets": "sopsSecrets",
         "stylix": "stylix",
@@ -3761,6 +3776,23 @@
         "owner": "oxalica",
         "repo": "rust-overlay",
         "type": "github"
+      }
+    },
+    "sdm845-linux": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777408949,
+        "narHash": "sha256-J5P2hwKcWxS41Dr5Ha+7RH9hHUdutzZlG+8ebBsl5p0=",
+        "ref": "refs/heads/sdm845-next",
+        "rev": "77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae",
+        "revCount": 1444023,
+        "type": "git",
+        "url": "https://codeberg.org/sdm845/linux.git"
+      },
+      "original": {
+        "rev": "77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae",
+        "type": "git",
+        "url": "https://codeberg.org/sdm845/linux.git"
       }
     },
     "sops-nix": {
