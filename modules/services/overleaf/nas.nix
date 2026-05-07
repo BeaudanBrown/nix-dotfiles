@@ -13,6 +13,7 @@ let
   mongoData = "${dataRoot}/mongo";
   redisData = "${dataRoot}/redis";
   gitBridgeData = "${dataRoot}/git-bridge";
+  texliveImage = "texlive/texlive:latest-full";
 
   containerNames = [
     "overleaf-sharelatex"
@@ -30,9 +31,28 @@ let
     rs.initiate({ _id: 'overleaf', members: [{ _id: 0, host: 'mongo:27017' }] })
   '';
 
+  nginxPodmanResolverPatch = pkgs.writeTextFile {
+    name = "overleaf-nginx-podman-resolver.sh";
+    executable = true;
+    text = ''
+      #!/bin/bash
+      set -euo pipefail
+
+      resolver="$(awk '/^nameserver / { print $2; exit }' /etc/resolv.conf)"
+      if [ -n "$resolver" ]; then
+        sed -i "s/resolver 127\.0\.0\.11 valid=10s;/resolver $resolver valid=10s;/" \
+          /etc/nginx/templates/overleaf.conf.template
+      fi
+    '';
+  };
+
 in
 {
   custom.ports.requests = [ { key = portKey; } ];
+
+  sops.secrets."overleaf/env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+  };
 
   hostedServices = [
     {
@@ -46,13 +66,17 @@ in
 
   systemd.tmpfiles.rules = [
     "d ${dataRoot} 0750 root root - -"
-    "d ${sharelatexData} 0750 root root - -"
-    "d ${sharelatexData}/data 0750 root root - -"
-    "d ${sharelatexData}/data/compiles 0750 root root - -"
-    "d ${sharelatexData}/data/output 0750 root root - -"
+    "d ${sharelatexData} 0750 33 33 - -"
+    "d ${sharelatexData}/data 0750 33 33 - -"
+    "d ${sharelatexData}/data/compiles 0750 33 33 - -"
+    "d ${sharelatexData}/data/output 0750 33 33 - -"
+    "d ${sharelatexData}/tmp 0750 33 33 - -"
+    "d ${sharelatexData}/tmp/uploads 0750 33 33 - -"
     "d ${mongoData} 0750 root root - -"
-    "d ${redisData} 0750 root root - -"
-    "d ${gitBridgeData} 0750 root root - -"
+    "d ${redisData} 0750 999 999 - -"
+    "d ${gitBridgeData} 0750 1000 1000 - -"
+    "d ${gitBridgeData}/.wlgb 0750 1000 1000 - -"
+    "d ${gitBridgeData}/.wlgb/atts 0750 1000 1000 - -"
   ];
 
   systemd.services = {
@@ -70,10 +94,37 @@ in
         podman network exists ${network} || podman network create ${network}
       '';
     };
+
+    overleaf-texlive-image = {
+      description = "Ensure Overleaf TeX Live compile image is available";
+      wantedBy = [ "multi-user.target" ];
+      after = [
+        "docker.service"
+        "network-online.target"
+      ];
+      requires = [
+        "docker.service"
+        "network-online.target"
+      ];
+      path = [ config.virtualisation.docker.package ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = ''
+        docker image inspect ${texliveImage} >/dev/null 2>&1 || docker pull ${texliveImage}
+      '';
+    };
   }
   // lib.genAttrs (map (name: "podman-${name}") containerNames) (_: {
-    after = [ "overleaf-network.service" ];
-    requires = [ "overleaf-network.service" ];
+    after = [
+      "overleaf-network.service"
+      "overleaf-texlive-image.service"
+    ];
+    requires = [
+      "overleaf-network.service"
+      "overleaf-texlive-image.service"
+    ];
   });
 
   virtualisation.oci-containers.containers = {
@@ -91,12 +142,17 @@ in
       volumes = [
         "${sharelatexData}:/var/lib/overleaf"
         "/var/run/docker.sock:/var/run/docker.sock"
+        "${nginxPodmanResolverPatch}:/etc/my_init.d/199_set_nginx_podman_resolver.sh:ro"
       ];
+      environmentFiles = [ config.sops.secrets."overleaf/env".path ];
       environment = {
         OVERLEAF_APP_NAME = "Overleaf CE+";
         OVERLEAF_SITE_URL = "https://${domain}";
         OVERLEAF_NAV_TITLE = "leaf.bepis.lol";
         OVERLEAF_ADMIN_EMAIL = "beaudan.brown@gmail.com";
+        OVERLEAF_BEHIND_PROXY = "true";
+        OVERLEAF_SECURE_COOKIE = "true";
+        OVERLEAF_TRUSTED_PROXY_IPS = "loopback,127.0.0.1";
         OVERLEAF_MONGO_URL = "mongodb://mongo/sharelatex";
         OVERLEAF_REDIS_HOST = "redis";
         REDIS_HOST = "redis";
@@ -109,6 +165,8 @@ in
         SANDBOXED_COMPILES_HOST_DIR_OUTPUT = "${sharelatexData}/data/output";
         DOCKER_RUNNER = "true";
         SANDBOXED_COMPILES_SIBLING_CONTAINERS = "true";
+        ALL_TEX_LIVE_DOCKER_IMAGES = texliveImage;
+        TEX_LIVE_DOCKER_IMAGE = texliveImage;
 
         GIT_BRIDGE_ENABLED = "true";
         GIT_BRIDGE_HOST = "git-bridge";
@@ -119,7 +177,7 @@ in
     };
 
     overleaf-mongo = {
-      image = "mongo:6.0";
+      image = "mongo:8.0";
       pull = "missing";
       networks = [ network ];
       cmd = [
