@@ -3785,12 +3785,13 @@
         "narHash": "sha256-J5P2hwKcWxS41Dr5Ha+7RH9hHUdutzZlG+8ebBsl5p0=",
         "ref": "refs/heads/sdm845-next",
         "rev": "77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae",
-        "revCount": 1444023,
+        "shallow": true,
         "type": "git",
         "url": "https://codeberg.org/sdm845/linux.git"
       },
       "original": {
-        "rev": "77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae",
+        "ref": "refs/heads/sdm845-next",
+        "shallow": true,
         "type": "git",
         "url": "https://codeberg.org/sdm845/linux.git"
       }
