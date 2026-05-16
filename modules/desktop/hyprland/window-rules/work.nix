@@ -15,7 +15,7 @@ let
     |> builtins.map (x: "size 5% 10%, " + x);
   tilingWindows =
     [
-      "class:(kitty)"
+      "class:(com.mitchellh.ghostty)"
       "class:(agent)"
       "class:(nas)"
       "class:(rozzy)"
@@ -45,6 +45,7 @@ let
   fullscreenWindows =
     [
       "class:(VirtualBox Machine)"
+      "class:(remote-viewer), title:^(windows)$"
     ]
     |> builtins.map (x: "fullscreen, " + x);
   nonFullscreenWindows =

@@ -2,7 +2,7 @@
 let
   leftMonitorWorkspaces =
     [
-      "kitty"
+      "ghostty"
       "Slack"
       "agent"
       "rozzy"

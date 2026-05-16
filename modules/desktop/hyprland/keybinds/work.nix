@@ -117,8 +117,9 @@ in
   hypr.launchers = [
     {
       key = "Return";
-      app = "$TERMINAL";
-      workspace = "$TERMINAL";
+      app = "ghostty --title=main-terminal";
+      workspace = "ghostty";
+      title = "main-terminal";
     }
     {
       key = "s";
@@ -150,12 +151,7 @@ in
       workspace = "Caprine";
       class = "Caprine";
     }
-    {
-      key = "v";
-      app = "launch_windows";
-      workspace = "Windows";
-      class = "VirtualBox Machine";
-    }
+    config.hypr.windowsLauncher
     {
       key = "g";
       app = "steam";
@@ -170,27 +166,27 @@ in
     }
     {
       key = "y";
-      app = "kitty --class=nas ssh nas";
+      app = "ghostty --gtk-single-instance=false --title=nas -e ssh nas";
       workspace = "nas";
-      class = "nas";
+      title = "nas";
     }
     {
       key = "a";
-      app = "kitty --class=agent ssh agent";
+      app = "ghostty --gtk-single-instance=false --title=agent -e ssh agent";
       workspace = "agent";
-      class = "agent";
+      title = "agent";
     }
     {
       key = "r";
-      app = "kitty --class=rozzy ssh rozzy";
+      app = "ghostty --gtk-single-instance=false --title=rozzy -e ssh rozzy";
       workspace = "rozzy";
-      class = "rozzy";
+      title = "rozzy";
     }
     {
       key = "t";
-      app = "kitty --class=bottom ssh bottom";
+      app = "ghostty --gtk-single-instance=false --title=bottom -e ssh bottom";
       workspace = "bottom";
-      class = "bottom";
+      title = "bottom";
     }
   ];
 

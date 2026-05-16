@@ -3,9 +3,9 @@
   hypr.launchers = [
     {
       key = "o";
-      app = "kitty --class=grill ssh grill";
+      app = "ghostty --gtk-single-instance=false --title=grill -e ssh grill";
       workspace = "grill";
-      class = "grill";
+      title = "grill";
     }
   ];
 }

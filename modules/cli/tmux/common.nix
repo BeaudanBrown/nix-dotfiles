@@ -44,7 +44,7 @@ in
           set -g extended-keys always
           set -g extended-keys-format csi-u
           set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
-          set -as terminal-features ',xterm-kitty:clipboard:extkeys'
+          set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
           set-environment -g ESCDELAY 25
           set-environment -g KEYTIMEOUT 1
           set -g allow-passthrough on
