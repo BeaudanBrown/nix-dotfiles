@@ -34,7 +34,7 @@
   ../../modules/tools/direnv/common.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
-  ../../modules/apps/kitty/client.nix
+  ../../modules/apps/ghostty/client.nix
   ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
 ]

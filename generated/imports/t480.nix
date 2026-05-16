@@ -7,6 +7,7 @@
   ../../modules/desktop/hyprland/t480.nix
   ../../modules/services/deskflow/t480.nix
   ../../modules/services/lan-mouse/t480.nix
+  ../../modules/services/windows-vm/t480.nix
   ../../modules/system/boot/t480.nix
   ../../modules/system/disko/t480.nix
   ../../modules/system/stylix/t480.nix
@@ -36,12 +37,15 @@
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
   ../../modules/services/ssh/common.nix
+  ../../modules/system/boot/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
+  ../../modules/cli/codex/network.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
-  ../../modules/apps/kitty/client.nix
+  ../../modules/system/networking/network.nix
+  ../../modules/apps/ghostty/client.nix
   ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
   ../../modules/cli/atuin/main.nix
@@ -55,10 +59,9 @@
   ../../modules/services/litellm/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
-  ../../modules/system/boot/main.nix
-  ../../modules/system/networking/main.nix
   ../../modules/triage/main.nix
   ../../modules/apps/brave/work.nix
+  ../../modules/apps/ghostty/work.nix
   ../../modules/apps/imagemagick/work.nix
   ../../modules/apps/inkscape/work.nix
   ../../modules/apps/ledger_live/work.nix

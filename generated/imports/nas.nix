@@ -28,6 +28,7 @@
   ../../modules/services/invoice-ai/nas.nix
   ../../modules/services/invoiceshelf/nas.nix
   ../../modules/services/jitsi-meet/nas.nix
+  ../../modules/services/lachy-vm/nas.nix
   ../../modules/services/litellm/nas.nix
   ../../modules/services/loom/nas.nix
   ../../modules/services/mealie/nas.nix
@@ -75,11 +76,14 @@
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
   ../../modules/services/ssh/common.nix
+  ../../modules/system/boot/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
+  ../../modules/cli/codex/network.nix
   ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
+  ../../modules/system/networking/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
@@ -91,12 +95,10 @@
   ../../modules/services/litellm/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
-  ../../modules/system/boot/main.nix
-  ../../modules/system/networking/main.nix
   ../../modules/triage/main.nix
   ../../modules/hosted-services/server.nix
   ../../modules/system/ports/server.nix
-  ../../modules/apps/kitty/client.nix
+  ../../modules/apps/ghostty/client.nix
   ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
 ]

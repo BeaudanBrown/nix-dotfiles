@@ -54,10 +54,11 @@
   ../../modules/services/litellm/main.nix
   ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
-  ../../modules/system/boot/main.nix
-  ../../modules/system/networking/main.nix
+  ../../modules/system/boot/common.nix
+  ../../modules/system/networking/network.nix
   ../../modules/triage/main.nix
   ../../modules/apps/brave/work.nix
+  ../../modules/apps/ghostty/work.nix
   ../../modules/apps/imagemagick/work.nix
   ../../modules/apps/inkscape/work.nix
   ../../modules/apps/ledger_live/work.nix
