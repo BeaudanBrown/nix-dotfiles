@@ -1,5 +1,26 @@
 {
   "nodes": {
+    "agentgraph": {
+      "inputs": {
+        "nixpkgs": [
+          "pi-harness",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1778903762,
+        "narHash": "sha256-b/nz+3Ak+BejGBAgVhLIzBIVEEd7Ol8lcdzDoDZ2qqI=",
+        "ref": "refs/heads/master",
+        "rev": "4413b7e4b6c30032d33411f9d4592bed58c52eb3",
+        "revCount": 47,
+        "type": "git",
+        "url": "ssh://git@github.com/BeaudanBrown/agentgraph.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/BeaudanBrown/agentgraph.git"
+      }
+    },
     "art-domain": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -3319,6 +3340,7 @@
     },
     "pi-harness": {
       "inputs": {
+        "agentgraph": "agentgraph",
         "flake-utils": "flake-utils_16",
         "nix-ai-tools": [
           "nix-ai-tools"
@@ -3328,11 +3350,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1778814364,
-        "narHash": "sha256-qnpIN3VNW4khpuHieY56nPiFG3bP90qZD773JwKO5DE=",
+        "lastModified": 1778909453,
+        "narHash": "sha256-ciebvk49jNrMb3D5KIWn41x1/sITtI6k/hmmwD0rJUs=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "ad4fc149a88042d1f6c431d22d7dfac68324a947",
+        "rev": "83877fc2717e25788a573c3404ba54772426cfd6",
         "type": "github"
       },
       "original": {
@@ -3840,10 +3862,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1777590817,
-        "narHash": "sha256-SEkPE51W9+T1b7Vu4DXndmniFxq33dosBHM5syNB2VE=",
+        "lastModified": 1778906103,
+        "narHash": "sha256-XW5RAA594xGEMnpOdsjvjqlvckccbReSRmClwMg+/7U=",
         "ref": "refs/heads/main",
-        "rev": "90e817e2cdd0ba46d0d2a8fc0ca2e4784ae67e51",
+        "rev": "8159036dc89d0a4b39226a8aa61d867fc85f3bce",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"

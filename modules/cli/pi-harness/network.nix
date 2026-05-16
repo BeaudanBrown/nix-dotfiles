@@ -59,7 +59,10 @@ let
       defaultProvider = "litellm";
       defaultModel = "sub-gpt-5.5";
       defaultThinkingLevel = "medium";
-      extensions = [ "./extensions/web-search/index.ts" ];
+      extensions = [
+        "./extensions/web-search/index.ts"
+        "./extensions/agentgraph/index.ts"
+      ];
       skills = [ "./skills" ];
       prompts = [ "./prompts" ];
       themes = [ "./themes" ];
@@ -80,6 +83,13 @@ in
     mode = "0400";
   };
 
+  sops.secrets."agentgraph/env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    owner = config.hostSpec.username;
+    inherit (config.users.users.${config.hostSpec.username}) group;
+    mode = "0400";
+  };
+
   hm.primary.home.file.".pi/agent/models.json".source = piModelsFile;
   hm.primary.home.sessionVariables = {
     PI_WEB_SEARCH_BASE_URL = "https://litellm.bepis.lol/openai_passthrough/v1";
@@ -90,6 +100,7 @@ in
   services.pi-harness = {
     enable = true;
     package = piHarnessPackage;
+    agentgraph.environmentFile = config.sops.secrets."agentgraph/env".path;
   };
 
   hm.primary.home.file = {
