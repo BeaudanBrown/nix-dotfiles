@@ -11,6 +11,7 @@ let
     nameValuePair
     listToAttrs
     filter
+    flatten
     ;
 
   services = config.hostedServices;
@@ -27,6 +28,7 @@ let
         {
           forceSSL = true;
           useACMEHost = s.domain;
+          serverAliases = s.serverAliases;
           # Allow larger uploads and long-running requests for proxied apps
           extraConfig = ''
             client_max_body_size 200m;
@@ -60,13 +62,14 @@ let
       s:
       nameValuePair s.domain {
         dnsProvider = "cloudflare";
+        extraDomainNames = s.acmeExtraDomainNames;
         reloadServices = [ "nginx" ];
         environmentFile = config.sops.secrets."cloudflare/env".path;
       }
     )
     |> listToAttrs;
 
-  cloudflareDomains = publicServices |> map (s: s.domain);
+  cloudflareDomains = publicServices |> map (s: [ s.domain ] ++ s.cloudflareExtraDomains) |> flatten;
 
   wait-for-tailscale-ip = pkgs.writeShellScript "wait-for-tailscale-ip" ''
     i=0
@@ -102,6 +105,21 @@ in
               upstreamPort = mkOption {
                 type = types.str;
                 description = "Upstream port for nginx proxy_pass.";
+              };
+              serverAliases = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional nginx server names for this service.";
+              };
+              acmeExtraDomainNames = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional names to include on this service's ACME certificate.";
+              };
+              cloudflareExtraDomains = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional domains to include in Cloudflare dynamic DNS updates.";
               };
               tailnet = mkOption {
                 type = types.bool;

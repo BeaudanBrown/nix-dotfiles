@@ -1,7 +1,6 @@
 {
   lib,
   config,
-  pkgs,
   ...
 }:
 let
@@ -11,6 +10,7 @@ let
     nameValuePair
     listToAttrs
     filter
+    flatten
     ;
 
   services = config.hostedServices;
@@ -23,17 +23,18 @@ let
       nameValuePair s.domain {
         forceSSL = true;
         useACMEHost = s.domain;
+        serverAliases = s.serverAliases;
         # Allow larger uploads and long-running requests for proxied apps
         extraConfig = ''
-            client_max_body_size 200m;
+          client_max_body_size 200m;
         '';
         locations."/" = {
           proxyPass = "http://${s.upstreamHost}:${s.upstreamPort}";
           proxyWebsockets = s.webSockets;
           extraConfig = ''
-              proxy_request_buffering off;
-              proxy_read_timeout 600s;
-              proxy_send_timeout 600s;
+            proxy_request_buffering off;
+            proxy_read_timeout 600s;
+            proxy_send_timeout 600s;
           '';
         };
       }
@@ -47,13 +48,14 @@ let
       s:
       nameValuePair s.domain {
         dnsProvider = "cloudflare";
+        extraDomainNames = s.acmeExtraDomainNames;
         reloadServices = [ "nginx" ];
         environmentFile = config.sops.secrets."cloudflare/env".path;
       }
     )
     |> listToAttrs;
 
-  cloudflareDomains = services |> map (s: s.domain);
+  cloudflareDomains = services |> map (s: [ s.domain ] ++ s.cloudflareExtraDomains) |> flatten;
 in
 {
   options = {
@@ -75,6 +77,21 @@ in
               upstreamPort = mkOption {
                 type = types.str;
                 description = "Upstream port for nginx proxy_pass.";
+              };
+              serverAliases = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional nginx server names for this service.";
+              };
+              acmeExtraDomainNames = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional names to include on this service's ACME certificate.";
+              };
+              cloudflareExtraDomains = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional domains to include in Cloudflare dynamic DNS updates.";
               };
               webSockets = mkOption {
                 type = types.bool;

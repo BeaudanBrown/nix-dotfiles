@@ -35,8 +35,11 @@ in
       OPENAI_API_BASE_URL = "http://127.0.0.1:${
         toString config.custom.ports.assigned.${litellmPortKey}
       }/v1";
+      DEFAULT_PROMPT_SUGGESTIONS = "[]";
+      ENABLE_AUTOCOMPLETE_GENERATION = "False";
+      ENABLE_FOLLOW_UP_GENERATION = "False";
       ENABLE_WEB_SEARCH = "True";
-      ENABLE_SEARCH_QUERY_GENERATION = "True";
+      ENABLE_SEARCH_QUERY_GENERATION = "False";
       WEB_SEARCH_ENGINE = "duckduckgo";
       WEB_SEARCH_RESULT_COUNT = "5";
       WEB_SEARCH_CONCURRENT_REQUESTS = "1";

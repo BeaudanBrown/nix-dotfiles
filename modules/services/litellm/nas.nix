@@ -83,6 +83,15 @@ let
       };
     }
     {
+      model_name = "sub-gpt-5.5";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-5.5";
+      };
+    }
+    {
       model_name = "sub-gpt-5.4";
       model_info = {
         mode = "responses";
