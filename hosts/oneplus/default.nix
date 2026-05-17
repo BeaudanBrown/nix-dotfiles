@@ -13,6 +13,7 @@
     inputs.stylix.nixosModules.stylix
     inputs.home-manager.nixosModules.home-manager
     inputs.nix-index-database.nixosModules.default
+    inputs."pi-harness".nixosModules.pi-harness
     {
       home-manager = {
         extraSpecialArgs = { };
@@ -21,9 +22,10 @@
     }
     "${inputs.nixpkgs}/nixos/modules/profiles/minimal.nix"
     ./oneplus-fajita/system.nix
-  ];
+  ]
+  ++ (import ../../generated/imports/oneplus.nix);
 
-  #thisHost = host;
+  thisHost = host;
 
   nixpkgs.overlays = [
     (final: prev: {

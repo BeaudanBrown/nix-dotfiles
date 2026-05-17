@@ -24,6 +24,24 @@
         "gaming"
       ]
     },
+    "oneplus": {
+      "hostName": "oneplus",
+      "users": [
+        {
+          "username": "beau",
+          "email": "beaudan.brown@gmail.com",
+          "userFullName": "Beaudan Brown",
+          "ageUserKey": "age1jwwxlvz0kqwrdg28t0p26f0mexf46nzrhl7xkamzcpuvnvzc7pxsxnm4rg"
+        }
+      ],
+      "tailIP": "100.64.0.1",
+      "wifi": true,
+      "ageHostKey": "age1rcx35s4lqvdj3vgefwwjmu4kq0regfyvxhtz92fh6nwak5wn8emskdds8r",
+      "roots": [
+        "minimal",
+        "common"
+      ]
+    },
     "nas": {
       "hostName": "nas",
       "users": [
