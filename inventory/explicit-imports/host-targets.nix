@@ -67,6 +67,15 @@
     resolveGraph = false;
   };
 
+  oneplus = {
+    roots = [
+      "minimal"
+      "common"
+    ];
+    includeHostStem = true;
+    resolveGraph = false;
+  };
+
   pi4 = {
     roots = [
       "minimal"
