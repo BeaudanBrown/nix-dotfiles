@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1778903762,
-        "narHash": "sha256-b/nz+3Ak+BejGBAgVhLIzBIVEEd7Ol8lcdzDoDZ2qqI=",
+        "lastModified": 1778950322,
+        "narHash": "sha256-MfWjctJIynw+uZIH3Rxxf8Qm39XnuDVS4+xLyfgaKEw=",
         "ref": "refs/heads/master",
-        "rev": "4413b7e4b6c30032d33411f9d4592bed58c52eb3",
-        "revCount": 47,
+        "rev": "136008282209b3aa367fc2b27cc92a886aebc404",
+        "revCount": 58,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/agentgraph.git"
       },
@@ -205,7 +205,6 @@
           "nix-ai-tools",
           "flake-parts"
         ],
-        "import-tree": "import-tree",
         "nixpkgs": [
           "nix-ai-tools",
           "nixpkgs"
@@ -220,11 +219,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1776192490,
-        "narHash": "sha256-5gYQNEs0/vDkHhg63aHS5g0IwG/8HNvU1Vr00cElofk=",
+        "lastModified": 1778445566,
+        "narHash": "sha256-oQvcadh2BCkrog+SGrG6YffKJrveYpjj3TdQJWaKhaM=",
         "owner": "nix-community",
         "repo": "bun2nix",
-        "rev": "6ef9f144616eedea90b364bb408ef2e1de7b310a",
+        "rev": "2499dedd70744dba1815875b854818a3019e9e4c",
         "type": "github"
       },
       "original": {
@@ -1003,11 +1002,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1775087534,
-        "narHash": "sha256-91qqW8lhL7TLwgQWijoGBbiD4t7/q75KTi8NxjVmSmA=",
+        "lastModified": 1778716662,
+        "narHash": "sha256-m1Yf0wZ8j1OHjTc2UwHwyQRSnNeSgLJOd7q5Y45hzi4=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "3107b77cd68437b9a76194f0f7f9c55f2329ca5b",
+        "rev": "f7c1a2d347e4c52d5fb8d10cb4d94b5884e546fb",
         "type": "github"
       },
       "original": {
@@ -2249,21 +2248,6 @@
         "type": "github"
       }
     },
-    "import-tree": {
-      "locked": {
-        "lastModified": 1763762820,
-        "narHash": "sha256-ZvYKbFib3AEwiNMLsejb/CWs/OL/srFQ8AogkebEPF0=",
-        "owner": "vic",
-        "repo": "import-tree",
-        "rev": "3c23749d8013ec6daa1d7255057590e9ca726646",
-        "type": "github"
-      },
-      "original": {
-        "owner": "vic",
-        "repo": "import-tree",
-        "type": "github"
-      }
-    },
     "invoice-ai": {
       "inputs": {
         "flake-parts": "flake-parts_9",
@@ -2479,11 +2463,11 @@
         "treefmt-nix": "treefmt-nix_2"
       },
       "locked": {
-        "lastModified": 1777019177,
-        "narHash": "sha256-YjPvucTsKmGO9QVNz07x7sSsK11PB0jtMniRkTolbq4=",
+        "lastModified": 1778908628,
+        "narHash": "sha256-ajmB9EJXjFEYA0XZIx241e3HzHffnd+xwiyeftsKgV8=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "8ff0f2a7fcd176b4547da6879ad549de2bbded41",
+        "rev": "44e88554de43257ed4f7298d77b2a15458f828e4",
         "type": "github"
       },
       "original": {
@@ -3070,11 +3054,11 @@
     },
     "nixpkgs_11": {
       "locked": {
-        "lastModified": 1778124196,
-        "narHash": "sha256-pYEytCNic/czazbV9r3tbQ6BZzqRBg/41x2dIC5ymOo=",
+        "lastModified": 1778794387,
+        "narHash": "sha256-BL04pOS9453Awkeb9f90XBJXBSkWxN+vB7HIgnL0iMM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "68a8af93ff4297686cb68880845e61e5e2e41d92",
+        "rev": "8a1b0127302ea51e05bf4ea5a291743fac442406",
         "type": "github"
       },
       "original": {
@@ -3112,6 +3096,22 @@
       "original": {
         "owner": "NixOS",
         "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_14": {
+      "locked": {
+        "lastModified": 1774709303,
+        "narHash": "sha256-D3Q07BbIA2KnTcSXIqqu9P586uWxN74zNoCH3h2ESHg=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "8110df5ad7abf5d4c0f6fb0f8f978390e77f9685",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -3345,16 +3345,14 @@
         "nix-ai-tools": [
           "nix-ai-tools"
         ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
+        "nixpkgs": "nixpkgs_14"
       },
       "locked": {
-        "lastModified": 1778909453,
-        "narHash": "sha256-ciebvk49jNrMb3D5KIWn41x1/sITtI6k/hmmwD0rJUs=",
+        "lastModified": 1778950357,
+        "narHash": "sha256-LuVGtNXUurpNVsf9MdhNt53+rpOXjau8e30ekCo16UQ=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "83877fc2717e25788a573c3404ba54772426cfd6",
+        "rev": "2594f05ea28355d9d16cc936cd15ca13090de928",
         "type": "github"
       },
       "original": {
@@ -3862,10 +3860,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1778906103,
-        "narHash": "sha256-XW5RAA594xGEMnpOdsjvjqlvckccbReSRmClwMg+/7U=",
+        "lastModified": 1779021732,
+        "narHash": "sha256-3aa86YJUogEEDOpOA4zZNIS0uQiXXA18H7sAVxs+4Zs=",
         "ref": "refs/heads/main",
-        "rev": "8159036dc89d0a4b39226a8aa61d867fc85f3bce",
+        "rev": "5021a31eaf877a4c3651cabac6c7a557f46adee7",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"

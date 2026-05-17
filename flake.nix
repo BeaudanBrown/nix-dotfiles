@@ -176,7 +176,6 @@
 
     pi-harness = {
       url = "github:BeaudanBrown/pi-harness";
-      inputs.nixpkgs.follows = "nixpkgs";
       inputs.nix-ai-tools.follows = "nix-ai-tools";
     };
 
