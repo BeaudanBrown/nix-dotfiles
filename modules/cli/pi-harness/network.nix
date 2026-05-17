@@ -30,6 +30,10 @@ let
               id = "sub-gpt-5.5";
               api = "openai-responses";
               reasoning = true;
+              input = [
+                "text"
+                "image"
+              ];
               contextWindow = 272000;
               maxTokens = 16384;
             }
@@ -37,6 +41,10 @@ let
               id = "sub-gpt-5.5-mini";
               api = "openai-responses";
               reasoning = true;
+              input = [
+                "text"
+                "image"
+              ];
               contextWindow = 272000;
               maxTokens = 16384;
             }

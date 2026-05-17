@@ -86,6 +86,7 @@ let
       model_name = "sub-gpt-5.5";
       model_info = {
         mode = "responses";
+        supports_vision = true;
       };
       litellm_params = {
         model = "chatgpt/gpt-5.5";
