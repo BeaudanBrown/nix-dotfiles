@@ -1,4 +1,8 @@
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  config,
+  ...
+}:
 {
   imports = [
     ./hardware/qualcomm-services.nix
@@ -6,12 +10,11 @@
     ./image/repart.nix
     ./networking/ssh.nix
     ./networking/wireless.nix
-    ./ui/phosh.nix
   ];
   boot.loader = {
     systemd-boot = {
       enable = true;
-      configurationLimit = 10;
+      configurationLimit = lib.mkForce 10;
     };
   };
   boot.kernelParams = [ "console=ttyGS0,115200" ];
@@ -32,8 +35,14 @@
   ];
   networking.hostName = "oneplus";
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "root" "@wheel" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    trusted-users = [
+      "root"
+      "@wheel"
+    ];
     trusted-public-keys = [
       "cache.bepis.lol:RICGW/iQ761PR6QiMUwbOLcvKird8EHoDd/ylnDOGJY="
     ];
