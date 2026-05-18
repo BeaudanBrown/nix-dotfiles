@@ -3345,19 +3345,37 @@
         "nix-ai-tools": [
           "nix-ai-tools"
         ],
-        "nixpkgs": "nixpkgs_14"
+        "nixpkgs": "nixpkgs_14",
+        "pi-lsp-extension-src": "pi-lsp-extension-src"
       },
       "locked": {
-        "lastModified": 1778950357,
-        "narHash": "sha256-LuVGtNXUurpNVsf9MdhNt53+rpOXjau8e30ekCo16UQ=",
+        "lastModified": 1779104484,
+        "narHash": "sha256-Z7r15NQbLmDWKXVpwueGiuP5DW6hR/4vLnVDdEcZQL4=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "2594f05ea28355d9d16cc936cd15ca13090de928",
+        "rev": "512e25a29f3eec3fc584d7c148bd5c52db92819a",
         "type": "github"
       },
       "original": {
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
+        "type": "github"
+      }
+    },
+    "pi-lsp-extension-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778770914,
+        "narHash": "sha256-kkMfO+GJdLOwX6o8tCSMaFaWmk3zl10EdarO+M4TTN4=",
+        "owner": "samfoy",
+        "repo": "pi-lsp-extension",
+        "rev": "73251632ad116c973844cc28fb1210417295c6fe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "samfoy",
+        "repo": "pi-lsp-extension",
+        "rev": "73251632ad116c973844cc28fb1210417295c6fe",
         "type": "github"
       }
     },

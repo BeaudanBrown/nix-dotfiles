@@ -3,6 +3,7 @@
   lib,
   pkgs,
   config,
+  options,
   ...
 }:
 let
@@ -109,6 +110,9 @@ in
     enable = true;
     package = piHarnessPackage;
     agentgraph.environmentFile = config.sops.secrets."agentgraph/env".path;
+  }
+  // lib.optionalAttrs (lib.hasAttrByPath [ "services" "pi-harness" "lsp" "enable" ] options) {
+    lsp.enable = true;
   };
 
   hm.primary.home.file = {
