@@ -5,14 +5,15 @@
         "nixpkgs": [
           "pi-harness",
           "nixpkgs"
-        ]
+        ],
+        "pi-lsp-extension-src": "pi-lsp-extension-src"
       },
       "locked": {
-        "lastModified": 1778950322,
-        "narHash": "sha256-MfWjctJIynw+uZIH3Rxxf8Qm39XnuDVS4+xLyfgaKEw=",
+        "lastModified": 1779277541,
+        "narHash": "sha256-vR6LG8XqO1k+NvVBx0GB9RzOWZKXWvnTf8h4T44pRic=",
         "ref": "refs/heads/master",
-        "rev": "136008282209b3aa367fc2b27cc92a886aebc404",
-        "revCount": 58,
+        "rev": "6d9ccdf1c50abb5c97c5783c84bb3e8ed6633ef8",
+        "revCount": 195,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/agentgraph.git"
       },
@@ -3346,14 +3347,14 @@
           "nix-ai-tools"
         ],
         "nixpkgs": "nixpkgs_14",
-        "pi-lsp-extension-src": "pi-lsp-extension-src"
+        "pi-lsp-extension-src": "pi-lsp-extension-src_2"
       },
       "locked": {
-        "lastModified": 1779104484,
-        "narHash": "sha256-Z7r15NQbLmDWKXVpwueGiuP5DW6hR/4vLnVDdEcZQL4=",
+        "lastModified": 1779277722,
+        "narHash": "sha256-85DVS7C4TgeDk9rIRjrdxjT+/nGM49nofSrb0fwIWS0=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "512e25a29f3eec3fc584d7c148bd5c52db92819a",
+        "rev": "9254abb674604f05824ef7e051af6408ed01bba9",
         "type": "github"
       },
       "original": {
@@ -3363,6 +3364,23 @@
       }
     },
     "pi-lsp-extension-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778770914,
+        "narHash": "sha256-kkMfO+GJdLOwX6o8tCSMaFaWmk3zl10EdarO+M4TTN4=",
+        "owner": "samfoy",
+        "repo": "pi-lsp-extension",
+        "rev": "73251632ad116c973844cc28fb1210417295c6fe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "samfoy",
+        "repo": "pi-lsp-extension",
+        "rev": "73251632ad116c973844cc28fb1210417295c6fe",
+        "type": "github"
+      }
+    },
+    "pi-lsp-extension-src_2": {
       "flake": false,
       "locked": {
         "lastModified": 1778770914,
