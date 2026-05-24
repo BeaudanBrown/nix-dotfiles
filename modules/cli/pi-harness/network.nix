@@ -68,13 +68,8 @@ let
       defaultProvider = "litellm";
       defaultModel = "sub-gpt-5.5";
       defaultThinkingLevel = "medium";
-      extensions = [
-        "./extensions/web-search/index.ts"
-        "./extensions/agentgraph/index.ts"
-      ];
-      skills = [ "./skills" ];
-      prompts = [ "./prompts" ];
-      themes = [ "./themes" ];
+      # Extensions, skills, prompts, and themes are injected by the Nix-built
+      # pi-harness wrapper so Pi does not auto-load duplicate mutable paths.
       enableSkillCommands = true;
       compaction = {
         enabled = true;
@@ -117,9 +112,5 @@ in
 
   hm.primary.home.file = {
     ".pi/agent/settings.json".source = piSettingsFile;
-    ".pi/agent/extensions".source = "${piHarnessPackage}/share/pi-harness/agent/extensions";
-    ".pi/agent/skills".source = "${piHarnessPackage}/share/pi-harness/agent/skills";
-    ".pi/agent/prompts".source = "${piHarnessPackage}/share/pi-harness/agent/prompts";
-    ".pi/agent/themes".source = "${piHarnessPackage}/share/pi-harness/agent/themes";
   };
 }
