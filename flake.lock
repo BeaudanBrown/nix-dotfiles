@@ -9,11 +9,11 @@
         "pi-lsp-extension-src": "pi-lsp-extension-src"
       },
       "locked": {
-        "lastModified": 1779450319,
-        "narHash": "sha256-b+opgeViZlvKfEkhTjm/studsSawFOGaWg0Ml6PEFRk=",
+        "lastModified": 1779587659,
+        "narHash": "sha256-DB3ZwiIayBTlrI9egUzrCq+NyEzn2+TKv7NFo96briQ=",
         "ref": "refs/heads/master",
-        "rev": "dd57dae85fa8b62256cc2cdc730a1dfe43c1a4a2",
-        "revCount": 259,
+        "rev": "8d80cbbb1401154511ae9d609c194178116d8f3f",
+        "revCount": 309,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/agentgraph.git"
       },
@@ -3350,11 +3350,11 @@
         "pi-lsp-extension-src": "pi-lsp-extension-src_2"
       },
       "locked": {
-        "lastModified": 1779450346,
-        "narHash": "sha256-hiNUCHP50P61rH/NZepXnhqLFCm8Xnma9xeSOx6p7mk=",
+        "lastModified": 1779588526,
+        "narHash": "sha256-6PQitozZOF1sqseHRahlzpbFCK73k03Mdif8lweE38A=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "153d308aedb93aeefd03ca2f3f5c08f934e5ba54",
+        "rev": "6dad30d25fe9be83df96fae20268e471637fd307",
         "type": "github"
       },
       "original": {
