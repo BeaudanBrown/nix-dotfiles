@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Beau <beau@example.invalid>
+Date: Wed, 27 May 2026 00:00:00 +0000
+Subject: [PATCH] tmux: disable active query escape delay override
+
+Upstream raises escape-time to at least 500ms while terminal capability
+queries are active. This protects slow/split terminal replies from being
+misparsed as input, but causes a visible Escape delay for tmux popup and
+nested tmux workflows.
+
+Respect the configured escape-time instead.
+---
+ tty-keys.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/tty-keys.c b/tty-keys.c
+--- a/tty-keys.c
++++ b/tty-keys.c
+@@ -950,11 +950,8 @@
+ 	if (delay == 0)
+ 		delay = 1;
+ 	if ((tty->flags & (TTY_WAITFG|TTY_WAITBG) ||
+-	    (tty->flags & TTY_ALL_REQUEST_FLAGS) != TTY_ALL_REQUEST_FLAGS)) {
+-		log_debug("%s: increasing delay for active query", c->name);
+-		if (delay < 500)
+-			delay = 500;
+-	}
++	    (tty->flags & TTY_ALL_REQUEST_FLAGS) != TTY_ALL_REQUEST_FLAGS))
++		log_debug("%s: active query; respecting configured escape-time", c->name);
+ 	tv.tv_sec = delay / 1000;
+ 	tv.tv_usec = (delay % 1000) * 1000L;

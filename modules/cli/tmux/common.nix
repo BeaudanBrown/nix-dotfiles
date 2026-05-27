@@ -9,6 +9,16 @@ let
   tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
 in
 {
+  nixpkgs.overlays = [
+    (final: prev: {
+      tmux = prev.tmux.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [
+          ./patches/tmux-active-query-escape-delay-50ms.patch
+        ];
+      });
+    })
+  ];
+
   environment.systemPackages = [
     llm
     nr
@@ -17,6 +27,7 @@ in
 
   hm.primary.programs.tmux = {
     enable = true;
+    package = pkgs.tmux;
     escapeTime = 0;
     historyLimit = 50000;
     keyMode = "vi";
@@ -41,12 +52,12 @@ in
           bind C-u copy-mode -u
 
           set -g set-clipboard on
-          set -g extended-keys always
-          set -g extended-keys-format csi-u
-          set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
-          set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
-          set-environment -g ESCDELAY 25
+          set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title'
+          set -as terminal-features ',xterm-ghostty:clipboard'
+          set-environment -g ESCDELAY 1
           set-environment -g KEYTIMEOUT 1
+          set -g extended-keys on
+          set -g extended-keys-format csi-u
           set -g allow-passthrough on
           set -g @override_copy_command 'tmux load-buffer -w -'
 
@@ -81,7 +92,7 @@ in
           set -gF '@last_scratch_name' scratch
 
           bind-key -n M-Space if-shell -F '#{==:#{session_name},default}' {
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux -T extkeys new-session -A -s #{@last_scratch_name} "'
+            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
           } {
             detach-client
           }
@@ -109,7 +120,7 @@ in
               run-shell 'tmux new-session -d -s #{@last_scratch_name}'
             }
             run-shell 'tmux break-pane -t "#{@last_scratch_name}"'
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux -T extkeys new-session -A -s #{@last_scratch_name} "'
+            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
           }
 
           bind -n M-| if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
@@ -122,7 +133,7 @@ in
               run-shell 'tmux new-session -d -s #{@last_scratch_name}'
             }
             run-shell 'tmux break-pane -s "#S:#I.#P" -t "#{@last_scratch_name}"'
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux -T extkeys new-session -A -s #{@last_scratch_name} "'
+            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
           }
       '';
   };

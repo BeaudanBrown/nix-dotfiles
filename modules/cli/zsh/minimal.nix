@@ -76,7 +76,7 @@
           bindkey '^P' fzf-open-file-or-dir
 
           if [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]]; then
-            tmux -T extkeys new -A -s default &> /dev/null
+            tmux new -A -s default &> /dev/null
           fi
 
           DIRENV_CONFIG="${

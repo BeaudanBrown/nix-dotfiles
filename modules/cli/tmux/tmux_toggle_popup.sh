@@ -63,7 +63,7 @@ popup() {
 
 new_session_cmd() {
 	local extra=${1-}
-	printf 'tmux -T extkeys new-session -A -s "%s" -c "%s"%s' \
+	printf 'tmux new-session -A -s "%s" -c "%s"%s' \
 		"$target" "$cwd" "${extra:+ \"$extra\"}"
 }
 
