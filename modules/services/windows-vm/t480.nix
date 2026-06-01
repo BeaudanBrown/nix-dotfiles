@@ -25,7 +25,9 @@ let
       <memory unit='MiB'>10240</memory>
       <currentMemory unit='MiB'>10240</currentMemory>
       <vcpu placement='static'>4</vcpu>
-      <cpu mode='host-passthrough' check='none'/>
+      <cpu mode='host-passthrough' check='none' migratable='off'>
+        <feature policy='require' name='vmx'/>
+      </cpu>
       <os firmware='efi'>
         <type arch='x86_64' machine='q35'>hvm</type>
         <boot dev='hd'/>
@@ -38,6 +40,17 @@ let
           <relaxed state='on'/>
           <vapic state='on'/>
           <spinlocks state='on' retries='8191'/>
+          <vpindex state='on'/>
+          <runtime state='on'/>
+          <synic state='on'/>
+          <stimer state='on'>
+            <direct state='on'/>
+          </stimer>
+          <reset state='on'/>
+          <frequencies state='on'/>
+          <tlbflush state='on'/>
+          <ipi state='on'/>
+          <evmcs state='on'/>
         </hyperv>
         <vmport state='off'/>
         <smm state='on'/>
@@ -151,6 +164,10 @@ let
   };
 in
 {
+  boot.extraModprobeConfig = lib.mkAfter ''
+    options kvm_intel nested=1
+  '';
+
   virtualisation.libvirtd = {
     enable = true;
     qemu.swtpm.enable = true;

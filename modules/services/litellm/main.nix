@@ -1,6 +1,6 @@
 # Shared option that exposes the LiteLLM model catalog to other modules.
 # The litellm service module (nas.nix) populates this; consumers like
-# openclaw and opencode read it to stay in sync automatically.
+# openclaw read it to stay in sync automatically.
 { lib, ... }:
 {
   options.custom.litellm.models = lib.mkOption {

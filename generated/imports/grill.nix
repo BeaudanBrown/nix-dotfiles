@@ -6,6 +6,7 @@
   ../../modules/desktop/addons/waybar/grill.nix
   ../../modules/desktop/hyprland/grill.nix
   ../../modules/desktop/hyprland/keybinds/grill.nix
+  ../../modules/services/attic/grill.nix
   ../../modules/services/deskflow/grill.nix
   ../../modules/services/lan-mouse/grill.nix
   ../../modules/services/ollama/grill.nix
@@ -37,17 +38,17 @@
   ../../modules/nix/common.nix
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
+  ../../modules/services/attic/common.nix
   ../../modules/services/ssh/common.nix
   ../../modules/system/boot/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/cli/codex/network.nix
-  ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
+  ../../modules/nix/builders/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/apps/ghostty/client.nix
-  ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
@@ -58,7 +59,6 @@
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/litellm/main.nix
-  ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
   ../../modules/triage/main.nix
   ../../modules/apps/brave/work.nix
@@ -91,12 +91,12 @@
   ../../modules/scripts/stt-assist/work.nix
   ../../modules/scripts/stt-dictate/work.nix
   ../../modules/security/pam/work.nix
+  ../../modules/services/agent-nfs/work.nix
   ../../modules/services/blueman/work.nix
   ../../modules/services/deskflow/work.nix
   ../../modules/services/dunst/work.nix
   ../../modules/services/kdeconnect/work.nix
   ../../modules/services/lan-mouse/work.nix
-  ../../modules/services/loom/work.nix
   ../../modules/services/printing/work.nix
   ../../modules/services/samba/work.nix
   ../../modules/services/udisks2/work.nix

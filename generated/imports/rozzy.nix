@@ -30,11 +30,12 @@
   ../../modules/nix/common.nix
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
+  ../../modules/services/attic/common.nix
   ../../modules/services/ssh/common.nix
+  ../../modules/system/boot/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/apps/ghostty/client.nix
-  ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
 ]

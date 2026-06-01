@@ -3,6 +3,36 @@
   lib,
   ...
 }:
+let
+  commonIgnorePatterns = [
+    "(?d)**/.direnv"
+    "(?d)**/.devenv"
+    "(?d)**/.devenv*"
+    "(?d)**/node_modules"
+    "(?d)**/dist-newstyle"
+    "(?d)**/.playwright"
+    "(?d)**/.playwright-cli"
+    "(?d)**/test-results"
+    "(?d)**/playwright-report"
+    "(?d)**/coverage"
+    "(?d)**/.cache"
+    "(?d)**/tmp"
+    "(?d)**/result"
+    "(?d)**/result-*"
+    "(?d)**/build"
+    "(?d)**/output"
+    "(?d)**/*.sync-conflict-*"
+    "(?d)**/.syncthing.*.tmp"
+  ];
+
+  addCommonIgnorePatterns = lib.mapAttrs (
+    _: folder:
+    folder
+    // {
+      ignorePatterns = commonIgnorePatterns ++ (folder.ignorePatterns or [ ]);
+    }
+  );
+in
 {
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
@@ -41,7 +71,7 @@
           autoAcceptFolder = true;
         };
       };
-      folders = {
+      folders = addCommonIgnorePatterns {
         "documents" = {
           id = "txxit-w9cwz";
           path = "${config.hostSpec.home}/documents";

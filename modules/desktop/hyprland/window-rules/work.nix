@@ -26,7 +26,7 @@ let
       "class:(brave-browser)"
       "class:(Slack)"
       "class:(steam)"
-      "class:(Caprine)"
+      "title:(Caprine)"
       "class:(discord)"
       "title:^(Spotify.*)"
       "title:^(Immich.*)"

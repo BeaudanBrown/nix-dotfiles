@@ -3,7 +3,7 @@
   keymaps = [
     {
       key = "<Space>";
-      action = ''<Nop>'';
+      action = "<Nop>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -28,7 +28,7 @@
     }
     {
       key = "<Leader>d";
-      action = ''<Plug>CloseBuffer<CR>'';
+      action = "<Plug>CloseBuffer<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -37,7 +37,7 @@
     }
     {
       key = "<Space>";
-      action = ''<Nop>'';
+      action = "<Nop>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -46,7 +46,7 @@
     }
     {
       key = "<Leader><Leader>";
-      action = ''<C-^>'';
+      action = "<C-^>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -55,7 +55,7 @@
     }
     {
       key = "<Leader>q";
-      action = '':q<CR>'';
+      action = ":q<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -64,7 +64,7 @@
     }
     {
       key = "<Leader>s";
-      action = '':w<CR>'';
+      action = ":w<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -73,7 +73,7 @@
     }
     {
       key = "<Leader>p";
-      action = '':pu<CR>==$'';
+      action = ":pu<CR>==$";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -82,7 +82,7 @@
     }
     {
       key = "<Leader>/";
-      action = '':noh<CR>'';
+      action = ":noh<CR>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -91,7 +91,7 @@
     }
     {
       key = "<Leader>=";
-      action = ''<C-w>='';
+      action = "<C-w>=";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -109,7 +109,7 @@
     }
     {
       key = "S";
-      action = '':%s//g<Left><Left>'';
+      action = ":%s//g<Left><Left>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -118,7 +118,7 @@
     }
     {
       key = "S";
-      action = '':s//g<Left><Left>'';
+      action = ":s//g<Left><Left>";
       mode = [ "v" ];
       options = {
         noremap = true;
@@ -127,7 +127,7 @@
     }
     {
       key = "Q";
-      action = ''@@'';
+      action = "@@";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -148,7 +148,7 @@
     }
     {
       key = "j";
-      action = ''gj'';
+      action = "gj";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -157,7 +157,7 @@
     }
     {
       key = "k";
-      action = ''gk'';
+      action = "gk";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -184,7 +184,7 @@
     }
     {
       key = "<A-left>";
-      action = ''3<c-w><'';
+      action = "3<c-w><";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -193,7 +193,7 @@
     }
     {
       key = "<A-right>";
-      action = ''3<c-w>>'';
+      action = "3<c-w>>";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -202,7 +202,7 @@
     }
     {
       key = "<A-up>";
-      action = ''3<c-w>+'';
+      action = "3<c-w>+";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -211,7 +211,7 @@
     }
     {
       key = "<A-down>";
-      action = ''3<c-w>-'';
+      action = "3<c-w>-";
       mode = [ "n" ];
       options = {
         noremap = true;
@@ -244,35 +244,6 @@
         noremap = true;
       };
     }
-    {
-      key = "<Leader>oa";
-      action = '':lua require("opencode").ask("@this: ", { submit = true })<CR>'';
-      mode = [
-        "n"
-        "x"
-      ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<Leader>os";
-      action = '':lua require("opencode").select()<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
-    {
-      key = "<Leader>oo";
-      action = '':lua require("opencode").toggle()<CR>'';
-      mode = [ "n" ];
-      options = {
-        noremap = true;
-        silent = true;
-      };
-    }
+
   ];
 }

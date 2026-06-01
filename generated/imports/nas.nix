@@ -11,11 +11,12 @@
   ../../modules/hosted-services/lights/nas.nix
   ../../modules/hosted-services/nas.nix
   ../../modules/nix/nas.nix
+  ../../modules/services/agent-nfs/nas.nix
+  ../../modules/services/attic/nas.nix
   ../../modules/services/atuin/nas.nix
   ../../modules/services/authentik/nas.nix
   ../../modules/services/bookstack/nas.nix
   ../../modules/services/chhoto-url/nas.nix
-  ../../modules/services/collabora/nas.nix
   ../../modules/services/container-registry-auth/nas.nix
   ../../modules/services/coordinator-vm/nas.nix
   ../../modules/services/copyparty/nas.nix
@@ -30,12 +31,9 @@
   ../../modules/services/jitsi-meet/nas.nix
   ../../modules/services/lachy-vm/nas.nix
   ../../modules/services/litellm/nas.nix
-  ../../modules/services/loom/nas.nix
   ../../modules/services/mealie/nas.nix
   ../../modules/services/meshcentral/nas.nix
   ../../modules/services/moonlight/nas.nix
-  ../../modules/services/ncps/nas.nix
-  ../../modules/services/nextcloud/nas.nix
   ../../modules/services/nginx/nas.nix
   ../../modules/services/open-webui/nas.nix
   ../../modules/services/overleaf/nas.nix
@@ -75,14 +73,15 @@
   ../../modules/nix/common.nix
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
+  ../../modules/services/attic/common.nix
   ../../modules/services/ssh/common.nix
   ../../modules/system/boot/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
   ../../modules/cli/codex/network.nix
-  ../../modules/cli/opencode/network.nix
   ../../modules/cli/pi-harness/network.nix
+  ../../modules/nix/builders/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
@@ -93,12 +92,10 @@
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/litellm/main.nix
-  ../../modules/services/loom/main.nix
   ../../modules/services/syncthing/main.nix
   ../../modules/triage/main.nix
   ../../modules/hosted-services/server.nix
   ../../modules/system/ports/server.nix
   ../../modules/apps/ghostty/client.nix
-  ../../modules/services/ncps/client.nix
   ../../modules/services/tailscale/client.nix
 ]

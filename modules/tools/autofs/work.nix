@@ -23,9 +23,13 @@
         cifsConf = pkgs.writeText "auto.cifs" ''
           /s -fstype=cifs,credentials=${config.sops.secrets.smbcredentials.path},uid=1000,gid=1000,iocharset=utf8,sec=ntlmssp,_netdev,nounix,cache=strict,vers=3.0,actimeo=60 ://ad.monash.edu/shared/Epi-Dementia
         '';
+        agentConf = pkgs.writeText "auto.agent-nfs" ''
+          ${config.hostSpec.home}/agent -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/pool1/agent
+        '';
       in
       ''
         /- file:${cifsConf} --timeout=300
+        /- file:${agentConf} --timeout=60
       '';
   };
 

@@ -57,6 +57,102 @@ let
     '';
   };
 
+  screenshot_monitor_region = pkgs.writeShellApplication {
+    name = "screenshot_monitor_region";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.grim
+      pkgs.hyprland
+      pkgs.imagemagick
+      pkgs.imv
+      pkgs.jq
+      pkgs.slurp
+      pkgs.wl-clipboard
+    ];
+    text = ''
+      set -euo pipefail
+
+      tmpdir="$(mktemp -d)"
+      shot="$tmpdir/screenshot.png"
+      viewer_pid=""
+
+      cleanup() {
+        if [ -n "$viewer_pid" ]; then
+          kill "$viewer_pid" 2>/dev/null || true
+        fi
+        rm -rf "$tmpdir"
+      }
+      trap cleanup EXIT
+
+      cursor="$(hyprctl cursorpos | tr -d ' ')"
+      mouse_x="''${cursor%,*}"
+      mouse_y="''${cursor#*,}"
+
+      monitors="$(hyprctl -j monitors)"
+      monitor="$(${pkgs.jq}/bin/jq -c --argjson x "$mouse_x" --argjson y "$mouse_y" '
+        first(
+          .[]
+          | select(
+              $x >= .x and $x < (.x + .width) and
+              $y >= .y and $y < (.y + .height)
+            )
+        ) // first(.[] | select(.focused == true))
+      ' <<< "$monitors")"
+
+      output="$(${pkgs.jq}/bin/jq -r '.name' <<< "$monitor")"
+      monitor_x="$(${pkgs.jq}/bin/jq -r '.x' <<< "$monitor")"
+      monitor_y="$(${pkgs.jq}/bin/jq -r '.y' <<< "$monitor")"
+      monitor_w="$(${pkgs.jq}/bin/jq -r '.width' <<< "$monitor")"
+      monitor_h="$(${pkgs.jq}/bin/jq -r '.height' <<< "$monitor")"
+
+      # Capture immediately, including the cursor, so hover-only UI state is frozen.
+      grim -c -o "$output" "$shot"
+
+      # Fullscreen windows generally open on the focused Hyprland monitor.
+      hyprctl dispatch focusmonitor "$output" >/dev/null || true
+      imv -i posthoc-screenshot -f -s full -b 000000 "$shot" &
+      viewer_pid="$!"
+
+      # Give the fullscreen image viewer a moment to map before selecting over it.
+      sleep 0.15
+
+      selection="$(slurp)" || exit 0
+      pos="''${selection%% *}"
+      size="''${selection#* }"
+      sel_x="''${pos%,*}"
+      sel_y="''${pos#*,}"
+      sel_w="''${size%x*}"
+      sel_h="''${size#*x}"
+
+      sel_right=$((sel_x + sel_w))
+      sel_bottom=$((sel_y + sel_h))
+      mon_right=$((monitor_x + monitor_w))
+      mon_bottom=$((monitor_y + monitor_h))
+
+      crop_left="$sel_x"
+      crop_top="$sel_y"
+      crop_right="$sel_right"
+      crop_bottom="$sel_bottom"
+
+      if [ "$crop_left" -lt "$monitor_x" ]; then crop_left="$monitor_x"; fi
+      if [ "$crop_top" -lt "$monitor_y" ]; then crop_top="$monitor_y"; fi
+      if [ "$crop_right" -gt "$mon_right" ]; then crop_right="$mon_right"; fi
+      if [ "$crop_bottom" -gt "$mon_bottom" ]; then crop_bottom="$mon_bottom"; fi
+
+      crop_w=$((crop_right - crop_left))
+      crop_h=$((crop_bottom - crop_top))
+      if [ "$crop_w" -le 0 ] || [ "$crop_h" -le 0 ]; then
+        exit 0
+      fi
+
+      crop_x=$((crop_left - monitor_x))
+      crop_y=$((crop_top - monitor_y))
+
+      magick "$shot" -crop "''${crop_w}x''${crop_h}+''${crop_x}+''${crop_y}" +repage png:- \
+        | wl-copy --type image/png
+    '';
+  };
+
   baseBinds = [
     # Program launchers (rofi etc.)
     "SUPER, space, exec, rofi -show drun -matching fuzzy"
@@ -65,6 +161,9 @@ let
 
     # Screenshot region to clipboard
     ", Print, exec, ${pkgs.grim}/bin/grim -g \"$(${pkgs.slurp}/bin/slurp)\" - | wl-copy"
+
+    # Screenshot the monitor under the mouse, then crop that frozen image to clipboard.
+    "SHIFT, Print, exec, ${screenshot_monitor_region}/bin/screenshot_monitor_region"
 
     # Push-to-dictate
     "SUPER, z, exec, stt-dictate toggle"
@@ -149,7 +248,7 @@ in
       key = "n";
       app = "caprine";
       workspace = "Caprine";
-      class = "Caprine";
+      title = "Caprine";
     }
     config.hypr.windowsLauncher
     {

@@ -32,7 +32,7 @@ let
 
   # ── Model catalog ──────────────────────────────────────────────────────
   # Single source of truth for every model routed through LiteLLM.
-  # Other modules (openclaw, opencode, etc.) read the names from
+  # Other modules (openclaw, etc.) read the names from
   # config.custom.litellm.models instead of maintaining their own copy.
   modelList = [
     {
@@ -61,9 +61,9 @@ let
       };
     }
     {
-      model_name = "gpt-5.2";
+      model_name = "gpt-5.5";
       litellm_params = {
-        model = "openai/gpt-5.2";
+        model = "openai/gpt-5.5";
         api_key = "os.environ/OPENAI_API_KEY";
         # OpenAI caches automatically — no injection points needed
       };
@@ -153,9 +153,9 @@ let
       };
     }
     {
-      model_name = "claude-opus-4-6";
+      model_name = "claude-opus-4-8";
       litellm_params = {
-        model = "claude-opus-4-6";
+        model = "claude-opus-4-8";
         api_key = "os.environ/ANTHROPIC_API_KEY";
         cache_control_injection_points = anthropicCachePoints;
       };
@@ -227,7 +227,7 @@ in
     "d ${chatgptTokenDir} 0700 root root - -"
   ];
 
-  # Expose model names to other modules (openclaw, opencode, etc.).
+  # Expose model names to other modules (openclaw, etc.).
   custom.litellm.models = map (m: m.model_name) modelList;
 
   hostedServices = [
@@ -249,7 +249,6 @@ in
             # added to the Nix config are silently ignored after the first run.
             store_model_in_db = false;
             store_prompts_in_spend_logs = true;
-            always_include_stream_usage = true;
           };
           litellm_settings = {
             modify_params = true;

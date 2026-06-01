@@ -27,10 +27,14 @@
   ../../modules/nix/common.nix
   ../../modules/security/polkit/common.nix
   ../../modules/security/sudo/common.nix
+  ../../modules/services/attic/common.nix
   ../../modules/services/ssh/common.nix
+  ../../modules/system/boot/common.nix
   ../../modules/system/ports/common.nix
   ../../modules/system/stylix/common.nix
   ../../modules/tools/direnv/common.nix
-  ../../modules/cli/opencode/network.nix
+  ../../modules/cli/codex/network.nix
   ../../modules/cli/pi-harness/network.nix
+  ../../modules/nix/builders/network.nix
+  ../../modules/system/networking/network.nix
 ]

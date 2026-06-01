@@ -28,6 +28,28 @@ let
           };
           models = [
             {
+              id = "gpt-5.5";
+              api = "openai-responses";
+              reasoning = true;
+              input = [
+                "text"
+                "image"
+              ];
+              contextWindow = 272000;
+              maxTokens = 16384;
+            }
+            {
+              id = "claude-opus-4-8";
+              api = "openai-responses";
+              reasoning = true;
+              input = [
+                "text"
+                "image"
+              ];
+              contextWindow = 272000;
+              maxTokens = 16384;
+            }
+            {
               id = "sub-gpt-5.5";
               api = "openai-responses";
               reasoning = true;
@@ -65,8 +87,10 @@ let
     builtins.toJSON {
       "$schema" =
         "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/core/settings-schema.json";
-      defaultProvider = "litellm";
-      defaultModel = "sub-gpt-5.5";
+      # defaultProvider = "litellm";
+      # defaultModel = "sub-gpt-5.5";
+      defaultProvider = "openai-codex";
+      defaultModel = "gpt-5.5";
       defaultThinkingLevel = "medium";
       # Extensions, skills, prompts, and themes are injected by the Nix-built
       # pi-harness wrapper so Pi does not auto-load duplicate mutable paths.

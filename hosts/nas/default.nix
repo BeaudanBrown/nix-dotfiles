@@ -19,9 +19,6 @@
     inputs.openclaw.nixosModules.openclaw-gateway
     inputs.nix-index-database.nixosModules.default
     inputs."pi-harness".nixosModules.pi-harness
-    "${inputs.loom}/infra/nixos-modules/loom-server.nix"
-    "${inputs.loom}/infra/nixos-modules/loom-web.nix"
-    "${inputs.loom}/infra/nixos-modules/k3s.nix"
     {
       home-manager = {
         extraSpecialArgs = { };

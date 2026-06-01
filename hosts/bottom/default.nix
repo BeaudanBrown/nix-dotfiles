@@ -18,9 +18,6 @@
         backupFileExtension = "backup";
       };
     }
-    # "${inputs.loom}/infra/nixos-modules/loom-server.nix"
-    # "${inputs.loom}/infra/nixos-modules/loom-web.nix"
-    # "${inputs.loom}/infra/nixos-modules/k3s.nix"
   ]
   ++ (import ../../generated/imports/bottom.nix);
 

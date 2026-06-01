@@ -147,11 +147,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    loom = {
-      url = "github:ghuntley/loom";
-      inputs.nixpkgs.follows = "nixpkgsUnstable";
-    };
-
     complix.url = "github:BeaudanBrown/complix";
 
     openclaw = {
