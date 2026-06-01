@@ -16,9 +16,9 @@
           buildInputs = [
             pkgs.nodejs
             pkgs.pnpm
-            pkgs.nodePackages.typescript
-            pkgs.nodePackages.eslint
-            pkgs.nodePackages.prettier
+            pkgs.typescript
+            pkgs.eslint
+            pkgs.prettier
           ];
         };
       }
