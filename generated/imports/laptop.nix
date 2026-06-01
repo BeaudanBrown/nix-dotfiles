@@ -100,7 +100,6 @@
   ../../modules/services/virtualbox/work.nix
   ../../modules/system/boot/work.nix
   ../../modules/system/networking/work.nix
-  ../../modules/tools/adb/work.nix
   ../../modules/tools/autofs/work.nix
   ../../modules/tools/feh/work.nix
   ../../modules/tools/qemu/work.nix

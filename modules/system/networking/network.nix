@@ -13,7 +13,6 @@
     ];
   };
   networking = {
-    wireless.enable = false;
     hostName = config.hostSpec.hostName;
 
     networkmanager = {

@@ -71,7 +71,6 @@
   ../../modules/apps/teams/work.nix
   ../../modules/apps/tor/work.nix
   ../../modules/apps/zathura/work.nix
-  ../../modules/cli/fl/work.nix
   ../../modules/cli/watson/work.nix
   ../../modules/cli/weechat/work.nix
   ../../modules/desktop/addons/clipboard/work.nix
@@ -101,7 +100,6 @@
   ../../modules/services/virtualbox/work.nix
   ../../modules/system/boot/work.nix
   ../../modules/system/networking/work.nix
-  ../../modules/tools/adb/work.nix
   ../../modules/tools/autofs/work.nix
   ../../modules/tools/feh/work.nix
   ../../modules/tools/qemu/work.nix

@@ -8,7 +8,6 @@
     libnotify
     (import ./scripts/hyprland_show_app.nix { inherit pkgs; })
   ];
-  programs.light.enable = true;
   users.users.${config.hostSpec.username}.extraGroups = [ "video" ];
 
   programs.hyprland.enable = true;
@@ -16,7 +15,6 @@
     displayManager = {
       gdm = {
         enable = true;
-        wayland = true;
       };
     };
     xserver = {
@@ -50,6 +48,8 @@
     wayland.windowManager.hyprland = {
       enable = true;
       xwayland.enable = true;
+      # TODO: Update to using lua
+      # wayland.windowManager.hyprland.configType = "lua";
 
       settings = {
         env = [

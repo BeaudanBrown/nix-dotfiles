@@ -8,7 +8,7 @@
     gparted
     nautilus
     qbittorrent
-    signal-desktop-bin
+    signal-desktop
     spotify
     sxiv
     tor-browser
