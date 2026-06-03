@@ -76,12 +76,25 @@ let
         --command="SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$database_name' AND pid <> pg_backend_pid();" \
         >/dev/null
 
+      echo "[rozzy-reset] refreshing postgres collation versions"
+      runuser -u postgres -- psql postgres \
+        --set=ON_ERROR_STOP=1 \
+        --quiet \
+        --command="ALTER DATABASE postgres REFRESH COLLATION VERSION;"
+      runuser -u postgres -- psql postgres \
+        --set=ON_ERROR_STOP=1 \
+        --quiet \
+        --command="ALTER DATABASE template1 REFRESH COLLATION VERSION;"
+
       echo "[rozzy-reset] recreating database"
       runuser -u postgres -- dropdb --if-exists "$database_name"
       runuser -u postgres -- createdb --owner "$database_user" "$database_name"
 
       echo "[rozzy-reset] loading schema"
       systemctl start loadSchema.service
+
+      echo "[rozzy-reset] running migrations"
+      systemctl start migrate.service
 
       echo "[rozzy-reset] running bootstrap account seed"
       systemctl start bootstrap-account.service
@@ -253,7 +266,7 @@ in
     serviceUser = databaseUser;
     createServiceUser = true;
     managePostgres = false;
-    enableMigrations = false;
+    enableMigrations = true;
     configureNginx = false;
 
     # Secret file placeholder for email delivery settings. Expected keys:
