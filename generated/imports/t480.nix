@@ -87,6 +87,7 @@
   ../../modules/scripts/bootstrap-nixos/work.nix
   ../../modules/scripts/stt-assist/work.nix
   ../../modules/scripts/stt-dictate/work.nix
+  ../../modules/scripts/thought-capture/work.nix
   ../../modules/security/pam/work.nix
   ../../modules/services/agent-nfs/work.nix
   ../../modules/services/blueman/work.nix

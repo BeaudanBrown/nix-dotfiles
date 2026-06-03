@@ -171,6 +171,9 @@ let
     # Push-to-assistant (STT → LLM → TTS + paste)
     "SUPERSHIFT, z, exec, stt-assist toggle"
 
+    # Push-to-thought-capture (STT → structured thought store on grill)
+    "SUPERALT, z, exec, thought-capture toggle"
+
     # Basic binds
     "SUPER,x,exec,hyprlock"
     "SUPERSHIFT,x,exec,systemctl hibernate"
