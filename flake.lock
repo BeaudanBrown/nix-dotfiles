@@ -2046,10 +2046,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1777193870,
-        "narHash": "sha256-nJMD33/GgnsJQxh4BxMWCFTSSsLwHeJ5h4YQTtdIYZE=",
+        "lastModified": 1780462816,
+        "narHash": "sha256-AZnLXvU99LSq/pZfTAjPo5ujigputE+jjPPDQ4XPkyI=",
         "ref": "refs/heads/roster",
-        "rev": "9bcb29b18c4393653332ba9c25074ce1e2a2898d",
+        "rev": "cf39fc2e7e0fe9aa2db5bbe2a0dfbd5e0e6213f9",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/ihp-roster.git"
