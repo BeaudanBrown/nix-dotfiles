@@ -5,6 +5,14 @@
 { lib, pkgs, ... }:
 
 let
+  # Minimal config metadata needed by NixOS' sysctl generation for this pinned
+  # Raspberry Pi kernel. The Pi arm64 kernel uses a 39-bit userspace VA range,
+  # whose maximum mmap ASLR entropy is 24 bits.
+  kernelConfig = pkgs.writeText "linux-config-6.12.47-stable_20250916" ''
+    CONFIG_ARCH_MMAP_RND_BITS_MAX=24
+    CONFIG_ARCH_MMAP_RND_COMPAT_BITS_MAX=16
+  '';
+
   kconfig = rec {
     isEnabled = name: name == "IP_NF_MATCH_RPFILTER";
     isSet = name: name == "MODULES" || isEnabled name;
@@ -28,7 +36,7 @@ let
 
     out = oldKernel;
     modules = "/nix/store/jjgg3s3zxc1vqs2p5my2wp6lifagiyc2-linux-rpi-6.12.47-stable_20250916-modules";
-    configfile = "/nix/store/qrxraxqrwwjpjw8cz7g2pksyxn8mpi07-linux-config-6.12.47-stable_20250916";
+    configfile = kernelConfig;
 
     stdenv = pkgs.stdenv;
     config = kconfig;
