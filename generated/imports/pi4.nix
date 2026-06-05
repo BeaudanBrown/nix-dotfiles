@@ -3,6 +3,7 @@
 # Do not edit manually.
 [
   ../../modules/cli/starship/pi4.nix
+  ../../modules/services/hyperhdr/pi4.nix
   ../../modules/cli/git/minimal.nix
   ../../modules/cli/htop/minimal.nix
   ../../modules/cli/misc/minimal.nix
