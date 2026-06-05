@@ -29,6 +29,9 @@
     };
   };
 
+  # TODO: This is a previous nixos method, investigate
+  # gtk.gtk4.theme = config.gtk.theme;
+
   hm.primary = {
     xdg.portal = {
       enable = true;
