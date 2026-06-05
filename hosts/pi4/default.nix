@@ -14,6 +14,7 @@
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
     inputs.nixos-hardware.nixosModules.raspberry-pi-4
+    ./pinned-running-kernel.nix
     inputs."pi-harness".nixosModules.pi-harness
     {
       home-manager = {
