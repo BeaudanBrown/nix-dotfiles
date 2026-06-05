@@ -3,7 +3,6 @@
 # to /etc/nixos/configuration.nix instead.
 {
   lib,
-  pkgs,
   modulesPath,
   ...
 }:
@@ -14,7 +13,6 @@
   ];
 
   boot = {
-    kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
     initrd.availableKernelModules = [
       "xhci_pci"
       "usbhid"

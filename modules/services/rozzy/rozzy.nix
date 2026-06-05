@@ -10,7 +10,7 @@ let
   portKey = "rozzy";
   databaseName = "rozzy";
   databaseUser = "rozzy";
-  rosterPackage = inputs.ihp-roster.packages.${pkgs.system}.default;
+  rosterPackage = inputs.ihp-roster.packages.${pkgs.stdenv.hostPlatform.system}.default;
   resetDatabaseScript = pkgs.writeShellApplication {
     name = "rozzy-reset-database";
     runtimeInputs = [

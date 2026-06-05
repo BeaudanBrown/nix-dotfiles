@@ -7,7 +7,7 @@
   ...
 }:
 let
-  piHarnessPackage = inputs.pi-harness.packages.${pkgs.system}.default;
+  piHarnessPackage = inputs.pi-harness.packages.${pkgs.stdenv.hostPlatform.system}.default;
   piModelsFile = pkgs.writeText "pi-models.json" (
     builtins.toJSON {
       providers = {

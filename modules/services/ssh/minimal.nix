@@ -32,61 +32,61 @@
   hm.primary.programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks = {
+    settings = {
       t480 = {
-        hostname = "t480.lan";
-        user = "beau";
+        HostName = "t480.lan";
+        User = "beau";
       };
       laptop = {
-        hostname = "laptop.lan";
-        user = "beau";
+        HostName = "laptop.lan";
+        User = "beau";
       };
       rozzy = {
-        hostname = "172.105.188.232";
-        user = "beau";
+        HostName = "172.105.188.232";
+        User = "beau";
       };
       roster = {
-        hostname = "45.79.238.145";
-        user = "beau";
+        HostName = "45.79.238.145";
+        User = "beau";
       };
       grill = {
-        hostname = "grill.lan";
-        user = "beau";
+        HostName = "grill.lan";
+        User = "beau";
       };
       nas = {
-        hostname = "nas.lan";
-        user = "beau";
+        HostName = "nas.lan";
+        User = "beau";
       };
       agent = {
-        hostname = "agent";
-        user = "beau";
+        HostName = "agent";
+        User = "beau";
       };
       mcbrick = {
-        user = "mikaerem";
+        User = "mikaerem";
       };
       pi4 = {
-        hostname = "pi4.lan";
-        user = "beau";
+        HostName = "pi4.lan";
+        User = "beau";
       };
       pizero = {
-        hostname = "192.168.1.103";
-        user = "pi";
-        port = 22;
+        HostName = "192.168.1.103";
+        User = "pi";
+        Port = 22;
       };
       dad = {
-        hostname = "slippers.beaudan.me";
-        user = "steve";
-        port = 9022;
+        HostName = "slippers.beaudan.me";
+        User = "steve";
+        Port = 9022;
       };
       m3 = {
-        hostname = "m3.massive.org.au";
-        user = "beaudanc";
+        HostName = "m3.massive.org.au";
+        User = "beaudanc";
       };
       "*" = {
-        forwardAgent = false;
-        serverAliveInterval = 0;
-        serverAliveCountMax = 3;
-        compression = false;
+        ForwardAgent = false;
+        ServerAliveInterval = 0;
+        ServerAliveCountMax = 3;
+        Compression = false;
       };
     };
   };

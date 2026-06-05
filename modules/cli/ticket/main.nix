@@ -1,6 +1,6 @@
 { outputs, pkgs, ... }:
 {
   environment.systemPackages = [
-    outputs.packages.${pkgs.system}.ticket
+    outputs.packages.${pkgs.stdenv.hostPlatform.system}.ticket
   ];
 }

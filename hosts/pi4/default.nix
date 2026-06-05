@@ -13,6 +13,8 @@
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs.nixos-hardware.nixosModules.raspberry-pi-4
+    inputs."pi-harness".nixosModules.pi-harness
     {
       home-manager = {
         extraSpecialArgs = { };
