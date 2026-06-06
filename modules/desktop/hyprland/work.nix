@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -11,12 +12,27 @@
   users.users.${config.hostSpec.username}.extraGroups = [ "video" ];
 
   programs.hyprland.enable = true;
+  # Temporary: bypass GDM on work devices while its greeter fails before login.
   services = {
-    displayManager = {
-      gdm = {
-        enable = true;
+    displayManager.gdm.enable = lib.mkForce false;
+
+    greetd = {
+      enable = true;
+      settings = {
+        # Auto-start Hyprland for the primary user after boot.
+        initial_session = {
+          user = config.hostSpec.username;
+          command = "Hyprland";
+        };
+
+        # Fallback TUI login if Hyprland exits.
+        default_session = {
+          user = "greeter";
+          command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd Hyprland";
+        };
       };
     };
+
     xserver = {
       enable = true;
       autoRepeatDelay = 175;
