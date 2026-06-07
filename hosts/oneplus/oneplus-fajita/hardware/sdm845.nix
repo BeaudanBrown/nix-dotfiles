@@ -30,7 +30,29 @@ let
         version = "7.0.0";
         modDirVersion = "7.0.0-next-20260414-sdm845";
         passthru = {
+          # NixOS/nixpkgs expect these kernel package attributes, but this is
+          # only a thin wrapper around the known-good kernel closure fetched
+          # from Attic, not a full buildLinux result.
+          commonMakeFlags = [ ];
+          configfile = kernelPkgs.writeText "oneplus-kernel-config" "";
+          config = {
+            isDisabled = _: true;
+            isEnabled = _: true;
+            isModule = _: true;
+            isNo = _: true;
+            isSet = _: true;
+            isYes = _: true;
+          };
+          features = {
+            efiBootStub = true;
+            netfilterRPFilter = true;
+          };
+          isLTS = false;
+          isZen = false;
+          kernelAtLeast = version: lib.versionAtLeast "7.0.0" version;
+          kernelOlder = version: lib.versionOlder "7.0.0" version;
           override = _: oneplusKernel;
+          stdenv = kernelPkgs.stdenv;
         };
         meta.platforms = [ "aarch64-linux" ];
       }
