@@ -39,7 +39,8 @@
       "ageHostKey": "age1rcx35s4lqvdj3vgefwwjmu4kq0regfyvxhtz92fh6nwak5wn8emskdds8r",
       "roots": [
         "minimal",
-        "common"
+        "common",
+        "network"
       ]
     },
     "nas": {

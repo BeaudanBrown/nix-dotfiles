@@ -13,6 +13,7 @@ The flake automatically discovers hosts by scanning the `/hosts/` directory - an
 | Host     | Purpose              | Username   | Roots                                                    |
 |----------|----------------------|------------|----------------------------------------------------------|
 | grill    | Primary desktop      | beau       | minimal, common, network, client, main, work, gaming     |
+| oneplus  | OnePlus 6T phone     | beau       | minimal, common, network                                 |
 | t480     | ThinkPad T480 laptop | beau       | minimal, common, network, client, main, work, gaming     |
 | laptop   | Standard laptop      | beau       | minimal, common, network, main, work                     |
 | nas      | Home server/NAS      | beau       | minimal, common, network, main, server, client           |

@@ -71,6 +71,7 @@
     roots = [
       "minimal"
       "common"
+      "network"
     ];
     includeHostStem = true;
     resolveGraph = false;
