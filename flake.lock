@@ -2720,6 +2720,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-oneplus-kernel": {
+      "locked": {
+        "lastModified": 1770843696,
+        "narHash": "sha256-LovWTGDwXhkfCOmbgLVA10bvsi/P8eDDpRudgk68HA8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2343bbb58f99267223bc2aac4fc9ea301a155a16",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2343bbb58f99267223bc2aac4fc9ea301a155a16",
+        "type": "github"
+      }
+    },
     "nixpkgs-regression": {
       "locked": {
         "lastModified": 1643052045,
@@ -3504,12 +3520,14 @@
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_12",
+        "nixpkgs-oneplus-kernel": "nixpkgs-oneplus-kernel",
         "nixpkgsUnstable": "nixpkgsUnstable",
         "nixvim": "nixvim",
         "openclaw": "openclaw",
         "pi-harness": "pi-harness",
         "pre-commit-hooks": "pre-commit-hooks_6",
         "sdm845-linux": "sdm845-linux",
+        "sdm845-linux-oneplus-kernel": "sdm845-linux-oneplus-kernel",
         "sops-nix": "sops-nix",
         "sopsSecrets": "sopsSecrets",
         "stylix": "stylix",
@@ -3590,6 +3608,24 @@
       },
       "original": {
         "ref": "refs/heads/sdm845-next",
+        "shallow": true,
+        "type": "git",
+        "url": "https://codeberg.org/sdm845/linux.git"
+      }
+    },
+    "sdm845-linux-oneplus-kernel": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777408949,
+        "narHash": "sha256-J5P2hwKcWxS41Dr5Ha+7RH9hHUdutzZlG+8ebBsl5p0=",
+        "ref": "refs/heads/sdm845-next",
+        "rev": "77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae",
+        "shallow": true,
+        "type": "git",
+        "url": "https://codeberg.org/sdm845/linux.git"
+      },
+      "original": {
+        "rev": "77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae",
         "shallow": true,
         "type": "git",
         "url": "https://codeberg.org/sdm845/linux.git"

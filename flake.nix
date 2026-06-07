@@ -30,6 +30,10 @@
         formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
         packages = {
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
+          oneplus-uboot-bootimg =
+            pkgs.pkgsCross.aarch64-multiplatform.callPackage
+              ./hosts/oneplus/oneplus-fajita/packages/uboot-bootimg.nix
+              { };
           ticket = pkgs.callPackage ./packages/ticket.nix { };
         };
         checks = import ./lib/checks.nix { inherit inputs system pkgs; };
@@ -75,6 +79,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    # Keep the OnePlus kernel pinned to the known-good build while allowing
+    # the rest of the system inputs to move forward.
+    nixpkgs-oneplus-kernel.url = "github:NixOS/nixpkgs/2343bbb58f99267223bc2aac4fc9ea301a155a16";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -177,6 +185,11 @@
     sdm845-linux = {
       url = "git+https://codeberg.org/sdm845/linux.git?ref=refs/heads/sdm845-next&shallow=1";
       #url = "git+file:///home/beau/documents/projects/oneplus/nixos-sdm845/sdm845-linux";
+      flake = false;
+    };
+
+    sdm845-linux-oneplus-kernel = {
+      url = "git+https://codeberg.org/sdm845/linux.git?rev=77ae339cc73c48bc37efbcb7b64d4e7cd0b158ae&shallow=1";
       flake = false;
     };
   };
