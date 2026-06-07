@@ -34,7 +34,10 @@ let
           # only a thin wrapper around the known-good kernel closure fetched
           # from Attic, not a full buildLinux result.
           commonMakeFlags = [ ];
-          configfile = kernelPkgs.writeText "oneplus-kernel-config" "";
+          configfile = kernelPkgs.writeText "oneplus-kernel-config" ''
+            CONFIG_ARCH_MMAP_RND_BITS_MAX=33
+            CONFIG_ARCH_MMAP_RND_COMPAT_BITS_MAX=16
+          '';
           config = {
             isDisabled = _: true;
             isEnabled = _: true;
