@@ -9,9 +9,17 @@ let
     system = pkgs.stdenv.hostPlatform.system;
     config.allowUnfree = true;
   };
-  pinnedKernelOut = /nix/store/ngrdfwid2bqici5lnxl8gg5aqlmaard8-linux-7.0.0;
-  pinnedKernelModules = /nix/store/5ii18dvifg1vpgwbmpb0bgqhp72yp8m5-linux-7.0.0-modules;
-  prebuiltOneplusKernel =
+  pinnedKernelOut = builtins.fetchClosure {
+    fromStore = "https://attic.bepis.lol/fleet";
+    fromPath = /nix/store/ngrdfwid2bqici5lnxl8gg5aqlmaard8-linux-7.0.0;
+    inputAddressed = true;
+  };
+  pinnedKernelModules = builtins.fetchClosure {
+    fromStore = "https://attic.bepis.lol/fleet";
+    fromPath = /nix/store/5ii18dvifg1vpgwbmpb0bgqhp72yp8m5-linux-7.0.0-modules;
+    inputAddressed = true;
+  };
+  oneplusKernel =
     kernelPkgs.runCommand "linux-7.0.0"
       {
         outputs = [
@@ -21,6 +29,9 @@ let
         ];
         version = "7.0.0";
         modDirVersion = "7.0.0-next-20260414-sdm845";
+        passthru = {
+          override = _: oneplusKernel;
+        };
         meta.platforms = [ "aarch64-linux" ];
       }
       ''
@@ -28,13 +39,6 @@ let
         cp -a ${pinnedKernelOut}/. "$out"/
         cp -a ${pinnedKernelModules}/. "$modules"/
       '';
-  oneplusKernel =
-    if builtins.pathExists pinnedKernelOut && builtins.pathExists pinnedKernelModules then
-      prebuiltOneplusKernel
-    else
-      kernelPkgs.callPackage ./kernel.nix {
-        src = inputs.sdm845-linux-oneplus-kernel;
-      };
   firmware2 =
     let
       baseFw = pkgs.fetchFromGitLab {

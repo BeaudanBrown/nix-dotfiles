@@ -38,6 +38,8 @@
     experimental-features = [
       "nix-command"
       "flakes"
+      "pipe-operators"
+      "fetch-closure"
     ];
     trusted-users = [
       "root"
