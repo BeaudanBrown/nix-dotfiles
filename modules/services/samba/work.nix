@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   services.samba = {
     enable = true;
@@ -22,14 +22,15 @@
   environment.etc."request-key.conf" = {
     text =
       let
-        upcall = "${pkgs.cifs-utils}/bin/cifs.upcall";
+        upcall = "${lib.getBin pkgs.cifs-utils}/bin/cifs.upcall";
+        dnsResolver = "${pkgs.keyutils}/sbin/key.dns_resolver";
         keyctl = "${pkgs.keyutils}/bin/keyctl";
       in
       ''
         #OP     TYPE          DESCRIPTION  CALLOUT_INFO  PROGRAM
         # -t is required for DFS share servers...
         create  cifs.spnego   *            *             ${upcall} -t %k
-        create  dns_resolver  *            *             ${upcall} %k
+        create  dns_resolver  *            *             ${dnsResolver} %k
         # Everything below this point is essentially the default configuration,
         # modified minimally to work under NixOS. Notably, it provides debug
         # logging.
