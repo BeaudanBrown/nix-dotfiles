@@ -26,6 +26,7 @@ let
       <currentMemory unit='MiB'>10240</currentMemory>
       <vcpu placement='static'>4</vcpu>
       <cpu mode='host-passthrough' check='none' migratable='off'>
+        <topology sockets='1' dies='1' cores='4' threads='1'/>
         <feature policy='require' name='vmx'/>
       </cpu>
       <os firmware='efi'>
@@ -117,6 +118,7 @@ let
     name = "windows-vm-ensure";
     runtimeInputs = with pkgs; [
       coreutils
+      gawk
       gnugrep
       libvirt
       qemu
@@ -131,8 +133,21 @@ let
         exit 1
       fi
 
-      if ! virsh --connect qemu:///system net-info default | grep -q "Active:.*yes"; then
-        virsh --connect qemu:///system net-start default
+      network_active() {
+        network_info="$(virsh --connect qemu:///system net-info default)"
+        case "$network_info" in
+          *Active:*yes*) return 0 ;;
+          *) return 1 ;;
+        esac
+      }
+
+      if ! network_active; then
+        virsh --connect qemu:///system net-start default || true
+        if ! network_active; then
+          echo "failed to start libvirt default network" >&2
+          virsh --connect qemu:///system net-info default >&2 || true
+          exit 1
+        fi
       fi
       virsh --connect qemu:///system net-autostart default
 
@@ -155,6 +170,16 @@ let
       cat > ${libvirtShellArg vmXmlPath} <<'EOF'
       ${windowsVmXml}
       EOF
+
+      if virsh --connect qemu:///system domuuid ${libvirtShellArg vmName} >/dev/null 2>&1; then
+        existing_uuid="$(virsh --connect qemu:///system domuuid ${libvirtShellArg vmName})"
+        tmp_xml="$(mktemp)"
+        awk -v uuid="$existing_uuid" '
+          { print }
+          $0 ~ /<name>${vmName}<\/name>/ { print "  <uuid>" uuid "</uuid>" }
+        ' ${libvirtShellArg vmXmlPath} > "$tmp_xml"
+        mv "$tmp_xml" ${libvirtShellArg vmXmlPath}
+      fi
 
       virsh --connect qemu:///system define ${libvirtShellArg vmXmlPath}
 
