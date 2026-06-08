@@ -30,7 +30,7 @@ let
     (matchClass "(bottom)")
     (matchClass "(signal)")
     (matchClass "(brave-browser)")
-    (matchClass "(Slack)")
+    (matchClass "(slack)")
     (matchClass "(steam)")
     (matchTitle "(Caprine)")
     (matchClass "(discord)")
