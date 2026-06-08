@@ -30,9 +30,15 @@
     }
   ];
   security.polkit.enable = true;
-  services.dbus.packages = [
-    config.systemd.package
-  ];
+  services.dbus = {
+    # Avoid a live dbus -> dbus-broker implementation change on the phone.
+    # That change is blocked by NixOS switch inhibitors and should only happen
+    # through `nixos-rebuild boot` + reboot if we decide to adopt it later.
+    implementation = "dbus";
+    packages = [
+      config.systemd.package
+    ];
+  };
   networking.hostName = "oneplus";
   nix.settings = {
     experimental-features = [
