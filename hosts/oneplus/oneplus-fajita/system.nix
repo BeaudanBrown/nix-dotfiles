@@ -10,6 +10,7 @@
     ./image/repart.nix
     ./networking/ssh.nix
     ./networking/wireless.nix
+    ./ui/phosh.nix
   ];
   boot.loader = {
     systemd-boot = {

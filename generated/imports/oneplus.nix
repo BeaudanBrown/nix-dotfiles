@@ -2,7 +2,6 @@
 # Effective roots: minimal, common, network
 # Do not edit manually.
 [
-  ../../modules/desktop/plasma-mobile/oneplus.nix
   ../../modules/cli/git/minimal.nix
   ../../modules/cli/htop/minimal.nix
   ../../modules/cli/misc/minimal.nix
