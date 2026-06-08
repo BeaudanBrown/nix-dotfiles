@@ -227,7 +227,7 @@ in
       key = "s";
       app = "slack";
       workspace = "Slack";
-      class = "Slack";
+      class = "slack";
     }
     {
       key = "c";
