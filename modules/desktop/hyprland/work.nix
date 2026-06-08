@@ -11,7 +11,10 @@
   ];
   users.users.${config.hostSpec.username}.extraGroups = [ "video" ];
 
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+  };
   # Temporary: bypass GDM on work devices while its greeter fails before login.
   services = {
     displayManager.gdm.enable = lib.mkForce false;
@@ -19,16 +22,12 @@
     greetd = {
       enable = true;
       settings = {
-        # Auto-start Hyprland for the primary user after boot.
-        initial_session = {
-          user = config.hostSpec.username;
-          command = "Hyprland";
-        };
-
-        # Fallback TUI login if Hyprland exits.
+        # TUI login prompt. Sessions are sourced from NixOS' display-manager
+        # session data so Hyprland uses the packaged start-hyprland/UWSM entries
+        # instead of invoking Hyprland directly.
         default_session = {
           user = "greeter";
-          command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd Hyprland";
+          command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --sessions ${config.services.displayManager.sessionData.desktops}/share/wayland-sessions";
         };
       };
     };
