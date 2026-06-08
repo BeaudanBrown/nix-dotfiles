@@ -25,9 +25,10 @@ let
       <memory unit='MiB'>10240</memory>
       <currentMemory unit='MiB'>10240</currentMemory>
       <vcpu placement='static'>4</vcpu>
-      <cpu mode='host-passthrough' check='none' migratable='off'>
+      <cpu mode='host-passthrough' check='none' migratable='on'>
         <topology sockets='1' dies='1' cores='4' threads='1'/>
         <feature policy='require' name='vmx'/>
+        <feature policy='disable' name='invtsc'/>
       </cpu>
       <os firmware='efi'>
         <type arch='x86_64' machine='q35'>hvm</type>
@@ -114,6 +115,8 @@ let
     </domain>
   '';
 
+  windowsVmManagedSaveMarker = "/run/windows-vm-managedsave-was-running";
+
   windowsVmEnsure = pkgs.writeShellApplication {
     name = "windows-vm-ensure";
     runtimeInputs = with pkgs; [
@@ -199,6 +202,67 @@ in
   };
 
   users.users.${config.hostSpec.username}.extraGroups = [ "libvirtd" ];
+
+  systemd.services.windows-vm-managedsave = {
+    description = "Managed-save Windows VM before host sleep and restore it after resume";
+    before = [
+      "systemd-suspend.service"
+      "systemd-hibernate.service"
+      "systemd-hybrid-sleep.service"
+      "systemd-suspend-then-hibernate.service"
+    ];
+    requiredBy = [
+      "systemd-suspend.service"
+      "systemd-hibernate.service"
+      "systemd-hybrid-sleep.service"
+      "systemd-suspend-then-hibernate.service"
+    ];
+    path = with pkgs; [
+      coreutils
+      gnugrep
+      libvirt
+    ];
+    unitConfig.StopWhenUnneeded = true;
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      TimeoutStartSec = "5min";
+      TimeoutStopSec = "2min";
+    };
+    script = ''
+      set -euo pipefail
+
+      rm -f ${libvirtShellArg windowsVmManagedSaveMarker}
+
+      state="$(virsh --connect qemu:///system domstate ${libvirtShellArg vmName} 2>/dev/null || true)"
+      if ! printf '%s\n' "$state" | grep -qx running; then
+        echo "Windows VM ${vmName} is not running before sleep; current state: ''${state:-unknown}."
+        exit 0
+      fi
+
+      echo "Managed-saving Windows VM ${vmName} before host sleep."
+      if timeout 240 virsh --connect qemu:///system managedsave ${libvirtShellArg vmName} --running; then
+        touch ${libvirtShellArg windowsVmManagedSaveMarker}
+        echo "Windows VM ${vmName} managed-save completed."
+      else
+        echo "Failed to managed-save Windows VM ${vmName}; refusing host sleep to avoid freezing the guest." >&2
+        exit 1
+      fi
+    '';
+    preStop = ''
+      set -euo pipefail
+
+      if [ ! -e ${libvirtShellArg windowsVmManagedSaveMarker} ]; then
+        exit 0
+      fi
+
+      rm -f ${libvirtShellArg windowsVmManagedSaveMarker}
+      echo "Restoring Windows VM ${vmName} after host resume."
+      if ! virsh --connect qemu:///system start ${libvirtShellArg vmName}; then
+        echo "Failed to restore Windows VM ${vmName} after resume." >&2
+      fi
+    '';
+  };
 
   environment.systemPackages = with pkgs; [
     windowsVmEnsure
