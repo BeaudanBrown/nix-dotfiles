@@ -10,7 +10,9 @@
     ./image/repart.nix
     ./networking/ssh.nix
     ./networking/wireless.nix
-    ./ui/phosh.nix
+    ./ui/greetd.nix
+    ./ui/niri.nix
+    # ./ui/phosh.nix
   ];
   boot.loader = {
     systemd-boot = {
@@ -33,16 +35,10 @@
     "rd.systemd.journald.forward_to_console=1"
     "rd.systemd.log_target=console"
     "rd.systemd.journald.forward_to_console=1"
-    "systemd.default_standard_output=kmsg+console"
-    "systemd.default_standard_error=kmsg+console"
-    "systemd.journald.forward_to_console=1"
-    "systemd.log_target=console"
-    "systemd.log_level=debug"
     "root=fstab"
     "loglevel=8"
     "lsm=landlock,yama,bpf"
   ];
-  security.polkit.enable = true;
   services.dbus = {
     # Avoid a live dbus -> dbus-broker implementation change on the phone.
     # That change is blocked by NixOS switch inhibitors and should only happen
@@ -51,41 +47,6 @@
     packages = [
       config.systemd.package
     ];
-  };
-  networking.hostName = "oneplus";
-  nix.settings = {
-    experimental-features = [
-      "nix-command"
-      "flakes"
-      "pipe-operators"
-      "fetch-closure"
-    ];
-    trusted-users = [
-      "root"
-      "@wheel"
-    ];
-    trusted-public-keys = [
-      "cache.bepis.lol:RICGW/iQ761PR6QiMUwbOLcvKird8EHoDd/ylnDOGJY="
-    ];
-    substituters = [
-      "https://cache.bepis.lol"
-    ];
-    builders-use-substitutes = true;
-  };
-
-  services.tailscale = {
-    enable = true;
-    openFirewall = true;
-    extraUpFlags = [
-      "--login-server=https://hs.bepis.lol"
-      "--accept-dns=true"
-      "--accept-routes=true"
-    ];
-  };
-
-  networking.firewall = {
-    checkReversePath = "loose";
-    trustedInterfaces = [ "tailscale0" ];
   };
 
   system.stateVersion = "25.11";
