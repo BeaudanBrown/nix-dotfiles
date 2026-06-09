@@ -245,7 +245,7 @@ in
       key = "m";
       app = "spotify";
       workspace = "Spotify";
-      class = "spotify";
+      class = "Spotify";
     }
     {
       key = "n";
