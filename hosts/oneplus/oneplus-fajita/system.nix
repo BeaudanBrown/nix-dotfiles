@@ -33,6 +33,9 @@
     "rd.systemd.journald.forward_to_console=1"
     "rd.systemd.log_target=console"
     "rd.systemd.journald.forward_to_console=1"
+    "root=fstab"
+    "loglevel=8"
+    "lsm=landlock,yama,bpf"
   ];
   security.polkit.enable = true;
   services.dbus = {
