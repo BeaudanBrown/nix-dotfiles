@@ -72,6 +72,7 @@
       "minimal"
       "common"
       "network"
+      "client"
     ];
     includeHostStem = true;
     resolveGraph = false;

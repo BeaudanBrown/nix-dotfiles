@@ -40,7 +40,8 @@
       "roots": [
         "minimal",
         "common",
-        "network"
+        "network",
+        "client"
       ]
     },
     "nas": {
