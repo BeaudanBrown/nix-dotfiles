@@ -18,17 +18,21 @@
       configurationLimit = lib.mkForce 10;
     };
   };
-  boot.kernelParams = [ "console=ttyGS0,115200" ];
-  boot.kernelPatches = [
-    {
-      name = "usb-otg-serial";
-      patch = null;
-      structuredExtraConfig = {
-        USB_G_SERIAL = lib.mkForce lib.kernel.yes;
-        U_SERIAL_CONSOLE = lib.mkForce lib.kernel.yes;
-        USB_U_SERIAL = lib.mkForce lib.kernel.yes;
-      };
-    }
+  # Keep the phone on the known-good boot argument shape. The common desktop
+  # boot module adds PC-oriented parameters that are unnecessary here, and the
+  # working generation used this exact console/initrd logging set.
+  boot.kernelParams = lib.mkForce [
+    "console=ttyGS0,115200"
+    "clk_ignore_unused"
+    "pd_ignore_unused"
+    "arm64.nopauth"
+    "console=ttyMSM0,115200n8"
+    "console=tty0"
+    "rd.systemd.default_standard_output=kmsg+console"
+    "rd.systemd.default_standard_error=kmsg+console"
+    "rd.systemd.journald.forward_to_console=1"
+    "rd.systemd.log_target=console"
+    "rd.systemd.journald.forward_to_console=1"
   ];
   security.polkit.enable = true;
   services.dbus = {
