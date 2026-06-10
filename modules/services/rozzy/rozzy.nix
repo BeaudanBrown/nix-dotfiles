@@ -174,6 +174,25 @@ in
     ];
   };
 
+  sops.secrets."rozzy/xero" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    restartUnits = [
+      "app.service"
+      "worker.service"
+      "xero-keepalive-sweep.service"
+    ];
+    mode = "0400";
+  };
+
+  sops.secrets."rozzy/stripe" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    restartUnits = [
+      "app.service"
+      "worker.service"
+    ];
+    mode = "0400";
+  };
+
   sops.secrets."rozzy/restic-env" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     mode = "0400";
@@ -211,6 +230,18 @@ in
       local all all reject
     '';
   };
+
+  systemd.services.app.serviceConfig.EnvironmentFile = lib.mkAfter [
+    config.sops.secrets."rozzy/xero".path
+    config.sops.secrets."rozzy/stripe".path
+  ];
+  systemd.services.worker.serviceConfig.EnvironmentFile = lib.mkAfter [
+    config.sops.secrets."rozzy/xero".path
+    config.sops.secrets."rozzy/stripe".path
+  ];
+  systemd.services.xero-keepalive-sweep.serviceConfig.EnvironmentFile = lib.mkAfter [
+    config.sops.secrets."rozzy/xero".path
+  ];
 
   services.restic.backups.rozzy-postgres = {
     initialize = true;
