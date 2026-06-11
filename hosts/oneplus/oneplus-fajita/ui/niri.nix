@@ -21,6 +21,23 @@ let
       NIRI_SOCKET="$socket" \
       ${config.programs.niri.package}/bin/niri msg "$@"
   '';
+  oneplusAppDrawer = pkgs.writeShellScriptBin "oneplus-app-drawer" ''
+    set -eu
+
+    uid="$(${pkgs.coreutils}/bin/id -u ${primaryUser})"
+    runtime_dir="/run/user/$uid"
+    wayland_socket="$(${pkgs.findutils}/bin/find "$runtime_dir" -maxdepth 1 -type s -name 'wayland-*' | ${pkgs.coreutils}/bin/head -n1)"
+    if [ -z "$wayland_socket" ]; then
+      echo "No Wayland socket found" >&2
+      exit 1
+    fi
+
+    exec ${pkgs.util-linux}/bin/runuser -u ${primaryUser} -- env \
+      XDG_RUNTIME_DIR="$runtime_dir" \
+      WAYLAND_DISPLAY="$(${pkgs.coreutils}/bin/basename "$wayland_socket")" \
+      DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus" \
+      ${pkgs.nwg-drawer}/bin/nwg-drawer
+  '';
   niriGestures = pkgs.writeShellScript "oneplus-niri-gestures" ''
     exec ${pkgs.lisgd}/bin/lisgd \
       -d /dev/input/by-path/platform-a90000.i2c-event \
@@ -29,7 +46,8 @@ let
       -s 2 \
       -g '1,DU,B,*,R,${niriMsg}/bin/oneplus-niri-msg action toggle-overview' \
       -g '1,LR,L,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-left' \
-      -g '1,RL,R,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-right'
+      -g '1,RL,R,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-right' \
+      -g '2,DU,*,*,R,${oneplusAppDrawer}/bin/oneplus-app-drawer'
   '';
 in
 {
@@ -49,9 +67,11 @@ in
     # foot
     ashell
     blueman
+    brave
     brightnessctl
     iwgtk
     lisgd
+    nwg-drawer
     pavucontrol
     squeekboard
     wayland-utils
