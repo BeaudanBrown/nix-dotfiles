@@ -1,10 +1,11 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }:
 {
+  imports = [ ./autologin-hyprlock.nix ];
+
   environment.systemPackages = with pkgs; [
     libnotify
     (import ./scripts/hyprland_show_app.nix { inherit pkgs; })
@@ -15,23 +16,7 @@
     enable = true;
     withUWSM = true;
   };
-  # Temporary: bypass GDM on work devices while its greeter fails before login.
   services = {
-    displayManager.gdm.enable = lib.mkForce false;
-
-    greetd = {
-      enable = true;
-      settings = {
-        # TUI login prompt. Sessions are sourced from NixOS' display-manager
-        # session data so Hyprland uses the packaged start-hyprland/UWSM entries
-        # instead of invoking Hyprland directly.
-        default_session = {
-          user = "greeter";
-          command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --sessions ${config.services.displayManager.sessionData.desktops}/share/wayland-sessions";
-        };
-      };
-    };
-
     xserver = {
       enable = true;
       autoRepeatDelay = 175;
@@ -66,6 +51,9 @@
     wayland.windowManager.hyprland = {
       enable = true;
       xwayland.enable = true;
+      # UWSM owns the graphical-session systemd targets; Home Manager's
+      # Hyprland systemd integration conflicts with that startup model.
+      systemd.enable = false;
       # TODO: Update to using lua
       # wayland.windowManager.hyprland.configType = "lua";
 
