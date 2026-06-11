@@ -89,16 +89,6 @@
     resolveGraph = false;
   };
 
-  rozzy = {
-    roots = [
-      "minimal"
-      "common"
-      "client"
-    ];
-    includeHostStem = true;
-    resolveGraph = false;
-  };
-
   t480 = {
     roots = [ "gaming" ];
     includeHostStem = true;

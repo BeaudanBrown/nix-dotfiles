@@ -21,7 +21,6 @@ The flake automatically discovers hosts by scanning the `/hosts/` directory - an
 | brick    | Remote server        | mikaerem   | minimal, common, network, server                         |
 | bottom   | Minimal node         | beau       | minimal, common                                          |
 | agent    | Coordinator VM       | beau       | minimal, common, network, client                         |
-| rozzy    | Linode app host      | beau       | minimal, common                                          |
 | iso      | Installer image      | nixos      | minimal                                                  |
 
 ## Host Directory Structure

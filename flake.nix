@@ -172,11 +172,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    ihp-roster = {
-      url = "git+ssh://git@github.com/BeaudanBrown/ihp-roster.git?ref=refs/heads/roster&shallow=1";
-      inputs.systems.follows = "systems";
-    };
-
     pi-harness = {
       url = "github:BeaudanBrown/pi-harness";
       inputs.nix-ai-tools.follows = "nix-ai-tools";
