@@ -6,7 +6,6 @@
 {
   imports = [
     ./hardware.nix
-
     inputs.sops-nix.nixosModules.sops
     inputs.nixvim.nixosModules.nixvim
     inputs.stylix.nixosModules.stylix
