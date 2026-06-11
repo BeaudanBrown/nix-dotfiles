@@ -19,6 +19,7 @@ in
       "systemd-tmpfiles-setup.service"
     ];
     wants = [ "local-fs.target" ];
+    unitConfig.RequiresMountsFor = agentRoot;
     path = with pkgs; [
       coreutils
       util-linux
@@ -32,17 +33,27 @@ in
 
       mkdir -p ${agentRoot} ${agentMount}
 
+      root_identity="$(stat -Lc '%d:%i' ${agentRoot})"
+
       if mountpoint -q ${agentMount}; then
-        current_source="$(findmnt -n -o SOURCE --target ${agentMount} || true)"
-        if [ "$current_source" = ${agentRoot} ]; then
+        mount_identity="$(stat -Lc '%d:%i' ${agentMount})"
+        if [ "$mount_identity" = "$root_identity" ]; then
           exit 0
         fi
 
-        echo "${agentMount} is already mounted from $current_source; refusing to replace it" >&2
+        current_source="$(findmnt -n -o SOURCE --target ${agentMount} || true)"
+        echo "${agentMount} is already mounted from $current_source and does not match ${agentRoot}; refusing to replace it" >&2
         exit 1
       fi
 
       mount --bind ${agentRoot} ${agentMount}
+
+      mount_identity="$(stat -Lc '%d:%i' ${agentMount})"
+      if [ "$mount_identity" != "$root_identity" ]; then
+        current_source="$(findmnt -n -o SOURCE --target ${agentMount} || true)"
+        echo "${agentMount} mounted from $current_source but does not match ${agentRoot}" >&2
+        exit 1
+      fi
     '';
   };
 
