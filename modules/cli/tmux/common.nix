@@ -37,7 +37,13 @@ in
       catppuccin
       extrakto
       # tmux-window-name
-      yank
+      {
+        plugin = yank;
+        extraConfig = ''
+          set -g @yank_action 'copy-pipe'
+          set -g @override_copy_command 'tmux load-buffer -w -'
+        '';
+      }
     ];
     extraConfig = # bash
       ''
@@ -59,7 +65,6 @@ in
           set -g extended-keys on
           set -g extended-keys-format csi-u
           set -g allow-passthrough on
-          set -g @override_copy_command 'tmux load-buffer -w -'
 
           bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
           bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane
@@ -85,6 +90,8 @@ in
           bind-key -T copy-mode-vi 'M-j' if-shell -F '#{pane_at_bottom}' {} { select-pane -D }
           bind-key -T copy-mode-vi 'M-k' if-shell -F '#{pane_at_top}'    {} { select-pane -U }
           bind-key -T copy-mode-vi 'M-l' if-shell -F '#{pane_at_right}'  {} { select-pane -R }
+          bind-key -T copy-mode-vi Enter send-keys -X copy-pipe 'tmux load-buffer -w -'
+          bind-key -T copy-mode-vi C-j send-keys -X copy-pipe 'tmux load-buffer -w -'
 
 
         # Toggle scratchpad terminal
