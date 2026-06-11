@@ -198,6 +198,8 @@ in
 
   virtualisation.libvirtd = {
     enable = true;
+    onBoot = "ignore";
+    onShutdown = "suspend";
     qemu.swtpm.enable = true;
   };
 
@@ -278,7 +280,16 @@ in
         echo "No display URI found for ${vmName}. Is the VM running?" >&2
         exit 1
       fi
-      exec ${virt-viewer}/bin/remote-viewer --title=windows --full-screen "$display_uri"
+
+      ${virt-viewer}/bin/remote-viewer --title=windows --full-screen "$display_uri"
+      viewer_status="$?"
+
+      if [ "$viewer_status" -eq 0 ] \
+        && ${libvirt}/bin/virsh --connect qemu:///system domstate ${vmName} | ${gnugrep}/bin/grep -q running; then
+        ${libvirt}/bin/virsh --connect qemu:///system managedsave ${vmName} --running
+      fi
+
+      exit "$viewer_status"
     '')
     (writeShellScriptBin "windows-vm-manager" ''
       exec ${virt-manager}/bin/virt-manager --connect qemu:///system --show-domain-console ${vmName}
