@@ -59,7 +59,11 @@
     ];
   };
 
-  systemd.settings.Manager.DefaultTimeoutStartSec = "10min";
+  # The USB gadget serial getty on ttyGS0 holds/contends for /dev/console's
+  # flock. That makes `systemd-run --pipe` from a PTY block in the transient
+  # service child, which in turn breaks nixos-rebuild-ng. Keep the hardware
+  # UART getty on ttyMSM0 for serial rescue, but do not start the USB getty.
+  systemd.services."serial-getty@ttyGS0".enable = false;
 
   nix = {
     buildMachines = lib.mkForce [ ];
