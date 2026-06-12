@@ -90,7 +90,7 @@ Name your file after the root it should be imported for:
 ## Golden Rules
 
 ### Formatting
-- Use `nixfmt-rfc-style` (auto-enforced by pre-commit)
+- Formatting is handled by pre-commit hooks; do not instruct agents/users to run `nix fmt` or `nixfmt` for normal changes.
 - Run `nix flake check` to validate
 
 ### Required Validation

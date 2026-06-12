@@ -15,9 +15,19 @@
     # ./ui/phosh.nix
   ];
   boot.loader = {
+    efi = {
+      efiSysMountPoint = "/boot";
+      canTouchEfiVariables = false;
+    };
+
     systemd-boot = {
       enable = true;
       configurationLimit = lib.mkForce 10;
+      extraFiles = {
+        "EFI/BOOT/BOOTAA64.EFI" = "${config.systemd.package}/lib/systemd/boot/efi/systemd-bootaa64.efi";
+        "EFI/systemd/systemd-bootaa64.efi" =
+          "${config.systemd.package}/lib/systemd/boot/efi/systemd-bootaa64.efi";
+      };
     };
   };
   # Keep the phone on the known-good boot argument shape. The common desktop
@@ -48,6 +58,18 @@
       config.systemd.package
     ];
   };
+
+  nix = {
+    buildMachines = lib.mkForce [ ];
+    distributedBuilds = lib.mkForce false;
+  };
+
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8192;
+    }
+  ];
 
   system.stateVersion = "25.11";
 }

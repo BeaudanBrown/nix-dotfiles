@@ -77,6 +77,8 @@ Hooks are defined in `lib/checks.nix` and run automatically in the dev shell.
 
 ### Nix Formatting & Quality
 
+Formatting and lint cleanup are handled by the pre-commit hooks. Do not document `nix fmt`/`nixfmt` as a normal manual workflow.
+
 | Hook              | Purpose                                    |
 |-------------------|--------------------------------------------|
 | `nixfmt-rfc-style`| Format Nix code according to RFC style     |
@@ -105,9 +107,6 @@ Hooks are defined in `lib/checks.nix` and run automatically in the dev shell.
 ```bash
 # Run all hooks on all files
 pre-commit run --all-files
-
-# Run specific hook
-pre-commit run nixfmt --all-files
 ```
 
 ## Flake Structure
@@ -134,7 +133,7 @@ The flake uses these primary inputs:
 | Output              | Description                                    |
 |---------------------|------------------------------------------------|
 | `nixosConfigurations` | Auto-generated from `/hosts/` directories    |
-| `formatter`         | `nixfmt-rfc-style` for `nix fmt`               |
+| `formatter`         | Nix formatter exposed for editor/hook integration |
 | `checks`            | Pre-commit hooks for `nix flake check`         |
 | `devShells.default` | Development shell with tooling                 |
 | `lib.custom`        | Custom library functions extended onto `lib`   |
@@ -230,7 +229,7 @@ just deploy <hostname>
 
 1. Run `nix develop` to ensure hooks are installed
 2. Run `pre-commit run --all-files` to see specific failures
-3. For formatting issues: `nix fmt` will auto-fix
+3. Let the configured hooks apply formatting/lint fixes
 
 ### Build Fails
 
