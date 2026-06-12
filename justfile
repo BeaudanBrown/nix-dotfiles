@@ -46,6 +46,10 @@ test-iso:
       --drive media=cdrom,file=latest.iso,format=raw,readonly=on \
       --smp cores=4,sockets=1,threads=1 \
 
+# Connect to the OnePlus U-Boot USB serial gadget
+oneplus-serial DEVICE="/dev/ttyACM0":
+  sudo nix shell nixpkgs#picocom -c picocom {{DEVICE}} -b 115200
+
 # ---------- Push-deploy helpers ----------
 # Generic: use an SSH config Host alias for {{HOST}}
 # Requires the target user to have passwordless sudo for nixos-rebuild.
