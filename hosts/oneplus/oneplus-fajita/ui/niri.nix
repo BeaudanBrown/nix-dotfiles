@@ -87,6 +87,31 @@ let
 
     exec ${oneplusSpawn}/bin/oneplus-spawn ${pkgs.wvkbd}/bin/wvkbd-mobintl
   '';
+  sttDictate =
+    (import ../../../../modules/scripts/stt-dictate/work.nix { inherit pkgs; })
+    .environment.systemPackages
+    |> builtins.head;
+  oneplusSttDictate = pkgs.writeShellScriptBin "oneplus-stt-dictate" ''
+    set -eu
+
+    uid="$(${pkgs.coreutils}/bin/id -u ${primaryUser})"
+    if [ "$(${pkgs.coreutils}/bin/id -u)" != "$uid" ]; then
+      exec ${pkgs.util-linux}/bin/runuser -u ${primaryUser} -- "$0" "$@"
+    fi
+
+    runtime_dir="/run/user/$uid"
+    wayland_socket="$(${pkgs.findutils}/bin/find "$runtime_dir" -maxdepth 1 -type s -name 'wayland-*' -print -quit 2>/dev/null)"
+    if [ -z "$wayland_socket" ]; then
+      echo "No Wayland socket found" >&2
+      exit 1
+    fi
+
+    export XDG_RUNTIME_DIR="$runtime_dir"
+    export WAYLAND_DISPLAY="$(${pkgs.coreutils}/bin/basename "$wayland_socket")"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus"
+
+    exec ${sttDictate}/bin/stt-dictate toggle
+  '';
   oneplusScreenRecord = pkgs.writeShellScriptBin "oneplus-screen-record" ''
     set -eu
 
@@ -183,7 +208,8 @@ let
       -g '1,DU,B,*,R,${niriMsg}/bin/oneplus-niri-msg action toggle-overview' \
       -g '1,LR,L,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-left' \
       -g '1,RL,R,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-right' \
-      -g '2,DU,*,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer'
+      -g '2,DU,*,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer' \
+      -g '2,UD,*,*,R,${oneplusSttDictate}/bin/oneplus-stt-dictate'
   '';
 in
 {
@@ -219,7 +245,9 @@ in
     oneplusKeyboard
     oneplusScreenRecord
     oneplusSpawn
+    oneplusSttDictate
     niriMsg
+    sttDictate
     pavucontrol
     squeekboard
     wayland-utils
@@ -233,6 +261,8 @@ in
     enable = true;
     indicator = true;
   };
+
+  hm.primary.programs.ghostty.settings.font-size = 10;
 
   hm.primary.xdg.desktopEntries = {
     oneplus-brave = {
@@ -307,6 +337,7 @@ in
     prefer-no-csd
     spawn-at-startup "ashell"
     spawn-at-startup "ghostty"
+    spawn-at-startup "squeekboard"
   '';
 
   hm.primary.home.file.".config/ashell/config.toml".text = ''

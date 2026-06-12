@@ -115,13 +115,6 @@ in
     SUBSYSTEM=="block", ACTION!="remove", ENV{ID_PART_ENTRY_NAME}=="userdata", RUN+="${pkgs.util-linux}/bin/losetup --partscan --find --sector-size 4096 --loop-ref userdata /dev/%k"
   '';
 
-  boot.blacklistedKernelModules = [
-    "qcrypto"
-    "ipa"
-    #        "efivarfs"
-    #        "dwc3-generic-plat"
-    #        "qcom_q6v5_pas"
-  ];
   boot.initrd.includeDefaultModules = false;
   #      boot.initrd.availableKernelModules = lib.mkForce [];
   boot.initrd.systemd.tpm2.enable = false; # This also pulls in some modules our kernel is not build with.

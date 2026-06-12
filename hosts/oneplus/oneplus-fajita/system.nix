@@ -47,23 +47,6 @@
     "root=fstab"
     "loglevel=8"
     "lsm=landlock,yama,bpf"
-
-    # Reboot-hang isolation: qcom_q6v5_mss owns 4080000.remoteproc (modem/MSS).
-    # SysRq emergency reboot works while orderly reboot hangs, so test whether
-    # keeping the modem remoteproc driver unloaded avoids the device shutdown
-    # path that blocks normal reboot. Remove this after confirming/denying the
-    # culprit and replacing it with a DT/kernel fix.
-    "module_blacklist=qcom_q6v5_mss"
-
-    # Temporary high-verbosity shutdown logging for the same investigation.
-    "ignore_loglevel"
-    "no_console_suspend"
-    "printk.time=1"
-    "printk.devkmsg=on"
-    "sysrq_always_enabled=1"
-    "initcall_debug"
-    "systemd.log_level=debug"
-    "systemd.log_target=kmsg"
   ];
   services = {
     dbus = {
