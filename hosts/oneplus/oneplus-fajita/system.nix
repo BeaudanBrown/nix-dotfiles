@@ -59,6 +59,8 @@
     ];
   };
 
+  systemd.settings.Manager.DefaultTimeoutStartSec = "10min";
+
   nix = {
     buildMachines = lib.mkForce [ ];
     distributedBuilds = lib.mkForce false;
