@@ -21,6 +21,15 @@ buildUBoot {
     CONFIG_CMD_UFETCH=y
     CONFIG_CMD_SELECT_FONT=y
     CONFIG_VIDEO_FONT_16X32=y
+    # Do not show U-Boot's bootmenu before running bootcmd. The recovery menu
+    # remains available via `run menucmd` after a failed boot or from the shell.
+    # CONFIG_AUTOBOOT_MENU_SHOW is not set
+
+    # Avoid spurious serial/button-kbd input aborting autoboot. With keyed
+    # autoboot, only the configured bootstopkey (or Ctrl-C) interrupts boot.
+    CONFIG_AUTOBOOT_KEYED=y
+    CONFIG_AUTOBOOT_FLUSH_STDIN=y
+    CONFIG_AUTOBOOT_KEYED_CTRLC=y
     CONFIG_BOOTDELAY=5
   '';
   prePatch = ''
