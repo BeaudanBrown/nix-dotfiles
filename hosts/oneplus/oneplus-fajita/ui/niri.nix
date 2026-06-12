@@ -87,37 +87,6 @@ let
 
     exec ${oneplusSpawn}/bin/oneplus-spawn ${pkgs.wvkbd}/bin/wvkbd-mobintl
   '';
-  oneplusAshellBattery = pkgs.writeShellScriptBin "oneplus-ashell-battery" ''
-    set -eu
-
-    find_battery() {
-      for path in /sys/class/power_supply/*; do
-        [ -e "$path/capacity" ] || continue
-        type="$(${pkgs.coreutils}/bin/cat "$path/type" 2>/dev/null || true)"
-        [ "$type" = "Battery" ] || continue
-        printf '%s\n' "$path"
-        return 0
-      done
-      return 1
-    }
-
-    while :; do
-      if battery="$(find_battery)"; then
-        capacity="$(${pkgs.coreutils}/bin/cat "$battery/capacity" 2>/dev/null || printf '?')"
-        status="$(${pkgs.coreutils}/bin/cat "$battery/status" 2>/dev/null || printf Unknown)"
-        case "$status" in
-          Charging) marker="+" ;;
-          Discharging) marker="-" ;;
-          Full) marker="=" ;;
-          *) marker="" ;;
-        esac
-        printf '{"text":"BAT %s%%%s","alt":"%s"}\n' "$capacity" "$marker" "$status"
-      else
-        printf '{"text":"BAT --%%","alt":"missing"}\n'
-      fi
-      ${pkgs.coreutils}/bin/sleep 30
-    done
-  '';
   oneplusScreenRecord = pkgs.writeShellScriptBin "oneplus-screen-record" ''
     set -eu
 
@@ -245,7 +214,6 @@ in
     lisgd
     maliit-keyboard
     nwg-drawer
-    oneplusAshellBattery
     oneplusBrave
     oneplusClipboard
     oneplusKeyboard
@@ -349,7 +317,7 @@ in
     [modules]
     left = [ [ "LeftPad", "Tempo" ] ]
     center = []
-    right = [ [ "Settings", "PhoneBattery", "RightPad" ] ]
+    right = [ [ "Settings", "RightPad" ] ]
 
     [tempo]
     clock_format = "%H:%M"
@@ -381,11 +349,6 @@ in
     name = "RightPad"
     type = "Text"
     listen_cmd = "printf '{\"text\": \" \", \"alt\": \"\"}\\n'"
-
-    [[CustomModule]]
-    name = "PhoneBattery"
-    type = "Text"
-    listen_cmd = "${oneplusAshellBattery}/bin/oneplus-ashell-battery"
 
     [appearance]
     style = "Solid"
