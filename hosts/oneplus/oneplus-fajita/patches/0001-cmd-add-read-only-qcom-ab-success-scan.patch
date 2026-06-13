@@ -1,0 +1,186 @@
+diff -ruN uboot-orig/cmd/Kconfig uboot-qcom-ab/cmd/Kconfig
+--- uboot-orig/cmd/Kconfig	2026-06-13 12:16:53.894395568 +1000
++++ uboot-qcom-ab/cmd/Kconfig	2026-06-13 12:41:15.342575397 +1000
+@@ -1271,6 +1271,15 @@
+ 	  partitions via the 'gpt swap' command or to rename single
+ 	  partitions via the 'rename' command.
+
++config CMD_QCOM_AB_SUCCESS
++	bool "qcom_ab_success"
++	depends on CMDLINE && BLK && EFI_PARTITION
++	help
++	  Read-only inspection command for Qualcomm Android A/B GPT boot
++	  partition attributes. It scans SCSI block devices, reports boot_a
++	  and boot_b, and prints the exact boot-successful bit change that
++	  a future write-capable command would make.
++
+ config CMD_IDE
+ 	bool "ide - Support for IDE drivers"
+ 	select IDE
+diff -ruN uboot-orig/cmd/Makefile uboot-qcom-ab/cmd/Makefile
+--- uboot-orig/cmd/Makefile	2026-06-13 12:16:53.894395568 +1000
++++ uboot-qcom-ab/cmd/Makefile	2026-06-13 12:41:15.338575344 +1000
+@@ -220,6 +220,7 @@
+
+ obj-$(CONFIG_CMD_DFU) += dfu.o
+ obj-$(CONFIG_CMD_GPT) += gpt.o
++obj-$(CONFIG_CMD_QCOM_AB_SUCCESS) += qcom_ab_success.o
+ obj-$(CONFIG_CMD_MBR) += mbr.o
+ obj-$(CONFIG_CMD_ETHSW) += ethsw.o
+ obj-$(CONFIG_CMD_AXI) += axi.o
+diff -ruN uboot-orig/cmd/qcom_ab_success.c uboot-qcom-ab/cmd/qcom_ab_success.c
+--- uboot-orig/cmd/qcom_ab_success.c	1970-01-01 10:00:00.000000000 +1000
++++ uboot-qcom-ab/cmd/qcom_ab_success.c	2026-06-13 12:41:15.345575436 +1000
+@@ -0,0 +1,152 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Read-only Qualcomm Android A/B GPT boot partition attribute inspector.
++ *
++ * The OnePlus 6T / SDM845 stock boot chain stores A/B slot state in
++ * GPT partition attribute bits. This command intentionally performs no
++ * writes; it only reports boot_a/boot_b state and the exact change a
++ * later write-capable command would make.
++ */
++
++#include <blk.h>
++#include <command.h>
++#include <part.h>
++#include <part_efi.h>
++#include <vsprintf.h>
++#include <linux/types.h>
++
++#define QCOM_AB_MAX_SCSI_DEVS 8
++
++/* Qualcomm Android A/B flags live in GPT attribute byte offset 6. */
++#define QCOM_AB_SLOT_ACTIVE     (1ULL << 50)
++#define QCOM_AB_BOOT_SUCCESSFUL (1ULL << 54)
++#define QCOM_AB_UNBOOTABLE      (1ULL << 55)
++
++static void gpt_name_to_cstr(const gpt_entry *entry, char *out, int out_len)
++{
++	int i;
++
++	if (out_len <= 0)
++		return;
++
++	for (i = 0; i < out_len - 1 && i < PARTNAME_SZ; i++) {
++		unsigned int ch = le16_to_cpu(entry->partition_name[i]);
++
++		if (!ch)
++			break;
++
++		out[i] = ch < 0x80 ? (char)ch : '?';
++	}
++
++	out[i] = '\0';
++}
++
++static bool is_boot_slot_name(const char *name)
++{
++	return !strcmp(name, "boot_a") || !strcmp(name, "boot_b");
++}
++
++static void print_attrs(const char *name, u64 attrs)
++{
++	u8 ab = (attrs >> 48) & 0xff;
++
++	printf("%-8s attrs 0x%016llx ab_byte 0x%02x pri %u active %u successful %u unbootable %u\n",
++	       name, attrs, ab, ab & 0xf,
++	       !!(attrs & QCOM_AB_SLOT_ACTIVE),
++	       !!(attrs & QCOM_AB_BOOT_SUCCESSFUL),
++	       !!(attrs & QCOM_AB_UNBOOTABLE));
++}
++
++static void print_dry_run(const char *name, u64 attrs)
++{
++	u64 new_attrs = (attrs | QCOM_AB_BOOT_SUCCESSFUL) & ~QCOM_AB_UNBOOTABLE;
++
++	if (new_attrs == attrs) {
++		printf("  dry-run: no change needed\n");
++		return;
++	}
++
++	printf("  dry-run: would mark boot successful: 0x%016llx -> 0x%016llx\n",
++	       attrs, new_attrs);
++}
++
++static int scan_device(int devnum, bool *found_boot_a, bool *found_boot_b)
++{
++	struct blk_desc *desc;
++	struct gpt_table tbl;
++	int entries, i, ret;
++	bool printed_header = false;
++
++	desc = blk_get_dev("scsi", devnum);
++	if (!desc)
++		return 0;
++
++	ret = gpt_table_load(desc, &tbl);
++	if (ret)
++		return 0;
++
++	entries = le32_to_cpu(tbl.header.num_partition_entries);
++
++	for (i = 0; i < entries; i++) {
++		char name[PARTNAME_SZ + 1];
++		u64 attrs;
++
++		gpt_name_to_cstr(&tbl.entries[i], name, sizeof(name));
++		if (!is_boot_slot_name(name))
++			continue;
++
++		attrs = le64_to_cpu(tbl.entries[i].attributes.raw);
++
++		if (!printed_header) {
++			printf("scsi %d:\n", devnum);
++			printed_header = true;
++		}
++
++		printf("  part %d ", i + 1);
++		print_attrs(name, attrs);
++		print_dry_run(name, attrs);
++
++		if (!strcmp(name, "boot_a"))
++			*found_boot_a = true;
++		else
++			*found_boot_b = true;
++	}
++
++	gpt_table_free(&tbl);
++	return 0;
++}
++
++static int do_qcom_ab_success(struct cmd_tbl *cmdtp, int flag, int argc,
++			      char *const argv[])
++{
++	bool found_boot_a = false;
++	bool found_boot_b = false;
++	int devnum;
++
++	if (argc > 2)
++		return CMD_RET_USAGE;
++
++	if (argc == 2 && strcmp(argv[1], "scan") && strcmp(argv[1], "dry-run"))
++		return CMD_RET_USAGE;
++
++	printf("qcom_ab_success: read-only boot_a/boot_b scan; no GPT writes will be performed\n");
++	printf("qcom_ab_success: dry-run operation is: attrs |= 0x%016llx; attrs &= ~0x%016llx\n",
++	       QCOM_AB_BOOT_SUCCESSFUL, QCOM_AB_UNBOOTABLE);
++
++	for (devnum = 0; devnum < QCOM_AB_MAX_SCSI_DEVS; devnum++)
++		scan_device(devnum, &found_boot_a, &found_boot_b);
++
++	if (!found_boot_a)
++		printf("warning: boot_a was not found\n");
++	if (!found_boot_b)
++		printf("warning: boot_b was not found\n");
++
++	return CMD_RET_SUCCESS;
++}
++
++U_BOOT_CMD(qcom_ab_success, 2, 0, do_qcom_ab_success,
++	   "read-only scan of Qualcomm Android A/B boot GPT attributes",
++	   "[scan|dry-run]\n"
++	   "    Scan scsi devices for boot_a and boot_b GPT partitions,\n"
++	   "    report slot attributes, and print the exact successful-bit\n"
++	   "    change that would be made. This command does not write GPT.");

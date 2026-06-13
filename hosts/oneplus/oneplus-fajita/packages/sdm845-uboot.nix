@@ -19,6 +19,7 @@ buildUBoot {
     CONFIG_CMD_BLKMAP=y
     CONFIG_BLKMAP=y
     CONFIG_CMD_UFETCH=y
+    CONFIG_CMD_QCOM_AB_SUCCESS=y
     CONFIG_CMD_SELECT_FONT=y
     CONFIG_VIDEO_FONT_16X32=y
     # Do not show U-Boot's bootmenu before running bootcmd. The recovery menu
@@ -32,6 +33,9 @@ buildUBoot {
     CONFIG_AUTOBOOT_KEYED_CTRLC=y
     CONFIG_BOOTDELAY=5
   '';
+  patches = [
+    ../patches/0001-cmd-add-read-only-qcom-ab-success-scan.patch
+  ];
   prePatch = ''
     cp ${../assets/qcom-phone.env} board/qualcomm/qcom-phone.env
   '';
