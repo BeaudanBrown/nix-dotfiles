@@ -50,10 +50,9 @@
   ];
   services = {
     dbus = {
-      # Avoid a live dbus -> dbus-broker implementation change on the phone.
-      # That change is blocked by NixOS switch inhibitors and should only happen
-      # through `nixos-rebuild boot` + reboot if we decide to adopt it later.
-      implementation = "dbus";
+      # Test dbus-broker on the phone through a booted generation rather than a
+      # live switch, since changing implementations is blocked by switch inhibitors.
+      implementation = "broker";
       packages = [
         config.systemd.package
       ];
