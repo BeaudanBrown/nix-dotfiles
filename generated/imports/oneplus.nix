@@ -37,5 +37,6 @@
   ../../modules/nix/builders/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/apps/ghostty/client.nix
+  ../../modules/hardware/audio/client.nix
   ../../modules/services/tailscale/client.nix
 ]

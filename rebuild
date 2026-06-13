@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+cd "$repo_dir"
+
+nix run .#generate-host-imports -- oneplus --repo .
+
+NEW=$(nix build --no-link --print-out-paths --extra-experimental-features 'fetch-closure' .#nixosConfigurations.oneplus.config.system.build.toplevel)
+sudo systemd-run --wait --collect --unit=oneplus-set-boot /run/current-system/sw/bin/sh -lc "exec >/var/log/oneplus-set-boot.log 2>&1; /run/current-system/sw/bin/nix-env -p /nix/var/nix/profiles/system --set '$NEW'; STC_DEBUG=1 '$NEW/bin/switch-to-configuration' boot"
