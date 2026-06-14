@@ -48,6 +48,13 @@ let
       Include.wcdspke.File "/codecs/wcd934x/SpeakerEnableSeq.conf"
       Include.wcdspkd.File "/codecs/wcd934x/SpeakerDisableSeq.conf"
 
+      EnableSequence [
+        cset "name='RX0 Digital Volume' 100"
+        cset "name='RX1 Digital Volume' 100"
+        cset "name='RX7 Digital Volume' 100"
+        cset "name='RX8 Digital Volume' 100"
+      ]
+
       Value {
         PlaybackPriority 100
         PlaybackPCM "hw:O6T,0"
