@@ -123,17 +123,10 @@ in
 
   systemd.user.services.wireplumber.environment.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
 
-  security.sudo.extraRules = [
-    {
-      groups = [ "wheel" ];
-      commands = [
-        {
-          command = "/run/current-system/sw/bin/systemd-run";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-    }
-  ];
+  # Temporary bring-up/debug mode for this phone: allow the agent/user in wheel
+  # to inspect and iterate across boot cycles without an interactive password.
+  # Remove this once OnePlus audio/reboot bring-up stabilizes.
+  security.sudo.wheelNeedsPassword = false;
 
   # The USB gadget serial getty on ttyGS0 holds/contends for /dev/console's
   # flock. That makes `systemd-run --pipe` from a PTY block in the transient
