@@ -197,13 +197,44 @@ in
         set -eu
 
         for _ in $(${pkgs.coreutils}/bin/seq 1 30); do
-          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker; then
+          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker set _enadev Mic1; then
             exit 0
           fi
           ${pkgs.coreutils}/bin/sleep 1
         done
 
         exit 1
+      '';
+    };
+  };
+
+  systemd.user.services.oneplus-mic-source = {
+    description = "Expose OnePlus 6T bottom microphone through PipeWire Pulse";
+    wantedBy = [ "default.target" ];
+    after = [
+      "oneplus-audio-route.service"
+      "pipewire-pulse.service"
+    ];
+    wants = [
+      "oneplus-audio-route.service"
+      "pipewire-pulse.service"
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "oneplus-mic-source" ''
+        set -eu
+
+        if ${pkgs.pulseaudio}/bin/pactl list modules short | ${pkgs.gnugrep}/bin/grep -q 'module-alsa-source.*oneplus_bottom_mic'; then
+          exit 0
+        fi
+
+        ${pkgs.pulseaudio}/bin/pactl load-module module-alsa-source \
+          device=hw:O6T,1 \
+          source_name=oneplus_bottom_mic \
+          'source_properties=device.description="OnePlus Bottom Microphone"' \
+          format=s16le \
+          rate=48000 \
+          channels=1
       '';
     };
   };
