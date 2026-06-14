@@ -405,6 +405,23 @@ Generation 55
 /nix/store/4wz6myn0xqax5828dh4xbffvhll0f0h8-nixos-system-oneplus-26.05.20260531.b51242d
 ```
 
+Prepared next boot generation:
+
+```text
+Generation 56
+/nix/store/cd847yabwwdci5v7zi8c2dinz7z88kkk-nixos-system-oneplus-26.05.20260531.b51242d
+```
+
+Expected generation 56 runtime changes:
+
+- Persisted speaker gain values in the OnePlus UCM `Speaker` enable sequence:
+  - `RX0 Digital Volume = 100`
+  - `RX1 Digital Volume = 100`
+  - `RX7 Digital Volume = 100`
+  - `RX8 Digital Volume = 100`
+- Added `scripts/record-oneplus-touch-events.sh` to the repo for manual touch/scroll captures.
+- Documentation-only additions for bring-up tracking and confirmed haptics.
+
 Current audio sink:
 
 ```text
