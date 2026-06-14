@@ -443,9 +443,28 @@ Generation 56 audio findings:
 - `QUAT_MI2S_RX Audio Mixer MultiMedia1 = on` after boot.
 - `spa-acp-tool` probing with ACP/UCM hung during live testing, so ACP should not be re-enabled blindly in a booted generation.
 
-Next prepared audio change:
+Generation 57 audio findings:
 
-- Keep the stable raw ALSA sink, but rename the PipeWire node to `OnePlus Speaker` / `Speaker` for clearer volume-control UI mapping.
+- Booted successfully:
+  - `/nix/store/b34y2bxci5f2f4mi0nhwg5yskndc0slk-nixos-system-oneplus-26.05.20260531.b51242d`
+- The raw sink rename worked:
+  - PipeWire node description: `OnePlus Speaker`
+  - PipeWire node nick: `Speaker`
+  - Pulse sink description: `OnePlus Speaker`
+- Still no Pro Audio fallback in the active runtime path because `api.alsa.use-acp = false` remains set.
+- Still not a real ACP/UCM `Speaker` profile; this remains the stable raw ALSA sink with UCM route initialization.
+- UCM aliases continue to load for `O6T`, `hw:0`, `oneplus-OnePlus6T`, and `sdm845`.
+- Speaker route/gain remains correct after boot:
+  - `RX0 Digital Volume = 100`
+  - `RX1 Digital Volume = 100`
+  - `RX7 Digital Volume = 100`
+  - `RX8 Digital Volume = 100`
+  - `QUAT_MI2S_RX Audio Mixer MultiMedia1 = on`
+- Bounded `spa-acp-tool` probing with `api.alsa.use-acp=true` and UCM enabled shows only:
+  - `off`
+  - `pro-audio`
+- Temp UCM variants adding `PlaybackVolume "RX0 Digital Volume"` and `CaptureVolume "ADC2 Volume"` still produced only `off` + `pro-audio` in `spa-acp-tool`, so missing volume fields are not the reason ACP ignores the UCM profile.
+- Current conclusion: alsa-lib/`alsaucm` can parse the custom UCM, but PipeWire SPA ACP is not generating UCM profiles for this card. Keep raw ALSA as the supported path until the ACP/UCM mismatch is understood.
 
 Current card:
 
