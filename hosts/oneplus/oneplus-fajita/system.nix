@@ -125,7 +125,7 @@ in
 
   # Temporary bring-up/debug mode for this phone: allow the agent/user in wheel
   # to inspect and iterate across boot cycles without an interactive password.
-  # Remove this once OnePlus audio/reboot bring-up stabilizes.
+  # Remove this once the OnePlus system is stable overall.
   security.sudo.wheelNeedsPassword = false;
 
   # The USB gadget serial getty on ttyGS0 holds/contends for /dev/console's
