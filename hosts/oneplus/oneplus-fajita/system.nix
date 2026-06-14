@@ -240,6 +240,14 @@ in
           rate=48000 \
           channels=1
 
+        for _ in $(${pkgs.coreutils}/bin/seq 1 10); do
+          if ${pkgs.pulseaudio}/bin/pactl set-card-profile alsa_card.platform-sound 'HiFi (Speaker)'; then
+            break
+          fi
+          ${pkgs.coreutils}/bin/sleep 1
+        done
+
+        ${pkgs.pulseaudio}/bin/pactl set-default-sink alsa_output.platform-sound.HiFi__Speaker__sink
         ${pkgs.pulseaudio}/bin/pactl set-default-source oneplus_bottom_mic
       '';
     };
