@@ -8,7 +8,7 @@ sudo_cmd="${SUDO:-/run/wrappers/bin/sudo}"
 
 usage() {
 	cat <<EOF
-Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm|tx-codec-dma] [OUTDIR]
+Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm|pmos-params|tx-codec-dma] [OUTDIR]
 
 Modes:
   full          Run all microphone/capture sweeps and diagnostics. Default.
@@ -16,6 +16,7 @@ Modes:
   pmos          Run only exact postmarketOS OnePlus/fajita UCM mic routes.
   pmos-global   Run PMOS-style global verb routes, then each PMOS mic device path.
   pmos-dapm     Run exact PMOS routes and save active DAPM snapshots while recording.
+  pmos-params   Sweep format/rate/channel params on PMOS bottom mic route.
   tx-codec-dma  Sweep TX_CODEC_DMA_TX capture frontends with AMIC4/ADC4.
 EOF
 }
@@ -48,7 +49,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$mode" in
-full | android | pmos | pmos-global | pmos-dapm | tx-codec-dma) ;;
+full | android | pmos | pmos-global | pmos-dapm | pmos-params | tx-codec-dma) ;;
 *)
 	echo "Invalid mode: $mode" >&2
 	usage >&2
@@ -227,12 +228,14 @@ run_regmap_diff() {
 	log "WCD934x regmap diff saved: $outdir/wcd934x-regmap.diff"
 }
 
-record_hw_pcm_current() {
+record_hw_pcm_params() {
 	local name="$1"
 	local dev="$2"
-	local channels="${3:-1}"
-	local seconds="${4:-2}"
-	local snapshot_dapm="${5:-false}"
+	local format="$3"
+	local rate="$4"
+	local channels="$5"
+	local seconds="${6:-2}"
+	local snapshot_dapm="${7:-false}"
 	local before_lines wav err dmesg_delta q6_dmesg code stat max rms samples pid
 
 	before_lines="$($sudo_cmd dmesg | wc -l)"
@@ -243,14 +246,14 @@ record_hw_pcm_current() {
 
 	set +e
 	if [[ $snapshot_dapm == true ]]; then
-		timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f S16_LE -r 48000 -c "$channels" -d "$seconds" "$wav" 2>"$err" &
+		timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f "$format" -r "$rate" -c "$channels" -d "$seconds" "$wav" 2>"$err" &
 		pid=$!
 		sleep 1
 		capture_dapm_snapshot "$name-active"
 		wait "$pid"
 		code=$?
 	else
-		timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f S16_LE -r 48000 -c "$channels" -d "$seconds" "$wav" 2>"$err"
+		timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f "$format" -r "$rate" -c "$channels" -d "$seconds" "$wav" 2>"$err"
 		code=$?
 	fi
 	set -e
@@ -264,14 +267,23 @@ record_hw_pcm_current() {
 		max="$(printf '%s\n' "$stat" | awk '/Maximum amplitude/ {print $3}')"
 		rms="$(printf '%s\n' "$stat" | awk '/RMS     amplitude/ {print $3}')"
 		samples="$(printf '%s\n' "$stat" | awk '/Samples read/ {print $3}')"
-		log "$name dev=$dev channels=$channels code=0 samples=${samples:-unknown} max=${max:-unknown} rms=${rms:-unknown} dmesg_lines=$(wc -l <"$dmesg_delta") wav=$wav"
+		log "$name dev=$dev format=$format rate=$rate channels=$channels code=0 samples=${samples:-unknown} max=${max:-unknown} rms=${rms:-unknown} dmesg_lines=$(wc -l <"$dmesg_delta") wav=$wav"
 	else
-		log "$name dev=$dev channels=$channels code=$code err=$(tr '\n' ' ' <"$err") dmesg_lines=$(wc -l <"$dmesg_delta")"
+		log "$name dev=$dev format=$format rate=$rate channels=$channels code=$code err=$(tr '\n' ' ' <"$err") dmesg_lines=$(wc -l <"$dmesg_delta")"
 	fi
 	if [[ -s $q6_dmesg ]]; then
 		log "q6_dmesg=$q6_dmesg"
 		cat "$q6_dmesg" | tee -a "$log_file" || true
 	fi
+}
+
+record_hw_pcm_current() {
+	local name="$1"
+	local dev="$2"
+	local channels="${3:-1}"
+	local seconds="${4:-2}"
+	local snapshot_dapm="${5:-false}"
+	record_hw_pcm_params "$name" "$dev" S16_LE 48000 "$channels" "$seconds" "$snapshot_dapm"
 }
 
 setup_amic_tx_path() {
@@ -466,11 +478,7 @@ run_android_mixer_paths_sweep() {
 	record_hw_pcm_current "android_handset_mic_rec_mm2_dev1_amic3_tx0_adcvol6" 1 1 3 true
 }
 
-run_pmos_fajita_ucm_sweep() {
-	log ""
-	log "===== postmarketOS OnePlus/fajita UCM exact mic route sweep ====="
-
-	# Bottom Microphone: MultiMedia2 <-> SLIMBUS_0_TX (AIF1_CAP, ADC4, TX7)
+setup_pmos_bottom_mic_route() {
 	reset_capture_routes
 	cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
 	cset "AIF1_CAP Mixer SLIM TX7" 1
@@ -480,6 +488,32 @@ run_pmos_fajita_ucm_sweep() {
 	cset "AMIC4_5 SEL" AMIC4
 	cset "ADC4 Volume" 12
 	cset "DEC7 Volume" 84
+}
+
+run_pmos_param_sweep() {
+	local format rate channels name fmt_name
+	log ""
+	log "===== PMOS bottom mic format/rate/channel parameter sweep ====="
+	log "Route: MultiMedia2 / SLIMBUS_0_TX / AIF1_CAP SLIM TX7 / ADC4 / hw:$card,1. Live-only; resets between attempts."
+	for format in S16_LE S24_LE S24_3LE S32_LE; do
+		for rate in 8000 16000 48000; do
+			for channels in 1 2 4; do
+				setup_pmos_bottom_mic_route
+				fmt_name="${format,,}"
+				fmt_name="${fmt_name//_/-}"
+				name="pmos_params_bottom_${fmt_name}_${rate}hz_${channels}ch"
+				record_hw_pcm_params "$name" 1 "$format" "$rate" "$channels" 1 false
+			done
+		done
+	done
+}
+
+run_pmos_fajita_ucm_sweep() {
+	log ""
+	log "===== postmarketOS OnePlus/fajita UCM exact mic route sweep ====="
+
+	# Bottom Microphone: MultiMedia2 <-> SLIMBUS_0_TX (AIF1_CAP, ADC4, TX7)
+	setup_pmos_bottom_mic_route
 	record_hw_pcm_current "pmos_fajita_bottom_mic_mm2_slim0_tx7_adc4" 1 1 3
 
 	# Top Microphone: MultiMedia4 <-> SLIMBUS_1_TX (AIF2_CAP, ADC3, TX6)
@@ -777,6 +811,9 @@ main() {
 			;;
 		pmos-dapm)
 			run_pmos_fajita_ucm_dapm_sweep
+			;;
+		pmos-params)
+			run_pmos_param_sweep
 			;;
 		tx-codec-dma)
 			run_tx_codec_dma_sweep
