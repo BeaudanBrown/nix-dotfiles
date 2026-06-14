@@ -395,7 +395,7 @@ run_android_acdb_inventory() {
 	log "===== Android/OxygenOS ACDB and proprietary audio inventory ====="
 	log "Lineage fajita proprietary-files.txt lists OxygenOS ACDB under odm/etc/acdbdata/MTP/*.acdb."
 	log "Lineage sdm845-common proprietary-files.txt lists vendor/etc/acdbdata/adsp_avs_config.acdb and Qualcomm audio/ACDB loader libraries."
-	run_sh "current firmware ACDB/audio-ish files" "for root in /run/current-system/firmware /lib/firmware; do test -e \"\$root\" && fd -a -i 'acdb|adsp_avs|MTP_.*cal|tfa98|audio|wcd|tavil|mbhc|calib|rfsa|adsp' \"\$root\" 2>/dev/null; done | sort -u | sed -n '1,240p'"
+	run_sh "current firmware ACDB/audio-ish files" "for root in /run/current-system/firmware /lib/firmware; do test -e \"\$root\" && fd -L -a -i 'acdb|adsp_avs|MTP_.*cal|tfa98|audio|wcd|tavil|mbhc|calib|rfsa|adsp' \"\$root\" 2>/dev/null; done | sort -u | sed -n '1,240p'"
 	run_sh "Lineage listed ACDB/audio blobs" "grep -E '(^# ACDB|^# Audio|acdb|ACDB|tfa98|libacdb|libaudcal|libadm)' /tmp/oneplus-audio-clues/lineage-fajita/proprietary-files.txt /tmp/oneplus-audio-clues/lineage-sdm845-common/proprietary-files.txt 2>/dev/null | sed -n '1,220p'"
 	run_sh "boot audio calibration messages" "$sudo_cmd dmesg | grep -Ei 'acdb|calib|adsp|avs|audcal|acph|adm|afe|q6|wcd|tavil|firmware|fail|error' | tail -260"
 }
@@ -686,8 +686,9 @@ collect_firmware_inventory() {
 			log "firmware_root_missing=$root"
 		fi
 	done
+	run_sh "firmware root symlinks" "for root in /lib/firmware /run/current-system/firmware; do test -e \"\$root\" && ls -la \"\$root\" | sed -n '1,120p'; done"
 	if have fd; then
-		run_sh "audio-ish firmware files" "for root in /lib/firmware /run/current-system/firmware; do test -e \"\$root\" && timeout 20 fd -a -i 'acdb|adsp|audio|wcd|mbhc|mixer|calib|q6|slpi|modem|venus|a660|tfa' \"\$root\"; done | sort -u | sed -n '1,300p'"
+		run_sh "audio-ish firmware files" "for root in /lib/firmware /run/current-system/firmware; do test -e \"\$root\" && timeout 20 fd -L -a -i 'acdb|adsp|audio|wcd|mbhc|mixer|calib|q6|slpi|modem|venus|a660|tfa' \"\$root\"; done | sort -u | sed -n '1,300p'"
 	else
 		run_sh "audio-ish firmware files" "for root in /lib/firmware /run/current-system/firmware; do test -e \"\$root\" && timeout 20 find -L \"\$root\" -iregex '.*\\(acdb\\|adsp\\|audio\\|wcd\\|mbhc\\|mixer\\|calib\\|q6\\|slpi\\|modem\\|venus\\|a660\\|tfa\\).*'; done | sort -u | sed -n '1,300p'"
 	fi
