@@ -12,7 +12,7 @@ This repo supports a generic manual reboot debugging loop.
 
 1. Seed the current debugging task with either `scripts/pi-boot-seed.sh "continue ..."` or by editing `.pi/boot-task.md`.
 2. Commit the current coherent changes before preparing a boot generation.
-3. Run `nr` or other approved commands to prepare the next boot generation.
+3. Run `nr` or other approved commands to prepare the next boot generation. Do not run `nix eval` immediately before `nr`; it duplicates work.
 4. Manually reboot the machine.
 5. On graphical login, the OnePlus Niri session starts Ghostty running `scripts/pi-boot-resume.sh`.
 6. The script attaches Ghostty to the `default` tmux session, recreates the `pi-boot-resume` window, opens `pi -c` in this repository, and sends the combined prompt to the most recent session.

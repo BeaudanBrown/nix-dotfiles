@@ -235,6 +235,7 @@ in
     blueman
     brave
     brightnessctl
+    fd
     iwgtk
     linuxConsoleTools
     lisgd
@@ -339,6 +340,9 @@ in
     spawn-at-startup "ghostty" "--gtk-single-instance=false" "--title=pi-boot-resume" "-e" "${config.hostSpec.dotfiles}/scripts/pi-boot-resume.sh"
     spawn-at-startup "squeekboard"
   '';
+
+  hm.primary.home.file.".local/share/squeekboard/keyboards/terminal/us.yaml".source =
+    ./squeekboard-keyboards/terminal/us.yaml;
 
   hm.primary.home.file.".config/ashell/config.toml".text = ''
     log_level = "warn"

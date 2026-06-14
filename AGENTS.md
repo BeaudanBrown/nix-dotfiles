@@ -39,6 +39,8 @@ Before starting a task, read the relevant specification:
 
 ## Core Workflow
 
+Use `fd` instead of `find` for repository and Nix store discovery when available. Prefer commands like `fd -a PATTERN PATH` for locating package sources, generated store files, layouts, and configs.
+
 When implementing a change, follow this decision tree:
 
 ### Step 1: Identify Target Host(s)
@@ -95,7 +97,8 @@ Name your file after the root it should be imported for:
 
 ### Required Validation
 - Do not report a Nix change as done until you have run at least one relevant validation command, or explicitly stated that you did not run validation.
-- By default, use evaluation-only checks such as `nix eval .#nixosConfigurations.<host>.config.system.build.toplevel.drvPath`, option evaluations, or focused syntax/format checks.
+- When iterating with `nr`, do **not** run `nix eval` first; it duplicates work and slows reboot-debug loops. Commit coherent changes, then run `nr` directly.
+- For non-`nr` validation, prefer focused option/syntax checks. Use `nix eval .#nixosConfigurations.<host>.config.system.build.toplevel.drvPath` only when you are not about to run `nr`.
 - **Do not run Nix builds** (`nix build`, `nixos-rebuild build`, `nixos-rebuild switch`, `nix flake check`, or any command that realizes/builds Nix outputs) unless the user explicitly instructs you to build.
 - **Do not rebuild or switch the current system yourself** unless the user explicitly instructs you to do so. When a change needs activation, report back that a rebuild/switch is needed and provide the appropriate command for the user to run.
 - If the user explicitly requests a build, use a targeted build for host-specific changes such as `nix build .#nixosConfigurations.<host>.config.system.build.toplevel`; use `nix flake check` only for broad validation when requested.
