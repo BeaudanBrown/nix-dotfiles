@@ -231,6 +231,7 @@ in
 
   environment.systemPackages = with pkgs; [
     # foot
+    alsa-utils
     ashell
     blueman
     brave
@@ -250,6 +251,7 @@ in
     niriMsg
     sttDictate
     pavucontrol
+    pulseaudio
     squeekboard
     wayland-utils
     wf-recorder

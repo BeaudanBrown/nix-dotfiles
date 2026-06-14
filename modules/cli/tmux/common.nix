@@ -144,6 +144,10 @@ in
           set-window-option -g pane-base-index 1
           set-option -g renumber-windows on
           set -g mouse on
+          bind-key -n WheelUpPane if-shell -F '#{pane_in_mode}' { send-keys -X -N 5 scroll-up } { copy-mode -e \; send-keys -X -N 5 scroll-up }
+          bind-key -n WheelDownPane if-shell -F '#{pane_in_mode}' { send-keys -X -N 5 scroll-down } { send-keys -M }
+          bind-key -T copy-mode-vi WheelUpPane send-keys -X -N 5 scroll-up
+          bind-key -T copy-mode-vi WheelDownPane send-keys -X -N 5 scroll-down
           bind-key C-Space resize-pane -Z # C-space to zoom pane
 
           is_vim="ps -o state= -o comm= -t '#{pane_tty}' \

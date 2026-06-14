@@ -9,7 +9,7 @@ outlines:
     large:         { width: 60.615,  height: 52     }
     narrow:        { width: 30.307,  height: 52     }
     small-row:     { width: 50.512,  height: 27.725 }
-    spaceline:     { width: 208.785, height: 52     }
+    spaceline:     { width: 148.17,  height: 52     }
     special:       { width: 60.615,  height: 52     }
     special-2:     { width: 60.615,  height: 52     }
     special-3:     { width: 67.35,   height: 52     }
