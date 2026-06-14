@@ -280,6 +280,121 @@ run_voice_frontend_sweep() {
 	done
 }
 
+trace_dir() {
+	if $sudo_cmd test -d /sys/kernel/tracing/events; then
+		printf '%s\n' /sys/kernel/tracing
+	elif $sudo_cmd test -d /sys/kernel/debug/tracing/events; then
+		printf '%s\n' /sys/kernel/debug/tracing
+	fi
+}
+
+collect_trace_capabilities() {
+	local tdir
+	tdir="$(trace_dir)"
+	log ""
+	log "===== trace capabilities ====="
+	if [[ -z $tdir ]]; then
+		log "tracefs unavailable"
+		return 0
+	fi
+	log "tracefs=$tdir"
+	for group in snd_soc regmap qcom_slim_ngd q6afe q6asm; do
+		if $sudo_cmd test -d "$tdir/events/$group"; then
+			log "trace_event_group=$group"
+			$sudo_cmd ls "$tdir/events/$group" | sed 's/^/  /' | tee -a "$log_file" || true
+		else
+			log "trace_event_group_missing=$group"
+		fi
+	done
+}
+
+run_regmap_trace_case() {
+	local tdir setup_script cleanup_script trace_out wav code stat max rms samples
+	tdir="$(trace_dir)"
+	log ""
+	log "===== regmap trace AMIC1 capture ====="
+	if [[ -z $tdir ]] || ! $sudo_cmd test -d "$tdir/events/regmap"; then
+		log "regmap trace skipped: tracefs/regmap events unavailable"
+		return 0
+	fi
+
+	setup_script="$outdir/trace-enable.sh"
+	cleanup_script="$outdir/trace-disable.sh"
+	trace_out="$outdir/regmap-amic1.trace"
+	wav="$outdir/regmap-trace-amic1.wav"
+
+	cat >"$setup_script" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+trace_dir='$tdir'
+echo 0 >"\$trace_dir/tracing_on" || true
+for enable in "\$trace_dir"/events/regmap/*/enable; do
+	test -e "\$enable" && echo 0 >"\$enable" || true
+done
+echo >"\$trace_dir/trace" || true
+echo 4096 >"\$trace_dir/buffer_size_kb" || true
+for event in \
+	regmap_reg_write \
+	regmap_bulk_write \
+	regmap_hw_write_start \
+	regmap_hw_write_done \
+	regcache_sync; do
+	enable="\$trace_dir/events/regmap/\$event/enable"
+	test -e "\$enable" && echo 1 >"\$enable" || true
+done
+echo 1 >"\$trace_dir/tracing_on" || true
+EOF
+	cat >"$cleanup_script" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+trace_dir='$tdir'
+echo 0 >"\$trace_dir/tracing_on" || true
+for enable in "\$trace_dir"/events/regmap/*/enable; do
+	test -e "\$enable" && echo 0 >"\$enable" || true
+done
+EOF
+	chmod +x "$setup_script" "$cleanup_script"
+
+	setup_slimbus0_capture
+	cset "AMIC MUX0" ADC1
+	cset "ADC1 Volume" 20
+	$sudo_cmd "$setup_script" || true
+	set +e
+	timeout 5 arecord -q -D "hw:$card,1" -f S16_LE -r 48000 -c 1 -d 3 "$wav" 2>"$outdir/regmap-trace-amic1.err"
+	code=$?
+	set -e
+	$sudo_cmd cat "$tdir/trace" | tee "$trace_out" >/dev/null || true
+	$sudo_cmd "$cleanup_script" || true
+
+	if [[ $code -eq 0 ]]; then
+		stat="$(sox_stat "$wav")"
+		printf '%s\n' "$stat" >"$outdir/regmap-trace-amic1.sox-stat"
+		max="$(printf '%s\n' "$stat" | awk '/Maximum amplitude/ {print $3}')"
+		rms="$(printf '%s\n' "$stat" | awk '/RMS     amplitude/ {print $3}')"
+		samples="$(printf '%s\n' "$stat" | awk '/Samples read/ {print $3}')"
+		log "regmap_trace_amic1 code=0 samples=${samples:-unknown} max=${max:-unknown} rms=${rms:-unknown} trace_lines=$(wc -l <"$trace_out") trace=$trace_out"
+	else
+		log "regmap_trace_amic1 code=$code err=$(tr '\n' ' ' <"$outdir/regmap-trace-amic1.err") trace_lines=$(wc -l <"$trace_out") trace=$trace_out"
+	fi
+}
+
+collect_firmware_inventory() {
+	log ""
+	log "===== audio firmware inventory ====="
+	for root in /lib/firmware /run/current-system/firmware; do
+		if [[ -e $root ]]; then
+			log "firmware_root=$root -> $(readlink -f "$root" 2>/dev/null || printf '%s' "$root")"
+		else
+			log "firmware_root_missing=$root"
+		fi
+	done
+	if have fd; then
+		run_sh "audio-ish firmware files" "for root in /lib/firmware /run/current-system/firmware; do test -e \"\$root\" && timeout 20 fd -a -i 'acdb|adsp|audio|wcd|mbhc|mixer|calib|q6|slpi|modem|venus|a660|tfa' \"\$root\"; done | sort -u | sed -n '1,300p'"
+	else
+		run_sh "audio-ish firmware files" "for root in /lib/firmware /run/current-system/firmware; do test -e \"\$root\" && timeout 20 find -L \"\$root\" -iregex '.*\\(acdb\\|adsp\\|audio\\|wcd\\|mbhc\\|mixer\\|calib\\|q6\\|slpi\\|modem\\|venus\\|a660\\|tfa\\).*'; done | sort -u | sed -n '1,300p'"
+	fi
+}
+
 main() {
 	: >"$log_file"
 	log "OnePlus mic debug output: $outdir"
@@ -288,6 +403,8 @@ main() {
 
 	run "ALSA cards" cat /proc/asound/cards
 	run "ALSA PCMs" cat /proc/asound/pcm
+	collect_trace_capabilities
+	collect_firmware_inventory
 	run_sh "mic-related control list" "amixer -c '$card' controls | grep -Ei 'AMIC|ADC|DEC|CDC_IF TX|SLIM TX|MIC BIAS|Headset|MBHC|4_5|TX.*MUX|AIF.*CAP|MultiMedia.*TX|Voice.*TX'"
 	{
 		echo
@@ -333,6 +450,7 @@ main() {
 	wait "$pid" || true
 
 	run_regmap_diff
+	run_regmap_trace_case
 
 	run_sh "hw:O6T,0 routed capture retry" "amixer -c '$card' cset name='MultiMedia1 Mixer SLIMBUS_0_TX' 1 >/dev/null 2>&1 || true; timeout 4 arecord -D hw:'$card',0 -f S16_LE -r 48000 -c 1 -d 2 '$outdir/hw0-routed.wav'"
 	if [[ -s "$outdir/hw0-routed.wav" ]]; then

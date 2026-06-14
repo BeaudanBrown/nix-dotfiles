@@ -550,10 +550,15 @@ Mic debugging after generation 59:
   - `RMS amplitude: 0.000000`
 - Current conclusion: routing to the ALSA capture frontend works and powers the codec path, but the stream is filled with zeros. This looks lower than UCM/PipeWire now: likely ADSP/AFE port behavior, codec capture path quirk, or missing downstream kernel/DT routing detail.
 - Latest reusable flake-script run:
-  - command: `nix run .#debug-oneplus-mic -- /tmp/oneplus-mic-debug-flake-3`
-  - output directory: `/tmp/oneplus-mic-debug-flake-3`
+  - command: `nix run .#debug-oneplus-mic -- /tmp/oneplus-mic-debug-pre-reboot-1`
+  - output directory: `/tmp/oneplus-mic-debug-pre-reboot-1`
   - booted system: `/nix/store/pp1ph7xgmdmj526hjkfyiqschy6wr7jy-nixos-system-oneplus-26.05.20260531.b51242d`
   - `writeShellApplication` build/shellcheck passed after using system `/run/wrappers/bin/sudo` instead of injecting non-setuid `pkgs.sudo`.
+  - Tracefs exists at `/sys/kernel/tracing`.
+  - Available useful trace event group: `regmap`.
+  - Missing trace event groups on this kernel: `snd_soc`, `qcom_slim_ngd`, `q6afe`, `q6asm`.
+  - Firmware inventory currently has no `/lib/firmware`; active root is `/run/current-system/firmware -> /nix/store/yxvki3a8qlkdm08ndr33qsp9092ggn5f-firmware/lib/firmware`.
+  - Audio-ish firmware files found include generic SDM845 ADSP/modem blobs and `tfa98xx.cnt.zst`; no obvious ACDB/calibration/mixer-path files were found by the script inventory.
   - AMIC1/2/2+Headset/3/4/5 each recorded 144000 samples and all had `Maximum amplitude: 0.000000`, `RMS amplitude: 0.000000`.
   - No new dmesg lines appeared during those AMIC sweeps.
   - MultiMedia frontend sweep with AMIC1 via `SLIMBUS_0_TX`:
@@ -566,6 +571,7 @@ Mic debugging after generation 59:
   - `VoiceMMode1` / `hw:O6T,6` still failed on read with `Invalid argument` at 8/16/32/48 kHz S16 mono.
   - DAPM snapshots are saved correctly by the script.
   - WCD934x regmap diff is saved correctly by the script; active AMIC1 capture changed codec registers including `060e`, `0625`, `0800`, and `0a31`, confirming the codec route is not purely inert.
+  - Regmap ftrace around an AMIC1 capture produced 346 trace lines while the WAV remained exact-zero; WCD934x writes include the already-seen capture path registers (`0625`, `0800`, `0a31`, `0a34`, `060e`).
   - Routed `hw:O6T,0` can open if `MultiMedia1 Mixer SLIMBUS_0_TX` is enabled, but its output is also exact-zero samples.
   - Boot log has no obvious `acdb`/`calib` messages in the filtered output; notable boot messages include WCD934x MBHC threshold DT warnings, SoundWire DIN-port mismatch, and one SLIM QMI wait timeout.
 - After testing, live capture mixer routes were reset to off to avoid persisting an unsafe state.
