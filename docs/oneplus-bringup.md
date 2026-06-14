@@ -188,23 +188,29 @@ Status: blocked.
 Findings:
 
 - PipeWire currently exposes no real audio source, only monitor source.
-- ALSA capture can open on `hw:O6T,1`, but records silence with tested route.
+- ALSA capture can open on routed `hw:O6T,0` and `hw:O6T,1`, but records exact-zero samples.
 - Risky persisted mic/capture UCM route previously caused a failed boot generation and was backed out.
+- Reusable live-only debug script:
 
-Known silent test route:
-
-```text
-MultiMedia2 Mixer SLIMBUS_0_TX = on
-AMIC MUX0 = ADC2
-ADC MUX0 = AMIC
-ADC2 Volume = 10
-arecord -D hw:O6T,1 -f S16_LE -r 48000 -c 2 -d 2 /tmp/oneplus-mic.wav
+```sh
+./scripts/debug-oneplus-mic.sh /tmp/oneplus-mic-debug-$(date +%s)
 ```
+
+The script:
+
+- records ALSA card/PCM/control state,
+- sweeps AMIC1-5 through `MultiMedia2` / `SLIMBUS_0_TX` / `AIF1_CAP` / `CDC_IF TX0`,
+- captures DAPM snapshots,
+- captures WCD934x regmap before/active diffs,
+- retries routed `hw:O6T,0`,
+- saves WAV/stat/dmesg artifacts,
+- resets live capture routes at the end.
 
 Next steps:
 
+- Extend `scripts/debug-oneplus-mic.sh` instead of using one-off shell snippets.
 - Continue testing capture routing live only, not persisted, until non-silent capture works.
-- Investigate valid WCD934x TX path and ADC/DMIC/AMIC mapping.
+- Investigate lower-level ADSP/AFE/codec behavior now that DAPM/regmap prove routes power on.
 - Expose a PipeWire source only after ALSA capture produces non-silent audio.
 
 ### Touch scrolling in tmux/Ghostty
@@ -537,6 +543,16 @@ Mic debugging after generation 59:
   - `Maximum amplitude: 0.000000`
   - `RMS amplitude: 0.000000`
 - Current conclusion: routing to the ALSA capture frontend works and powers the codec path, but the stream is filled with zeros. This looks lower than UCM/PipeWire now: likely ADSP/AFE port behavior, codec capture path quirk, or missing downstream kernel/DT routing detail.
+- Latest reusable script run:
+  - script: `scripts/debug-oneplus-mic.sh`
+  - output directory: `/tmp/oneplus-mic-debug-repo-script-3`
+  - booted system: `/nix/store/pp1ph7xgmdmj526hjkfyiqschy6wr7jy-nixos-system-oneplus-26.05.20260531.b51242d`
+  - AMIC1/2/2+Headset/3/4/5 each recorded 144000 samples and all had `Maximum amplitude: 0.000000`, `RMS amplitude: 0.000000`.
+  - No new dmesg lines appeared during those AMIC sweeps.
+  - DAPM snapshots are now saved correctly by the script.
+  - WCD934x regmap diff is saved correctly by the script; active AMIC1 capture changed codec registers including `060e`, `0625`, `0800`, and `0a31`, confirming the codec route is not purely inert.
+  - Routed `hw:O6T,0` can open if `MultiMedia1 Mixer SLIMBUS_0_TX` is enabled, but its output is also exact-zero samples.
+  - Boot log has no obvious `acdb`/`calib` messages in the filtered output; notable boot messages include WCD934x MBHC threshold DT warnings, SoundWire DIN-port mismatch, and one SLIM QMI wait timeout.
 - After testing, live capture mixer routes were reset to off to avoid persisting an unsafe state.
 
 Current card:
