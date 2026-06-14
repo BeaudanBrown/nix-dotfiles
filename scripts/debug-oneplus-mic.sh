@@ -8,10 +8,11 @@ sudo_cmd="${SUDO:-/run/wrappers/bin/sudo}"
 
 usage() {
 	cat <<EOF
-Usage: $0 [--mode full|pmos|pmos-global|pmos-dapm] [OUTDIR]
+Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm] [OUTDIR]
 
 Modes:
   full         Run all microphone/capture sweeps and diagnostics. Default.
+  android      Run Android/OxygenOS mixer_paths_tavil-style mic routes and ACDB inventory.
   pmos         Run only exact postmarketOS OnePlus/fajita UCM mic routes.
   pmos-global  Run PMOS-style global verb routes, then each PMOS mic device path.
   pmos-dapm    Run exact PMOS routes and save active DAPM snapshots while recording.
@@ -46,7 +47,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$mode" in
-full | pmos | pmos-global | pmos-dapm) ;;
+full | android | pmos | pmos-global | pmos-dapm) ;;
 *)
 	echo "Invalid mode: $mode" >&2
 	usage >&2
@@ -105,7 +106,7 @@ cset() {
 
 reset_capture_routes() {
 	local mm src a s ctrl
-	for mm in 1 2 3 4 5 6; do
+	for mm in 1 2 3 4 5 6 8; do
 		for src in \
 			SLIMBUS_0_TX SLIMBUS_1_TX SLIMBUS_2_TX SLIMBUS_3_TX SLIMBUS_4_TX SLIMBUS_5_TX SLIMBUS_6_TX \
 			TX_CODEC_DMA_TX_0 TX_CODEC_DMA_TX_1 TX_CODEC_DMA_TX_2 TX_CODEC_DMA_TX_3 TX_CODEC_DMA_TX_4 TX_CODEC_DMA_TX_5 \
@@ -363,6 +364,69 @@ run_vendor_lineage_sweep() {
 	record_hw_pcm_current "lineage_amic4_tx0_dec0_adc12_dec84_iir" 1 1 3
 	setup_vendor_lineage_amic_path 0 ADC4 "cset 'AMIC4_5 SEL' AMIC5"
 	record_hw_pcm_current "lineage_amic5_tx0_dec0_adc12_dec84_iir" 1 1 3
+}
+
+setup_android_slim0_amic_path() {
+	local mm="$1"
+	local adc="$2"
+	local extra="${3:-}"
+	local adc_num
+
+	reset_capture_routes
+	# Android/OxygenOS mixer_paths_tavil.xml normal audio-record uses
+	# MultiMedia1 Mixer SLIM_0_TX. Mainline exposes this as SLIMBUS_0_TX.
+	cset "MultiMedia${mm} Mixer SLIMBUS_0_TX" 1
+	cset "AIF1_CAP Mixer SLIM TX0" 1
+	cset "CDC_IF TX0 MUX" DEC0
+	cset "ADC MUX0" AMIC
+	cset "AMIC MUX0" "$adc"
+	cset "IIR0 INP0 MUX" DEC0
+	cset "IIR0 INP0 Volume" 54
+	adc_num="${adc#ADC}"
+	cset "ADC${adc_num} Volume" 12
+	cset "DEC0 Volume" 84
+	if [[ -n $extra ]]; then
+		eval "$extra"
+	fi
+}
+
+run_android_acdb_inventory() {
+	log ""
+	log "===== Android/OxygenOS ACDB and proprietary audio inventory ====="
+	log "Lineage fajita proprietary-files.txt lists OxygenOS ACDB under odm/etc/acdbdata/MTP/*.acdb."
+	log "Lineage sdm845-common proprietary-files.txt lists vendor/etc/acdbdata/adsp_avs_config.acdb and Qualcomm audio/ACDB loader libraries."
+	run_sh "current firmware ACDB/audio-ish files" "for root in /run/current-system/firmware /lib/firmware; do test -e \"\$root\" && fd -a -i 'acdb|adsp_avs|MTP_.*cal|tfa98|audio|wcd|tavil|mbhc|calib|rfsa|adsp' \"\$root\" 2>/dev/null; done | sort -u | sed -n '1,240p'"
+	run_sh "Lineage listed ACDB/audio blobs" "grep -E '(^# ACDB|^# Audio|acdb|ACDB|tfa98|libacdb|libaudcal|libadm)' /tmp/oneplus-audio-clues/lineage-fajita/proprietary-files.txt /tmp/oneplus-audio-clues/lineage-sdm845-common/proprietary-files.txt 2>/dev/null | sed -n '1,220p'"
+	run_sh "boot audio calibration messages" "$sudo_cmd dmesg | grep -Ei 'acdb|calib|adsp|avs|audcal|acph|adm|afe|q6|wcd|tavil|firmware|fail|error' | tail -260"
+}
+
+run_android_mixer_paths_sweep() {
+	log ""
+	log "===== Android/OxygenOS mixer_paths_tavil exact-ish mic route sweep ====="
+	log "Testing mainline equivalents of Android audio-record + handset/speaker/headset mic paths."
+	log "Android audio-record: MultiMedia1 Mixer SLIM_0_TX = 1. Mainline equivalent: MultiMedia1 Mixer SLIMBUS_0_TX."
+	log "Android handset-mic/speaker-mic -> amic4: AIF1_CAP SLIM TX0, DEC0, ADC4, AMIC4_5 SEL=AMIC4."
+	log "Android headset-mic -> amic2: AIF1_CAP SLIM TX0, DEC0, ADC2, optional Headset Mic Switch."
+
+	setup_android_slim0_amic_path 1 ADC4 "cset 'AMIC4_5 SEL' AMIC4"
+	record_hw_pcm_current "android_audio_record_mm1_dev0_handset_speaker_amic4_tx0" 0 1 3 true
+
+	setup_android_slim0_amic_path 2 ADC4 "cset 'AMIC4_5 SEL' AMIC4"
+	record_hw_pcm_current "android_route_mm2_dev1_handset_speaker_amic4_tx0" 1 1 3 true
+
+	setup_android_slim0_amic_path 1 ADC2 "cset 'Headset Mic Switch' 1"
+	record_hw_pcm_current "android_audio_record_mm1_dev0_headset_amic2_tx0" 0 1 3 true
+
+	setup_android_slim0_amic_path 2 ADC2 "cset 'Headset Mic Switch' 1"
+	record_hw_pcm_current "android_route_mm2_dev1_headset_amic2_tx0" 1 1 3 true
+
+	setup_android_slim0_amic_path 1 ADC3
+	cset "ADC3 Volume" 6
+	record_hw_pcm_current "android_handset_mic_rec_mm1_dev0_amic3_tx0_adcvol6" 0 1 3 true
+
+	setup_android_slim0_amic_path 2 ADC3
+	cset "ADC3 Volume" 6
+	record_hw_pcm_current "android_handset_mic_rec_mm2_dev1_amic3_tx0_adcvol6" 1 1 3 true
 }
 
 run_pmos_fajita_ucm_sweep() {
@@ -663,6 +727,10 @@ main() {
 
 	if [[ $mode != full ]]; then
 		case "$mode" in
+		android)
+			run_android_acdb_inventory
+			run_android_mixer_paths_sweep
+			;;
 		pmos)
 			run_pmos_fajita_ucm_sweep
 			;;
@@ -692,6 +760,8 @@ main() {
 	run_tx_slot_sweep
 	run_slimbus_link_sweep
 	run_vendor_lineage_sweep
+	run_android_acdb_inventory
+	run_android_mixer_paths_sweep
 	run_pmos_fajita_ucm_sweep
 	run_voice_frontend_sweep
 
