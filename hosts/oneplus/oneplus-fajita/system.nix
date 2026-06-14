@@ -62,7 +62,7 @@ let
       }
     }
 
-    SectionDevice."Mic" {
+    SectionDevice."Mic1" {
       Comment "Bottom microphone"
 
       EnableSequence [
@@ -80,7 +80,7 @@ let
         cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 0"
         cset "name='AIF1_CAP Mixer SLIM TX7' 0"
         cset "name='CDC_IF TX7 MUX' ZERO"
-        cset "name='ADC MUX7' DMIC"
+        cset "name='ADC MUX7' ZERO"
         cset "name='AMIC MUX7' ZERO"
       ]
 
@@ -88,6 +88,14 @@ let
         CapturePriority 100
         CapturePCM "hw:O6T,1"
         CaptureChannels 1
+
+        # PipeWire ACP currently drops this custom UCM verb if it contains a
+        # capture-only device. Give the mic a low-priority playback side on the
+        # already-valid speaker PCM so ACP keeps the HiFi profile; Speaker stays
+        # the preferred playback device due to its higher priority.
+        PlaybackPriority 1
+        PlaybackPCM "hw:O6T,0"
+        PlaybackChannels 2
       }
     }
     EOF
