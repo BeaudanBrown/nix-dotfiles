@@ -202,6 +202,8 @@ in
         }
       ];
       actions.update-props = {
+        "audio.format" = "S16LE";
+        "audio.rate" = 48000;
         "audio.channels" = 2;
         "audio.position" = [
           "FL"
@@ -210,6 +212,23 @@ in
         "node.description" = "OnePlus Speaker";
         "node.nick" = "Speaker";
         "node.link-group" = "oneplus-speaker";
+      };
+    }
+    {
+      matches = [
+        {
+          "api.alsa.path" = "hw:O6T,0";
+          "media.class" = "Audio/Sink";
+        }
+      ];
+      actions.update-props = {
+        "audio.format" = "S16LE";
+        "audio.rate" = 48000;
+        "audio.channels" = 2;
+        "audio.position" = [
+          "FL"
+          "FR"
+        ];
       };
     }
   ];

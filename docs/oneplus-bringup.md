@@ -482,6 +482,14 @@ Generation 57 audio findings:
 - Prepared as generation 58:
   - `/nix/store/8z290n1y9g7p7izgp7mdv4zcr7kd9v3l-nixos-system-oneplus-26.05.20260531.b51242d`
 
+Post-generation-58 live loudness finding:
+
+- Direct ALSA playback of a 48 kHz stereo S16 test WAV through `hw:O6T,0` was loud.
+- The same WAV through PipeWire/`pw-play` was quiet when PipeWire negotiated `s24-32le`.
+- A temporary WirePlumber override forcing the sink to `S16LE`, 48 kHz, stereo made PipeWire playback loud.
+- Current conclusion: speaker hardware routing/gain is sufficient; the quiet YouTube/PipeWire path is caused by PipeWire's default ALSA format negotiation on this device.
+- Next prepared change persists `audio.format = "S16LE"`, `audio.rate = 48000`, and stereo channel layout for both the current raw sink name and the expected ACP/UCM sink using `hw:O6T,0`.
+
 Current card:
 
 ```text
