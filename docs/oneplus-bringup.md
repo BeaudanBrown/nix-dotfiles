@@ -479,6 +479,8 @@ Generation 57 audio findings:
   - keep `api.alsa.use-ucm = true`
   - set `api.acp.hidden-profiles = "pro-audio"`
   - persist RX digital volumes at `120` because YouTube at max volume was still very quiet at `100`
+- Prepared as generation 58:
+  - `/nix/store/8z290n1y9g7p7izgp7mdv4zcr7kd9v3l-nixos-system-oneplus-26.05.20260531.b51242d`
 
 Current card:
 
