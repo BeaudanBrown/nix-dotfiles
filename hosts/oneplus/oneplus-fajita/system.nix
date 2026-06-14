@@ -42,6 +42,7 @@ let
       Value {
         PlaybackPriority 100
         PlaybackPCM "hw:O6T,0"
+        PlaybackChannels 2
       }
     }
 
@@ -51,6 +52,7 @@ let
       Value {
         CapturePriority 100
         CapturePCM "hw:O6T,0"
+        CaptureChannels 2
       }
     }
     EOF
@@ -123,7 +125,64 @@ in
 
   environment.sessionVariables.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
 
-  systemd.user.services.wireplumber.environment.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
+  systemd.user.services.pipewire.environment.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
+  systemd.user.services.wireplumber = {
+    environment.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
+    unitConfig = {
+      Requires = [ "oneplus-audio-route.service" ];
+      After = [ "oneplus-audio-route.service" ];
+    };
+  };
+
+  systemd.user.services.oneplus-audio-route = {
+    description = "Initialize OnePlus 6T audio route";
+    wantedBy = [ "default.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      Environment = "ALSA_CONFIG_UCM2=${oneplusUcm}/share/alsa/ucm2";
+      ExecStart = pkgs.writeShellScript "oneplus-audio-route" ''
+        set -eu
+
+        for _ in $(${pkgs.coreutils}/bin/seq 1 30); do
+          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker; then
+            exit 0
+          fi
+          ${pkgs.coreutils}/bin/sleep 1
+        done
+
+        exit 1
+      '';
+    };
+  };
+
+  services.pipewire.wireplumber.extraConfig."oneplus-alsa"."monitor.alsa.rules" = [
+    {
+      matches = [
+        {
+          "device.name" = "alsa_card.platform-sound";
+        }
+      ];
+      actions.update-props = {
+        "api.alsa.use-acp" = false;
+        "api.alsa.use-ucm" = true;
+        "api.alsa.split-enable" = false;
+      };
+    }
+    {
+      matches = [
+        {
+          "node.name" = "alsa_output.platform-sound.playback.0.0";
+        }
+      ];
+      actions.update-props = {
+        "audio.channels" = 2;
+        "audio.position" = [
+          "FL"
+          "FR"
+        ];
+      };
+    }
+  ];
 
   # Temporary bring-up/debug mode for this phone: allow the agent/user in wheel
   # to inspect and iterate across boot cycles without an interactive password.
