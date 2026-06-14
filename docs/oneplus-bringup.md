@@ -422,12 +422,30 @@ Expected generation 56 runtime changes:
 - Added `scripts/record-oneplus-touch-events.sh` to the repo for manual touch/scroll captures.
 - Documentation-only additions for bring-up tracking and confirmed haptics.
 
-Current audio sink:
+Current audio sink on generation 56:
 
 ```text
 alsa_output.platform-sound.playback.0.0
 Built-in Audio [alsa:pcm]
 ```
+
+Generation 56 audio findings:
+
+- Booted successfully.
+- UCM aliases load for `O6T`, `hw:0`, `oneplus-OnePlus6T`, and `sdm845`.
+- WirePlumber is not falling back to `Built-in Audio Pro`.
+- WirePlumber is deliberately using raw ALSA (`api.alsa.use-acp = false`) with UCM route initialization, so it does not expose a real ACP/UCM `Speaker` profile.
+- Persisted speaker gain worked:
+  - `RX0 Digital Volume = 100`
+  - `RX1 Digital Volume = 100`
+  - `RX7 Digital Volume = 100`
+  - `RX8 Digital Volume = 100`
+- `QUAT_MI2S_RX Audio Mixer MultiMedia1 = on` after boot.
+- `spa-acp-tool` probing with ACP/UCM hung during live testing, so ACP should not be re-enabled blindly in a booted generation.
+
+Next prepared audio change:
+
+- Keep the stable raw ALSA sink, but rename the PipeWire node to `OnePlus Speaker` / `Speaker` for clearer volume-control UI mapping.
 
 Current card:
 

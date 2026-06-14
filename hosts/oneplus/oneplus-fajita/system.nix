@@ -207,6 +207,8 @@ in
           "FL"
           "FR"
         ];
+        "node.description" = "OnePlus Speaker";
+        "node.nick" = "Speaker";
         "node.link-group" = "oneplus-speaker";
       };
     }
