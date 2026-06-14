@@ -595,10 +595,11 @@ Mic debugging after generation 59:
     - Android `headset-mic` routes to `amic2`: same TX0/DEC0 path with `AMIC MUX0 = ADC2` and headset switch.
     - Added `--mode android` to the mic debugger to test these Android-style routes on the visible mainline frontends and collect ACDB/blob inventory.
     - `--mode android` run `/tmp/oneplus-mic-debug-android-1` confirmed:
-      - current firmware still has no ACDB files, only SDM845 ADSP blobs and `tfa98xx.cnt.zst`.
+      - current firmware at that time still had no ACDB files, only SDM845 ADSP blobs and `tfa98xx.cnt.zst`.
       - Android-style `audio-record`/`MultiMedia1` (`hw:O6T,0`) and cross-check `MultiMedia2` (`hw:O6T,1`) routes all opened.
       - Android `amic4`/`ADC4`, `amic2`/`ADC2`, and `amic3`/`ADC3` paths powered in DAPM as expected (`AIF1 Capture`, `AIF1_CAP Mixer`, `CDC_IF TX0 MUX`, `ADC MUX0`, selected ADC, and mic bias on).
       - all Android-style captures still recorded exact-zero samples with no fresh q6/AFE dmesg.
+    - Added local OxygenOS/Lineage audio vendor payload subset as tracked files under `hosts/oneplus/oneplus-fajita/assets/oxygen-audio-vendor/` and copy it into the OnePlus firmware closure under Android-like and firmware-root mirror paths. Contents include MTP ACDB files, `adsp_avs_config.acdb`, Android audio XML/tuning files, and `tfa98xx.cnt`. The larger `lib/rfsa/adsp` binaries and `MTP_workspaceFile.qwsp` from the payload are intentionally omitted from this first low-risk pass. This still only changes the immutable NixOS firmware closure for one generation; it does not write EFS/persist/modem partitions.
   - Kernel/channel-map inspection:
     - `sdm845_slim_snd_hw_params()` gets the WCD934x active codec channel map and passes it to q6afe for capture.
     - WCD934x initially has a 16-channel TX map (`128..143`), while q6afe SLIM config has `AFE_MAX_CHAN_COUNT = 8`; `q6slim_set_channel_map()` lacks a bound check, so this is a robustness bug.

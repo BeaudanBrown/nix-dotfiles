@@ -19,6 +19,7 @@ let
     fromPath = /nix/store/5ii18dvifg1vpgwbmpb0bgqhp72yp8m5-linux-7.0.0-modules;
     inputAddressed = true;
   };
+  oxygenAudioVendorFiles = ../assets/oxygen-audio-vendor;
   oneplusKernel =
     kernelPkgs.runCommand "linux-7.0.0"
       {
@@ -83,6 +84,17 @@ let
         chmod +w -R $out
         rm -rf $out/lib/firmware/postmarketos
         cp -r $baseFw/lib/firmware/postmarketos/* $out/lib/firmware
+
+        # OxygenOS/Lineage audio calibration/config files. These are data-only
+        # additions to the firmware closure; they do not modify device
+        # partitions. Keep Android-like paths plus firmware-root mirrors so
+        # kernel/ADSP userspace helpers can find whichever layout they expect.
+        mkdir -p $out/lib/firmware/vendor
+        cp -r ${oxygenAudioVendorFiles}/odm $out/lib/firmware/
+        cp -r ${oxygenAudioVendorFiles}/odm $out/lib/firmware/vendor/
+        cp -r ${oxygenAudioVendorFiles}/etc $out/lib/firmware/
+        cp -r ${oxygenAudioVendorFiles}/etc $out/lib/firmware/vendor/
+
         ls -lah $out/lib/firmware/qcom/sdm845
 
         ${pkgs.tree}/bin/tree $out/lib/firmware/qcom/sdm845
