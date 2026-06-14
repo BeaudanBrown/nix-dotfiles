@@ -196,6 +196,12 @@ Findings:
 nix run .#debug-oneplus-mic -- /tmp/oneplus-mic-debug-$(date +%s)
 ```
 
+For a clean reboot comparison that only tests the exact postmarketOS OnePlus/fajita UCM mic routes:
+
+```sh
+nix run .#debug-oneplus-mic -- --mode pmos /tmp/oneplus-mic-debug-pmos-$(date +%s)
+```
+
 Direct source script for editing:
 
 ```sh
@@ -551,7 +557,7 @@ Mic debugging after generation 59:
     - Bottom mic: `MultiMedia2 <-> SLIMBUS_0_TX`, `AIF1_CAP`, `ADC4`, `TX7`, PCM `hw:${CardId},1`.
     - Top mic: `MultiMedia4 <-> SLIMBUS_1_TX`, `AIF2_CAP`, `ADC3`, `TX6`, PCM `hw:${CardId},3`.
     - Headset mic: `MultiMedia6 <-> SLIMBUS_2_TX`, `AIF3_CAP`, `ADC2`, `TX0`, PCM `hw:${CardId},5`.
-  - Exact postmarketOS fajita UCM routes were added to `nix run .#debug-oneplus-mic` and tested in `/tmp/oneplus-mic-debug-pmos-ucm-1`; all three opened successfully but recorded exact-zero samples with no new dmesg lines.
+  - Exact postmarketOS fajita UCM routes were added to `nix run .#debug-oneplus-mic` and can be run alone with `--mode pmos`; tested in `/tmp/oneplus-mic-debug-pmos-ucm-1` and `/tmp/oneplus-mic-debug-pmos-mode-pre-reboot-2`; all three opened successfully but recorded exact-zero samples with no new dmesg lines.
   - Manual channel-count probe for the postmarketOS bottom mic route recorded exact-zero samples for `-c1`, `-c2`, and `-c4`; `-c8`/`-c16` were rejected as unavailable.
   - `q6voiced` is a userspace daemon for voice-call hostless PCM activation only; it opens `VoiceMMode1` at S16 mono 8 kHz during calls. It is not currently installed/running here, but q6voice kernel modules are loaded.
 - Tested `VoiceMMode1` with `VoiceMMode1 Capture Mixer SLIMBUS_0_TX = on`; reads failed with `Invalid argument` at 8/16/32/48 kHz S16 mono.

@@ -2,8 +2,57 @@
 set -euo pipefail
 
 card="${ONEPLUS_AUDIO_CARD:-O6T}"
-outdir="${1:-/tmp/oneplus-mic-debug-$(date +%s)}"
+mode="${ONEPLUS_MIC_DEBUG_MODE:-full}"
+outdir=""
 sudo_cmd="${SUDO:-/run/wrappers/bin/sudo}"
+
+usage() {
+	cat <<EOF
+Usage: $0 [--mode full|pmos] [OUTDIR]
+
+Modes:
+  full   Run all microphone/capture sweeps and diagnostics. Default.
+  pmos   Run only exact postmarketOS OnePlus/fajita UCM mic routes.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--mode)
+		mode="${2:-}"
+		shift 2
+		;;
+	--mode=*)
+		mode="${1#--mode=}"
+		shift
+		;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*)
+		if [[ -z $outdir ]]; then
+			outdir="$1"
+		else
+			echo "Unexpected argument: $1" >&2
+			usage >&2
+			exit 2
+		fi
+		shift
+		;;
+	esac
+done
+
+case "$mode" in
+full | pmos) ;;
+*)
+	echo "Invalid mode: $mode" >&2
+	usage >&2
+	exit 2
+	;;
+esac
+
+outdir="${outdir:-/tmp/oneplus-mic-debug-$(date +%s)}"
 mkdir -p "$outdir"
 log_file="$outdir/summary.txt"
 
@@ -174,12 +223,13 @@ record_hw_pcm_current() {
 	local dev="$2"
 	local channels="${3:-1}"
 	local seconds="${4:-2}"
-	local before_lines wav err dmesg_delta code stat max rms samples
+	local before_lines wav err dmesg_delta q6_dmesg code stat max rms samples
 
 	before_lines="$($sudo_cmd dmesg | wc -l)"
 	wav="$outdir/$name.wav"
 	err="$outdir/$name.err"
 	dmesg_delta="$outdir/$name.dmesg"
+	q6_dmesg="$outdir/$name.q6-dmesg"
 
 	set +e
 	timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f S16_LE -r 48000 -c "$channels" -d "$seconds" "$wav" 2>"$err"
@@ -187,6 +237,7 @@ record_hw_pcm_current() {
 	set -e
 
 	$sudo_cmd dmesg | tail -n +$((before_lines + 1)) >"$dmesg_delta" || true
+	grep -Ei 'q6|afe|asm|adm|apr|glink|slim|wcd|adc|mic|error|fail|timeout|remoteproc' "$dmesg_delta" >"$q6_dmesg" || true
 
 	if [[ $code -eq 0 ]]; then
 		stat="$(sox_stat "$wav")"
@@ -198,7 +249,10 @@ record_hw_pcm_current() {
 	else
 		log "$name dev=$dev channels=$channels code=$code err=$(tr '\n' ' ' <"$err") dmesg_lines=$(wc -l <"$dmesg_delta")"
 	fi
-	grep -Ei 'q6|afe|asm|slim|wcd|adc|mic|error|fail' "$dmesg_delta" | tee -a "$log_file" || true
+	if [[ -s $q6_dmesg ]]; then
+		log "q6_dmesg=$q6_dmesg"
+		cat "$q6_dmesg" | tee -a "$log_file" || true
+	fi
 }
 
 setup_amic_tx_path() {
@@ -485,6 +539,7 @@ main() {
 	log "OnePlus mic debug output: $outdir"
 	log "boot=$(readlink -f /run/current-system 2>/dev/null || true)"
 	log "card=$card"
+	log "mode=$mode"
 
 	run "ALSA cards" cat /proc/asound/cards
 	run "ALSA PCMs" cat /proc/asound/pcm
@@ -510,6 +565,14 @@ main() {
 			amixer -c "$card" cget name="$selected_control" 2>/dev/null | sed -n '1,20p'
 		} | tee -a "$log_file"
 	done
+
+	if [[ $mode == pmos ]]; then
+		run_pmos_fajita_ucm_sweep
+		reset_capture_routes
+		log "Capture routes reset to off."
+		log "Done. Summary: $log_file"
+		return 0
+	fi
 
 	log ""
 	log "===== AMIC sweep through MultiMedia2/SLIMBUS_0_TX/AIF1_CAP/TX0 ====="
