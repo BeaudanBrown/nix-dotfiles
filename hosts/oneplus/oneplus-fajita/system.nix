@@ -191,6 +191,7 @@ in
           "FL"
           "FR"
         ];
+        "node.link-group" = "oneplus-speaker";
       };
     }
   ];
