@@ -4,6 +4,8 @@ result
 result/
 latest.iso
 oneplus-audio-debug.log
+.pi/boot-prompt.md
+.pi/boot-task.md
 .pre-commit-config.yaml
 .claude
 .mcp.json
