@@ -62,6 +62,43 @@ let
       }
     }
 
+    SectionDevice."Mic1" {
+      Comment "Bottom microphone"
+
+      EnableSequence [
+        cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 1"
+        cset "name='AIF1_CAP Mixer SLIM TX7' 1"
+        cset "name='CDC_IF TX7 MUX' DEC7"
+        cset "name='ADC MUX7' AMIC"
+        cset "name='AMIC MUX7' ADC4"
+        cset "name='AMIC4_5 SEL' AMIC4"
+        cset "name='ADC4 Volume' 12"
+        cset "name='DEC7 Volume' 84"
+      ]
+
+      DisableSequence [
+        cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 0"
+        cset "name='AIF1_CAP Mixer SLIM TX7' 0"
+        cset "name='CDC_IF TX7 MUX' ZERO"
+        cset "name='ADC MUX7' ZERO"
+        cset "name='AMIC MUX7' ZERO"
+      ]
+
+      Value {
+        CapturePriority 100
+        CapturePCM "hw:O6T,1"
+        CaptureChannels 1
+
+        # PipeWire ACP currently drops this custom UCM verb if it contains a
+        # capture-only device. Give the mic a low-priority playback side on the
+        # already-valid speaker PCM so ACP keeps the HiFi profile; Speaker stays
+        # the preferred playback device due to its higher priority.
+        PlaybackPriority 1
+        PlaybackPCM "hw:O6T,0"
+        PlaybackChannels 2
+      }
+    }
+
     EOF
 
     cat > $out/share/alsa/ucm2/module/snd_soc_sdm845.conf <<'EOF'
