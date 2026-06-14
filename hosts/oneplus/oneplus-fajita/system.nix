@@ -62,43 +62,6 @@ let
       }
     }
 
-    SectionDevice."Mic1" {
-      Comment "Bottom microphone"
-
-      EnableSequence [
-        cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 1"
-        cset "name='AIF1_CAP Mixer SLIM TX7' 1"
-        cset "name='CDC_IF TX7 MUX' DEC7"
-        cset "name='ADC MUX7' AMIC"
-        cset "name='AMIC MUX7' ADC4"
-        cset "name='AMIC4_5 SEL' AMIC4"
-        cset "name='ADC4 Volume' 12"
-        cset "name='DEC7 Volume' 84"
-      ]
-
-      DisableSequence [
-        cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 0"
-        cset "name='AIF1_CAP Mixer SLIM TX7' 0"
-        cset "name='CDC_IF TX7 MUX' ZERO"
-        cset "name='ADC MUX7' ZERO"
-        cset "name='AMIC MUX7' ZERO"
-      ]
-
-      Value {
-        CapturePriority 100
-        CapturePCM "hw:O6T,1"
-        CaptureChannels 1
-
-        # PipeWire ACP currently drops this custom UCM verb if it contains a
-        # capture-only device. Give the mic a low-priority playback side on the
-        # already-valid speaker PCM so ACP keeps the HiFi profile; Speaker stays
-        # the preferred playback device due to its higher priority.
-        PlaybackPriority 1
-        PlaybackPCM "hw:O6T,0"
-        PlaybackChannels 2
-      }
-    }
-
     EOF
 
     cat > $out/share/alsa/ucm2/module/snd_soc_sdm845.conf <<'EOF'
@@ -204,51 +167,6 @@ in
         done
 
         exit 1
-      '';
-    };
-  };
-
-  systemd.user.services.oneplus-mic-source = {
-    description = "Expose OnePlus 6T bottom microphone through PipeWire Pulse";
-    wantedBy = [ "default.target" ];
-    after = [
-      "oneplus-audio-route.service"
-      "pipewire-pulse.service"
-      "wireplumber.service"
-    ];
-    wants = [
-      "oneplus-audio-route.service"
-      "pipewire-pulse.service"
-      "wireplumber.service"
-    ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = pkgs.writeShellScript "oneplus-mic-source" ''
-        set -eu
-
-        if ${pkgs.pulseaudio}/bin/pactl list modules short | ${pkgs.gnugrep}/bin/grep -q 'module-alsa-source.*oneplus_bottom_mic'; then
-          exit 0
-        fi
-
-        ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker set _enadev Mic1
-
-        ${pkgs.pulseaudio}/bin/pactl load-module module-alsa-source \
-          device=hw:O6T,1 \
-          source_name=oneplus_bottom_mic \
-          source_properties=device.description=OnePlus_Bottom_Mic \
-          format=s16le \
-          rate=48000 \
-          channels=1
-
-        for _ in $(${pkgs.coreutils}/bin/seq 1 10); do
-          if ${pkgs.pulseaudio}/bin/pactl set-card-profile alsa_card.platform-sound 'HiFi (Speaker)'; then
-            break
-          fi
-          ${pkgs.coreutils}/bin/sleep 1
-        done
-
-        ${pkgs.pulseaudio}/bin/pactl set-default-sink alsa_output.platform-sound.HiFi__Speaker__sink
-        ${pkgs.pulseaudio}/bin/pactl set-default-source oneplus_bottom_mic
       '';
     };
   };
