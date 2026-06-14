@@ -8,14 +8,15 @@ sudo_cmd="${SUDO:-/run/wrappers/bin/sudo}"
 
 usage() {
 	cat <<EOF
-Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm] [OUTDIR]
+Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm|tx-codec-dma] [OUTDIR]
 
 Modes:
-  full         Run all microphone/capture sweeps and diagnostics. Default.
-  android      Run Android/OxygenOS mixer_paths_tavil-style mic routes and ACDB inventory.
-  pmos         Run only exact postmarketOS OnePlus/fajita UCM mic routes.
-  pmos-global  Run PMOS-style global verb routes, then each PMOS mic device path.
-  pmos-dapm    Run exact PMOS routes and save active DAPM snapshots while recording.
+  full          Run all microphone/capture sweeps and diagnostics. Default.
+  android       Run Android/OxygenOS mixer_paths_tavil-style mic routes and ACDB inventory.
+  pmos          Run only exact postmarketOS OnePlus/fajita UCM mic routes.
+  pmos-global   Run PMOS-style global verb routes, then each PMOS mic device path.
+  pmos-dapm     Run exact PMOS routes and save active DAPM snapshots while recording.
+  tx-codec-dma  Sweep TX_CODEC_DMA_TX capture frontends with AMIC4/ADC4.
 EOF
 }
 
@@ -47,7 +48,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$mode" in
-full | android | pmos | pmos-global | pmos-dapm) ;;
+full | android | pmos | pmos-global | pmos-dapm | tx-codec-dma) ;;
 *)
 	echo "Invalid mode: $mode" >&2
 	usage >&2
@@ -400,6 +401,42 @@ run_android_acdb_inventory() {
 	run_sh "boot audio calibration messages" "$sudo_cmd dmesg | grep -Ei 'acdb|calib|adsp|avs|audcal|acph|adm|afe|q6|wcd|tavil|firmware|fail|error' | tail -260"
 }
 
+setup_tx_codec_dma_amic_path() {
+	local mm="$1"
+	local dma="$2"
+	local adc="$3"
+	local extra="${4:-}"
+	reset_capture_routes
+	cset "MultiMedia${mm} Mixer TX_CODEC_DMA_TX_${dma}" 1
+	cset "CDC_IF TX${dma} MUX" "DEC${dma}"
+	cset "ADC MUX${dma}" AMIC
+	cset "AMIC MUX${dma}" "$adc"
+	cset "AMIC4_5 SEL" AMIC4
+	cset "IIR0 INP0 MUX" "DEC${dma}"
+	cset "IIR0 INP0 Volume" 54
+	local adc_num="${adc#ADC}"
+	cset "ADC${adc_num} Volume" 12
+	cset "DEC${dma} Volume" 84
+	if [[ -n $extra ]]; then
+		eval "$extra"
+	fi
+}
+
+run_tx_codec_dma_sweep() {
+	log ""
+	log "===== TX_CODEC_DMA_TX AMIC4/ADC4 route sweep ====="
+	log "Tests whether the ADSP TX codec DMA capture DAIs work where SLIMBUS TX paths produce exact-zero samples."
+
+	setup_tx_codec_dma_amic_path 1 0 ADC4
+	record_hw_pcm_current "tx_codec_dma_mm1_dev0_dma0_amic4" 0 1 3 true
+
+	local dma
+	for dma in 0 1 2 3 4 5; do
+		setup_tx_codec_dma_amic_path 2 "$dma" ADC4
+		record_hw_pcm_current "tx_codec_dma_mm2_dev1_dma${dma}_amic4" 1 1 3 true
+	done
+}
+
 run_android_mixer_paths_sweep() {
 	log ""
 	log "===== Android/OxygenOS mixer_paths_tavil exact-ish mic route sweep ====="
@@ -740,6 +777,9 @@ main() {
 			;;
 		pmos-dapm)
 			run_pmos_fajita_ucm_dapm_sweep
+			;;
+		tx-codec-dma)
+			run_tx_codec_dma_sweep
 			;;
 		esac
 		reset_capture_routes
