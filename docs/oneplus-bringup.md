@@ -490,6 +490,26 @@ Post-generation-58 live loudness finding:
 - Current conclusion: speaker hardware routing/gain is sufficient; the quiet YouTube/PipeWire path is caused by PipeWire's default ALSA format negotiation on this device.
 - Next prepared change persists `audio.format = "S16LE"`, `audio.rate = 48000`, and stereo channel layout for both the current raw sink name and the expected ACP/UCM sink using `hw:O6T,0`.
 
+Generation 59 audio findings:
+
+- Booted successfully:
+  - `/nix/store/pp1ph7xgmdmj526hjkfyiqschy6wr7jy-nixos-system-oneplus-26.05.20260531.b51242d`
+- PipeWire/WirePlumber now exposes the real ACP/UCM speaker sink instead of the raw fallback:
+  - `alsa_output.platform-sound.HiFi__Speaker__sink`
+  - profile/device: `HiFi: Speaker: sink`
+  - port: `[Out] Speaker`
+  - object path: `alsa:acp:O6T:0:playback`
+  - `api.alsa.open.ucm = true`
+- No `Built-in Audio Pro` / Pro Audio fallback is active.
+- S16 fix persisted:
+  - `s16le 2ch 48000Hz`
+  - `audio.format = S16LE`
+  - `alsa.resolution_bits = 16`
+- UCM for `O6T`, `hw:0`, `oneplus-OnePlus6T`, and `sdm845` loads and now contains only the speaker device. The bad `Mic` capture device remains intentionally removed until a valid capture PCM/route is found.
+- Boot restored the new sink volume to 40%, which made output quiet despite the correct sink/profile. Setting the default sink to 100% restored loud PipeWire playback:
+  - `wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0`
+- No browser/YouTube sink input was active during inspection, so per-app browser volume could not be checked yet.
+
 Current card:
 
 ```text
