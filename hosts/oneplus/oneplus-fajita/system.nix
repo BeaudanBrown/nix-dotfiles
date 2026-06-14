@@ -31,6 +31,8 @@ let
 
       Value {
         TQ "HiFi"
+        PlaybackCTL "hw:O6T"
+        CaptureCTL "hw:O6T"
       }
     }
 
