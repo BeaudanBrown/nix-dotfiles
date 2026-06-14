@@ -510,6 +510,35 @@ Generation 59 audio findings:
   - `wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0`
 - No browser/YouTube sink input was active during inspection, so per-app browser volume could not be checked yet.
 
+Mic debugging after generation 59:
+
+- PipeWire intentionally exposes no audio source because the bad UCM `Mic` device was removed to let ACP expose the speaker profile.
+- ALSA capture PCMs exist for devices 0-6:
+  - `MultiMedia1` through `MultiMedia6`
+  - `VoiceMMode1`
+- Capture PCMs reject opens until a TX route is enabled.
+- `MultiMediaN Mixer SLIMBUS_0_TX = on` maps to capture device `N-1` and opens successfully.
+- `TX_CODEC_DMA_TX_*` and `VA_CODEC_DMA_TX_*` mixer routes did not open any MultiMedia capture PCM in live tests.
+- Device tree for fajita declares analog mics, not digital mics:
+  - `AMIC1`, `AMIC2`, `AMIC3`, `AMIC4`, `AMIC5`
+  - corresponding `MIC BIAS*` routes
+- Tested live routes that powered the complete DAPM path but still recorded exact zero samples:
+  - `MultiMedia2 Mixer SLIMBUS_0_TX = on`
+  - `AIF1_CAP Mixer SLIM TX0 = on`
+  - `CDC_IF TX0 MUX = DEC0`
+  - `ADC MUX0 = AMIC`
+  - `AMIC MUX0 = ADC1` with `MIC BIAS3` / `AMIC1` / `ADC1` powered on
+  - `AMIC MUX0 = ADC2` with `Headset Mic Switch = on`, `MIC BIAS2` / `AMIC2` / `ADC2` powered on
+  - `ADC1/ADC2 Volume = 20`, `DEC0 Volume = 110`
+- Also tested `DMIC0..DMIC5`, but DT suggests these are not the relevant fajita mic pins; they also recorded exact zero.
+- Tested SLIMBUS capture links 0, 1, and 2 via AIF1/AIF2/AIF3; all opened but recorded exact zero.
+- Tested `VoiceMMode1` with `VoiceMMode1 Capture Mixer SLIMBUS_0_TX = on`; reads failed with `Invalid argument` at 8/16/32/48 kHz S16 mono.
+- During AMIC tests, DAPM showed the whole analog capture path powered on through `AIF1 Capture` and `MultiMedia2 Capture`, but the resulting WAV files had:
+  - `Maximum amplitude: 0.000000`
+  - `RMS amplitude: 0.000000`
+- Current conclusion: routing to the ALSA capture frontend works and powers the codec path, but the stream is filled with zeros. This looks lower than UCM/PipeWire now: likely ADSP/AFE port behavior, codec capture path quirk, or missing downstream kernel/DT routing detail.
+- After testing, live capture mixer routes were reset to off to avoid persisting an unsafe state.
+
 Current card:
 
 ```text
