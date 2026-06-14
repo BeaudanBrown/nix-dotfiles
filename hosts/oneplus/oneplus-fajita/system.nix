@@ -197,9 +197,7 @@ in
         set -eu
 
         for _ in $(${pkgs.coreutils}/bin/seq 1 30); do
-          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi; then
-            ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _enadev Speaker
-            ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _enadev Mic1
+          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker; then
             exit 0
           fi
           ${pkgs.coreutils}/bin/sleep 1
@@ -208,28 +206,6 @@ in
         exit 1
       '';
     };
-  };
-
-  services.pipewire.extraConfig.pipewire."20-oneplus-bottom-mic-source" = {
-    "context.objects" = [
-      {
-        factory = "adapter";
-        args = {
-          "factory.name" = "api.alsa.pcm.source";
-          "node.name" = "oneplus_bottom_mic";
-          "node.description" = "OnePlus Bottom Microphone";
-          "node.nick" = "Bottom Mic";
-          "media.class" = "Audio/Source";
-          "api.alsa.path" = "hw:O6T,1";
-          "audio.format" = "S16LE";
-          "audio.rate" = 48000;
-          "audio.channels" = 1;
-          "audio.position" = [ "MONO" ];
-          "node.suspend-on-idle" = true;
-          "resample.disable" = true;
-        };
-      }
-    ];
   };
 
   services.pipewire.wireplumber.extraConfig."oneplus-alsa"."monitor.alsa.rules" = [
