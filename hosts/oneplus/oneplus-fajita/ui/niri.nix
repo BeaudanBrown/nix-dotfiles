@@ -362,7 +362,7 @@ in
     brightness_indicator_format = "Icon"
     audio_indicator_format = "Icon"
     microphone_indicator_format = "Icon"
-    indicators = [ "Network", "Bluetooth", "Audio", "Battery", "Brightness" ]
+    indicators = [ "Network", "Bluetooth", "Audio", "Microphone", "Battery", "Brightness" ]
     wifi_more_cmd = "iwgtk"
     bluetooth_more_cmd = "blueman-manager"
     audio_sinks_more_cmd = "pavucontrol -t 3"
