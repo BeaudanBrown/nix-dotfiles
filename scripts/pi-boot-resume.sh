@@ -8,6 +8,30 @@ legacy_prompt_file="${PI_BOOT_RESUME_PROMPT:-}"
 
 cd "$repo_dir"
 
+if [[ ${PI_BOOT_RESUME_TMUX:-1} != 0 && -z ${PI_BOOT_RESUME_IN_TMUX:-} && -z ${TMUX:-} ]]; then
+	if command -v tmux >/dev/null 2>&1; then
+		tmux_session="${PI_BOOT_RESUME_TMUX_SESSION:-default}"
+		tmux_window="${PI_BOOT_RESUME_TMUX_WINDOW:-pi-boot-resume}"
+
+		if ! tmux has-session -t "=$tmux_session" 2>/dev/null; then
+			tmux new-session -d -s "$tmux_session" -c "$repo_dir"
+		fi
+
+		if tmux list-windows -t "=$tmux_session" -F '#{window_name}' | grep -Fxq "$tmux_window"; then
+			tmux kill-window -t "=$tmux_session:$tmux_window" 2>/dev/null || true
+		fi
+
+		printf -v tmux_command 'PI_BOOT_RESUME_IN_TMUX=1 exec %q' "$0"
+		tmux_target="$(tmux new-window -d -P -F '#{session_name}:#{window_index}' \
+			-t "=$tmux_session:" \
+			-n "$tmux_window" \
+			-c "$repo_dir" \
+			"$tmux_command")"
+		tmux select-window -t "$tmux_target"
+		exec tmux attach-session -t "=$tmux_session"
+	fi
+fi
+
 prompt=""
 if [[ -n $legacy_prompt_file && -s $legacy_prompt_file ]]; then
 	prompt="$(cat "$legacy_prompt_file")"
