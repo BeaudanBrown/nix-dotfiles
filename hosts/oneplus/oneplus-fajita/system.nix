@@ -197,7 +197,7 @@ in
         set -eu
 
         for _ in $(${pkgs.coreutils}/bin/seq 1 30); do
-          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker set _enadev Mic1; then
+          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker; then
             exit 0
           fi
           ${pkgs.coreutils}/bin/sleep 1
@@ -214,10 +214,12 @@ in
     after = [
       "oneplus-audio-route.service"
       "pipewire-pulse.service"
+      "wireplumber.service"
     ];
     wants = [
       "oneplus-audio-route.service"
       "pipewire-pulse.service"
+      "wireplumber.service"
     ];
     serviceConfig = {
       Type = "oneshot";
@@ -228,13 +230,17 @@ in
           exit 0
         fi
 
+        ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker set _enadev Mic1
+
         ${pkgs.pulseaudio}/bin/pactl load-module module-alsa-source \
           device=hw:O6T,1 \
           source_name=oneplus_bottom_mic \
-          'source_properties=device.description="OnePlus Bottom Microphone"' \
+          source_properties=device.description=OnePlus_Bottom_Mic \
           format=s16le \
           rate=48000 \
           channels=1
+
+        ${pkgs.pulseaudio}/bin/pactl set-default-source oneplus_bottom_mic
       '';
     };
   };
