@@ -25,6 +25,12 @@ let
         cset "name='QUAT_MI2S_RX Audio Mixer MultiMedia1' 1"
       ]
 
+      Include.wcde.File "/codecs/wcd934x/DefaultEnableSeq.conf"
+      Include.wcdd {
+        File "/codecs/wcd934x/DefaultDisableSeq.conf"
+        Before.DisableSequence "0"
+      }
+
       DisableSequence [
         cset "name='QUAT_MI2S_RX Audio Mixer MultiMedia1' 0"
       ]
@@ -38,6 +44,9 @@ let
 
     SectionDevice."Speaker" {
       Comment "Speaker playback"
+
+      Include.wcdspke.File "/codecs/wcd934x/SpeakerEnableSeq.conf"
+      Include.wcdspkd.File "/codecs/wcd934x/SpeakerDisableSeq.conf"
 
       Value {
         PlaybackPriority 100
