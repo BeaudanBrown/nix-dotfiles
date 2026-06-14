@@ -190,7 +190,13 @@ Findings:
 - PipeWire currently exposes no real audio source, only monitor source.
 - ALSA capture can open on routed `hw:O6T,0` and `hw:O6T,1`, but records exact-zero samples.
 - Risky persisted mic/capture UCM route previously caused a failed boot generation and was backed out.
-- Reusable live-only debug script:
+- Reusable live-only debug script, exposed through the flake so dependencies and shell checks are injected by `writeShellApplication`:
+
+```sh
+nix run .#debug-oneplus-mic -- /tmp/oneplus-mic-debug-$(date +%s)
+```
+
+Direct source script for editing:
 
 ```sh
 ./scripts/debug-oneplus-mic.sh /tmp/oneplus-mic-debug-$(date +%s)
@@ -543,13 +549,22 @@ Mic debugging after generation 59:
   - `Maximum amplitude: 0.000000`
   - `RMS amplitude: 0.000000`
 - Current conclusion: routing to the ALSA capture frontend works and powers the codec path, but the stream is filled with zeros. This looks lower than UCM/PipeWire now: likely ADSP/AFE port behavior, codec capture path quirk, or missing downstream kernel/DT routing detail.
-- Latest reusable script run:
-  - script: `scripts/debug-oneplus-mic.sh`
-  - output directory: `/tmp/oneplus-mic-debug-repo-script-3`
+- Latest reusable flake-script run:
+  - command: `nix run .#debug-oneplus-mic -- /tmp/oneplus-mic-debug-flake-3`
+  - output directory: `/tmp/oneplus-mic-debug-flake-3`
   - booted system: `/nix/store/pp1ph7xgmdmj526hjkfyiqschy6wr7jy-nixos-system-oneplus-26.05.20260531.b51242d`
+  - `writeShellApplication` build/shellcheck passed after using system `/run/wrappers/bin/sudo` instead of injecting non-setuid `pkgs.sudo`.
   - AMIC1/2/2+Headset/3/4/5 each recorded 144000 samples and all had `Maximum amplitude: 0.000000`, `RMS amplitude: 0.000000`.
   - No new dmesg lines appeared during those AMIC sweeps.
-  - DAPM snapshots are now saved correctly by the script.
+  - MultiMedia frontend sweep with AMIC1 via `SLIMBUS_0_TX`:
+    - `MultiMedia1`/`hw:O6T,0` through `MultiMedia6`/`hw:O6T,5` all opened and recorded 96000 samples.
+    - all were exact-zero samples.
+  - TX slot sweep with `MultiMedia2` + `AIF1_CAP` + AMIC1:
+    - `SLIM TX0`, `SLIM TX1`, `SLIM TX2`, and `SLIM TX3` all opened and recorded exact-zero samples.
+  - SLIMBUS link sweep with `MultiMedia2` + AMIC1:
+    - `SLIMBUS_0_TX`/`AIF1_CAP`, `SLIMBUS_1_TX`/`AIF2_CAP`, and `SLIMBUS_2_TX`/`AIF3_CAP` all opened and recorded exact-zero samples.
+  - `VoiceMMode1` / `hw:O6T,6` still failed on read with `Invalid argument` at 8/16/32/48 kHz S16 mono.
+  - DAPM snapshots are saved correctly by the script.
   - WCD934x regmap diff is saved correctly by the script; active AMIC1 capture changed codec registers including `060e`, `0625`, `0800`, and `0a31`, confirming the codec route is not purely inert.
   - Routed `hw:O6T,0` can open if `MultiMedia1 Mixer SLIMBUS_0_TX` is enabled, but its output is also exact-zero samples.
   - Boot log has no obvious `acdb`/`calib` messages in the filtered output; notable boot messages include WCD934x MBHC threshold DT warnings, SoundWire DIN-port mismatch, and one SLIM QMI wait timeout.

@@ -30,6 +30,7 @@
       {
         formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
         packages = {
+          debug-oneplus-mic = pkgs.callPackage ./scripts/debug-oneplus-mic.nix { };
           disko = inputs.disko.packages.${system}.disko;
           fleet-installer = fleetInstaller;
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
@@ -38,6 +39,9 @@
               ./hosts/oneplus/oneplus-fajita/packages/uboot-bootimg.nix
               { };
           ticket = pkgs.callPackage ./packages/ticket.nix { };
+        };
+        apps = {
+          debug-oneplus-mic = flake-utils.lib.mkApp { drv = self.packages.${system}.debug-oneplus-mic; };
         };
         checks = (import ./lib/checks.nix { inherit inputs system pkgs; }) // {
           fleet-installer = fleetInstaller;
