@@ -171,6 +171,51 @@ in
     };
   };
 
+  systemd.user.services.oneplus-mic-source = {
+    description = "Expose OnePlus 6T bottom microphone through PipeWire Pulse";
+    wantedBy = [ "default.target" ];
+    after = [
+      "oneplus-audio-route.service"
+      "pipewire-pulse.service"
+      "wireplumber.service"
+    ];
+    wants = [
+      "oneplus-audio-route.service"
+      "pipewire-pulse.service"
+      "wireplumber.service"
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "oneplus-mic-source" ''
+        set -eu
+
+        if ${pkgs.pulseaudio}/bin/pactl list modules short | ${pkgs.gnugrep}/bin/grep -q 'module-alsa-source.*oneplus_bottom_mic'; then
+          exit 0
+        fi
+
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='MultiMedia2 Mixer SLIMBUS_0_TX' 1
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='AIF1_CAP Mixer SLIM TX7' 1
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='CDC_IF TX7 MUX' DEC7
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='ADC MUX7' AMIC
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='AMIC MUX7' ADC4
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='AMIC4_5 SEL' AMIC4
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='ADC4 Volume' 12
+        ${pkgs.alsa-utils}/bin/amixer -c O6T cset name='DEC7 Volume' 84
+
+        ${pkgs.pulseaudio}/bin/pactl load-module module-alsa-source \
+          device=hw:O6T,1 \
+          source_name=oneplus_bottom_mic \
+          source_properties=device.description=OnePlus_Bottom_Mic \
+          format=s16le \
+          rate=48000 \
+          channels=1
+
+        ${pkgs.pulseaudio}/bin/pactl set-default-sink alsa_output.platform-sound.HiFi__Speaker__sink
+        ${pkgs.pulseaudio}/bin/pactl set-default-source oneplus_bottom_mic
+      '';
+    };
+  };
+
   services.pipewire.wireplumber.extraConfig."oneplus-alsa"."monitor.alsa.rules" = [
     {
       matches = [
