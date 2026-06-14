@@ -8,11 +8,13 @@ sudo_cmd="${SUDO:-/run/wrappers/bin/sudo}"
 
 usage() {
 	cat <<EOF
-Usage: $0 [--mode full|pmos] [OUTDIR]
+Usage: $0 [--mode full|pmos|pmos-global|pmos-dapm] [OUTDIR]
 
 Modes:
-  full   Run all microphone/capture sweeps and diagnostics. Default.
-  pmos   Run only exact postmarketOS OnePlus/fajita UCM mic routes.
+  full         Run all microphone/capture sweeps and diagnostics. Default.
+  pmos         Run only exact postmarketOS OnePlus/fajita UCM mic routes.
+  pmos-global  Run PMOS-style global verb routes, then each PMOS mic device path.
+  pmos-dapm    Run exact PMOS routes and save active DAPM snapshots while recording.
 EOF
 }
 
@@ -44,7 +46,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$mode" in
-full | pmos) ;;
+full | pmos | pmos-global | pmos-dapm) ;;
 *)
 	echo "Invalid mode: $mode" >&2
 	usage >&2
@@ -128,6 +130,11 @@ reset_capture_routes() {
 		for s in 0 1 2 3 4 5 6 7 8; do
 			cset "AIF${a}_CAP Mixer SLIM TX$s" 0
 		done
+	done
+	for s in 0 1 2 3 4 5 6 7 8; do
+		cset "CDC_IF TX$s MUX" ZERO
+		cset "ADC MUX$s" DMIC
+		cset "AMIC MUX$s" ZERO
 	done
 }
 
@@ -223,7 +230,8 @@ record_hw_pcm_current() {
 	local dev="$2"
 	local channels="${3:-1}"
 	local seconds="${4:-2}"
-	local before_lines wav err dmesg_delta q6_dmesg code stat max rms samples
+	local snapshot_dapm="${5:-false}"
+	local before_lines wav err dmesg_delta q6_dmesg code stat max rms samples pid
 
 	before_lines="$($sudo_cmd dmesg | wc -l)"
 	wav="$outdir/$name.wav"
@@ -232,8 +240,17 @@ record_hw_pcm_current() {
 	q6_dmesg="$outdir/$name.q6-dmesg"
 
 	set +e
-	timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f S16_LE -r 48000 -c "$channels" -d "$seconds" "$wav" 2>"$err"
-	code=$?
+	if [[ $snapshot_dapm == true ]]; then
+		timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f S16_LE -r 48000 -c "$channels" -d "$seconds" "$wav" 2>"$err" &
+		pid=$!
+		sleep 1
+		capture_dapm_snapshot "$name-active"
+		wait "$pid"
+		code=$?
+	else
+		timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f S16_LE -r 48000 -c "$channels" -d "$seconds" "$wav" 2>"$err"
+		code=$?
+	fi
 	set -e
 
 	$sudo_cmd dmesg | tail -n +$((before_lines + 1)) >"$dmesg_delta" || true
@@ -385,6 +402,84 @@ run_pmos_fajita_ucm_sweep() {
 	cset "ADC2 Volume" 12
 	cset "DEC0 Volume" 84
 	record_hw_pcm_current "pmos_fajita_headset_mic_mm6_slim2_tx0_adc2" 5 1 3
+}
+
+run_pmos_fajita_ucm_dapm_sweep() {
+	log ""
+	log "===== postmarketOS OnePlus/fajita UCM exact mic route sweep with active DAPM snapshots ====="
+
+	reset_capture_routes
+	cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
+	cset "AIF1_CAP Mixer SLIM TX7" 1
+	cset "CDC_IF TX7 MUX" DEC7
+	cset "ADC MUX7" AMIC
+	cset "AMIC MUX7" ADC4
+	cset "AMIC4_5 SEL" AMIC4
+	cset "ADC4 Volume" 12
+	cset "DEC7 Volume" 84
+	record_hw_pcm_current "pmos_dapm_bottom_mic_mm2_slim0_tx7_adc4" 1 1 8 true
+
+	reset_capture_routes
+	cset "MultiMedia4 Mixer SLIMBUS_1_TX" 1
+	cset "AIF2_CAP Mixer SLIM TX6" 1
+	cset "CDC_IF TX6 MUX" DEC6
+	cset "ADC MUX6" AMIC
+	cset "AMIC MUX6" ADC3
+	cset "ADC3 Volume" 12
+	cset "DEC6 Volume" 84
+	record_hw_pcm_current "pmos_dapm_top_mic_mm4_slim1_tx6_adc3" 3 1 8 true
+
+	reset_capture_routes
+	cset "MultiMedia6 Mixer SLIMBUS_2_TX" 1
+	cset "AIF3_CAP Mixer SLIM TX0" 1
+	cset "CDC_IF TX0 MUX" DEC0
+	cset "ADC MUX0" AMIC
+	cset "AMIC MUX0" ADC2
+	cset "ADC2 Volume" 12
+	cset "DEC0 Volume" 84
+	record_hw_pcm_current "pmos_dapm_headset_mic_mm6_slim2_tx0_adc2" 5 1 8 true
+}
+
+run_pmos_fajita_global_sweep() {
+	log ""
+	log "===== postmarketOS OnePlus/fajita global verb route sweep ====="
+
+	reset_capture_routes
+	# Mirror PMOS SectionVerb capture-related EnableSequence, then toggle each
+	# SectionDevice ADC path while keeping the backend links available.
+	cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
+	cset "MultiMedia4 Mixer SLIMBUS_1_TX" 1
+	cset "MultiMedia6 Mixer SLIMBUS_2_TX" 1
+	cset "VoiceMMode1 Capture Mixer SLIMBUS_0_TX" 1
+	cset "AIF1_CAP Mixer SLIM TX7" 1
+	cset "CDC_IF TX7 MUX" DEC7
+	cset "AMIC4_5 SEL" AMIC4
+	cset "AIF2_CAP Mixer SLIM TX6" 1
+	cset "CDC_IF TX6 MUX" DEC6
+	cset "AIF3_CAP Mixer SLIM TX0" 1
+	cset "CDC_IF TX0 MUX" DEC0
+
+	cset "ADC MUX7" AMIC
+	cset "AMIC MUX7" ADC4
+	cset "ADC4 Volume" 12
+	cset "DEC7 Volume" 84
+	record_hw_pcm_current "pmos_global_bottom_mic_mm2_slim0_tx7_adc4" 1 1 3
+	cset "ADC MUX7" DMIC
+	cset "AMIC MUX7" ZERO
+
+	cset "ADC MUX6" AMIC
+	cset "AMIC MUX6" ADC3
+	cset "ADC3 Volume" 12
+	cset "DEC6 Volume" 84
+	record_hw_pcm_current "pmos_global_top_mic_mm4_slim1_tx6_adc3" 3 1 3
+	cset "ADC MUX6" DMIC
+	cset "AMIC MUX6" ZERO
+
+	cset "ADC MUX0" AMIC
+	cset "AMIC MUX0" ADC2
+	cset "ADC2 Volume" 12
+	cset "DEC0 Volume" 84
+	record_hw_pcm_current "pmos_global_headset_mic_mm6_slim2_tx0_adc2" 5 1 3
 }
 
 run_voice_frontend_sweep() {
@@ -566,8 +661,18 @@ main() {
 		} | tee -a "$log_file"
 	done
 
-	if [[ $mode == pmos ]]; then
-		run_pmos_fajita_ucm_sweep
+	if [[ $mode != full ]]; then
+		case "$mode" in
+		pmos)
+			run_pmos_fajita_ucm_sweep
+			;;
+		pmos-global)
+			run_pmos_fajita_global_sweep
+			;;
+		pmos-dapm)
+			run_pmos_fajita_ucm_dapm_sweep
+			;;
+		esac
 		reset_capture_routes
 		log "Capture routes reset to off."
 		log "Done. Summary: $log_file"

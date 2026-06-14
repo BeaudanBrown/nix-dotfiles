@@ -202,6 +202,16 @@ For a clean reboot comparison that only tests the exact postmarketOS OnePlus/faj
 nix run .#debug-oneplus-mic -- --mode pmos /tmp/oneplus-mic-debug-pmos-$(date +%s)
 ```
 
+Other focused modes:
+
+```sh
+# PMOS SectionVerb-style global backend routes, then each mic path.
+nix run .#debug-oneplus-mic -- --mode pmos-global /tmp/oneplus-mic-debug-pmos-global-$(date +%s)
+
+# Exact PMOS routes plus active DAPM snapshots while each capture is open.
+nix run .#debug-oneplus-mic -- --mode pmos-dapm /tmp/oneplus-mic-debug-pmos-dapm-$(date +%s)
+```
+
 Direct source script for editing:
 
 ```sh
@@ -557,7 +567,12 @@ Mic debugging after generation 59:
     - Bottom mic: `MultiMedia2 <-> SLIMBUS_0_TX`, `AIF1_CAP`, `ADC4`, `TX7`, PCM `hw:${CardId},1`.
     - Top mic: `MultiMedia4 <-> SLIMBUS_1_TX`, `AIF2_CAP`, `ADC3`, `TX6`, PCM `hw:${CardId},3`.
     - Headset mic: `MultiMedia6 <-> SLIMBUS_2_TX`, `AIF3_CAP`, `ADC2`, `TX0`, PCM `hw:${CardId},5`.
-  - Exact postmarketOS fajita UCM routes were added to `nix run .#debug-oneplus-mic` and can be run alone with `--mode pmos`; tested in `/tmp/oneplus-mic-debug-pmos-ucm-1` and `/tmp/oneplus-mic-debug-pmos-mode-pre-reboot-2`; all three opened successfully but recorded exact-zero samples with no new dmesg lines.
+  - Exact postmarketOS fajita UCM routes were added to `nix run .#debug-oneplus-mic` and can be run alone with `--mode pmos`; tested in `/tmp/oneplus-mic-debug-pmos-ucm-1`, `/tmp/oneplus-mic-debug-pmos-mode-pre-reboot-2`, and clean-boot `/tmp/oneplus-mic-debug-pmos-clean-1`; all three opened successfully but recorded exact-zero samples with no new dmesg lines/q6 deltas.
+  - PMOS SectionVerb-style global backend routes were added as `--mode pmos-global`; `/tmp/oneplus-mic-debug-pmos-global-script-1` still recorded exact-zero for bottom/top/headset.
+  - Active DAPM capture snapshots were added as `--mode pmos-dapm`; `/tmp/oneplus-mic-debug-pmos-dapm-script-1` shows each exact PMOS route powers the expected codec path and active AIF capture stream while still recording exact-zero:
+    - bottom: `MIC BIAS1` / `AMIC4` / `ADC4` / `ADC MUX7` / `CDC_IF TX7 MUX` / `SLIM TX7` / `AIF1 Capture` on.
+    - top: `MIC BIAS4` / `AMIC3` / `ADC3` / `ADC MUX6` / `CDC_IF TX6 MUX` / `SLIM TX6` / `AIF2 Capture` on.
+    - headset: `MIC BIAS2` / `AMIC2` / `ADC2` / `ADC MUX0` / `CDC_IF TX0 MUX` / `SLIM TX0` / `AIF3 Capture` on.
   - Manual channel-count probe for the postmarketOS bottom mic route recorded exact-zero samples for `-c1`, `-c2`, and `-c4`; `-c8`/`-c16` were rejected as unavailable.
   - `q6voiced` is a userspace daemon for voice-call hostless PCM activation only; it opens `VoiceMMode1` at S16 mono 8 kHz during calls. It is not currently installed/running here, but q6voice kernel modules are loaded.
 - Tested `VoiceMMode1` with `VoiceMMode1 Capture Mixer SLIMBUS_0_TX = on`; reads failed with `Invalid argument` at 8/16/32/48 kHz S16 mono.
