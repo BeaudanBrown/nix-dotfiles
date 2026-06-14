@@ -49,10 +49,10 @@ let
       Include.wcdspkd.File "/codecs/wcd934x/SpeakerDisableSeq.conf"
 
       EnableSequence [
-        cset "name='RX0 Digital Volume' 100"
-        cset "name='RX1 Digital Volume' 100"
-        cset "name='RX7 Digital Volume' 100"
-        cset "name='RX8 Digital Volume' 100"
+        cset "name='RX0 Digital Volume' 120"
+        cset "name='RX1 Digital Volume' 120"
+        cset "name='RX7 Digital Volume' 120"
+        cset "name='RX8 Digital Volume' 120"
       ]
 
       Value {
@@ -61,15 +61,14 @@ let
         PlaybackChannels 2
       }
     }
+    EOF
 
-    SectionDevice."Mic" {
-      Comment "Microphone capture"
+    cat > $out/share/alsa/ucm2/module/snd_soc_sdm845.conf <<'EOF'
+    Syntax 3
 
-      Value {
-        CapturePriority 100
-        CapturePCM "hw:O6T,0"
-        CaptureChannels 2
-      }
+    SectionUseCase."HiFi" {
+      File "/Qualcomm/sdm845/OnePlus6T-HiFi.conf"
+      Comment "HiFi quality Music."
     }
     EOF
 
@@ -179,9 +178,10 @@ in
         }
       ];
       actions.update-props = {
-        "api.alsa.use-acp" = false;
+        "api.alsa.use-acp" = true;
         "api.alsa.use-ucm" = true;
         "api.alsa.split-enable" = false;
+        "api.acp.hidden-profiles" = "pro-audio";
       };
     }
     {

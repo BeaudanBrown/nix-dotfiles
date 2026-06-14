@@ -460,11 +460,25 @@ Generation 57 audio findings:
   - `RX7 Digital Volume = 100`
   - `RX8 Digital Volume = 100`
   - `QUAT_MI2S_RX Audio Mixer MultiMedia1 = on`
-- Bounded `spa-acp-tool` probing with `api.alsa.use-acp=true` and UCM enabled shows only:
+- Bounded `spa-acp-tool` probing with `api.alsa.use-acp=true` and UCM enabled initially showed only:
   - `off`
   - `pro-audio`
-- Temp UCM variants adding `PlaybackVolume "RX0 Digital Volume"` and `CaptureVolume "ADC2 Volume"` still produced only `off` + `pro-audio` in `spa-acp-tool`, so missing volume fields are not the reason ACP ignores the UCM profile.
-- Current conclusion: alsa-lib/`alsaucm` can parse the custom UCM, but PipeWire SPA ACP is not generating UCM profiles for this card. Keep raw ALSA as the supported path until the ACP/UCM mismatch is understood.
+- Temp UCM variants adding `PlaybackVolume "RX0 Digital Volume"` and `CaptureVolume "ADC2 Volume"` still produced only `off` + `pro-audio`, so missing volume fields were not the reason ACP ignored the UCM profile.
+- Root cause found: the `Mic` UCM device used `CapturePCM "hw:O6T,0"`, but ACP reports that PCM as having zero capture channels. That invalid capture device causes ACP to reject the UCM `HiFi` profile.
+- A temp speaker-only UCM makes `spa-acp-tool` expose:
+  - `off`
+  - `HiFi`
+  - `pro-audio`
+  - port `[Out] Speaker`
+  - device `HiFi: Speaker: sink`
+- Setting `api.acp.hidden-profiles=pro-audio` makes `spa-acp-tool` select `HiFi` instead of `pro-audio`.
+- Next prepared audio change:
+  - remove the invalid `Mic` UCM device until a valid capture PCM/route is found
+  - map `module/snd_soc_sdm845.conf` to the OnePlus speaker-only UCM
+  - set `api.alsa.use-acp = true`
+  - keep `api.alsa.use-ucm = true`
+  - set `api.acp.hidden-profiles = "pro-audio"`
+  - persist RX digital volumes at `120` because YouTube at max volume was still very quiet at `100`
 
 Current card:
 
