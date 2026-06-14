@@ -1,8 +1,66 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
+let
+  oneplusUcm = pkgs.runCommand "oneplus-alsa-ucm-conf" { } ''
+    mkdir -p $out/share/alsa
+    cp -r ${pkgs.alsa-ucm-conf}/share/alsa/ucm2 $out/share/alsa/ucm2
+    chmod -R u+w $out/share/alsa/ucm2
+
+    cat > $out/share/alsa/ucm2/Qualcomm/sdm845/OnePlus6T.conf <<'EOF'
+    Syntax 3
+
+    SectionUseCase."HiFi" {
+      File "/Qualcomm/sdm845/OnePlus6T-HiFi.conf"
+      Comment "HiFi quality Music."
+    }
+    EOF
+
+    cat > $out/share/alsa/ucm2/Qualcomm/sdm845/OnePlus6T-HiFi.conf <<'EOF'
+    SectionVerb {
+      EnableSequence [
+        cset "name='QUAT_MI2S_RX Audio Mixer MultiMedia1' 1"
+      ]
+
+      DisableSequence [
+        cset "name='QUAT_MI2S_RX Audio Mixer MultiMedia1' 0"
+      ]
+
+      Value {
+        TQ "HiFi"
+      }
+    }
+
+    SectionDevice."Speaker" {
+      Comment "Speaker playback"
+
+      Value {
+        PlaybackPriority 100
+        PlaybackPCM "hw:O6T,0"
+      }
+    }
+
+    SectionDevice."Mic" {
+      Comment "Microphone capture"
+
+      Value {
+        CapturePriority 100
+        CapturePCM "hw:O6T,0"
+      }
+    }
+    EOF
+
+    ln -sf ../../Qualcomm/sdm845/OnePlus6T.conf \
+      $out/share/alsa/ucm2/conf.d/sdm845/oneplus-OnePlus6T.conf
+
+    mkdir -p $out/share/alsa/ucm2/O6T
+    ln -sf ../Qualcomm/sdm845/OnePlus6T.conf \
+      $out/share/alsa/ucm2/O6T/O6T.conf
+  '';
+in
 {
   imports = [
     ./hardware/qualcomm-services.nix
@@ -60,6 +118,22 @@
 
     upower.enable = true;
   };
+
+  environment.sessionVariables.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
+
+  systemd.user.services.wireplumber.environment.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
+
+  security.sudo.extraRules = [
+    {
+      groups = [ "wheel" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/systemd-run";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
 
   # The USB gadget serial getty on ttyGS0 holds/contends for /dev/console's
   # flock. That makes `systemd-run --pipe` from a PTY block in the transient

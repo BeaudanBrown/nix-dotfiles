@@ -69,8 +69,8 @@ let
       baseFw = pkgs.fetchFromGitLab {
         owner = "sdm845-mainline";
         repo = "firmware-oneplus-sdm845";
-        rev = "3ec855b2247291c79652b319dfe93f7747363c86";
-        sha256 = "sha256-7CaXWOpao+vuFA7xknzbLml2hxTlmuzFCEM99aLD2uk=";
+        rev = "3e31a0c3e5a061645c09f805387b49fa9d35acbf";
+        sha256 = "sha256-DeOlhchDGi0Pso3w8ZlM7q3Tdkmt3Ji+GyEmepkISTE=";
       };
     in
     pkgs.runCommand "oneplus-sdm845-firmware"
@@ -88,12 +88,12 @@ let
         ${pkgs.tree}/bin/tree $out/lib/firmware/qcom/sdm845
 
         mkdir -p $out/lib/firmware/qcom/sdm845/OnePlus
-        cd $out/lib/firmware/qcom/sdm845/OnePlus
-        ln -s ../oneplus6 $out/lib/firmware/qcom/sdm845/OnePlus/enchilada
+        rm -rf $out/lib/firmware/qcom/sdm845/OnePlus/fajita
+        ln -s enchilada $out/lib/firmware/qcom/sdm845/OnePlus/fajita
 
         mkdir -p $out/lib/firmware/qca/OnePlus
-        cd $out/lib/firmware/qca/OnePlus
-        ln -s ../oneplus6 $out/lib/firmware/qca/OnePlus/enchilada
+        rm -rf $out/lib/firmware/qca/OnePlus/fajita
+        ln -s enchilada $out/lib/firmware/qca/OnePlus/fajita
       '';
 in
 {
@@ -135,6 +135,11 @@ in
   #  "regulatory.db.p7s"
   #  "regulatory.db"
   #];
+
+  boot.blacklistedKernelModules = [
+    "ipa"
+    "qcrypto"
+  ];
 
   boot.initrd.kernelModules = [
     "qcom_pd_mapper"

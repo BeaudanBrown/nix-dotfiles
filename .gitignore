@@ -3,6 +3,7 @@ rebuild
 result
 result/
 latest.iso
+oneplus-audio-debug.log
 .pre-commit-config.yaml
 .claude
 .mcp.json
