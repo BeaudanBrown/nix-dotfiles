@@ -594,6 +594,11 @@ Mic debugging after generation 59:
     - Android `handset-mic` and `speaker-mic` route to `amic4`: `AIF1_CAP Mixer SLIM TX0`, `CDC_IF TX0 MUX = DEC0`, `ADC MUX0 = AMIC`, `AMIC MUX0 = ADC4`, `AMIC4_5 SEL = AMIC4`, `IIR0 INP0 MUX = DEC0`.
     - Android `headset-mic` routes to `amic2`: same TX0/DEC0 path with `AMIC MUX0 = ADC2` and headset switch.
     - Added `--mode android` to the mic debugger to test these Android-style routes on the visible mainline frontends and collect ACDB/blob inventory.
+    - `--mode android` run `/tmp/oneplus-mic-debug-android-1` confirmed:
+      - current firmware still has no ACDB files, only SDM845 ADSP blobs and `tfa98xx.cnt.zst`.
+      - Android-style `audio-record`/`MultiMedia1` (`hw:O6T,0`) and cross-check `MultiMedia2` (`hw:O6T,1`) routes all opened.
+      - Android `amic4`/`ADC4`, `amic2`/`ADC2`, and `amic3`/`ADC3` paths powered in DAPM as expected (`AIF1 Capture`, `AIF1_CAP Mixer`, `CDC_IF TX0 MUX`, `ADC MUX0`, selected ADC, and mic bias on).
+      - all Android-style captures still recorded exact-zero samples with no fresh q6/AFE dmesg.
   - Kernel/channel-map inspection:
     - `sdm845_slim_snd_hw_params()` gets the WCD934x active codec channel map and passes it to q6afe for capture.
     - WCD934x initially has a 16-channel TX map (`128..143`), while q6afe SLIM config has `AFE_MAX_CHAN_COUNT = 8`; `q6slim_set_channel_map()` lacks a bound check, so this is a robustness bug.
