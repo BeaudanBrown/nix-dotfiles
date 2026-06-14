@@ -149,7 +149,7 @@ Manual test:
 sudo fftest /dev/input/by-path/platform-c440000.spmi-platform-c440000.spmi:pmic@3:haptics@c000-event
 ```
 
-Status: kernel side looks functional; user confirmation needed for whether the test is physically felt.
+Status: confirmed working. User manually tested with `fftest` and felt both strong and weak rumble effects.
 
 ### Camera flash / torch
 
