@@ -8,7 +8,7 @@ sudo_cmd="${SUDO:-/run/wrappers/bin/sudo}"
 
 usage() {
 	cat <<EOF
-Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm|pmos-params|tx-codec-dma] [OUTDIR]
+Usage: $0 [--mode full|android|pmos|pmos-global|pmos-dapm|pmos-params|pmos-runtime|adc4-tx-slots|tx-codec-dma] [OUTDIR]
 
 Modes:
   full          Run all microphone/capture sweeps and diagnostics. Default.
@@ -17,6 +17,8 @@ Modes:
   pmos-global   Run PMOS-style global verb routes, then each PMOS mic device path.
   pmos-dapm     Run exact PMOS routes and save active DAPM snapshots while recording.
   pmos-params   Sweep format/rate/channel params on PMOS bottom mic route.
+  pmos-runtime  Probe /proc/asound hw_params/status and ASoC debugfs while PMOS captures are active.
+  adc4-tx-slots Sweep ADC4 bottom mic over lower AIF1 SLIM TX0..5 on MultiMedia2/SLIMBUS_0_TX.
   tx-codec-dma  Sweep TX_CODEC_DMA_TX capture frontends with AMIC4/ADC4.
 EOF
 }
@@ -49,7 +51,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$mode" in
-full | android | pmos | pmos-global | pmos-dapm | pmos-params | tx-codec-dma) ;;
+full | android | pmos | pmos-global | pmos-dapm | pmos-params | pmos-runtime | adc4-tx-slots | tx-codec-dma) ;;
 *)
 	echo "Invalid mode: $mode" >&2
 	usage >&2
@@ -194,12 +196,50 @@ capture_dapm_snapshot() {
 	local name="$1"
 	local dest="$outdir/$name.dapm"
 	if $sudo_cmd test -d "/sys/kernel/debug/asoc/OnePlus 6T"; then
-		$sudo_cmd grep -RHiE ': On|AMIC|MIC BIAS|ADC|CDC_IF TX|SLIM TX|AIF[123]|MultiMedia2|Headset Mic|Int Mic' \
+		$sudo_cmd grep -RHiE ': On|AMIC|MIC BIAS|ADC|CDC_IF TX|SLIM TX|AIF[123]|MultiMedia[1246]|SLIMBUS_[012]_TX|Headset Mic|Int Mic' \
 			"/sys/kernel/debug/asoc/OnePlus 6T" 2>/dev/null | tee "$dest" >/dev/null || true
 		log "DAPM snapshot saved: $dest"
 	else
 		log "DAPM snapshot skipped: ASoC debugfs path not present"
 	fi
+}
+
+capture_proc_asound_snapshot() {
+	local name="$1"
+	local dest="$outdir/$name.proc-asound"
+	# shellcheck disable=SC2016
+	$sudo_cmd sh -c '
+		for f in /proc/asound/card*/pcm*/sub*/hw_params /proc/asound/card*/pcm*/sub*/status /proc/asound/card*/pcm*/sub*/info; do
+			test -e "$f" || continue
+			printf "\n===== %s =====\n" "$f"
+			cat "$f" 2>/dev/null || true
+		done
+	' | tee "$dest" >/dev/null || true
+	log "proc/asound snapshot saved: $dest"
+}
+
+capture_asoc_inventory() {
+	local name="$1"
+	local dest="$outdir/$name.asoc"
+	# shellcheck disable=SC2016
+	$sudo_cmd sh -c '
+		base="/sys/kernel/debug/asoc/OnePlus 6T"
+		if test ! -d "$base"; then
+			echo "ASoC debugfs path missing: $base"
+			exit 0
+		fi
+		printf "===== ASoC debugfs file list =====\n"
+		for f in "$base"/* "$base"/*/* "$base"/*/*/*; do
+			test -e "$f" || continue
+			printf "%s\n" "$f"
+		done
+		for f in "$base"/dais "$base"/components "$base"/*/dais "$base"/*/components "$base"/*/dapm/* "$base"/*/*/dapm/*; do
+			test -f "$f" || continue
+			printf "\n===== %s =====\n" "$f"
+			cat "$f" 2>/dev/null || true
+		done
+	' | tee "$dest" >/dev/null || true
+	log "ASoC inventory saved: $dest"
 }
 
 run_regmap_diff() {
@@ -323,6 +363,23 @@ run_tx_slot_sweep() {
 		cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
 		setup_amic_tx_path "$tx" 1 ADC1
 		record_hw_pcm_current "mm2_aif1_tx${tx}_amic1" 1 1 2
+	done
+}
+
+run_adc4_tx_slot_sweep() {
+	local tx
+	log ""
+	log "===== ADC4 bottom mic lower TX slot sweep: MultiMedia2 + SLIMBUS_0_TX + AIF1_CAP ====="
+	log "Tests whether routing ADC4 through lower SLIM TX slots changes capture vs PMOS TX7."
+	log "TX6..8 are intentionally skipped here: live testing showed AFE enable -22 failures that left SLIM capture failing until reboot."
+	for tx in 0 1 2 3 4 5; do
+		reset_capture_routes
+		cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
+		setup_amic_tx_path "$tx" 1 ADC4
+		cset "AMIC4_5 SEL" AMIC4
+		cset "ADC4 Volume" 12
+		cset "DEC$tx Volume" 84
+		record_hw_pcm_current "mm2_slim0_aif1_tx${tx}_adc4" 1 1 3 true
 	done
 }
 
@@ -506,6 +563,64 @@ run_pmos_param_sweep() {
 			done
 		done
 	done
+}
+
+record_pmos_runtime_case() {
+	local name="$1"
+	local dev="$2"
+	local format="$3"
+	local rate="$4"
+	local channels="$5"
+	local seconds="${6:-5}"
+	local before_lines wav err dmesg_delta q6_dmesg code stat max rms samples pid
+
+	before_lines="$($sudo_cmd dmesg | wc -l)"
+	wav="$outdir/$name.wav"
+	err="$outdir/$name.err"
+	dmesg_delta="$outdir/$name.dmesg"
+	q6_dmesg="$outdir/$name.q6-dmesg"
+
+	set +e
+	timeout $((seconds + 3)) arecord -q -D "hw:$card,$dev" -f "$format" -r "$rate" -c "$channels" -d "$seconds" "$wav" 2>"$err" &
+	pid=$!
+	sleep 1
+	capture_proc_asound_snapshot "$name-active"
+	capture_dapm_snapshot "$name-active"
+	wait "$pid"
+	code=$?
+	set -e
+
+	$sudo_cmd dmesg | tail -n +$((before_lines + 1)) >"$dmesg_delta" || true
+	grep -Ei 'q6|afe|asm|adm|apr|glink|slim|wcd|adc|mic|error|fail|timeout|remoteproc' "$dmesg_delta" >"$q6_dmesg" || true
+
+	if [[ $code -eq 0 ]]; then
+		stat="$(sox_stat "$wav")"
+		printf '%s\n' "$stat" >"$outdir/$name.sox-stat"
+		max="$(printf '%s\n' "$stat" | awk '/Maximum amplitude/ {print $3}')"
+		rms="$(printf '%s\n' "$stat" | awk '/RMS     amplitude/ {print $3}')"
+		samples="$(printf '%s\n' "$stat" | awk '/Samples read/ {print $3}')"
+		log "$name dev=$dev format=$format rate=$rate channels=$channels code=0 samples=${samples:-unknown} max=${max:-unknown} rms=${rms:-unknown} dmesg_lines=$(wc -l <"$dmesg_delta") wav=$wav"
+	else
+		log "$name dev=$dev format=$format rate=$rate channels=$channels code=$code err=$(tr '\n' ' ' <"$err") dmesg_lines=$(wc -l <"$dmesg_delta")"
+	fi
+	if [[ -s $q6_dmesg ]]; then
+		log "q6_dmesg=$q6_dmesg"
+		cat "$q6_dmesg" | tee -a "$log_file" || true
+	fi
+}
+
+run_pmos_runtime_probe() {
+	log ""
+	log "===== PMOS runtime capture probe ====="
+	capture_asoc_inventory "pmos-runtime-before"
+
+	setup_pmos_bottom_mic_route
+	record_pmos_runtime_case "pmos_runtime_bottom_s16_48k_1ch" 1 S16_LE 48000 1 5
+
+	setup_pmos_bottom_mic_route
+	record_pmos_runtime_case "pmos_runtime_bottom_s24_48k_1ch" 1 S24_LE 48000 1 5
+
+	reset_capture_routes
 }
 
 run_pmos_fajita_ucm_sweep() {
@@ -814,6 +929,12 @@ main() {
 			;;
 		pmos-params)
 			run_pmos_param_sweep
+			;;
+		pmos-runtime)
+			run_pmos_runtime_probe
+			;;
+		adc4-tx-slots)
+			run_adc4_tx_slot_sweep
 			;;
 		tx-codec-dma)
 			run_tx_codec_dma_sweep
