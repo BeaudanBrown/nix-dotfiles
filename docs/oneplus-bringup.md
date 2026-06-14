@@ -575,6 +575,18 @@ Mic debugging after generation 59:
     - headset: `MIC BIAS2` / `AMIC2` / `ADC2` / `ADC MUX0` / `CDC_IF TX0 MUX` / `SLIM TX0` / `AIF3 Capture` on.
   - Manual channel-count probe for the postmarketOS bottom mic route recorded exact-zero samples for `-c1`, `-c2`, and `-c4`; `-c8`/`-c16` were rejected as unavailable.
   - `q6voiced` is a userspace daemon for voice-call hostless PCM activation only; it opens `VoiceMMode1` at S16 mono 8 kHz during calls. It is not currently installed/running here, but q6voice kernel modules are loaded.
+  - Clean post-reboot PipeWire/WirePlumber state is good for playback:
+    - active profile is `HiFi`, not Pro Audio.
+    - Pro Audio is hidden.
+    - default sink is `alsa_output.platform-sound.HiFi__Speaker__sink` / `Built-in Audio Speaker playback`.
+    - `api.alsa.open.ucm = true`, `api.alsa.path = hw:O6T,0`, format `s16le 2ch 48000Hz`, volume 100%.
+    - `alsaucm -c O6T dump text` loads the custom UCM for card id `O6T`.
+  - Kernel/channel-map inspection:
+    - `sdm845_slim_snd_hw_params()` gets the WCD934x active codec channel map and passes it to q6afe for capture.
+    - WCD934x initially has a 16-channel TX map (`128..143`), while q6afe SLIM config has `AFE_MAX_CHAN_COUNT = 8`; `q6slim_set_channel_map()` lacks a bound check, so this is a robustness bug.
+    - However WCD934x `get_channel_map()` walks the active DAPM `slim_ch_list`; exact PMOS routes should pass only one active TX slot (`TX7`, `TX6`, or `TX0`), so the 16-channel overflow is probably not hit for these tested routes.
+    - q6afe SLIM TX DAI ids are odd (`SLIMBUS_0_TX = 3`, `SLIMBUS_1_TX = 5`, `SLIMBUS_2_TX = 7`), matching `q6slim_set_channel_map()`'s TX branch.
+    - q6afe sends only four shared SLIM channel mapping entries to ADSP, but single-channel PMOS routes fit inside that limit.
 - Tested `VoiceMMode1` with `VoiceMMode1 Capture Mixer SLIMBUS_0_TX = on`; reads failed with `Invalid argument` at 8/16/32/48 kHz S16 mono.
 - During AMIC tests, DAPM showed the whole analog capture path powered on through `AIF1 Capture` and `MultiMedia2 Capture`, but the resulting WAV files had:
   - `Maximum amplitude: 0.000000`
