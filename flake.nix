@@ -33,6 +33,9 @@
           debug-oneplus-mic = pkgs.callPackage ./scripts/debug-oneplus-mic.nix { };
           disko = inputs.disko.packages.${system}.disko;
           fleet-installer = fleetInstaller;
+          oneplus-mic-trial = pkgs.callPackage ./scripts/oneplus-mic-trial.nix {
+            debug-oneplus-mic = self.packages.${system}.debug-oneplus-mic;
+          };
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
           oneplus-uboot-bootimg =
             pkgs.pkgsCross.aarch64-multiplatform.callPackage
@@ -42,6 +45,7 @@
         };
         apps = {
           debug-oneplus-mic = flake-utils.lib.mkApp { drv = self.packages.${system}.debug-oneplus-mic; };
+          oneplus-mic-trial = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-mic-trial; };
         };
         checks = (import ./lib/checks.nix { inherit inputs system pkgs; }) // {
           fleet-installer = fleetInstaller;

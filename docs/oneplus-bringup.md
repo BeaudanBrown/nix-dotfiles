@@ -221,6 +221,18 @@ Direct source script for editing:
 ./scripts/debug-oneplus-mic.sh /tmp/oneplus-mic-debug-$(date +%s)
 ```
 
+For traceable experiments, prefer the trial wrapper. It refuses to run from a dirty tree by default, runs one focused diagnostic, writes a Markdown record under `docs/oneplus-audio-trials/`, and can commit that record so every result is locked to a git change:
+
+```sh
+# After a full power-off/cold boot, before touching PipeWire/routes:
+nix run .#oneplus-mic-trial -- \
+  --label coldboot-pmos-runtime \
+  --reset-note 'full power off 30s, immediate post-login run' \
+  --commit
+```
+
+Use `--allow-dirty` only for an intentionally dirty trial, and mention why in `--reset-note`.
+
 The script:
 
 - records ALSA card/PCM/control state,
