@@ -23,7 +23,6 @@ let
     SectionVerb {
       EnableSequence [
         cset "name='QUAT_MI2S_RX Audio Mixer MultiMedia1' 1"
-        cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 1"
       ]
 
       Include.wcde.File "/codecs/wcd934x/DefaultEnableSeq.conf"
@@ -34,7 +33,6 @@ let
 
       DisableSequence [
         cset "name='QUAT_MI2S_RX Audio Mixer MultiMedia1' 0"
-        cset "name='MultiMedia2 Mixer SLIMBUS_0_TX' 0"
       ]
 
       Value {
@@ -50,13 +48,6 @@ let
       Include.wcdspke.File "/codecs/wcd934x/SpeakerEnableSeq.conf"
       Include.wcdspkd.File "/codecs/wcd934x/SpeakerDisableSeq.conf"
 
-      EnableSequence [
-        cset "name='RX0 Digital Volume' 96"
-        cset "name='RX1 Digital Volume' 96"
-        cset "name='RX7 Digital Volume' 96"
-        cset "name='RX8 Digital Volume' 96"
-      ]
-
       Value {
         PlaybackPriority 100
         PlaybackPCM "hw:O6T,0"
@@ -67,14 +58,10 @@ let
     SectionDevice."Mic" {
       Comment "Microphone capture"
 
-      Include.wcdmice.File "/codecs/wcd934x/HeadphoneMicEnableSeq.conf"
-      Include.wcdmicd.File "/codecs/wcd934x/HeadphoneMicDisableSeq.conf"
-
       Value {
         CapturePriority 100
-        CapturePCM "hw:O6T,1"
+        CapturePCM "hw:O6T,0"
         CaptureChannels 2
-        CaptureMixerElem "ADC2"
       }
     }
     EOF
@@ -166,7 +153,7 @@ in
         set -eu
 
         for _ in $(${pkgs.coreutils}/bin/seq 1 30); do
-          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker set _enadev Mic; then
+          if ${pkgs.alsa-utils}/bin/alsaucm -c O6T set _verb HiFi set _enadev Speaker; then
             exit 0
           fi
           ${pkgs.coreutils}/bin/sleep 1
@@ -193,7 +180,7 @@ in
     {
       matches = [
         {
-          "node.name" = "~alsa_input.platform-sound.capture.[023456].*";
+          "node.name" = "~alsa_input.platform-sound.capture.*";
         }
         {
           "node.name" = "~alsa_output.platform-sound.playback.[1-6].*";
@@ -214,22 +201,6 @@ in
           "FR"
         ];
         "node.link-group" = "oneplus-speaker";
-      };
-    }
-    {
-      matches = [
-        {
-          "node.name" = "alsa_input.platform-sound.capture.1.0";
-        }
-      ];
-      actions.update-props = {
-        "audio.channels" = 2;
-        "audio.position" = [
-          "FL"
-          "FR"
-        ];
-        "node.description" = "Built-in Microphone";
-        "node.link-group" = "oneplus-mic";
       };
     }
   ];
