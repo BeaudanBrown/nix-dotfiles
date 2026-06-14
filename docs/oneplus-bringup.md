@@ -118,6 +118,39 @@ Run outside chat, then swipe in Ghostty/tmux and any opened `wev` window:
 cat /tmp/oneplus-touch-events-*/summary.txt
 ```
 
+### Haptics
+
+Haptics device is present:
+
+```sh
+/dev/input/by-path/platform-c440000.spmi-platform-c440000.spmi:pmic@3:haptics@c000-event
+```
+
+Kernel registers it as:
+
+```text
+input: spmi_haptics as .../pmic@3:haptics@c000/input/input4
+```
+
+`fftest` can open it with sudo and upload force-feedback effects successfully:
+
+```text
+Force feedback effects types: Periodic, Rumble, Gain
+Force feedback periodic effects: Square, Triangle, Sine
+Number of simultaneous effects: 16
+Uploading effect #0 (Periodic sinusoidal) ... OK
+Uploading effect #4 (Strong rumble, with heavy motor) ... OK
+Uploading effect #5 (Weak rumble, with light motor) ... OK
+```
+
+Manual test:
+
+```sh
+sudo fftest /dev/input/by-path/platform-c440000.spmi-platform-c440000.spmi:pmic@3:haptics@c000-event
+```
+
+Status: kernel side looks functional; user confirmation needed for whether the test is physically felt.
+
 ### Camera flash / torch
 
 Torch LEDs are exposed at:
