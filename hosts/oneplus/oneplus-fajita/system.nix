@@ -171,6 +171,17 @@ in
     {
       matches = [
         {
+          "node.name" = "~alsa_input.platform-sound.capture.*";
+        }
+        {
+          "node.name" = "~alsa_output.platform-sound.playback.[1-6].*";
+        }
+      ];
+      actions.update-props."node.disabled" = true;
+    }
+    {
+      matches = [
+        {
           "node.name" = "alsa_output.platform-sound.playback.0.0";
         }
       ];
