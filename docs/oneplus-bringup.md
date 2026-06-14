@@ -544,6 +544,16 @@ Mic debugging after generation 59:
   - `ADC1/ADC2 Volume = 20`, `DEC0 Volume = 110`
 - Also tested `DMIC0..DMIC5`, but DT suggests these are not the relevant fajita mic pins; they also recorded exact zero.
 - Tested SLIMBUS capture links 0, 1, and 2 via AIF1/AIF2/AIF3; all opened but recorded exact zero.
+- Public downstream/vendor clues found:
+  - LineageOS `android_device_oneplus_sdm845-common/audio/mixer_paths_tavil.xml` uses WCD934x/Tavil routes with vendor names like `SLIM_0_TX`, `MultiMedia1 Channel1`, and `IIR0 INP0 MUX`; on mainline many channel controls do not exist, but `IIR0 INP0 MUX` does.
+  - postmarketOS `soc-qcom-sdm845` depends on `soc-qcom-sdm845-ucm`; its exact UCM commit includes `ucm2/OnePlus/fajita/HiFi.conf`.
+  - postmarketOS fajita UCM says:
+    - Bottom mic: `MultiMedia2 <-> SLIMBUS_0_TX`, `AIF1_CAP`, `ADC4`, `TX7`, PCM `hw:${CardId},1`.
+    - Top mic: `MultiMedia4 <-> SLIMBUS_1_TX`, `AIF2_CAP`, `ADC3`, `TX6`, PCM `hw:${CardId},3`.
+    - Headset mic: `MultiMedia6 <-> SLIMBUS_2_TX`, `AIF3_CAP`, `ADC2`, `TX0`, PCM `hw:${CardId},5`.
+  - Exact postmarketOS fajita UCM routes were added to `nix run .#debug-oneplus-mic` and tested in `/tmp/oneplus-mic-debug-pmos-ucm-1`; all three opened successfully but recorded exact-zero samples with no new dmesg lines.
+  - Manual channel-count probe for the postmarketOS bottom mic route recorded exact-zero samples for `-c1`, `-c2`, and `-c4`; `-c8`/`-c16` were rejected as unavailable.
+  - `q6voiced` is a userspace daemon for voice-call hostless PCM activation only; it opens `VoiceMMode1` at S16 mono 8 kHz during calls. It is not currently installed/running here, but q6voice kernel modules are loaded.
 - Tested `VoiceMMode1` with `VoiceMMode1 Capture Mixer SLIMBUS_0_TX = on`; reads failed with `Invalid argument` at 8/16/32/48 kHz S16 mono.
 - During AMIC tests, DAPM showed the whole analog capture path powered on through `AIF1 Capture` and `MultiMedia2 Capture`, but the resulting WAV files had:
   - `Maximum amplitude: 0.000000`
@@ -568,6 +578,10 @@ Mic debugging after generation 59:
     - `SLIM TX0`, `SLIM TX1`, `SLIM TX2`, and `SLIM TX3` all opened and recorded exact-zero samples.
   - SLIMBUS link sweep with `MultiMedia2` + AMIC1:
     - `SLIMBUS_0_TX`/`AIF1_CAP`, `SLIMBUS_1_TX`/`AIF2_CAP`, and `SLIMBUS_2_TX`/`AIF3_CAP` all opened and recorded exact-zero samples.
+  - Exact postmarketOS fajita UCM route sweep (`/tmp/oneplus-mic-debug-pmos-ucm-1`):
+    - bottom mic: `MultiMedia2`/`SLIMBUS_0_TX`/`AIF1_CAP SLIM TX7`/`ADC4` -> exact-zero.
+    - top mic: `MultiMedia4`/`SLIMBUS_1_TX`/`AIF2_CAP SLIM TX6`/`ADC3` -> exact-zero.
+    - headset mic: `MultiMedia6`/`SLIMBUS_2_TX`/`AIF3_CAP SLIM TX0`/`ADC2` -> exact-zero.
   - `VoiceMMode1` / `hw:O6T,6` still failed on read with `Invalid argument` at 8/16/32/48 kHz S16 mono.
   - DAPM snapshots are saved correctly by the script.
   - WCD934x regmap diff is saved correctly by the script; active AMIC1 capture changed codec registers including `060e`, `0625`, `0800`, and `0a31`, confirming the codec route is not purely inert.

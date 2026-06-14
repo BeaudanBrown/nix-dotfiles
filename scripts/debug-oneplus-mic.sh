@@ -69,6 +69,12 @@ reset_capture_routes() {
 		"Headset Mic Switch"; do
 		cset "$ctrl" 0
 	done
+	for ctrl in \
+		"IIR0 INP0 MUX" \
+		"IIR0 INP1 MUX" \
+		"IIR0 INP2 MUX"; do
+		cset "$ctrl" ZERO
+	done
 	for a in 1 2 3; do
 		for s in 0 1 2 3 4 5 6 7 8; do
 			cset "AIF${a}_CAP Mixer SLIM TX$s" 0
@@ -246,6 +252,85 @@ run_slimbus_link_sweep() {
 		setup_amic_tx_path "$link" "$aif" ADC1
 		record_hw_pcm_current "mm2_slimbus${link}_aif${aif}_tx${link}_amic1" 1 1 2
 	done
+}
+
+setup_vendor_lineage_amic_path() {
+	local tx="$1"
+	local adc="$2"
+	local extra="${3:-}"
+	local adc_num
+
+	reset_capture_routes
+	cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
+	cset "AIF1_CAP Mixer SLIM TX$tx" 1
+	cset "CDC_IF TX$tx MUX" "DEC$tx"
+	cset "ADC MUX$tx" AMIC
+	cset "AMIC MUX$tx" "$adc"
+	cset "IIR0 INP0 MUX" "DEC$tx"
+	cset "IIR0 INP0 Volume" 54
+	adc_num="${adc#ADC}"
+	cset "ADC${adc_num} Volume" 12
+	cset "DEC$tx Volume" 84
+	if [[ -n $extra ]]; then
+		eval "$extra"
+	fi
+}
+
+run_vendor_lineage_sweep() {
+	log ""
+	log "===== Lineage mixer_paths_tavil AMIC route sweep ====="
+	# LineageOS mixer_paths_tavil.xml uses AMIC1 on TX6/DEC6, not TX0/DEC0.
+	setup_vendor_lineage_amic_path 6 ADC1
+	record_hw_pcm_current "lineage_amic1_tx6_dec6_adc12_dec84_iir" 1 1 3
+	setup_vendor_lineage_amic_path 0 ADC2
+	record_hw_pcm_current "lineage_amic2_tx0_dec0_adc12_dec84_iir" 1 1 3
+	setup_vendor_lineage_amic_path 0 ADC2 "cset 'Headset Mic Switch' 1"
+	record_hw_pcm_current "lineage_amic2_headset_tx0_dec0_adc12_dec84_iir" 1 1 3
+	setup_vendor_lineage_amic_path 0 ADC3
+	record_hw_pcm_current "lineage_amic3_tx0_dec0_adc12_dec84_iir" 1 1 3
+	setup_vendor_lineage_amic_path 0 ADC4 "cset 'AMIC4_5 SEL' AMIC4"
+	record_hw_pcm_current "lineage_amic4_tx0_dec0_adc12_dec84_iir" 1 1 3
+	setup_vendor_lineage_amic_path 0 ADC4 "cset 'AMIC4_5 SEL' AMIC5"
+	record_hw_pcm_current "lineage_amic5_tx0_dec0_adc12_dec84_iir" 1 1 3
+}
+
+run_pmos_fajita_ucm_sweep() {
+	log ""
+	log "===== postmarketOS OnePlus/fajita UCM exact mic route sweep ====="
+
+	# Bottom Microphone: MultiMedia2 <-> SLIMBUS_0_TX (AIF1_CAP, ADC4, TX7)
+	reset_capture_routes
+	cset "MultiMedia2 Mixer SLIMBUS_0_TX" 1
+	cset "AIF1_CAP Mixer SLIM TX7" 1
+	cset "CDC_IF TX7 MUX" DEC7
+	cset "ADC MUX7" AMIC
+	cset "AMIC MUX7" ADC4
+	cset "AMIC4_5 SEL" AMIC4
+	cset "ADC4 Volume" 12
+	cset "DEC7 Volume" 84
+	record_hw_pcm_current "pmos_fajita_bottom_mic_mm2_slim0_tx7_adc4" 1 1 3
+
+	# Top Microphone: MultiMedia4 <-> SLIMBUS_1_TX (AIF2_CAP, ADC3, TX6)
+	reset_capture_routes
+	cset "MultiMedia4 Mixer SLIMBUS_1_TX" 1
+	cset "AIF2_CAP Mixer SLIM TX6" 1
+	cset "CDC_IF TX6 MUX" DEC6
+	cset "ADC MUX6" AMIC
+	cset "AMIC MUX6" ADC3
+	cset "ADC3 Volume" 12
+	cset "DEC6 Volume" 84
+	record_hw_pcm_current "pmos_fajita_top_mic_mm4_slim1_tx6_adc3" 3 1 3
+
+	# Headset Microphone: MultiMedia6 <-> SLIMBUS_2_TX (AIF3_CAP, ADC2, TX0)
+	reset_capture_routes
+	cset "MultiMedia6 Mixer SLIMBUS_2_TX" 1
+	cset "AIF3_CAP Mixer SLIM TX0" 1
+	cset "CDC_IF TX0 MUX" DEC0
+	cset "ADC MUX0" AMIC
+	cset "AMIC MUX0" ADC2
+	cset "ADC2 Volume" 12
+	cset "DEC0 Volume" 84
+	record_hw_pcm_current "pmos_fajita_headset_mic_mm6_slim2_tx0_adc2" 5 1 3
 }
 
 run_voice_frontend_sweep() {
@@ -438,6 +523,8 @@ main() {
 	run_multimedia_frontend_sweep
 	run_tx_slot_sweep
 	run_slimbus_link_sweep
+	run_vendor_lineage_sweep
+	run_pmos_fajita_ucm_sweep
 	run_voice_frontend_sweep
 
 	setup_slimbus0_capture
