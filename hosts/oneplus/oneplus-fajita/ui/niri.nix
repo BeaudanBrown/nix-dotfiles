@@ -336,7 +336,7 @@ in
 
     prefer-no-csd
     spawn-at-startup "ashell"
-    spawn-at-startup "ghostty"
+    spawn-at-startup "ghostty" "--gtk-single-instance=false" "--title=pi-boot-resume" "-e" "${config.hostSpec.dotfiles}/scripts/pi-boot-resume.sh"
     spawn-at-startup "squeekboard"
   '';
 

@@ -259,18 +259,6 @@ After documentation changes:
 2. Verify code examples are accurate
 3. Run `nix flake check` (good practice)
 
-## Coordinator Workstreams
-
-- When this repo is used as a coordinator-managed execution target, put active workstream files under `.loom/workstreams/<workstream>/`.
-- Use repo-local workstream files for technical handoff, not the coordinator repo.
-- Once a workstream is complete and durable lessons are reflected in repo docs or specs, remove the `.loom/workstreams/<workstream>/` directory.
-
-## Learning Capture
-
-- Record workstream-specific resume details in `.loom/workstreams/<workstream>/handoff.md`.
-- Record longer active debug trails in `.loom/workstreams/<workstream>/history.md`.
-- Promote any stable repo-wide commands, module patterns, or infra constraints into this file or the relevant spec once they are likely to matter again.
-
 ## Quick Start for Common Tasks
 
 ### Adding a New Package
