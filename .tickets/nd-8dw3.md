@@ -26,3 +26,7 @@ Known OnePlus journal issues are represented as concrete child tickets with evid
 **2026-06-15T14:01:00Z**
 
 Prepared repo for long /aloop operation. Active guidance is now docs/oneplus-agent-loop.md and concise docs/oneplus-bringup.md; historical long bring-up notes moved to docs/archive/oneplus-bringup-history-20260615.md. Final sentinel ticket nd-nebp should close the epic only after a final scan finds no actionable work.
+
+**2026-06-15T14:06:19Z**
+
+HANDOFF from nd-24hg: touch scrolling is not a raw touchscreen/kernel failure; lisgd sees OnePlus swipes on platform-a90000.i2c-event. Remaining actionable work is follow-up nd-wzyq for a Ghostty/niri/tmux touch-to-scroll workaround.

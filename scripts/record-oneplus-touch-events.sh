@@ -3,6 +3,7 @@ set -euo pipefail
 
 seconds="${1:-30}"
 out="${2:-/tmp/oneplus-touch-events-$(date +%Y%m%d-%H%M%S)}"
+start_iso="$(date -Is)"
 mkdir -p "$out"
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -20,7 +21,7 @@ sudo -v
 
 cat >"$out/README.txt" <<EOF
 OnePlus touch/scroll event capture
-Started: $(date -Is)
+Started: ${start_iso}
 Duration: ${seconds}s
 
 While this script is recording, try:
@@ -34,6 +35,7 @@ Logs:
 - evtest-event*.log: raw kernel evdev events per /dev/input/event*
 - terminal-bytes.hex: bytes delivered to this terminal stdin, useful for mouse-wheel escape sequences
 - wev.log: Wayland events if a wev window could be opened; swipe inside that window too
+- oneplus-niri-gestures.log: lisgd service events; useful to prove the raw touchscreen swipe reached the global gesture layer
 EOF
 
 {
@@ -98,6 +100,9 @@ printf '\rRecording for %ss. Swipe now. Logs: %s\n' "$seconds" "$out"
 
 sleep "$seconds"
 
+journalctl --unit=oneplus-niri-gestures --since "$start_iso" --no-pager >"$out/oneplus-niri-gestures.log" 2>&1 ||
+	echo "Could not read oneplus-niri-gestures journal" >"$out/oneplus-niri-gestures.log"
+
 kill "$libinput_pid" "$terminal_pid" ${wev_pid:-} 2>/dev/null || true
 pkill -P $$ evtest 2>/dev/null || true
 wait 2>/dev/null || true
@@ -123,6 +128,9 @@ wait 2>/dev/null || true
 	echo
 	echo "== wev notable events =="
 	grep -E 'pointer|touch|axis|gesture|keyboard|button' "$out/wev.log" || echo "none"
+	echo
+	echo "== oneplus lisgd gesture events =="
+	grep -E 'Swipe distance|Execute|\[swipe\]' "$out/oneplus-niri-gestures.log" || echo "none"
 } | tee "$out/summary.txt"
 
 printf '\nDone. Send me this summary path or paste it:\n  %s/summary.txt\nFull logs are in:\n  %s\n' "$out" "$out"
