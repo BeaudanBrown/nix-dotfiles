@@ -74,3 +74,7 @@ HANDOFF from nd-y6z0: OnePlus camera sensors and lc898217xc actuator subdevices 
 **2026-06-15T14:40:00Z**
 
 HANDOFF from nd-wzyq: OnePlus terminal touch-scroll is now handled by a focused Ghostty-only lisgd bridge in hosts/oneplus/oneplus-fajita/ui/niri.nix; next OnePlus switch/boot should test center one-finger swipes in Ghostty/tmux for direction/amount.
+
+**2026-06-15T14:42:28Z**
+
+HANDOFF from nd-hr89: current generation 74/75 bottom-mic trial still exact-zero with ALSA RUNNING/advancing pointers and no dmesg delta. Normal /aloop userspace work is exhausted; kernel-development follow-up nd-n819 now tracks the sdm845/wcd934x/q6afe/slim patch/trace target and blocks nd-nebp.

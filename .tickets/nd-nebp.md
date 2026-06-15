@@ -1,7 +1,7 @@
 ---
 id: nd-nebp
 status: open
-deps: [nd-87m2, nd-o9qo, nd-bcqi, nd-jiqb, nd-pq7i, nd-y6z0, nd-3wfg, nd-fuc6, nd-24hg, nd-pcdw, nd-wzyq, nd-843d, nd-hr89]
+deps: [nd-87m2, nd-o9qo, nd-bcqi, nd-jiqb, nd-pq7i, nd-y6z0, nd-3wfg, nd-fuc6, nd-24hg, nd-pcdw, nd-wzyq, nd-843d, nd-hr89, nd-n819]
 links: []
 created: 2026-06-15T14:00:59Z
 type: task

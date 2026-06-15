@@ -86,6 +86,7 @@ Important current evidence:
 - A live app-source test on generation 70 worked after manually programming the proven raw ALSA route and loading `module-alsa-source` as `oneplus_bottom_mic`.
 - Generation 71 boot-time app-source loading produced the desired app-visible shape but exact-zero capture.
 - Generation 72 disabled automatic app-source loading again, but traceable trials still recorded exact-zero after manual route/full poweroff.
+- The `nd-hr89` current-boot retrace on generation 74/75 also recorded exact-zero S16/S24 captures while `hw:O6T,1` was RUNNING with advancing pointers and no dmesg delta; see `docs/oneplus-audio-trials/20260615T144115Z-nd-hr89-current-kernel-boundary.md`.
 - Current conclusion: the safe userspace shape is speaker-only UCM plus manual `module-alsa-source` only after a known-good direct capture state. The remaining exact-zero vs non-zero failure is below UCM/PipeWire and likely needs kernel/ADSP/AFE/SLIM/codec reset or initialization work.
 
 Audio codec/topology warning triage from current boot (`nd-fuc6`):
@@ -98,7 +99,8 @@ Audio codec/topology warning triage from current boot (`nd-fuc6`):
 Active/split tickets:
 
 - `nd-87m2` — Stabilize OnePlus mic/audio capture path; split after userspace evidence showed the remaining blocker is lower-level.
-- `nd-hr89` — investigate OnePlus bottom-mic exact-zero capture despite active ALSA/DAPM route (kernel/ADSP follow-up). Include the SLIM/QMI boot timeout only as background evidence, not as a proven root cause.
+- `nd-hr89` — closed after narrowing the bottom-mic exact-zero state to kernel/ADSP work rather than UCM/PipeWire.
+- `nd-n819` — explicit kernel-development follow-up for `hw:O6T,1` / MultiMedia2 / SLIMBUS_0_TX / AIF1_CAP / SLIM TX0 / CDC_IF TX0 / DEC0 / ADC4 exact-zero capture. Include the SLIM/QMI boot timeout only as background evidence, not as a proven root cause.
 
 Detailed historical trial records are under `docs/oneplus-audio-trials/`. Treat them as evidence, not as current instructions.
 
