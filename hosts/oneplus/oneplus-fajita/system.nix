@@ -5,6 +5,67 @@
   ...
 }:
 let
+  oneplusForceReboot = pkgs.writeShellApplication {
+    name = "reboot";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -eu
+
+      if [ "$(id -u)" != 0 ]; then
+        exec /run/wrappers/bin/sudo -n /run/current-system/sw/bin/reboot "$@"
+      fi
+
+      echo "=== ONEPLUS SYSRQ REBOOT $(date -Ins) args: $* ===" >/dev/kmsg || true
+      sync
+      echo s >/proc/sysrq-trigger
+      sleep 2
+      echo u >/proc/sysrq-trigger
+      sleep 2
+      echo b >/proc/sysrq-trigger
+      sleep 30
+      echo "SysRq reboot did not complete" >&2
+      exit 1
+    '';
+  };
+  oneplusForceShutdown = pkgs.writeShellApplication {
+    name = "shutdown";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -eu
+
+      if [ "$(id -u)" != 0 ]; then
+        exec /run/wrappers/bin/sudo -n /run/current-system/sw/bin/shutdown "$@"
+      fi
+
+      action=poweroff
+      for arg in "$@"; do
+        case "$arg" in
+          -r|--reboot)
+            action=reboot
+            ;;
+          -c|--cancel)
+            echo "oneplus shutdown wrapper does not support cancelling scheduled shutdowns" >&2
+            exit 1
+            ;;
+        esac
+      done
+
+      echo "=== ONEPLUS SYSRQ SHUTDOWN $(date -Ins) action: $action args: $* ===" >/dev/kmsg || true
+      sync
+      echo s >/proc/sysrq-trigger
+      sleep 2
+      echo u >/proc/sysrq-trigger
+      sleep 2
+      if [ "$action" = reboot ]; then
+        echo b >/proc/sysrq-trigger
+      else
+        echo o >/proc/sysrq-trigger
+      fi
+      sleep 30
+      echo "SysRq $action did not complete" >&2
+      exit 1
+    '';
+  };
   oneplusUcm = pkgs.runCommand "oneplus-alsa-ucm-conf" { } ''
     mkdir -p $out/share/alsa
     cp -r ${pkgs.alsa-ucm-conf}/share/alsa/ucm2 $out/share/alsa/ucm2
@@ -110,22 +171,31 @@ in
   };
   # Keep the phone on the known-good boot argument shape. The common desktop
   # boot module adds PC-oriented parameters that are unnecessary here.
-  boot.kernelParams = lib.mkForce [
-    "console=ttyGS0,115200"
-    "clk_ignore_unused"
-    "pd_ignore_unused"
-    "arm64.nopauth"
-    "console=ttyMSM0,115200n8"
-    "console=tty0"
-    "rd.systemd.default_standard_output=kmsg+console"
-    "rd.systemd.default_standard_error=kmsg+console"
-    "rd.systemd.journald.forward_to_console=1"
-    "rd.systemd.log_target=console"
-    "rd.systemd.journald.forward_to_console=1"
-    "root=fstab"
-    "loglevel=8"
-    "lsm=landlock,yama,bpf"
-  ];
+  boot = {
+    kernelParams = lib.mkForce [
+      "console=ttyGS0,115200"
+      "clk_ignore_unused"
+      "pd_ignore_unused"
+      "arm64.nopauth"
+      "console=ttyMSM0,115200n8"
+      "console=tty0"
+      "rd.systemd.default_standard_output=kmsg+console"
+      "rd.systemd.default_standard_error=kmsg+console"
+      "rd.systemd.journald.forward_to_console=1"
+      "rd.systemd.log_target=console"
+      "rd.systemd.journald.forward_to_console=1"
+      "root=fstab"
+      "loglevel=8"
+      "lsm=landlock,yama,bpf"
+    ];
+
+    # Make `/proc/sysrq-trigger` fully available for the local reboot/poweroff
+    # wrappers below. SysRq s/u/b avoids the broken orderly qcom_q6v5_mss stop
+    # path and remounts filesystems read-only before emergency reboot.
+    kernel.sysctl."kernel.sysrq" = 1;
+  };
+  custom.atticCache.upload.enable = true;
+
   services = {
     dbus = {
       # Test dbus-broker on the phone through a booted generation rather than a
@@ -138,6 +208,17 @@ in
 
     upower.enable = true;
   };
+
+  # Override systemd's normal reboot/shutdown frontends on this phone. Normal
+  # orderly shutdown stops qcom_q6v5_mss (4080000.remoteproc), which currently
+  # hangs/crashdumps the device. `systemctl --force --force` avoids that stop
+  # path but leaves userspace running while UFS goes away, causing noisy I/O
+  # errors. Use SysRq sync/remount-ro/reboot-or-poweroff instead so `sudo reboot`
+  # and `sudo shutdown now` remain the agent-safe iteration commands.
+  environment.systemPackages = lib.mkBefore [
+    (lib.hiPrio oneplusForceReboot)
+    (lib.hiPrio oneplusForceShutdown)
+  ];
 
   environment.sessionVariables.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
 
