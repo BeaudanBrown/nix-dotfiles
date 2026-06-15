@@ -1,6 +1,6 @@
 ---
 id: nd-qo2o
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-15T13:54:53Z
@@ -21,3 +21,9 @@ Add a concise current-state section near the top. Demote or mark historical the 
 ## Acceptance Criteria
 
 A fresh agent can read the top of docs/oneplus-bringup.md and know the current OnePlus audio/mic target without chasing obsolete directions. Contradictory historical statements are removed, moved, or explicitly marked historical. Journal issue list points to tk tickets once available.
+
+## Notes
+
+**2026-06-15T14:01:00Z**
+
+Cleaned docs/oneplus-bringup.md into a concise current-state agent entry point and moved old generation-by-generation history to docs/archive/oneplus-bringup-history-20260615.md.

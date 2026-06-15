@@ -19,6 +19,8 @@ This repo supports a generic manual reboot debugging loop.
 
 This is intentionally task-agnostic. Change `.pi/boot-task.md` for audio, reboot debugging, hardware bring-up, or any other investigation.
 
-Current constraint: software reboot is not reliable yet. Do not automate reboot loops until that is fixed; ask for a manual reboot when the next boot cycle is needed.
+For long OnePlus `/aloop` runs, also read `docs/oneplus-agent-loop.md` and the active tk epic `nd-8dw3`.
+
+Current constraint: unattended reboot loops are not approved yet. The OnePlus host has SysRq-backed `reboot` and `shutdown` wrappers, but agents must continue to stop for manual reboot until ticket `nd-pcdw` validates and documents automated reboot safety.
 
 On the OnePlus host, `wheel` currently has temporary passwordless sudo for bring-up/debugging. The resumed agent may use `sudo` freely for root-only diagnostics on this host. Remove `security.sudo.wheelNeedsPassword = false;` from `hosts/oneplus/oneplus-fajita/system.nix` once the OnePlus system is stable overall.

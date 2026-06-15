@@ -33,14 +33,14 @@
     wantedBy = [ "multi-user.target" ];
     before = [ "suspend.target" ];
     conflicts = [ "suspend.target" ];
+    unitConfig.ConditionPathExists = [
+      "!/dev/fastrpc-sdsp"
+      "/dev/fastrpc-adsp"
+    ];
 
     serviceConfig = {
       ExecStart = "${pkgs.unstable.hexagonrpc}/bin/hexagonrpcd -f /dev/fastrpc-adsp -d adsp -s";
       Restart = "on-failure";
-      ConditionPathExists = [
-        "!/dev/fastrpc-sdsp"
-        "/dev/fastrpc-adsp"
-      ];
       RestartSec = "3s";
       User = "root";
       Group = "root";

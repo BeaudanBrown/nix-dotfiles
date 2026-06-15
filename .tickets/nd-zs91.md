@@ -1,6 +1,6 @@
 ---
 id: nd-zs91
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-15T13:54:54Z
@@ -21,3 +21,9 @@ Update docs/pi-boot-resume.md and/or add docs/oneplus-agent-loop.md. Explain tha
 ## Acceptance Criteria
 
 Docs answer whether standard /aloop works with the reboot pattern: not automatically yet; use manual boot-resume handoff. Agents have explicit stop conditions for reboot-required work and know not to run unattended reboot loops.
+
+## Notes
+
+**2026-06-15T14:01:00Z**
+
+Added docs/oneplus-agent-loop.md and updated docs/pi-boot-resume.md/.pi/boot-system.md with /aloop reboot boundaries, manual boot-resume handoff, kernel rebuild boundary, and final sentinel behavior.

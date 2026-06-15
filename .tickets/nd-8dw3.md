@@ -20,3 +20,9 @@ Treat this epic as the live OnePlus stabilization backlog. Each /aloop worker sh
 ## Acceptance Criteria
 
 Known OnePlus journal issues are represented as concrete child tickets with evidence, likely seams, and acceptance criteria. docs/oneplus-bringup.md is cleaned so current state and open issue pointers are not contradicted by old mic/audio history. Reboot-loop limitations are documented for /aloop. Initial actionable tickets exist for simple non-reboot fixes and deeper hardware investigations. Agents can safely run /aloop against this epic without being misled by stale docs or forced into unsupported reboot automation.
+
+## Notes
+
+**2026-06-15T14:01:00Z**
+
+Prepared repo for long /aloop operation. Active guidance is now docs/oneplus-agent-loop.md and concise docs/oneplus-bringup.md; historical long bring-up notes moved to docs/archive/oneplus-bringup-history-20260615.md. Final sentinel ticket nd-nebp should close the epic only after a final scan finds no actionable work.

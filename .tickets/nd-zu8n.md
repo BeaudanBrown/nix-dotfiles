@@ -1,6 +1,6 @@
 ---
 id: nd-zu8n
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-15T13:54:54Z
@@ -21,3 +21,13 @@ Likely seam is hosts/oneplus/oneplus-fajita/hardware/qualcomm-services.nix, wher
 ## Acceptance Criteria
 
 ConditionPathExists entries are placed in the correct systemd unit section. Focused Nix validation/evaluation is run or explicitly skipped. Ticket notes say whether the journal warning should disappear after next boot.
+
+## Notes
+
+**2026-06-15T14:01:00Z**
+
+Moved ConditionPathExists for hexagonrpcd-adsp-sensorspd from serviceConfig to unitConfig in hosts/oneplus/oneplus-fajita/hardware/qualcomm-services.nix.
+
+**2026-06-15T14:01:40Z**
+
+Validation: nix eval --extra-experimental-features 'nix-command flakes fetch-closure pipe-operators' .#nixosConfigurations.oneplus.config.systemd.services.hexagonrpcd-adsp-sensorspd.unitConfig.ConditionPathExists returned [ "!/dev/fastrpc-sdsp" "/dev/fastrpc-adsp" ].
