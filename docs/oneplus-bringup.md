@@ -53,6 +53,12 @@ Current boot exposes the WCN3990 Bluetooth controller as `/sys/class/bluetooth/h
 
 Battery reporting is usable on the current boot. `/sys/class/power_supply/bq27411-0` exposes percentage and charge metadata (`capacity=63`, `charge_full_design=3640000`, `charge_full=2993000`, `charge_now=2076000` during the 2026-06-16 check), while UPower reports the same battery with percentage, time-to-full, voltage, rate, design energy, and current full energy. The old `bq27xxx-battery ... missing/invalid battery:energy-full-design-microwatt-hours` lines were not present in retained current kernel journals; treat them as cosmetic DT/property probing noise unless percentage or charge/energy fields disappear in a future boot.
 
+## Camera current summary
+
+Current boot separates the camera sensor path from the actuator/OIS path. The CAMSS media device and capture video nodes exist, and the three known camera sensors bind as V4L2 subdevices: `imx371 16-0010`, `imx519 16-001a`, and `imx376 17-0010`. The two OIS/actuator chips also bind as subdevices (`lc898217xc 16-0072` and `lc898217xc 17-0074`). The old `lc898217xc ... Error writing reg 0x0084: -6` / `failed to set DAC: -6` lines were not present in the retained current kernel journal during the 2026-06-16 check, so treat them as historical unless they recur during focus/OIS movement or camera open tests.
+
+The host now includes `v4l-utils` and `libcamera` so future on-device checks can inspect the media graph and attempt sensor capture separately from actuator/OIS behavior. If actuator DAC writes recur while sensors still enumerate/capture, the likely remaining seam is kernel driver/device-tree power sequencing/regulator work, not a Nix userspace service.
+
 ## RTC/time current summary
 
 The PMIC RTC is still not a trustworthy wall-clock source: on 2026-06-16 `timedatectl` showed synchronized system time but `RTC time: Fri 1970-01-02 00:36:21`, and `/sys/class/rtc/rtc0/name` was `rtc-pm8xxx c440000.spmi:pmic@0:rtc@6000`. The same boot initially synchronized through `systemd-timesyncd` about two minutes after `systemd-timesyncd` start; early services such as NetworkManager retained 1970-era activation timestamps until the network clock step.

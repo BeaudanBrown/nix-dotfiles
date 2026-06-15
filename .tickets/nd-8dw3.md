@@ -66,3 +66,7 @@ HANDOFF from nd-pcdw: OnePlus SysRq reboot wrapper had one clean full handoff. F
 **2026-06-15T14:30:07Z**
 
 HANDOFF from nd-pq7i: OnePlus battery reporting is usable in current sysfs/UPower; old bq27xxx energy-full-design warnings were absent from retained current kernel logs and are treated as cosmetic unless capacity/charge reporting regresses.
+
+**2026-06-15T14:34:40Z**
+
+HANDOFF from nd-y6z0: OnePlus camera sensors and lc898217xc actuator subdevices enumerate on current boot; old actuator DAC I2C errors did not recur in retained current kernel journal. oneplus now includes v4l-utils/libcamera for future camera graph/capture checks; remaining actuator power-sequencing work should only be ticketed if errors recur during camera-open/focus tests.

@@ -1,6 +1,6 @@
 ---
 id: nd-y6z0
-status: open
+status: closed
 deps: [nd-qo2o]
 links: []
 created: 2026-06-15T13:54:54Z
@@ -21,3 +21,9 @@ Check camera enumeration/capture separately from actuator/OIS. Determine whether
 ## Acceptance Criteria
 
 Camera sensor status is separated from actuator/OIS status. A small fix is implemented if available, or follow-up blocker ticket(s) are created with evidence.
+
+## Notes
+
+**2026-06-15T14:34:40Z**
+
+HANDOFF: Current boot has CAMSS /dev/media0 and /dev/video0-13; sensors bind as imx371 16-0010, imx519 16-001a, imx376 17-0010; actuator/OIS chips bind as lc898217xc 16-0072 and 17-0074. Retained current kernel journal has no lc898217xc reg 0x0084 / failed-to-set-DAC lines, so old errors are historical unless they recur during camera-open/focus tests. Added v4l-utils and libcamera to oneplus systemPackages and documented camera status in docs/oneplus-bringup.md. Verification: current runtime/sysfs/journal inspection passed; package attr evals passed; environment.systemPackages eval passed; toplevel drvPath eval timed out after 120s without a diagnostic.

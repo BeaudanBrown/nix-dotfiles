@@ -306,6 +306,13 @@ in
   environment.systemPackages = lib.mkBefore [
     (lib.hiPrio oneplusForceReboot)
     (lib.hiPrio oneplusForceShutdown)
+
+    # Keep camera/media graph inspection tools available on-device. The phone
+    # exposes CAMSS sensors and actuator subdevices directly through V4L2/media;
+    # these tools let follow-up work distinguish sensor capture from OIS/actuator
+    # failures without rebuilding the system just to inspect the graph.
+    pkgs.libcamera
+    pkgs.v4l-utils
   ];
 
   environment.sessionVariables.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
