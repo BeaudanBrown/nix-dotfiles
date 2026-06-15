@@ -62,3 +62,7 @@ HANDOFF from nd-pcdw: reboot automation is still not approved. nd-pcdw now has a
 **2026-06-15T14:28:03Z**
 
 HANDOFF from nd-pcdw: OnePlus SysRq reboot wrapper had one clean full handoff. Future reboot-required OnePlus tickets may use a single committed/seeded sudo -n /run/current-system/sw/bin/reboot cycle, but no chained reboot loops or automatic nr&&reboot stress cycles are approved.
+
+**2026-06-15T14:30:07Z**
+
+HANDOFF from nd-pq7i: OnePlus battery reporting is usable in current sysfs/UPower; old bq27xxx energy-full-design warnings were absent from retained current kernel logs and are treated as cosmetic unless capacity/charge reporting regresses.
