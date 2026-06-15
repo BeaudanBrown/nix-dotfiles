@@ -49,6 +49,10 @@ No `ath10k` key install/remove timeout was present in the current boot journal o
 
 Current boot exposes the WCN3990 Bluetooth controller as `/sys/class/bluetooth/hci0`, and no current kernel log line matches the old `pwrseq-qcom_wcn wcn3990-pmu` / SPMI `-EPERM` failure cluster. The remaining userspace failure was configuration: the `oneplus` host has only `minimal`, `common`, `network`, and `client` roots, so it did not import the work-root Bluetooth module and had no `bluetooth.service` or `bluetoothctl`. The host now enables `hardware.bluetooth` directly; validate adapter listing after the next boot/switch.
 
+## Touch and terminal-scroll current summary
+
+Raw touchscreen swipes reach evdev/lisgd on the OnePlus touch device, but Ghostty/tmux does not currently translate direct finger swipes into wheel escape bytes. The host has a narrow workaround in `hosts/oneplus/oneplus-fajita/ui/niri.nix`: central one-finger up/down lisgd gestures run `oneplus-terminal-scroll`, which first confirms the focused niri window is Ghostty and then scrolls the most recently active tmux client/pane, falling back to PageUp/PageDown for non-tmux Ghostty. The script no-ops for non-Ghostty focus so normal touch use outside terminals is not globally remapped.
+
 ## Battery current summary
 
 Battery reporting is usable on the current boot. `/sys/class/power_supply/bq27411-0` exposes percentage and charge metadata (`capacity=63`, `charge_full_design=3640000`, `charge_full=2993000`, `charge_now=2076000` during the 2026-06-16 check), while UPower reports the same battery with percentage, time-to-full, voltage, rate, design energy, and current full energy. The old `bq27xxx-battery ... missing/invalid battery:energy-full-design-microwatt-hours` lines were not present in retained current kernel journals; treat them as cosmetic DT/property probing noise unless percentage or charge/energy fields disappear in a future boot.
@@ -112,6 +116,7 @@ Initial journal-derived tickets:
 - `nd-3wfg` — Triage GPU/display firmware and SMMU warnings
 - `nd-fuc6` — Triage audio codec topology warnings separately from mic capture
 - `nd-24hg` — Investigate touch scrolling in Ghostty/tmux
+- `nd-wzyq` — Add OnePlus terminal touch-scroll workaround
 - `nd-pcdw` — Validate OnePlus SysRq reboot wrappers before automated reboot loops (closed after one clean constrained handoff)
 
 A final sentinel ticket should remain blocked until the backlog is otherwise exhausted. When it becomes ready, the worker should scan for current unresolved OnePlus hardware/configuration issues. If more work exists, create tickets and make the sentinel depend on them. If no actionable work remains, close the sentinel and the epic with a clear no-more-work note.

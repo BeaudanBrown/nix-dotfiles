@@ -87,6 +87,44 @@ let
 
     exec ${oneplusSpawn}/bin/oneplus-spawn ${pkgs.wvkbd}/bin/wvkbd-mobintl
   '';
+  oneplusTerminalScroll = pkgs.writeShellScriptBin "oneplus-terminal-scroll" ''
+    set -eu
+
+    direction="''${1:-}"
+    case "$direction" in
+      up)
+        tmux_scroll="scroll-up"
+        fallback_key="Page_Up"
+        ;;
+      down)
+        tmux_scroll="scroll-down"
+        fallback_key="Page_Down"
+        ;;
+      *)
+        echo "Usage: oneplus-terminal-scroll up|down" >&2
+        exit 64
+        ;;
+    esac
+
+    focused="$(${niriMsg}/bin/oneplus-niri-msg -j focused-window 2>/dev/null || true)"
+    if ! printf '%s\n' "$focused" | ${pkgs.gnugrep}/bin/grep -Eq '"app_id"[[:space:]]*:[[:space:]]*"com\.mitchellh\.ghostty"'; then
+      exit 0
+    fi
+
+    if ${pkgs.tmux}/bin/tmux list-clients >/dev/null 2>&1; then
+      target="$(${pkgs.tmux}/bin/tmux list-clients -F '#{client_activity} #{client_session}:#{client_window}.#{client_pane}' \
+        | ${pkgs.coreutils}/bin/sort -nr \
+        | ${pkgs.coreutils}/bin/head -n 1 \
+        | ${pkgs.coreutils}/bin/cut -d ' ' -f 2-)"
+      if [ -n "$target" ]; then
+        exec ${pkgs.tmux}/bin/tmux if-shell -t "$target" -F '#{pane_in_mode}' \
+          "send-keys -t '$target' -X -N 6 $tmux_scroll" \
+          "copy-mode -e -t '$target'; send-keys -t '$target' -X -N 6 $tmux_scroll"
+      fi
+    fi
+
+    exec ${pkgs.wtype}/bin/wtype -k "$fallback_key"
+  '';
   sttDictate =
     (import ../../../../modules/scripts/stt-dictate/work.nix { inherit pkgs; })
     .environment.systemPackages
@@ -206,6 +244,8 @@ let
       -r 35 \
       -s 2 \
       -g '1,DU,B,*,R,${niriMsg}/bin/oneplus-niri-msg action toggle-overview' \
+      -g '1,DU,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll down' \
+      -g '1,UD,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll up' \
       -g '1,LR,L,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-left' \
       -g '1,RL,R,*,R,${niriMsg}/bin/oneplus-niri-msg action focus-column-right' \
       -g '2,DU,*,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer' \
@@ -248,6 +288,7 @@ in
     oneplusScreenRecord
     oneplusSpawn
     oneplusSttDictate
+    oneplusTerminalScroll
     niriMsg
     sttDictate
     pavucontrol

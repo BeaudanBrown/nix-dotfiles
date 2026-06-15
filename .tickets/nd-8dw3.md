@@ -70,3 +70,7 @@ HANDOFF from nd-pq7i: OnePlus battery reporting is usable in current sysfs/UPowe
 **2026-06-15T14:34:40Z**
 
 HANDOFF from nd-y6z0: OnePlus camera sensors and lc898217xc actuator subdevices enumerate on current boot; old actuator DAC I2C errors did not recur in retained current kernel journal. oneplus now includes v4l-utils/libcamera for future camera graph/capture checks; remaining actuator power-sequencing work should only be ticketed if errors recur during camera-open/focus tests.
+
+**2026-06-15T14:40:00Z**
+
+HANDOFF from nd-wzyq: OnePlus terminal touch-scroll is now handled by a focused Ghostty-only lisgd bridge in hosts/oneplus/oneplus-fajita/ui/niri.nix; next OnePlus switch/boot should test center one-finger swipes in Ghostty/tmux for direction/amount.
