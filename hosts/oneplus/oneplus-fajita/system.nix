@@ -173,7 +173,11 @@ in
 
   systemd.user.services.oneplus-mic-source = {
     description = "Expose OnePlus 6T bottom microphone through PipeWire Pulse";
-    wantedBy = [ "default.target" ];
+    # Do not start this automatically at login. Generation 71 proved that a
+    # boot-time module-alsa-source load gives the desired app-visible source
+    # shape but poisons/locks the lower-level capture path into exact-zero
+    # samples. Keep it as an explicit debug/manual service while retracing the
+    # clean speaker-only boot state.
     after = [
       "oneplus-audio-route.service"
       "pipewire-pulse.service"
