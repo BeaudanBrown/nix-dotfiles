@@ -81,6 +81,19 @@ Until `nd-pcdw` closes with explicit approval for automated reboot loops:
 
 SysRq-backed `reboot` and `shutdown` wrappers exist on OnePlus, but they are only candidates for automation until `nd-pcdw` validates them.
 
+### `nd-pcdw` reboot-wrapper validation checklist
+
+When explicitly working `nd-pcdw`, do a manual, single-cycle validation before changing the automation policy:
+
+1. Confirm the booted system is the OnePlus host and that `/run/current-system/sw/bin/reboot` resolves to the high-priority OnePlus wrapper.
+2. Confirm `kernel.sysrq = 1`.
+3. Seed `.pi/boot-task.md` with the selected ticket, the expected post-boot checks, and the rule that the resumed agent must not start a second reboot automatically.
+4. From a normal agent shell, run the same command future automation would use, currently `sudo -n /run/current-system/sw/bin/reboot`.
+5. After graphical login and boot-resume, check journal continuity and runtime health: current boot id/time, previous boot end time, wrapper/kmsg markers if retained, no shutdown hang, no remoteproc crashdump hang, root filesystem mounted read-write, network up, and the relevant `/aloop` tmux/pi handoff resumed.
+6. Record the evidence in `nd-pcdw` before deciding policy.
+
+Approval requires at least one complete manual handoff with the wrapper returning control to the resumed agent. If evidence is incomplete or the reboot path needs human intervention beyond the expected login/resume, keep the manual-reboot-only policy.
+
 ## Final sentinel / no-more-work behavior
 
 A final sentinel ticket should remain blocked by all known actionable OnePlus issue tickets.

@@ -54,3 +54,7 @@ HANDOFF from nd-jiqb: OnePlus RTC still reports 1970 even after NTP sync; non-ke
 **2026-06-15T14:23:23Z**
 
 HANDOFF from nd-o9qo: current OnePlus Bluetooth issue was a userspace config gap, not a reproduced WCN3990 power-sequencing failure on this boot: hci0 exists and old pwrseq/SPMI -EPERM logs are absent. oneplus now enables hardware.bluetooth directly; validate bluetoothctl list after a future switch/boot.
+
+**2026-06-15T14:25:31Z**
+
+HANDOFF from nd-pcdw: reboot automation is still not approved. nd-pcdw now has a documented one-cycle manual SysRq wrapper validation checklist and .pi/boot-task.md seed; next step is an actual supervised sudo -n /run/current-system/sw/bin/reboot followed by post-boot evidence before any policy change.

@@ -23,4 +23,6 @@ For long OnePlus `/aloop` runs, also read `docs/oneplus-agent-loop.md` and the a
 
 Current constraint: unattended reboot loops are not approved yet. The OnePlus host has SysRq-backed `reboot` and `shutdown` wrappers, but agents must continue to stop for manual reboot until ticket `nd-pcdw` validates and documents automated reboot safety.
 
+For `nd-pcdw` specifically, only perform one manually supervised wrapper reboot at a time: seed `.pi/boot-task.md`, commit the current state, invoke the wrapper command, and require the resumed agent to record post-boot evidence before any policy change or second reboot. This prevents an accidental unattended reboot loop while the wrapper is still under test.
+
 On the OnePlus host, `wheel` currently has temporary passwordless sudo for bring-up/debugging. The resumed agent may use `sudo` freely for root-only diagnostics on this host. Remove `security.sudo.wheelNeedsPassword = false;` from `hosts/oneplus/oneplus-fajita/system.nix` once the OnePlus system is stable overall.
