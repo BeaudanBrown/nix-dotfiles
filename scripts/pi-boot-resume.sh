@@ -5,8 +5,29 @@ repo_dir="${PI_BOOT_RESUME_REPO:-$HOME/documents/nix-dotfiles}"
 system_prompt_file="${PI_BOOT_RESUME_SYSTEM_PROMPT:-$repo_dir/.pi/boot-system.md}"
 task_prompt_file="${PI_BOOT_RESUME_TASK_PROMPT:-$repo_dir/.pi/boot-task.md}"
 legacy_prompt_file="${PI_BOOT_RESUME_PROMPT:-}"
+session_dir="${PI_BOOT_RESUME_SESSION_DIR:-${PI_CODING_AGENT_SESSION_DIR:-$HOME/.pi/agent/sessions}}"
 
 cd "$repo_dir"
+
+latest_pi_session() {
+	local newest_time=""
+	local newest_file=""
+	local file mtime
+
+	[[ -d $session_dir ]] || return 1
+
+	while IFS= read -r -d '' file; do
+		mtime="$(stat -c %Y "$file" 2>/dev/null || true)"
+		[[ -n $mtime ]] || continue
+		if [[ -z $newest_time || $mtime -gt $newest_time ]]; then
+			newest_time="$mtime"
+			newest_file="$file"
+		fi
+	done < <(find "$session_dir" -type f -name '*.jsonl' -print0 2>/dev/null)
+
+	[[ -n $newest_file ]] || return 1
+	printf '%s\n' "$newest_file"
+}
 
 if [[ ${PI_BOOT_RESUME_TMUX:-1} != 0 && -z ${PI_BOOT_RESUME_IN_TMUX:-} && -z ${TMUX:-} ]]; then
 	if command -v tmux >/dev/null 2>&1; then
@@ -47,8 +68,17 @@ else
 	fi
 fi
 
-if [[ -n $prompt ]]; then
-	exec pi -c "$prompt"
+latest_session="$(latest_pi_session || true)"
+
+if [[ -n $latest_session ]]; then
+	if [[ -n $prompt ]]; then
+		exec pi --session "$latest_session" "$prompt"
+	fi
+	exec pi --session "$latest_session"
 fi
 
-exec pi -c
+if [[ -n $prompt ]]; then
+	exec pi --continue "$prompt"
+fi
+
+exec pi --continue
