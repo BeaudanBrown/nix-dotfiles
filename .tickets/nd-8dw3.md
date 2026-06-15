@@ -58,3 +58,7 @@ HANDOFF from nd-o9qo: current OnePlus Bluetooth issue was a userspace config gap
 **2026-06-15T14:25:31Z**
 
 HANDOFF from nd-pcdw: reboot automation is still not approved. nd-pcdw now has a documented one-cycle manual SysRq wrapper validation checklist and .pi/boot-task.md seed; next step is an actual supervised sudo -n /run/current-system/sw/bin/reboot followed by post-boot evidence before any policy change.
+
+**2026-06-15T14:28:03Z**
+
+HANDOFF from nd-pcdw: OnePlus SysRq reboot wrapper had one clean full handoff. Future reboot-required OnePlus tickets may use a single committed/seeded sudo -n /run/current-system/sw/bin/reboot cycle, but no chained reboot loops or automatic nr&&reboot stress cycles are approved.

@@ -1,6 +1,6 @@
 ---
 id: nd-pcdw
-status: in_progress
+status: closed
 deps: [nd-zs91]
 links: []
 created: 2026-06-15T13:54:54Z
@@ -27,3 +27,7 @@ Manual evidence proves whether wrappers are reliable enough for automation. Docs
 **2026-06-15T14:25:22Z**
 
 HANDOFF: Added explicit nd-pcdw one-cycle SysRq wrapper validation checklist to docs/oneplus-agent-loop.md and docs/pi-boot-resume.md, and seeded .pi/boot-task.md for the next manual reboot handoff. Non-invasive preflight on current OnePlus boot: hostname=oneplus, /run/current-system/sw/bin/reboot resolves to /nix/store/ziadansm1m0nk0qfa0q4ri1z4y0dc62c-reboot/bin/reboot, kernel.sysrq=1; retained recent boot journals did not contain ONEPLUS SYSRQ markers. Tests/checks run: rg/read docs, hostname/uname/readlink/sysctl/journalctl. Remaining risk/next touchpoint: requires the actual supervised command sudo -n /run/current-system/sw/bin/reboot and post-boot evidence before closing or approving automation.
+
+**2026-06-15T14:28:03Z**
+
+HANDOFF: Completed post-boot validation for one OnePlus SysRq-wrapper reboot. Evidence: host=oneplus; reboot wrapper=/nix/store/ziadansm1m0nk0qfa0q4ri1z4y0dc62c-reboot/bin/reboot; kernel.sysrq=1; previous boot ended 2026-06-15 23:24:52 AEST and current boot started 2026-06-15 23:27:11 AEST; pi/tmux handoff resumed; / is rw; wlan0/Tailscale up; gateway ping passed; systemctl --failed reported 0 units; no retained shutdown/remoteproc/root I/O failure evidence. Docs updated to allow exactly one ticket-scoped sudo -n /run/current-system/sw/bin/reboot handoff, while repeated unattended reboot loops remain unapproved.

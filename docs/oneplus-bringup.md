@@ -21,7 +21,7 @@ Use the archive only as evidence when needed. If you find useful facts there, co
 3. Inspect current runtime/log state before assuming an old journal line is still true.
 4. Make focused changes; create follow-up tickets for new discoveries instead of silently expanding scope.
 5. If progress requires a kernel rebuild, kernel patching, or a new kernel closure, record the blocker in tk, create/link a kernel-work ticket if useful, close the current non-kernel ticket as blocked by kernel work, and move on. Do not build kernels in normal `/aloop`.
-6. If reboot validation is needed, commit coherent changes, seed `.pi/boot-task.md`, run `nr` only when appropriate, then stop for manual reboot unless `nd-pcdw` has explicitly approved automated reboot loops.
+6. If reboot validation is needed, commit coherent changes, seed `.pi/boot-task.md`, run `nr` only when appropriate, then either stop for manual reboot or, on OnePlus only, use the constrained single `sudo -n /run/current-system/sw/bin/reboot` handoff approved by `nd-pcdw`.
 
 ## Current known-good state
 
@@ -31,7 +31,7 @@ Use the archive only as evidence when needed. If you find useful facts there, co
 - Speaker playback is expected through the custom speaker-only UCM/ACP path.
 - `oneplus-audio-route.service` initializes the speaker route before WirePlumber.
 - `oneplus-mic-source.service` exists but is intentionally manual-only.
-- SysRq-backed `reboot` and `shutdown` wrappers exist, but unattended reboot loops are not approved until `nd-pcdw` validates them.
+- SysRq-backed `reboot` and `shutdown` wrappers exist. `nd-pcdw` validated one clean `sudo -n /run/current-system/sw/bin/reboot` handoff, so single-ticket boot validation may use that exact path after seeding `.pi/boot-task.md`; repeated unattended reboot loops remain unapproved.
 
 ## GPU/display current summary
 
@@ -102,7 +102,7 @@ Initial journal-derived tickets:
 - `nd-3wfg` — Triage GPU/display firmware and SMMU warnings
 - `nd-fuc6` — Triage audio codec topology warnings separately from mic capture
 - `nd-24hg` — Investigate touch scrolling in Ghostty/tmux
-- `nd-pcdw` — Validate OnePlus SysRq reboot wrappers before automated reboot loops
+- `nd-pcdw` — Validate OnePlus SysRq reboot wrappers before automated reboot loops (closed after one clean constrained handoff)
 
 A final sentinel ticket should remain blocked until the backlog is otherwise exhausted. When it becomes ready, the worker should scan for current unresolved OnePlus hardware/configuration issues. If more work exists, create tickets and make the sentinel depend on them. If no actionable work remains, close the sentinel and the epic with a clear no-more-work note.
 

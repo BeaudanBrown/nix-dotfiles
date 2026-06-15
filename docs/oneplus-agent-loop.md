@@ -68,31 +68,29 @@ This keeps long loops from spending all iterations in expensive kernel work.
 
 ## Reboot boundary
 
-Standard `/aloop` is safe for non-reboot work. It is not yet an unattended reboot loop.
+Standard `/aloop` is safe for non-reboot work. OnePlus now has approval for a constrained single-cycle reboot handoff, not an unlimited unattended reboot loop.
 
-Until `nd-pcdw` closes with explicit approval for automated reboot loops:
+For a ticket that explicitly needs OnePlus boot validation, an agent may invoke the proven wrapper once with `sudo -n /run/current-system/sw/bin/reboot` only after all of these are true:
 
-1. Do not run unattended reboot loops.
-2. If a change needs boot validation, commit the coherent change first.
-3. Seed `.pi/boot-task.md` with the ticket id, expected post-boot checks, and stop/continue criteria.
-4. Run `nr` only when the ticket/user explicitly calls for preparing a boot generation.
-5. Stop and ask for manual reboot.
-6. The resumed agent should inspect runtime state, record results in tk/docs/git, and then close/continue/split.
+1. The coherent code/docs/ticket state is committed.
+2. `.pi/boot-task.md` names the ticket, expected post-boot checks, and stop/continue criteria.
+3. `/run/current-system/sw/bin/reboot` resolves to the OnePlus high-priority wrapper and `kernel.sysrq = 1`.
+4. The ticket/user explicitly calls for reboot validation; do not add reboots to unrelated work.
+5. The boot-task seed tells the resumed agent not to start another reboot automatically.
 
-SysRq-backed `reboot` and `shutdown` wrappers exist on OnePlus, but they are only candidates for automation until `nd-pcdw` validates them.
+After the resumed agent reaches graphical login / `pi-boot-resume`, it must inspect runtime state, record results in tk/docs/git, and then close/continue/split the ticket. Do not run chained reboot loops, repeated stress cycles, or automatic `nr && reboot` loops unless a later ticket separately validates that broader policy.
 
-### `nd-pcdw` reboot-wrapper validation checklist
+SysRq-backed `reboot` and `shutdown` wrappers exist on OnePlus. `nd-pcdw` validated one clean `sudo -n /run/current-system/sw/bin/reboot` cycle on 2026-06-16: the next boot resumed pi/tmux handoff, journal history remained available, root was read-write, Wi-Fi/Tailscale were up, and no failed units were present. The persistent journal did not retain explicit wrapper/kmsg markers, so future post-boot checks should treat marker absence as inconclusive rather than failure when other handoff evidence is clean.
 
-When explicitly working `nd-pcdw`, do a manual, single-cycle validation before changing the automation policy:
+### `nd-pcdw` reboot-wrapper validation result
 
-1. Confirm the booted system is the OnePlus host and that `/run/current-system/sw/bin/reboot` resolves to the high-priority OnePlus wrapper.
-2. Confirm `kernel.sysrq = 1`.
-3. Seed `.pi/boot-task.md` with the selected ticket, the expected post-boot checks, and the rule that the resumed agent must not start a second reboot automatically.
-4. From a normal agent shell, run the same command future automation would use, currently `sudo -n /run/current-system/sw/bin/reboot`.
-5. After graphical login and boot-resume, check journal continuity and runtime health: current boot id/time, previous boot end time, wrapper/kmsg markers if retained, no shutdown hang, no remoteproc crashdump hang, root filesystem mounted read-write, network up, and the relevant `/aloop` tmux/pi handoff resumed.
-6. Record the evidence in `nd-pcdw` before deciding policy.
+Evidence from the completed one-cycle validation:
 
-Approval requires at least one complete manual handoff with the wrapper returning control to the resumed agent. If evidence is incomplete or the reboot path needs human intervention beyond the expected login/resume, keep the manual-reboot-only policy.
+1. Booted host was `oneplus`; `/run/current-system/sw/bin/reboot` resolved to `/nix/store/ziadansm1m0nk0qfa0q4ri1z4y0dc62c-reboot/bin/reboot`.
+2. `kernel.sysrq = 1`.
+3. `journalctl --list-boots` showed the previous boot ending at 2026-06-15 23:24:52 AEST and the current boot starting at 2026-06-15 23:27:11 AEST.
+4. Runtime health after resume: `/` mounted `rw`, `wlan0` had `192.168.68.126/24`, Tailscale had `100.64.0.1/32`, gateway ping succeeded, `systemctl --failed` reported 0 failed units, and the tmux/pi handoff reached the resumed agent.
+5. No shutdown hang, remoteproc crashdump hang, or root I/O error was found in the retained previous/current boot evidence searched for this ticket.
 
 ## Final sentinel / no-more-work behavior
 

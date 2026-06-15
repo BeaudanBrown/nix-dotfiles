@@ -10,8 +10,8 @@ Boot-resume workflow:
 - You may run `nr` to prepare the next boot generation.
 - Before running `nr`, commit the current coherent changes so the booted generation corresponds to a durable git state.
 - Do not run `nix eval` immediately before `nr`; it duplicates work and slows iteration. Commit coherent changes, then run `nr` directly.
-- Unattended reboot loops are not approved yet, so do not attempt automatic reboot loops.
-- When a reboot is needed, stop after preparing the generation and ask the user to manually reboot unless ticket `nd-pcdw` has explicitly validated automated reboot safety.
+- Unbounded unattended reboot loops are not approved; do not attempt repeated automatic reboot loops.
+- On OnePlus, ticket `nd-pcdw` validated one clean SysRq-wrapper handoff. When an active ticket explicitly needs boot validation, you may commit the coherent state, seed `.pi/boot-task.md`, and run exactly one `sudo -n /run/current-system/sw/bin/reboot`; the resumed agent must record evidence before any further reboot.
 - If work cannot proceed without rebuilding or patching the kernel, record the blocker in tk, create/link a kernel-work ticket if useful, close or unblock the current ticket appropriately, and move on rather than building a kernel in normal `/aloop`.
 
 Task-specific seed follows.
