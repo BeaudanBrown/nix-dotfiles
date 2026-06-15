@@ -78,3 +78,7 @@ HANDOFF from nd-wzyq: OnePlus terminal touch-scroll is now handled by a focused 
 **2026-06-15T14:42:28Z**
 
 HANDOFF from nd-hr89: current generation 74/75 bottom-mic trial still exact-zero with ALSA RUNNING/advancing pointers and no dmesg delta. Normal /aloop userspace work is exhausted; kernel-development follow-up nd-n819 now tracks the sdm845/wcd934x/q6afe/slim patch/trace target and blocks nd-nebp.
+
+**2026-06-15T14:45:47Z**
+
+HANDOFF from nd-n819: selected kernel-development ticket cannot progress in normal /aloop because OnePlus currently boots a fetched pinned kernel closure, not a patchable source derivation. Created prerequisite nd-1q85 for an explicit patchable kernel flow; nd-n819 now depends on it and remains the bottom-mic trace/patch target.

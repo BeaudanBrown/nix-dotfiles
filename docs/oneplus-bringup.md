@@ -100,7 +100,7 @@ Active/split tickets:
 
 - `nd-87m2` — Stabilize OnePlus mic/audio capture path; split after userspace evidence showed the remaining blocker is lower-level.
 - `nd-hr89` — closed after narrowing the bottom-mic exact-zero state to kernel/ADSP work rather than UCM/PipeWire.
-- `nd-n819` — explicit kernel-development follow-up for `hw:O6T,1` / MultiMedia2 / SLIMBUS_0_TX / AIF1_CAP / SLIM TX0 / CDC_IF TX0 / DEC0 / ADC4 exact-zero capture. Include the SLIM/QMI boot timeout only as background evidence, not as a proven root cause.
+- `nd-n819` — explicit kernel-development follow-up for `hw:O6T,1` / MultiMedia2 / SLIMBUS_0_TX / AIF1_CAP / SLIM TX0 / CDC_IF TX0 / DEC0 / ADC4 exact-zero capture. Include the SLIM/QMI boot timeout only as background evidence, not as a proven root cause. Normal `/aloop` cannot satisfy this directly while `hosts/oneplus/oneplus-fajita/hardware/sdm845.nix` uses the fetched pinned kernel closure; prerequisite `nd-1q85` tracks making an explicit patchable kernel-development flow.
 
 Detailed historical trial records are under `docs/oneplus-audio-trials/`. Treat them as evidence, not as current instructions.
 
