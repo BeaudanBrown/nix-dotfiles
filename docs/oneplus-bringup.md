@@ -33,6 +33,10 @@ Use the archive only as evidence when needed. If you find useful facts there, co
 - `oneplus-mic-source.service` exists but is intentionally manual-only.
 - SysRq-backed `reboot` and `shutdown` wrappers exist, but unattended reboot loops are not approved until `nd-pcdw` validates them.
 
+## GPU/display current summary
+
+The current boot has the expected `msm_dpu` DRM device and GUI output. The old `a630_sqe.fw` / `a630_gmu.bin` lookup warnings are classified as harmless firmware-location noise: the firmware exists in the current compressed firmware tree (`qcom/a630_sqe.fw.zst`, `qcom/a630_gmu.bin.zst`) and the driver later logs that both files loaded from the new location. Current dmesg still shows early `arm-smmu 15000000.iommu: Unhandled context fault` lines and a separate burst of `msm_dpu` vblank/ppdone timeout warnings; track the latter under `nd-843d` if it correlates with display instability. Do not chase kernel/device-tree fixes in normal `/aloop`.
+
 ## Audio and microphone current summary
 
 Speaker playback is the stable audio path. The active direction is:

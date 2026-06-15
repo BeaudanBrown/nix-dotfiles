@@ -30,3 +30,7 @@ Prepared repo for long /aloop operation. Active guidance is now docs/oneplus-age
 **2026-06-15T14:06:19Z**
 
 HANDOFF from nd-24hg: touch scrolling is not a raw touchscreen/kernel failure; lisgd sees OnePlus swipes on platform-a90000.i2c-event. Remaining actionable work is follow-up nd-wzyq for a Ghostty/niri/tmux touch-to-scroll workaround.
+
+**2026-06-15T14:09:21Z**
+
+HANDOFF from nd-3wfg: a630 firmware warnings classified as harmless compressed/new-location firmware noise; current boot does show separate msm_dpu vblank timeout WARN cluster, captured as linked follow-up nd-843d and added as a blocker for nd-nebp.
