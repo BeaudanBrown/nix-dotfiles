@@ -38,3 +38,7 @@ HANDOFF from nd-3wfg: a630 firmware warnings classified as harmless compressed/n
 **2026-06-15T14:11:24Z**
 
 HANDOFF from nd-87m2: mic userspace work is split; keep speaker-only UCM, do not reintroduce UCM Mic1 or static PipeWire source. Remaining bottom-mic exact-zero/non-zero issue is tracked by linked child nd-hr89 for kernel/ADSP investigation; nd-nebp now depends on it.
+
+**2026-06-15T14:14:39Z**
+
+HANDOFF from nd-bcqi: OnePlus Wi-Fi is currently functional; persistent MAC source is Android persist /wlan_mac.bin, but mainline DT/driver is not consuming it and wlan0 is random (addr_assign_type=3). No current ath10k key timeout warnings found; treat old key warnings as historical unless they recur with connectivity symptoms.

@@ -37,6 +37,14 @@ Use the archive only as evidence when needed. If you find useful facts there, co
 
 The current boot has the expected `msm_dpu` DRM device and GUI output. The old `a630_sqe.fw` / `a630_gmu.bin` lookup warnings are classified as harmless firmware-location noise: the firmware exists in the current compressed firmware tree (`qcom/a630_sqe.fw.zst`, `qcom/a630_gmu.bin.zst`) and the driver later logs that both files loaded from the new location. Current dmesg still shows early `arm-smmu 15000000.iommu: Unhandled context fault` lines and a separate burst of `msm_dpu` vblank/ppdone timeout warnings; track the latter under `nd-843d` if it correlates with display instability. Do not chase kernel/device-tree fixes in normal `/aloop`.
 
+## Wi-Fi current summary
+
+Wi-Fi is functional on the current boot despite the older `ath10k_snoc` warning cluster. On 2026-06-16 the phone was connected to the local SSID on `wlan0`, had an IPv4 default route, and successfully pinged the gateway with 0% packet loss.
+
+The random-MAC cause is now identified: the upstream OnePlus 6T device tree enables WCN3990 but does not provide a MAC/calibration nvmem binding, while the Android `persist` partition contains `/wlan_mac.bin` with interface MAC assignments. The live `wlan0` address had `addr_assign_type=3` (`NET_ADDR_RANDOM`) and did not match the persistent `Intf0MacAddress` entry, so Linux is not consuming that file today.
+
+No `ath10k` key install/remove timeout was present in the current boot journal or retained kernel journals during this check. Treat the old key warnings as historical/noisy unless they recur with disconnects, roaming failures, or WPA rekey failures.
+
 ## Audio and microphone current summary
 
 Speaker playback is the stable audio path. The active direction is:
