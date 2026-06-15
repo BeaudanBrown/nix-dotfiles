@@ -64,10 +64,17 @@ Important current evidence:
 - Generation 72 disabled automatic app-source loading again, but traceable trials still recorded exact-zero after manual route/full poweroff.
 - Current conclusion: the safe userspace shape is speaker-only UCM plus manual `module-alsa-source` only after a known-good direct capture state. The remaining exact-zero vs non-zero failure is below UCM/PipeWire and likely needs kernel/ADSP/AFE/SLIM/codec reset or initialization work.
 
+Audio codec/topology warning triage from current boot (`nd-fuc6`):
+
+- `wcd934x-codec ... ASoC: mux ... has no paths` appears during codec registration for unused internal RX mixers and unused TX9/TX10/TX11/TX13 controls. The proven/interesting mic routes use TX7/TX6/TX0, so this is harmless topology inventory noise for current speaker and bottom-mic work.
+- `qcom-soundwire ... din-ports (2) mismatch with controller (6)` is a device-tree/kernel SoundWire topology mismatch. Current speaker playback does not depend on fixing it, and the analog bottom-mic route is SLIM/AFE based rather than SoundWire DIN based. Treat it as not actionable unless a future headset/SoundWire path ticket needs it.
+- The one-shot `qcom,slim-ngd-ctrl ... QMI wait timeout` is lower-level SLIM/QMI noise. The controller subsequently registers and emits SLIM SAT events, and historical non-zero bottom-mic captures occurred with the same class of boot noise. Keep it as context for `nd-hr89`, not as a separate userspace/UCM fix.
+- `MultiMedia1: ASoC: no backend DAIs enabled for MultiMedia1` occurs during early/probe-time PCM use before or outside the intended UCM route. Current PipeWire selects the speaker UCM sink and speaker playback remains the stable path, so do not change UCM for this warning alone. If it recurs during actual playback failures, investigate under a new playback-specific ticket.
+
 Active/split tickets:
 
 - `nd-87m2` — Stabilize OnePlus mic/audio capture path; split after userspace evidence showed the remaining blocker is lower-level.
-- `nd-hr89` — investigate OnePlus bottom-mic exact-zero capture despite active ALSA/DAPM route (kernel/ADSP follow-up).
+- `nd-hr89` — investigate OnePlus bottom-mic exact-zero capture despite active ALSA/DAPM route (kernel/ADSP follow-up). Include the SLIM/QMI boot timeout only as background evidence, not as a proven root cause.
 
 Detailed historical trial records are under `docs/oneplus-audio-trials/`. Treat them as evidence, not as current instructions.
 

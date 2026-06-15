@@ -21,3 +21,9 @@ Treat UCM/PipeWire shape as already constrained: keep speaker-only UCM, do not r
 ## Acceptance Criteria
 
 A kernel/device-tree/ADSP-side fix or diagnostic patch explains or resolves exact-zero bottom-mic capture without regressing speaker playback, or the blocker is narrowed to a specific upstream/kernel subsystem with collected evidence and next patch target.
+
+## Notes
+
+**2026-06-15T14:16:36Z**
+
+Context from nd-fuc6: current boot has one qcom,slim-ngd-ctrl QMI wait timeout, but SLIM controller later registers/emits SAT messages and historical non-zero bottom-mic captures occurred with this warning class. Treat as background for kernel/ADSP/SLIM reset-state investigation, not a proven root cause.

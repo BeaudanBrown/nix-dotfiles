@@ -42,3 +42,7 @@ HANDOFF from nd-87m2: mic userspace work is split; keep speaker-only UCM, do not
 **2026-06-15T14:14:39Z**
 
 HANDOFF from nd-bcqi: OnePlus Wi-Fi is currently functional; persistent MAC source is Android persist /wlan_mac.bin, but mainline DT/driver is not consuming it and wlan0 is random (addr_assign_type=3). No current ath10k key timeout warnings found; treat old key warnings as historical unless they recur with connectivity symptoms.
+
+**2026-06-15T14:16:36Z**
+
+HANDOFF from nd-fuc6: audio codec topology warnings are now categorized in docs/oneplus-bringup.md; no separate follow-up ticket was created. Keep speaker-only UCM; only SLIM/QMI noise remains relevant as background context for nd-hr89.
