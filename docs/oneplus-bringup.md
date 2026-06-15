@@ -54,10 +54,12 @@ Important current evidence:
 - A live app-source test on generation 70 worked after manually programming the proven raw ALSA route and loading `module-alsa-source` as `oneplus_bottom_mic`.
 - Generation 71 boot-time app-source loading produced the desired app-visible shape but exact-zero capture.
 - Generation 72 disabled automatic app-source loading again, but traceable trials still recorded exact-zero after manual route/full poweroff.
+- Current conclusion: the safe userspace shape is speaker-only UCM plus manual `module-alsa-source` only after a known-good direct capture state. The remaining exact-zero vs non-zero failure is below UCM/PipeWire and likely needs kernel/ADSP/AFE/SLIM/codec reset or initialization work.
 
-Active ticket:
+Active/split tickets:
 
-- `nd-87m2` — Stabilize OnePlus mic/audio capture path
+- `nd-87m2` — Stabilize OnePlus mic/audio capture path; split after userspace evidence showed the remaining blocker is lower-level.
+- `nd-hr89` — investigate OnePlus bottom-mic exact-zero capture despite active ALSA/DAPM route (kernel/ADSP follow-up).
 
 Detailed historical trial records are under `docs/oneplus-audio-trials/`. Treat them as evidence, not as current instructions.
 

@@ -34,3 +34,7 @@ HANDOFF from nd-24hg: touch scrolling is not a raw touchscreen/kernel failure; l
 **2026-06-15T14:09:21Z**
 
 HANDOFF from nd-3wfg: a630 firmware warnings classified as harmless compressed/new-location firmware noise; current boot does show separate msm_dpu vblank timeout WARN cluster, captured as linked follow-up nd-843d and added as a blocker for nd-nebp.
+
+**2026-06-15T14:11:24Z**
+
+HANDOFF from nd-87m2: mic userspace work is split; keep speaker-only UCM, do not reintroduce UCM Mic1 or static PipeWire source. Remaining bottom-mic exact-zero/non-zero issue is tracked by linked child nd-hr89 for kernel/ADSP investigation; nd-nebp now depends on it.
