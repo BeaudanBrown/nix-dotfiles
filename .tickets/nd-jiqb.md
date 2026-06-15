@@ -1,6 +1,6 @@
 ---
 id: nd-jiqb
-status: open
+status: closed
 deps: [nd-qo2o]
 links: []
 created: 2026-06-15T13:54:54Z
@@ -21,3 +21,9 @@ Inspect current RTC/time-sync behavior, journal timestamps, systemd-timesync/Net
 ## Acceptance Criteria
 
 Current time behavior is documented. A mitigation/fix is implemented if feasible without kernel rebuild, or a focused follow-up/blocker ticket is created.
+
+## Notes
+
+**2026-06-15T14:21:03Z**
+
+HANDOFF: Confirmed live system time syncs via systemd-timesyncd while rtc-pm8xxx still reports 1970; documented current behavior in docs/oneplus-bringup.md; added OnePlus userspace time seed restore/save timer and ordered tailscaled after time-sync.target using systemd-time-wait-sync; validation: nix eval for oneplus systemd units/timer/tailscaled ordering passed; remaining risk: PMIC RTC persistence itself remains kernel/DT/firmware work and first boot after deploying needs a seed to be written.

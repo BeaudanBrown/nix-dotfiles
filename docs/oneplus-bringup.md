@@ -45,6 +45,12 @@ The random-MAC cause is now identified: the upstream OnePlus 6T device tree enab
 
 No `ath10k` key install/remove timeout was present in the current boot journal or retained kernel journals during this check. Treat the old key warnings as historical/noisy unless they recur with disconnects, roaming failures, or WPA rekey failures.
 
+## RTC/time current summary
+
+The PMIC RTC is still not a trustworthy wall-clock source: on 2026-06-16 `timedatectl` showed synchronized system time but `RTC time: Fri 1970-01-02 00:36:21`, and `/sys/class/rtc/rtc0/name` was `rtc-pm8xxx c440000.spmi:pmic@0:rtc@6000`. The same boot initially synchronized through `systemd-timesyncd` about two minutes after `systemd-timesyncd` start; early services such as NetworkManager retained 1970-era activation timestamps until the network clock step.
+
+Mitigation is host-local and non-kernel: `oneplus-time-save.timer` periodically touches `/var/lib/oneplus-time-seed/stamp`, and `oneplus-time-restore.service` restores that saved timestamp early in the next boot if the current clock is older. This does not fix the PMIC RTC itself, but it prevents certificate/timer consumers from seeing 1970 after the first seeded runtime. `tailscaled.service` is ordered after `time-sync.target` on OnePlus so its control-plane TLS/auth path waits for real NTP when possible. A true RTC persistence fix remains kernel/DT/firmware work and should not be pursued in normal `/aloop`.
+
 ## Audio and microphone current summary
 
 Speaker playback is the stable audio path. The active direction is:

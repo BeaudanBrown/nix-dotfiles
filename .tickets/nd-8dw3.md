@@ -46,3 +46,7 @@ HANDOFF from nd-bcqi: OnePlus Wi-Fi is currently functional; persistent MAC sour
 **2026-06-15T14:16:36Z**
 
 HANDOFF from nd-fuc6: audio codec topology warnings are now categorized in docs/oneplus-bringup.md; no separate follow-up ticket was created. Keep speaker-only UCM; only SLIM/QMI noise remains relevant as background context for nd-hr89.
+
+**2026-06-15T14:21:03Z**
+
+HANDOFF from nd-jiqb: OnePlus RTC still reports 1970 even after NTP sync; non-kernel mitigation now saves/restores /var/lib/oneplus-time-seed/stamp and delays tailscaled until time-sync.target. True RTC persistence remains kernel/DT/firmware work, not normal /aloop scope.

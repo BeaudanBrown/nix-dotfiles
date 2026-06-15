@@ -66,6 +66,33 @@ let
       exit 1
     '';
   };
+  oneplusSaveClock = pkgs.writeShellApplication {
+    name = "oneplus-save-clock";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -eu
+      install -d -m 0755 /var/lib/oneplus-time-seed
+      touch /var/lib/oneplus-time-seed/stamp
+    '';
+  };
+  oneplusRestoreClock = pkgs.writeShellApplication {
+    name = "oneplus-restore-clock";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -eu
+
+      stamp=/var/lib/oneplus-time-seed/stamp
+      if [ ! -e "$stamp" ]; then
+        exit 0
+      fi
+
+      saved_epoch=$(stat -c %Y "$stamp")
+      current_epoch=$(date -u +%s)
+      if [ "$current_epoch" -lt "$saved_epoch" ]; then
+        date -u -s "@$saved_epoch"
+      fi
+    '';
+  };
   oneplusUcm = pkgs.runCommand "oneplus-alsa-ucm-conf" { } ''
     mkdir -p $out/share/alsa
     cp -r ${pkgs.alsa-ucm-conf}/share/alsa/ucm2 $out/share/alsa/ucm2
@@ -207,6 +234,62 @@ in
     };
 
     upower.enable = true;
+  };
+
+  # The PMIC RTC currently persists/returns a 1970-era clock. Keep a monotonic
+  # userspace timestamp seed so early boot is at worst minutes behind the last
+  # synced runtime instead of decades behind, then let timesyncd correct it once
+  # Wi-Fi is online. Certificate-sensitive services should still wait for
+  # time-sync.target when practical.
+  systemd = {
+    additionalUpstreamSystemUnits = [ "systemd-time-wait-sync.service" ];
+
+    services = {
+      systemd-time-wait-sync.wantedBy = [ "sysinit.target" ];
+
+      oneplus-time-restore = {
+        description = "Restore OnePlus clock from userspace timestamp seed";
+        wantedBy = [ "sysinit.target" ];
+        before = [
+          "sysinit.target"
+          "time-set.target"
+        ];
+        after = [
+          "local-fs.target"
+          "systemd-remount-fs.service"
+        ];
+        unitConfig = {
+          DefaultDependencies = false;
+          ConditionPathExists = "/var/lib/oneplus-time-seed/stamp";
+        };
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${oneplusRestoreClock}/bin/oneplus-restore-clock";
+        };
+      };
+
+      oneplus-time-save = {
+        description = "Save OnePlus clock timestamp seed";
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${oneplusSaveClock}/bin/oneplus-save-clock";
+        };
+      };
+
+      tailscaled = lib.mkIf config.services.tailscale.enable {
+        wants = [ "time-sync.target" ];
+        after = [ "time-sync.target" ];
+      };
+    };
+
+    timers.oneplus-time-save = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "5min";
+        OnUnitActiveSec = "15min";
+        Persistent = true;
+      };
+    };
   };
 
   # Override systemd's normal reboot/shutdown frontends on this phone. Normal
