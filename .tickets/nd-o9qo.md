@@ -1,6 +1,6 @@
 ---
 id: nd-o9qo
-status: open
+status: closed
 deps: [nd-qo2o]
 links: []
 created: 2026-06-15T13:54:54Z
@@ -21,3 +21,9 @@ Evidence includes disallowed SPMI write to sid=0 addr=0xC240, qcom-spmi-gpio wri
 ## Acceptance Criteria
 
 Current runtime state is recorded. A small config/service fix is implemented if found; otherwise a precise follow-up/blocker ticket is created with evidence.
+
+## Notes
+
+**2026-06-15T14:23:23Z**
+
+HANDOFF: Current runtime on host oneplus: /sys/class/bluetooth/hci0 exists and journalctl -b -k has no current WCN3990 pwrseq/SPMI -EPERM cluster, but bluetoothctl is not installed and bluetooth.service is not found/inactive because the oneplus roots do not import the work-root blueman/Bluetooth module. Implemented host-local hardware.bluetooth.enable = true in hosts/oneplus/oneplus-fajita/system.nix and documented the conclusion in docs/oneplus-bringup.md. Verification: nix eval .#nixosConfigurations.oneplus.config.hardware.bluetooth.enable --json => true; nix eval systemd.services.bluetooth and bluez in systemPackages succeeded. Remaining risk: adapter listing still needs validation after a future switch/boot; no kernel work appears required for the current boot state.

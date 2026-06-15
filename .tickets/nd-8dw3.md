@@ -50,3 +50,7 @@ HANDOFF from nd-fuc6: audio codec topology warnings are now categorized in docs/
 **2026-06-15T14:21:03Z**
 
 HANDOFF from nd-jiqb: OnePlus RTC still reports 1970 even after NTP sync; non-kernel mitigation now saves/restores /var/lib/oneplus-time-seed/stamp and delays tailscaled until time-sync.target. True RTC persistence remains kernel/DT/firmware work, not normal /aloop scope.
+
+**2026-06-15T14:23:23Z**
+
+HANDOFF from nd-o9qo: current OnePlus Bluetooth issue was a userspace config gap, not a reproduced WCN3990 power-sequencing failure on this boot: hci0 exists and old pwrseq/SPMI -EPERM logs are absent. oneplus now enables hardware.bluetooth directly; validate bluetoothctl list after a future switch/boot.

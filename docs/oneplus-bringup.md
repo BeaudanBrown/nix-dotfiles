@@ -45,6 +45,10 @@ The random-MAC cause is now identified: the upstream OnePlus 6T device tree enab
 
 No `ath10k` key install/remove timeout was present in the current boot journal or retained kernel journals during this check. Treat the old key warnings as historical/noisy unless they recur with disconnects, roaming failures, or WPA rekey failures.
 
+## Bluetooth current summary
+
+Current boot exposes the WCN3990 Bluetooth controller as `/sys/class/bluetooth/hci0`, and no current kernel log line matches the old `pwrseq-qcom_wcn wcn3990-pmu` / SPMI `-EPERM` failure cluster. The remaining userspace failure was configuration: the `oneplus` host has only `minimal`, `common`, `network`, and `client` roots, so it did not import the work-root Bluetooth module and had no `bluetooth.service` or `bluetoothctl`. The host now enables `hardware.bluetooth` directly; validate adapter listing after the next boot/switch.
+
 ## RTC/time current summary
 
 The PMIC RTC is still not a trustworthy wall-clock source: on 2026-06-16 `timedatectl` showed synchronized system time but `RTC time: Fri 1970-01-02 00:36:21`, and `/sys/class/rtc/rtc0/name` was `rtc-pm8xxx c440000.spmi:pmic@0:rtc@6000`. The same boot initially synchronized through `systemd-timesyncd` about two minutes after `systemd-timesyncd` start; early services such as NetworkManager retained 1970-era activation timestamps until the network clock step.

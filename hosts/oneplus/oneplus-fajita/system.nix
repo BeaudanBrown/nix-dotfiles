@@ -223,6 +223,11 @@ in
   };
   custom.atticCache.upload.enable = true;
 
+  # The kernel currently exposes WCN3990 Bluetooth as hci0, but the OnePlus
+  # host does not import the work-root blueman module that enables BlueZ.
+  # Enable the system Bluetooth service here so userspace can see the adapter.
+  hardware.bluetooth.enable = true;
+
   services = {
     dbus = {
       # Test dbus-broker on the phone through a booted generation rather than a
