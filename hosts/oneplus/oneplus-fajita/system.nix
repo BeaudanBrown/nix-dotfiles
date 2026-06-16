@@ -228,6 +228,12 @@ in
   # Enable the system Bluetooth service here so userspace can see the adapter.
   hardware.bluetooth.enable = true;
 
+  # Allow ticket-scoped agent UI smoke tests to inject one-shot pointer/key
+  # events through the ydotool flake helpers. Keep this OnePlus-local because it
+  # grants uinput-style control to members of the ydotool group.
+  programs.ydotool.enable = true;
+  users.users.${config.hostSpec.username}.extraGroups = [ config.programs.ydotool.group ];
+
   services = {
     dbus = {
       # Test dbus-broker on the phone through a booted generation rather than a
