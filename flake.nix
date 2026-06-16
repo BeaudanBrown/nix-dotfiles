@@ -38,6 +38,7 @@
           };
           oneplus-loop-seed-reboot = pkgs.callPackage ./scripts/oneplus-loop-seed-reboot.nix { };
           oneplus-screenshot = pkgs.callPackage ./scripts/oneplus-screenshot.nix { };
+          oneplus-touch = pkgs.callPackage ./scripts/oneplus-touch.nix { };
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
           oneplus-uboot-bootimg =
             pkgs.pkgsCross.aarch64-multiplatform.callPackage
@@ -52,6 +53,7 @@
             drv = self.packages.${system}.oneplus-loop-seed-reboot;
           };
           oneplus-screenshot = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-screenshot; };
+          oneplus-touch = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-touch; };
         };
         checks = (import ./lib/checks.nix { inherit inputs system pkgs; }) // {
           fleet-installer = fleetInstaller;
