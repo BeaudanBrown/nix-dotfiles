@@ -4,19 +4,18 @@ set -euo pipefail
 mode="pmos-runtime"
 label="trial"
 outdir=""
-commit_result=0
 allow_dirty=0
 reset_note="unspecified"
 
 usage() {
 	cat <<EOF
-Usage: $0 [--mode MODE] [--label LABEL] [--reset-note NOTE] [--outdir OUTDIR] [--commit] [--allow-dirty]
+Usage: $0 [--mode MODE] [--label LABEL] [--reset-note NOTE] [--outdir OUTDIR] [--allow-dirty]
 
-Run one focused OnePlus mic diagnostic and write a committed-ready trial record
+Run one focused OnePlus mic diagnostic and write a trial record
 that ties the result to the exact git/config/boot/firmware state.
 
 Recommended cold-boot retrace:
-  nix run .#oneplus-mic-trial -- --label coldboot-pmos-runtime --reset-note 'full power off 30s' --commit
+  nix run .#oneplus-mic-trial -- --label coldboot-pmos-runtime --reset-note 'full power off 30s'
 
 Defaults:
   --mode pmos-runtime
@@ -59,8 +58,8 @@ while [[ $# -gt 0 ]]; do
 		shift
 		;;
 	--commit)
-		commit_result=1
-		shift
+		echo "--commit has been removed. Review the trial record and commit manually with related code/ticket changes." >&2
+		exit 2
 		;;
 	--allow-dirty)
 		allow_dirty=1
@@ -164,8 +163,4 @@ nix run .#oneplus-mic-trial -- --mode '${mode}' --label '${label}' --reset-note 
 EOF
 
 printf 'Trial record written: %s\n' "$record"
-
-if [[ $commit_result -eq 1 ]]; then
-	git add "$record"
-	git commit -m "Record OnePlus mic trial ${safe_label}"
-fi
+printf 'Review this record and commit it manually with the related code/docs/ticket changes when appropriate.\n'
