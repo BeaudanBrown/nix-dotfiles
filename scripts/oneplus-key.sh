@@ -28,6 +28,21 @@ require_ydotool() {
 	fi
 }
 
+wtype_key_name() {
+	case "$1" in
+	enter) printf 'Return' ;;
+	escape | esc) printf 'Escape' ;;
+	tab) printf 'Tab' ;;
+	backspace) printf 'BackSpace' ;;
+	space) printf 'space' ;;
+	up) printf 'Up' ;;
+	down) printf 'Down' ;;
+	left) printf 'Left' ;;
+	right) printf 'Right' ;;
+	*) return 1 ;;
+	esac
+}
+
 key_code() {
 	case "$1" in
 	enter) printf '28' ;;
@@ -92,11 +107,20 @@ text)
 		exit 2
 	fi
 	if [[ $dry_run -eq 1 ]]; then
-		printf 'Would press key %s using Linux input code %s via ydotool\n' "$name" "$code"
+		if wtype_name="$(wtype_key_name "$name")"; then
+			printf 'Would press key %s using wtype key %s when Wayland is available, otherwise Linux input code %s via ydotool\n' "$name" "$wtype_name" "$code"
+		else
+			printf 'Would press key %s using Linux input code %s via ydotool\n' "$name" "$code"
+		fi
 		exit 0
 	fi
-	require_ydotool
-	ydotool key "${code}:1" "${code}:0"
-	printf 'Pressed key %s using Linux input code %s via ydotool\n' "$name" "$code"
+	if wtype_name="$(wtype_key_name "$name")" && command -v wtype >/dev/null 2>&1 && [[ -n ${WAYLAND_DISPLAY:-} ]]; then
+		wtype -k "$wtype_name"
+		printf 'Pressed key %s using wtype key %s\n' "$name" "$wtype_name"
+	else
+		require_ydotool
+		ydotool key "${code}:1" "${code}:0"
+		printf 'Pressed key %s using Linux input code %s via ydotool\n' "$name" "$code"
+	fi
 	;;
 esac
