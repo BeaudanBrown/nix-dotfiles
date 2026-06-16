@@ -36,6 +36,7 @@
           oneplus-mic-trial = pkgs.callPackage ./scripts/oneplus-mic-trial.nix {
             debug-oneplus-mic = self.packages.${system}.debug-oneplus-mic;
           };
+          oneplus-loop-seed-reboot = pkgs.callPackage ./scripts/oneplus-loop-seed-reboot.nix { };
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
           oneplus-uboot-bootimg =
             pkgs.pkgsCross.aarch64-multiplatform.callPackage
@@ -46,6 +47,9 @@
         apps = {
           debug-oneplus-mic = flake-utils.lib.mkApp { drv = self.packages.${system}.debug-oneplus-mic; };
           oneplus-mic-trial = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-mic-trial; };
+          oneplus-loop-seed-reboot = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.oneplus-loop-seed-reboot;
+          };
         };
         checks = (import ./lib/checks.nix { inherit inputs system pkgs; }) // {
           fleet-installer = fleetInstaller;

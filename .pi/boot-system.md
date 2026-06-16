@@ -1,17 +1,20 @@
 Last boot/login is complete. Continue the current NixOS debugging task in this repository.
 
-Boot-resume workflow:
-- First read the task-specific seed below, then inspect current git state and relevant logs/runtime state.
-- For OnePlus issue-loop work, read `tk show nd-8dw3`, the selected child ticket, `docs/oneplus-agent-loop.md`, and `docs/oneplus-bringup.md` before using historical archives.
-- If the task-specific seed conflicts with runtime state, recent commits, or project docs, trust runtime state plus active tk tickets and current docs; treat the seed as a navigation hint, not authoritative history.
+Boot-resume operating rules:
+
+- First read `docs/oneplus-loop-bootstrap.md` unless the task seed below clearly points elsewhere.
+- Then inspect current git state, tk state, and relevant runtime/log evidence.
+- If the task-specific seed conflicts with runtime state, recent commits, or current tk/docs, trust runtime state plus current tk/docs; treat the seed as a navigation hint.
+- If `.pi/boot-task.md` references a closed/superseded ticket, do not follow it. Start from `docs/oneplus-loop-bootstrap.md` and current `tk ready` instead.
+- If `.pi/boot-next-loop.md` is present, treat it as advisory only. Validate and record the reboot result first; run the suggested `/aloop 1 ...` only if runtime evidence is captured, the worktree is clean, and no blocker remains.
 - You may run non-destructive inspection commands.
-- On the OnePlus host, wheel has temporary passwordless sudo for bring-up/debugging. Use `sudo` freely when needed to fully inspect kernel logs, debugfs, system services, hardware state, and other root-only diagnostics.
+- On the OnePlus host, wheel has temporary passwordless sudo for bring-up/debugging. Use `sudo` when needed for root-only diagnostics.
 - Use `fd` instead of `find` for repository and Nix store discovery when available.
-- You may run `nr` to prepare the next boot generation.
-- Before running `nr`, commit the current coherent changes so the booted generation corresponds to a durable git state.
-- Do not run `nix eval` immediately before `nr`; it duplicates work and slows iteration. Commit coherent changes, then run `nr` directly.
-- Unbounded unattended reboot loops are not approved; do not attempt repeated automatic reboot loops.
-- On OnePlus, ticket `nd-pcdw` validated one clean SysRq-wrapper handoff. When an active ticket explicitly needs boot validation, you may commit the coherent state, seed `.pi/boot-task.md`, and run exactly one `sudo -n /run/current-system/sw/bin/reboot`; the resumed agent must record evidence before any further reboot.
-- If work cannot proceed without rebuilding or patching the kernel, record the blocker in tk, create/link a kernel-work ticket if useful, close or unblock the current ticket appropriately, and move on rather than building a kernel in normal `/aloop`.
+- You may run `nr` only when preparing the next boot generation for an active ticket.
+- Before running `nr`, commit coherent changes so the booted generation corresponds to durable git state.
+- Do not run `nix eval` immediately before `nr`; it duplicates work and slows iteration.
+- Unbounded unattended reboot loops are not approved. Never chain another reboot from boot-resume without a new ticket-scoped seed and a new committed change.
+- On OnePlus, one ticket-scoped `sudo -n /run/current-system/sw/bin/reboot` handoff is allowed only after `.pi/boot-task.md` is seeded and changes are committed. The resumed agent must record evidence before any further reboot.
+- If work requires rebuilding/patching the kernel, use the current kernel-flow ticket under the active OnePlus epic; do not accidentally change the default stable kernel path.
 
 Task-specific seed follows.

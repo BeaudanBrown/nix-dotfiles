@@ -4,6 +4,7 @@ set -euo pipefail
 repo_dir="${PI_BOOT_RESUME_REPO:-$HOME/documents/nix-dotfiles}"
 system_prompt_file="${PI_BOOT_RESUME_SYSTEM_PROMPT:-$repo_dir/.pi/boot-system.md}"
 task_prompt_file="${PI_BOOT_RESUME_TASK_PROMPT:-$repo_dir/.pi/boot-task.md}"
+next_loop_file="${PI_BOOT_RESUME_NEXT_LOOP:-$repo_dir/.pi/boot-next-loop.md}"
 legacy_prompt_file="${PI_BOOT_RESUME_PROMPT:-}"
 session_dir="${PI_BOOT_RESUME_SESSION_DIR:-${PI_CODING_AGENT_SESSION_DIR:-$HOME/.pi/agent/sessions}}"
 
@@ -65,6 +66,13 @@ else
 			prompt+=$'\n---\n\n'
 		fi
 		prompt+="$(cat "$task_prompt_file")"
+	fi
+	if [[ -s $next_loop_file ]]; then
+		if [[ -n $prompt ]]; then
+			prompt+=$'\n---\n\n'
+		fi
+		prompt+=$'Optional next-loop instruction follows. Validate the reboot task before using it.\n\n'
+		prompt+="$(cat "$next_loop_file")"
 	fi
 fi
 

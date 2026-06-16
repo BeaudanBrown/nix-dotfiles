@@ -1,26 +1,38 @@
 # Pi Boot Resume
 
-This repo supports a generic boot-resume debugging loop.
+This repo supports a generic boot-resume debugging handoff. For OnePlus loop work, start from `docs/oneplus-loop-bootstrap.md` and use this file only for reboot mechanics.
 
 ## Files
 
-- `.pi/boot-system.md` is tracked and contains the persistent boot-resume operating instructions.
-- `.pi/boot-task.md` is intentionally untracked/ignored and contains the current task seed. Edit this file to change what pi should continue after the next manual reboot.
-- `scripts/pi-boot-resume.sh` opens/attaches the `default` tmux session, starts a `pi-boot-resume` tmux window, concatenates the system prompt and task seed, then opens the most recently modified Pi session and sends the prompt there.
+- `.pi/boot-system.md` is tracked and contains persistent boot-resume operating instructions.
+- `.pi/boot-task.md` is untracked/ignored and contains the current ticket-specific reboot seed.
+- `.pi/boot-next-loop.md` is untracked/ignored and optionally contains an advisory next `/aloop 1 ...` command to use after validation.
+- `scripts/pi-boot-seed.sh` writes `.pi/boot-task.md` for generic handoffs.
+- `nix run .#oneplus-loop-seed-reboot -- <ticket-id> --checks "..."` writes OnePlus-specific `.pi/boot-task.md` plus `.pi/boot-next-loop.md`.
+- `scripts/pi-boot-resume.sh` opens/attaches the `default` tmux session, starts a `pi-boot-resume` window, concatenates the system prompt, task seed, and optional next-loop advisory, then opens the most recently modified Pi session and sends the prompt there.
 
 ## Workflow
 
-1. Seed the current debugging task with either `scripts/pi-boot-seed.sh "continue ..."` or by editing `.pi/boot-task.md`.
-2. Commit the current coherent changes before preparing a boot generation.
-3. Run `nr` or other approved commands to prepare the next boot generation. Do not run `nix eval` immediately before `nr`; it duplicates work.
-4. Reboot the machine. For OnePlus, agents may use the constrained `sudo -n /run/current-system/sw/bin/reboot` path only when the active ticket explicitly needs boot validation and `.pi/boot-task.md` says the resumed agent must not start a second reboot automatically.
-5. On graphical login, the OnePlus Niri session starts Ghostty running `scripts/pi-boot-resume.sh`.
-6. The script attaches Ghostty to the `default` tmux session, recreates the `pi-boot-resume` window, opens the newest Pi session under `~/.pi/agent/sessions` (or `$PI_BOOT_RESUME_SESSION_DIR` / `$PI_CODING_AGENT_SESSION_DIR`), and sends the combined prompt to it.
+1. Commit the coherent code/docs/ticket state.
+2. For OnePlus loop work, seed the reboot task with:
 
-This is intentionally task-agnostic. Change `.pi/boot-task.md` for audio, reboot debugging, hardware bring-up, or any other investigation.
+   ```sh
+   nix run .#oneplus-loop-seed-reboot -- <ticket-id> --checks "<post-boot checks>"
+   ```
 
-For long OnePlus `/aloop` runs, also read `docs/oneplus-agent-loop.md` and the active tk epic `nd-8dw3`.
+   For generic handoffs, use `scripts/pi-boot-seed.sh "..."` or edit `.pi/boot-task.md`.
+3. Include the active ticket id, expected post-boot checks, and explicit stop/continue criteria.
+4. Run `nr` only if preparing a new boot generation. Do not run `nix eval` immediately before `nr`.
+5. Reboot only when the active ticket needs boot validation.
+6. If the reboot is part of `/aloop`, finish the worker with `ALOOP_RESULT: needs_reboot` so the live supervisor stops without treating the open ticket as a failure.
+7. On graphical login, the OnePlus session starts Ghostty running `scripts/pi-boot-resume.sh`.
+8. The resumed agent assesses the result, records evidence in tk/docs/git, and must not automatically start another reboot.
+9. If `.pi/boot-next-loop.md` is present, use it only after validation is recorded and the worktree is clean.
 
-Current OnePlus constraint: `nd-pcdw` validated one clean SysRq-wrapper reboot handoff, so agents may run exactly one `sudo -n /run/current-system/sw/bin/reboot` for an active ticket that explicitly needs boot validation after seeding `.pi/boot-task.md` and committing the coherent state. The resumed agent must record post-boot evidence before any further reboot. Unbounded unattended reboot loops, reboot stress tests, and automatic `nr && reboot` loops remain unapproved.
+## OnePlus constraints
 
-On the OnePlus host, `wheel` currently has temporary passwordless sudo for bring-up/debugging. The resumed agent may use `sudo` freely for root-only diagnostics on this host. Remove `security.sudo.wheelNeedsPassword = false;` from `hosts/oneplus/oneplus-fajita/system.nix` once the OnePlus system is stable overall.
+- One ticket may use exactly one `sudo -n /run/current-system/sw/bin/reboot` handoff after the seed and commit are in place.
+- Reboot stress loops, chained automated reboots, and automatic `nr && reboot` loops are not approved.
+- If `.pi/boot-task.md` is stale or references a closed ticket, ignore it as a navigation hint and fall back to `docs/oneplus-loop-bootstrap.md` plus current tk state.
+- If `.pi/boot-next-loop.md` is present, it is advisory rather than automatic; validate the reboot result first, then run the suggested `/aloop 1 nd-gv62` only if safe.
+- On the OnePlus host, `wheel` currently has temporary passwordless sudo for bring-up diagnostics. Remove that host setting once the phone is stable.
