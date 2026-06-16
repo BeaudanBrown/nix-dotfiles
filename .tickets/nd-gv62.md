@@ -71,3 +71,7 @@ HANDOFF from nd-vnpn: current UCM has no mic capture device; Oxygen maps bottom 
 **2026-06-16T12:52:34Z**
 
 HANDOFF from nd-296h: current-runtime audio service ordering does not recover OnePlus bottom-mic samples; manual app-visible source remains exact-zero while speaker playback survives. nd-ts1j firmware/DSP runtime log inspection is next.
+
+**2026-06-16T12:59:01Z**
+
+HANDOFF from nd-ts1j: firmware/DSP log sweep found no userspace-remediable missing-firmware, remoteproc crash, or audio service failure; exact-zero mic persists while capture attempts correlate with SLIM/WCD TX timeout/overflow logs. Continue to nd-y7b7 fallback input options, not kernel builds.

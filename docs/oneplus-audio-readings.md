@@ -136,3 +136,26 @@ Bounded one-second ordering trials found no reliable service-order recovery:
 | Final restored state | explicit mic modules unloaded, `oneplus-audio-route` rerun, speaker monitor still positive (`max=0.11999878`, RMS `0.07525060`), `hw:0,1` exact zero. |
 
 Conclusion: in this warm current runtime, manual ordering among `oneplus-audio-route`, PipeWire, WirePlumber, and the manual `oneplus-mic-source` can safely create/remove the app-visible source and preserve speaker playback, but it does not change the lower-level exact-zero capture state. Service ordering is ruled out as a current-runtime microphone fix; the next useful non-kernel step is firmware/DSP/runtime log inspection.
+
+## 2026-06-16 firmware/DSP runtime logs (`nd-ts1j`)
+
+Current runtime artifact: `/tmp/oneplus-fw-dsp-nd-ts1j-20260616T125403Z`. The inspection captured firmware paths, remoteproc state, focused kernel/journal logs before and after bounded capture attempts, user audio service logs, and fresh `oneplus-audio-readings` output. No Nix build, kernel change, persistent config change, or reboot was used.
+
+Firmware/runtime state:
+
+- ADSP, modem remoteproc, CDSP, and SLPI were all `running` in `/sys/class/remoteproc`; coredumps were disabled and recovery was enabled.
+- Remoteproc firmware names point at `qcom/sdm845/OnePlus/enchilada/{adsp,mba,cdsp,slpi}.mbn`; the active firmware closure provides those files as `.zst` under `/run/current-system/firmware`, plus the existing `fajita -> enchilada` compatibility symlink from the host firmware package.
+- No current boot log evidence showed ADSP/CDSP/remoteproc crashes, fatal QMI/GLink/APR errors, or missing firmware around the microphone attempts.
+- User audio services were healthy: `pipewire`, `pipewire-pulse`, and `wireplumber` active; user `oneplus-audio-route.service` had completed successfully; `oneplus-mic-source.service` remained manual/inactive. There were no failed systemd units.
+
+Capture-correlated log evidence:
+
+| Evidence | Result |
+| --- | --- |
+| Fresh no-route reading | Speaker monitor positive (`max=0.11999878`, RMS `0.07525060`); `hw:0,1` exact zero; other ALSA capture devices rejected the requested params. |
+| Direct `arecord -D hw:O6T,1` after the routed trial | Command succeeded; sample payload inspection found `nonzero_samples=0`. |
+| Routed helper attempt | Speaker monitor stayed positive, but transient PipeWire capture failed and direct ALSA was busy while the transient source owned `hw:O6T,1`; this did not reveal a new non-zero mic route. |
+| Kernel log during capture attempts | Repeated `qcom,slim-ngd.1` `TX timed out` / `failed:-110` messages and `wcd934x-codec` `Port Closed TX port 0/7` messages appeared during capture open/close; earlier current-boot mic trials also produced `wcd934x-codec` overflow/underflow messages on TX port 7. |
+| PipeWire/Pulse/WirePlumber logs | Only routine Pulse peercred/SO_PRIORITY warnings around client connections; no DSP/firmware-specific userspace error or remediation clue. |
+
+Conclusion: the current runtime does not show a userspace-remediable missing-firmware, crashed-remoteproc, or service-log failure that explains exact-zero bottom-mic capture. The actionable finding is a lower-level SLIM/WCD TX-port timeout/overflow pattern that correlates with capture attempts, while ADSP/CDSP/SLPI stay running and speaker playback stays healthy. Because this loop is explicitly non-kernel, no kernel or firmware patch/build was started; proceed to fallback input options rather than broadening into kernel work.
