@@ -159,3 +159,29 @@ Capture-correlated log evidence:
 | PipeWire/Pulse/WirePlumber logs | Only routine Pulse peercred/SO_PRIORITY warnings around client connections; no DSP/firmware-specific userspace error or remediation clue. |
 
 Conclusion: the current runtime does not show a userspace-remediable missing-firmware, crashed-remoteproc, or service-log failure that explains exact-zero bottom-mic capture. The actionable finding is a lower-level SLIM/WCD TX-port timeout/overflow pattern that correlates with capture attempts, while ADSP/CDSP/SLPI stay running and speaker playback stays healthy. Because this loop is explicitly non-kernel, no kernel or firmware patch/build was started; proceed to fallback input options rather than broadening into kernel work.
+
+## 2026-06-16 microphone fallback input matrix (`nd-y7b7`)
+
+Current-runtime inventory for fallback planning:
+
+```sh
+hostname
+cat /proc/asound/cards
+arecord -l
+pactl list sources short
+bluetoothctl list
+rfkill list bluetooth
+ip -brief addr
+```
+
+Observed state: only the built-in `O6T` ALSA card is present, PipeWire exposes only the speaker monitor source, Bluetooth service is active but `hci0` is soft-blocked, and Wi-Fi plus Tailscale networking are up. No USB audio class device, Bluetooth audio device, or other external capture source is attached in this runtime; `/sys/bus/usb/devices` and `/sys/class/typec` exposed no useful connected-device inventory.
+
+| Fallback class | Current status | What is testable now | Recommended next action |
+| --- | --- | --- | --- |
+| USB-C class-compliant audio adapter/headset or USB microphone | **Test-needed / user hardware required.** No USB audio card is attached now, and `arecord -l` lists only `O6T`. | Not meaningfully testable without a dongle/headset or USB microphone. Once attached, verify a new ALSA card/source appears with `arecord -l` and `pactl list sources short`, then run a bounded `arecord`/`pw-record` positive-sample check. | Best practical fallback while internal WCD/TX capture is blocked, because a USB audio device should bypass the failing internal Qualcomm/WCD capture path. Prefer a simple class-compliant USB-C headset adapter with mic or USB-C microphone. |
+| Bluetooth headset microphone | **Deferred / blocked on Bluetooth classification.** Bluetooth service is active, but current `hci0` is soft-blocked and no paired audio device/source is visible. | Only service/rfkill state can be checked now. A real headset test needs `nd-d6hc` to classify controller availability and unblock/pair an adapter path. | Do not pick as the primary fallback until `nd-d6hc` determines whether Bluetooth is usable on this host. If it becomes usable, test HFP/HSP microphone exposure through PipeWire/WirePlumber. |
+| Network/remote audio source over Wi-Fi or Tailscale | **Available as a software path, but no local mic hardware.** `wlan0` and `tailscale0` are up. | Connectivity is present; actual capture requires another phone/laptop to provide microphone audio over a conferencing app, browser, SSH/PipeWire stream, or similar network tool. | Reasonable no-dongle workaround when another device is available, especially for calls/meetings. Treat it as an application-level workaround, not a system microphone fix. |
+| Built-in camera/video devices as microphone fallback | **Not available.** PipeWire lists camera/video devices, but no audio capture node/source accompanies them. | No useful audio capture test exists from the camera devices alone. | Ignore for microphone fallback unless a future device-specific camera stack unexpectedly exposes audio, which is not expected. |
+| ALSA `null`/speaker monitor loopback | **Available but not a microphone.** Previous matrix work saw generated `null` samples and positive speaker-monitor samples. | Useful only to validate the measurement path and speaker playback. | Do not use as an input fallback for voice; it cannot capture ambient speech. |
+
+Recommendation: keep the default OnePlus audio config on the stable speaker-only shape and use an external USB-C class-compliant mic/headset adapter as the preferred practical microphone path until the internal bottom mic has a lower-level fix. Bluetooth remains a secondary candidate only after `nd-d6hc` proves the controller/headset path is usable. Network/remote audio is the no-purchase software workaround if another device can supply the microphone.

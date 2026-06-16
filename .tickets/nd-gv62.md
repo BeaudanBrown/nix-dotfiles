@@ -75,3 +75,7 @@ HANDOFF from nd-296h: current-runtime audio service ordering does not recover On
 **2026-06-16T12:59:01Z**
 
 HANDOFF from nd-ts1j: firmware/DSP log sweep found no userspace-remediable missing-firmware, remoteproc crash, or audio service failure; exact-zero mic persists while capture attempts correlate with SLIM/WCD TX timeout/overflow logs. Continue to nd-y7b7 fallback input options, not kernel builds.
+
+**2026-06-16T13:03:01Z**
+
+HANDOFF from nd-y7b7: fallback matrix recorded; internal mic remains blocked, recommended practical fallback is USB-C class-compliant mic/headset adapter; Bluetooth fallback should wait for nd-d6hc controller classification.
