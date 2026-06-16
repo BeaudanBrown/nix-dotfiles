@@ -39,3 +39,7 @@ ORDERING UPDATE: top-level loop work is intentionally dependency-gated so /aloop
 **2026-06-16T02:20:09Z**
 
 TOOL LIBRARY UPDATE: added closed child nd-1jlj for OnePlus agent UI observe/control tools. Future agents should extend docs/oneplus-debug-tools.md and the flake-wrapped scripts rather than creating ad-hoc screenshot/touch snippets.
+
+**2026-06-16T10:55:03Z**
+
+HANDOFF from nd-qbd8: current scan found no failed units and no current display/DRM/GPU kernel warnings in focused grep; existing display->kernel->mic chain remains next, and new Bluetooth controller classification ticket nd-d6hc was added after nd-ihy2 before sentinel nd-y7lt.
