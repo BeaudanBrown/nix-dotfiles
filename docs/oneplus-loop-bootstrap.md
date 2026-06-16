@@ -30,7 +30,15 @@ If the current epic is closed with a `STOP` note, stop immediately unless the us
 
 ## Selecting work
 
-Pick one ready child ticket under `nd-gv62`. Do not work the epic itself unless you are grooming the backlog. If no focused ticket is ready, use `nd-qbd8` to scan current runtime and create the next focused ticket.
+Pick the next ready child ticket under `nd-gv62`. Do not work the epic itself unless you are grooming the backlog. The active loop is intentionally dependency-gated so `/aloop` has a deterministic path:
+
+1. `nd-qbd8` — current runtime scan and issue selection
+2. `nd-6g7r` — display stability classification, depends on `nd-qbd8`
+3. `nd-qa6a` — patchable kernel experiment flow, depends on `nd-6g7r`
+4. `nd-ihy2` — bottom microphone tracing, depends on `nd-qa6a`
+5. `nd-y7lt` — stop sentinel, depends on all actionable work
+
+If no focused ticket is ready, use `nd-qbd8` or create a new small child ticket under `nd-gv62` and insert it into this chain with `tk dep` rather than relying on prose ordering.
 
 Each iteration should do exactly one focused thing:
 
@@ -42,7 +50,7 @@ Each iteration should do exactly one focused thing:
 6. Review `git diff` and `git status --short`.
 7. Commit exactly one coherent commit for the iteration when running under `/aloop`; diagnostic tools must not commit.
 8. Amend/squash/rebase your own local commits when needed so each iteration commit is meaningful and reviewable.
-9. Leave a clear next suggested inquiry in the ticket note.
+9. Leave a clear next suggested inquiry in the ticket note, including which dependency should unblock next or which new ticket was inserted.
 
 If a change makes the device worse, prefer reverting that exact change and recording why before trying an unrelated fix.
 

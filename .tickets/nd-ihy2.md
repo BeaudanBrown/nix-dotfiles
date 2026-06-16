@@ -5,7 +5,7 @@ deps: [nd-qa6a]
 links: []
 created: 2026-06-16T00:57:56Z
 type: task
-priority: 2
+priority: 3
 assignee: Beaudan Brown
 parent: nd-gv62
 tags: [oneplus, audio, mic, kernel]

@@ -31,3 +31,7 @@ BOOTSTRAP CLEANUP: created current fresh-agent loop docs, moved superseded OnePl
 **2026-06-16T01:07:19Z**
 
 GIT POLICY UPDATE: removed oneplus-mic-trial auto-commit behavior (--commit now errors) and documented that agents must review diffs and manually create/amend/squash focused commits. Next cleanup before more loop work should be history surgery on the existing noisy commits, done only with explicit rewrite/push guidance.
+
+**2026-06-16T02:03:16Z**
+
+ORDERING UPDATE: top-level loop work is intentionally dependency-gated so /aloop picks up the previous iteration cleanly: nd-qbd8 current scan first, then nd-6g7r display classification, then nd-qa6a patchable kernel flow, then nd-ihy2 mic tracing, then nd-y7lt sentinel. Future agents should add new tickets into this chain by dependency, not by relying only on prose.

@@ -1,11 +1,11 @@
 ---
 id: nd-6g7r
 status: open
-deps: []
+deps: [nd-qbd8]
 links: []
 created: 2026-06-16T00:57:56Z
 type: task
-priority: 2
+priority: 1
 assignee: Beaudan Brown
 parent: nd-gv62
 tags: [oneplus, display, gpu, current]

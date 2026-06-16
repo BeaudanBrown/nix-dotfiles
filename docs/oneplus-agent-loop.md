@@ -31,6 +31,24 @@ Iteration contract:
 
 If new work is discovered, create a focused child ticket and link/depend it as needed. Do not hide new scope inside an unrelated ticket.
 
+## Queue discipline
+
+The current OnePlus loop uses tk dependencies as the queue, not just priority or prose. `/aloop` should normally see one obvious ready leaf ticket. Maintain that invariant:
+
+- Keep `nd-qbd8` as the current-runtime scan/reset point.
+- Gate display work after the scan: `nd-6g7r <- nd-qbd8`.
+- Gate patchable-kernel infrastructure after display classification: `nd-qa6a <- nd-6g7r`.
+- Gate bottom-mic kernel tracing after the patchable-kernel flow: `nd-ihy2 <- nd-qa6a`.
+- Keep `nd-y7lt` blocked on every known actionable ticket.
+
+When an agent discovers new work, decide where it belongs in the chain:
+
+1. If it must happen before the current ticket can finish, create a prerequisite ticket and add `tk dep <current> <new-prereq>`.
+2. If it is the next sensible follow-up after the current ticket, create it under `nd-gv62`, make it depend on the current ticket, and make later/sentinel tickets depend on it as needed.
+3. If it is optional or speculative, add a note/link rather than unblocking the queue.
+
+At handoff, ticket notes should say what changed, what evidence was checked, and which ticket should become ready next.
+
 ## History policy
 
 Closed tickets, archived notes, old trial records, and git history are evidence, not instructions. It is fine to retry old approaches if current evidence justifies it, but the new result must be integrated into the current docs/tickets so future agents do not need to replay the archive.

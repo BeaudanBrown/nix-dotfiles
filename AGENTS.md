@@ -89,6 +89,26 @@ Name your file after the root it should be imported for:
 | `gaming.nix`   | Gaming-capable machines          |
 | `<hostname>.nix` | Specific host only             |
 
+## OnePlus Agent Loop Queue
+
+For OnePlus (`hosts/oneplus`) stabilization work, start from `docs/oneplus-loop-bootstrap.md` and the active tk epic `nd-gv62`. The queue is maintained with tk dependencies so fresh `/aloop 1 nd-gv62` workers pick up where the last worker stopped.
+
+Current intentional order:
+
+1. `nd-qbd8` current runtime scan
+2. `nd-6g7r` display stability classification, depends on `nd-qbd8`
+3. `nd-qa6a` patchable kernel experiment flow, depends on `nd-6g7r`
+4. `nd-ihy2` bottom microphone tracing, depends on `nd-qa6a`
+5. `nd-y7lt` stop sentinel, depends on all actionable work
+
+When adding OnePlus follow-up work, create a focused child ticket under `nd-gv62` and wire it into this chain with `tk dep`:
+
+- prerequisite: `tk dep <current-ticket> <new-prereq>`
+- next follow-up: `tk dep <new-follow-up> <current-ticket>` and update later/sentinel deps as needed
+- optional/speculative: add a tk note/link instead of unblocking the queue
+
+Each OnePlus loop iteration should leave a tk note naming the evidence checked, the result, and the next ticket expected to become ready. Do not rely on stale docs, archive history, or ticket creation time for ordering.
+
 ## Golden Rules
 
 ### Formatting

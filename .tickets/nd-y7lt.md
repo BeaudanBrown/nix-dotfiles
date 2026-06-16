@@ -5,7 +5,7 @@ deps: [nd-qbd8, nd-qa6a, nd-ihy2, nd-6g7r]
 links: []
 created: 2026-06-16T00:57:56Z
 type: task
-priority: 2
+priority: 4
 assignee: Beaudan Brown
 parent: nd-gv62
 tags: [oneplus, sentinel, stop]

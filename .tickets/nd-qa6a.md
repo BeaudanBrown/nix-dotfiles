@@ -1,7 +1,7 @@
 ---
 id: nd-qa6a
 status: open
-deps: []
+deps: [nd-6g7r]
 links: []
 created: 2026-06-16T00:57:56Z
 type: task

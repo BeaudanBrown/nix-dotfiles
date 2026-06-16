@@ -22,13 +22,15 @@ Closed tickets, archived bring-up notes, old trial records, and git history are 
 
 ## Current work selection
 
-Use `tk ready` and choose a child ticket under `nd-gv62`. As of this cleanup, the clean current tickets are:
+Use `tk ready` and choose the next dependency-unblocked child ticket under `nd-gv62`. The queue is intentionally ordered with dependencies so `/aloop` moves forward predictably:
 
-- `nd-qbd8` — scan current runtime and choose/create the next hardware issue
-- `nd-6g7r` — classify current display stability warnings
-- `nd-qa6a` — provide an opt-in patchable OnePlus kernel experiment flow
+- `nd-qbd8` — scan current runtime and choose/create the next hardware issue; first reset point
+- `nd-6g7r` — classify current display stability warnings; depends on `nd-qbd8`
+- `nd-qa6a` — provide an opt-in patchable OnePlus kernel experiment flow; depends on `nd-6g7r`
 - `nd-ihy2` — trace bottom microphone exact-zero capture; depends on `nd-qa6a`
-- `nd-y7lt` — stop sentinel; closes the loop when no actionable work remains
+- `nd-y7lt` — stop sentinel; depends on all actionable work and closes the loop when no actionable work remains
+
+If a new issue is discovered, add it as a focused child ticket and wire it into this dependency chain instead of relying on ticket creation time or prose priority.
 
 The previous backlog and its child tickets are superseded and should not guide new work.
 
