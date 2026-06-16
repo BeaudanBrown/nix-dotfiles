@@ -37,8 +37,8 @@ The current OnePlus loop uses tk dependencies as the queue, not just priority or
 
 - Keep `nd-qbd8` as the current-runtime scan/reset point.
 - Gate display work after the scan: `nd-6g7r <- nd-qbd8`.
-- Gate patchable-kernel infrastructure after display classification: `nd-qa6a <- nd-6g7r`.
-- Gate bottom-mic kernel tracing after the patchable-kernel flow: `nd-ihy2 <- nd-qa6a`.
+- Treat `nd-qa6a` as cancelled unless a future user explicitly requests kernel builds again.
+- Keep bottom-mic/speaker work non-kernel focused under `nd-ihy2`; do not compile kernels or create a test-kernel path in normal loop work.
 - Keep `nd-y7lt` blocked on every known actionable ticket.
 
 When an agent discovers new work, decide where it belongs in the chain:
@@ -57,14 +57,9 @@ Closed tickets, archived notes, old trial records, and git history are evidence,
 
 ## Kernel boundary
 
-Normal loop iterations should not accidentally enter expensive kernel development. If work requires a new kernel closure or source patching:
+Normal loop iterations must not enter kernel development for the current OnePlus audio work. Do not build kernels, create a patchable/test-kernel path, or add kernel patches unless the user gives new explicit direction in the current session.
 
-1. record the blocker and evidence in tk;
-2. create/link a focused kernel ticket;
-3. keep default OnePlus config on the known-good pinned kernel unless a ticket explicitly opts into kernel experiments;
-4. move on to other ready non-kernel work when appropriate.
-
-The current clean kernel-enablement ticket is `nd-qa6a`; bottom-mic tracing is blocked on it through `nd-ihy2`.
+If evidence points below userspace, record the blocker and exact evidence in tk/docs, keep the default OnePlus config on the known-good pinned kernel, and continue with other non-kernel validation or fallback experiments where useful. The old kernel-enablement ticket `nd-qa6a` is closed/cancelled; current mic work proceeds through `nd-ihy2` without that dependency.
 
 ## Reboot boundary
 

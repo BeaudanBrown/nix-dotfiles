@@ -43,3 +43,7 @@ TOOL LIBRARY UPDATE: added closed child nd-1jlj for OnePlus agent UI observe/con
 **2026-06-16T10:55:03Z**
 
 HANDOFF from nd-qbd8: current scan found no failed units and no current display/DRM/GPU kernel warnings in focused grep; existing display->kernel->mic chain remains next, and new Bluetooth controller classification ticket nd-d6hc was added after nd-ihy2 before sentinel nd-y7lt.
+
+**2026-06-16T11:52:27Z**
+
+QUEUE UPDATE: user cancelled nd-qa6a patchable-kernel work. Current OnePlus audio focus is non-kernel exploration to get consistent positive speaker and microphone readings; nd-ihy2 is unblocked and should avoid kernel builds/patches.

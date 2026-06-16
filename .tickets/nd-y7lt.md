@@ -1,7 +1,7 @@
 ---
 id: nd-y7lt
 status: open
-deps: [nd-qbd8, nd-qa6a, nd-ihy2, nd-6g7r, nd-d6hc]
+deps: [nd-qbd8, nd-ihy2, nd-6g7r, nd-d6hc]
 links: []
 created: 2026-06-16T00:57:56Z
 type: task

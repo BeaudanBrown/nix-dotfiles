@@ -26,9 +26,11 @@ Use `tk ready` and choose the next dependency-unblocked child ticket under `nd-g
 
 - `nd-qbd8` — scan current runtime and choose/create the next hardware issue; first reset point
 - `nd-6g7r` — classify current display stability warnings; depends on `nd-qbd8`
-- `nd-qa6a` — provide an opt-in patchable OnePlus kernel experiment flow; depends on `nd-6g7r`
-- `nd-ihy2` — trace bottom microphone exact-zero capture; depends on `nd-qa6a`
+- `nd-ihy2` — stabilize speaker and bottom microphone readings with non-kernel userspace/runtime exploration
+- `nd-d6hc` — classify missing Bluetooth controller after audio work
 - `nd-y7lt` — stop sentinel; depends on all actionable work and closes the loop when no actionable work remains
+
+Removed from the active queue: `nd-qa6a`, the patchable/test-kernel experiment flow, is closed/cancelled and should not be pursued unless future user direction explicitly reintroduces kernel builds.
 
 If a new issue is discovered, add it as a focused child ticket and wire it into this dependency chain instead of relying on ticket creation time or prose priority.
 
@@ -73,7 +75,7 @@ Speaker playback is the stable supported audio path. The host keeps a conservati
 - `oneplus-mic-source.service` is manual-only;
 - bottom-mic work should use `docs/oneplus-debug-tools.md` and active tickets.
 
-The current bottom-mic work is kernel/ASoC/ADSP/SLIM/WCD934x focused and should proceed only through the clean current tickets (`nd-qa6a`, then `nd-ihy2`). Do not reintroduce broad UCM/PipeWire microphone changes unless current evidence and the active ticket justify it.
+The current bottom-mic work is non-kernel focused under `nd-ihy2`: seek repeatable positive/zero readings through ALSA/PipeWire/WirePlumber/UCM/mixer/service experiments while preserving speaker playback. Do not compile kernels, add kernel patches, or create a test-kernel path for this loop. Avoid broad UCM/PipeWire microphone rewrites unless current evidence and the active ticket justify a small reversible experiment.
 
 ### Camera / battery / RTC / other hardware
 

@@ -97,8 +97,8 @@ Current intentional order:
 
 1. `nd-qbd8` current runtime scan
 2. `nd-6g7r` display stability classification, depends on `nd-qbd8`
-3. `nd-qa6a` patchable kernel experiment flow, depends on `nd-6g7r`
-4. `nd-ihy2` bottom microphone tracing, depends on `nd-qa6a`
+3. `nd-ihy2` non-kernel speaker/microphone reading stabilization
+4. `nd-d6hc` Bluetooth controller classification, depends on `nd-ihy2`
 5. `nd-y7lt` stop sentinel, depends on all actionable work
 
 When adding OnePlus follow-up work, create a focused child ticket under `nd-gv62` and wire it into this chain with `tk dep`:

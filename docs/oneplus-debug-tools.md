@@ -137,4 +137,4 @@ Create these only when a ticket needs them:
 - a display/DRM warning collector for `msm_dpu`, vblank, SMMU, GPU firmware, and user-visible display state;
 - a combined `oneplus-ui-workflow` helper that captures before/after screenshots around one touch/key action;
 - a `oneplus-input-discover` helper that reports screen size, input backends, ydotool socket state, and relevant devices;
-- a patchable-kernel experiment helper once `nd-qa6a` defines the supported flow.
+- a non-kernel audio reading helper that plays a bounded speaker test, records bounded ALSA/PipeWire mic samples, and reports positive/zero levels without changing persistent routing by default.
