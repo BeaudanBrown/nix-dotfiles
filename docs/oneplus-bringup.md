@@ -62,6 +62,8 @@ Use observe → act → observe for UI/display/touch work and record conclusions
 
 Display/GPU warnings should be investigated under current tickets only when they recur or correlate with visible instability. Use current `dmesg`/journal evidence plus screenshots when useful; do not chase historical warning clusters by default.
 
+Current classification from `nd-6g7r` (2026-06-16): no actionable display/GPU instability was found on the live host. Current and previous boot kernel logs had no DRM/MSM/DPU/Adreno/SMMU/vblank/display matches; the current user journal had one early Niri `vblank_throttle` warning for `DSI-1` about a 0 ns vblank. The panel is active as `DSI-1` at 1080x2340@60 Hz, Niri/Ghostty remain running, and screenshots before/after a safe Escape key action showed a readable, non-glitched UI. Treat this single userspace vblank warning as benign unless it recurs, clusters, or coincides with visible blanking, flicker, compositor crashes, or input/display lag.
+
 ### Audio / microphone
 
 Speaker playback is the stable supported audio path. The host keeps a conservative userspace shape for audio:
