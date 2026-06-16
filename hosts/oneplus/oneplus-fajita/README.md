@@ -1,7 +1,13 @@
 # OnePlus 6T Fajita
 
-This directory contains the board-specific bring-up for the OnePlus 6T
-(`oneplus-fajita`). The flake-discovered host remains `hosts/oneplus`.
+This directory contains the board-specific configuration for the OnePlus 6T (`oneplus-fajita`). The flake-discovered host remains `hosts/oneplus`.
+
+For agent-facing current state and workflow, start with:
+
+- `docs/oneplus-loop-bootstrap.md`
+- `docs/oneplus-bringup.md`
+- `docs/oneplus-agent-loop.md`
+- `docs/oneplus-debug-tools.md`
 
 ## Layout
 
@@ -9,7 +15,7 @@ This directory contains the board-specific bring-up for the OnePlus 6T
 - `hardware/`: SDM845 kernel, firmware, device tree, initrd, and Qualcomm services.
 - `image/`: repart-based image layout.
 - `networking/`: NetworkManager, iwd, Tailscale, and firewall settings.
-- `ui/`: Phosh/mobile user interface configuration.
+- `ui/`: current mobile UI/session configuration, including Niri/Ghostty boot-resume and touch/gesture helpers.
 - `packages/`: U-Boot and boot image derivations.
 - `assets/`: DTS, kernel config, and U-Boot input files used by active modules.
 

@@ -1,112 +1,81 @@
-# OnePlus Agent Loop Workflow
+# OnePlus Agent Loop Policy
 
-This document is the operating contract for running long `/aloop` sessions on the OnePlus backlog.
+Use `docs/oneplus-loop-bootstrap.md` as the canonical fresh-agent prompt. This file defines the operating boundaries for that loop.
 
-Primary epic:
+## Active backlog
 
-- `nd-8dw3` — OnePlus issue-loop stabilization backlog
+Current epic:
 
-The goal is that `/aloop 30 nd-8dw3` can keep making progress without being derailed by stale debugging history, unsupported reboot automation, or kernel-build rabbit holes.
+- `nd-gv62` — OnePlus fresh-agent hardware stabilization loop
 
-## Source of truth
+Superseded tickets are archived historical evidence. Do not use them as current navigation unless a current ticket explicitly asks for history.
 
-Use this priority order:
+## Iteration contract
 
-1. tk tickets and notes, especially `tk show nd-8dw3` and the selected child ticket.
-2. Current runtime state and current logs.
-3. Current concise docs:
-   - `docs/oneplus-bringup.md`
-   - `docs/pi-boot-resume.md`
-4. Specific historical evidence only when needed:
-   - `docs/oneplus-audio-trials/`
-   - `docs/archive/oneplus-bringup-history-20260615.md`
-   - git history
+Each agent performs one focused iteration, usually through:
 
-Do not use archived generation narratives as a task list. If a useful historical fact matters, write the concise conclusion into the active ticket or current docs.
+```text
+/aloop 1 nd-gv62
+```
 
-## Per-ticket loop
+Iteration contract:
 
-Each worker should:
+1. Start from `docs/oneplus-loop-bootstrap.md`.
+2. Pick one ready child ticket under `nd-gv62`.
+3. Inspect current runtime/log/code state before trusting prior conclusions.
+4. Implement one fix, one experiment, or one documentation/ticket cleanup.
+5. Promote reusable scripts into Nix-wrapped repo tools when practical.
+6. Add a concise tk note with evidence, commands, result, and next suggested inquiry.
+7. Create one coherent commit for the iteration. Diagnostic tools must not commit.
+8. Amend/squash/rebase your own local commits when needed so the history stays meaningful.
 
-1. Read the epic and selected ticket.
-2. Read recent notes for related tickets if relevant.
-3. Check `git status --short` and recent `git log --oneline`.
-4. Inspect current logs/runtime/code enough to verify the issue still exists.
-5. Form a small plan.
-6. Implement one focused change or document a grounded finding.
-7. If new work is discovered, create/link a tk ticket instead of expanding scope indefinitely.
-8. Add tk notes with evidence, commands, and decisions.
-9. Commit coherent code/docs/ticket changes together.
-10. Close the ticket only when its acceptance criteria are met or when it is explicitly blocked by kernel work / no longer actionable.
+If new work is discovered, create a focused child ticket and link/depend it as needed. Do not hide new scope inside an unrelated ticket.
 
-## Creating follow-up tickets
+## History policy
 
-Create new tickets when investigation finds:
+Closed tickets, archived notes, old trial records, and git history are evidence, not instructions. It is fine to retry old approaches if current evidence justifies it, but the new result must be integrated into the current docs/tickets so future agents do not need to replay the archive.
 
-- a distinct log/error cluster;
-- a separate subsystem;
-- a prerequisite;
-- a hypothesis requiring its own experiment;
-- a kernel/device-tree/kernel-config change that normal `/aloop` must not perform.
+## Kernel boundary
 
-New child tickets should use `--parent nd-8dw3`. Add dependencies with `tk dep` when ordering matters.
+Normal loop iterations should not accidentally enter expensive kernel development. If work requires a new kernel closure or source patching:
 
-If the final sentinel ticket is open, make it depend on new actionable tickets so it cannot close the epic prematurely.
+1. record the blocker and evidence in tk;
+2. create/link a focused kernel ticket;
+3. keep default OnePlus config on the known-good pinned kernel unless a ticket explicitly opts into kernel experiments;
+4. move on to other ready non-kernel work when appropriate.
 
-## Kernel rebuild boundary
-
-Normal `/aloop` must not start kernel rebuilds or kernel development.
-
-If an issue cannot be pursued further without rebuilding/patching the kernel or producing a new kernel closure:
-
-1. Record the exact blocker and evidence in the current ticket.
-2. Create/link a focused kernel-work ticket if that future work is worth tracking.
-3. Close the current non-kernel ticket as blocked by kernel work, or leave the new kernel ticket as the remaining work.
-4. Move on to other ready tickets.
-
-This keeps long loops from spending all iterations in expensive kernel work.
+The current clean kernel-enablement ticket is `nd-qa6a`; bottom-mic tracing is blocked on it through `nd-ihy2`.
 
 ## Reboot boundary
 
-Standard `/aloop` is safe for non-reboot work. OnePlus now has approval for a constrained single-cycle reboot handoff, not an unlimited unattended reboot loop.
+A single ticket-scoped OnePlus reboot handoff is allowed when boot validation is genuinely needed. Before rebooting:
 
-For a ticket that explicitly needs OnePlus boot validation, an agent may invoke the proven wrapper once with `sudo -n /run/current-system/sw/bin/reboot` only after all of these are true:
+1. commit the coherent state;
+2. seed `.pi/boot-task.md` and optional `.pi/boot-next-loop.md` with:
 
-1. The coherent code/docs/ticket state is committed.
-2. `.pi/boot-task.md` names the ticket, expected post-boot checks, and stop/continue criteria.
-3. `/run/current-system/sw/bin/reboot` resolves to the OnePlus high-priority wrapper and `kernel.sysrq = 1`.
-4. The ticket/user explicitly calls for reboot validation; do not add reboots to unrelated work.
-5. The boot-task seed tells the resumed agent not to start another reboot automatically.
+   ```sh
+   nix run .#oneplus-loop-seed-reboot -- <ticket-id> --checks "<post-boot checks>"
+   ```
 
-After the resumed agent reaches graphical login / `pi-boot-resume`, it must inspect runtime state, record results in tk/docs/git, and then close/continue/split the ticket. Do not run chained reboot loops, repeated stress cycles, or automatic `nr && reboot` loops unless a later ticket separately validates that broader policy.
+3. run `nr` only if preparing a new boot generation;
+4. confirm `/run/current-system/sw/bin/reboot` is the OnePlus wrapper and `kernel.sysrq = 1` when relying on the approved wrapper;
+5. run at most one `sudo -n /run/current-system/sw/bin/reboot`;
+6. finish the `/aloop` worker with `ALOOP_RESULT: needs_reboot` so the live supervisor stops cleanly.
 
-SysRq-backed `reboot` and `shutdown` wrappers exist on OnePlus. `nd-pcdw` validated one clean `sudo -n /run/current-system/sw/bin/reboot` cycle on 2026-06-16: the next boot resumed pi/tmux handoff, journal history remained available, root was read-write, Wi-Fi/Tailscale were up, and no failed units were present. The persistent journal did not retain explicit wrapper/kmsg markers, so future post-boot checks should treat marker absence as inconclusive rather than failure when other handoff evidence is clean.
+The resumed agent must inspect the result, record evidence, and decide close/revert/split/continue. It may use `.pi/boot-next-loop.md` to run `/aloop 1 nd-gv62` only after validation is recorded and the worktree is clean. It must not chain another reboot automatically.
 
-### `nd-pcdw` reboot-wrapper validation result
+If no reboot is needed, finish by leaving tk notes clear enough for a fresh agent to start the next iteration from the bootstrap.
 
-Evidence from the completed one-cycle validation:
+## Git history policy
 
-1. Booted host was `oneplus`; `/run/current-system/sw/bin/reboot` resolved to `/nix/store/ziadansm1m0nk0qfa0q4ri1z4y0dc62c-reboot/bin/reboot`.
-2. `kernel.sysrq = 1`.
-3. `journalctl --list-boots` showed the previous boot ending at 2026-06-15 23:24:52 AEST and the current boot starting at 2026-06-15 23:27:11 AEST.
-4. Runtime health after resume: `/` mounted `rw`, `wlan0` had `192.168.68.126/24`, Tailscale had `100.64.0.1/32`, gateway ping succeeded, `systemctl --failed` reported 0 failed units, and the tmux/pi handoff reached the resumed agent.
-5. No shutdown hang, remoteproc crashdump hang, or root I/O error was found in the retained previous/current boot evidence searched for this ticket.
+Agents, not tools, decide when to commit. Diagnostic tools must not auto-commit. A good `/aloop` iteration ends with exactly one clean commit containing the code/docs/ticket changes for that focused unit of work. If an iteration creates noisy intermediate commits, clean them before handoff with amend/squash/rebase while they are still local. After a local loop batch, it is acceptable to clean history before sharing. Do not rewrite shared history unless the user explicitly asks.
 
-## Final sentinel / no-more-work behavior
+## Sentinel / stop behavior
 
-A final sentinel ticket should remain blocked by all known actionable OnePlus issue tickets.
+`nd-y7lt` is the no-more-work sentinel. It should depend on all known actionable current tickets. When ready:
 
-When it becomes ready, the worker should:
+1. scan current docs, `tk ready/blocked`, failed units, recent logs, and obvious hardware/runtime state;
+2. create new focused tickets if actionable work remains, and make the sentinel depend on them;
+3. if no work remains, add a `STOP:` note, close the sentinel, and close `nd-gv62`.
 
-1. Run a final scan of tk, current docs, current journal warnings, failed services, and obvious hardware/runtime state.
-2. If actionable issues remain, create child tickets and make the sentinel depend on them.
-3. If no actionable issues remain, add a note explaining what was checked, close the sentinel, add an epic closeout note, and close `nd-8dw3`.
-
-After the epic is closed, future agents should stop immediately unless the user explicitly reopens the epic or creates a new ticket.
-
-## Validation expectations
-
-- Docs-only changes: review for contradictions and broken internal references.
-- Nix config changes: run focused evaluation when practical; do not build unless explicitly requested.
-- `nr`: only when preparing a boot generation for a ticket that needs it.
-- Kernel work: flag and ticket, do not perform in normal `/aloop`.
+After the epic is closed with `STOP:`, future agents should stop unless the user explicitly starts a new phase.
