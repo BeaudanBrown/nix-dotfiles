@@ -59,3 +59,7 @@ HANDOFF from nd-iwoo: OnePlus bottom-mic exact-zero was reproduced across helper
 **2026-06-16T12:32:56Z**
 
 HANDOFF from nd-h6lz: current ALSA/PipeWire endpoint matrix found no non-zero internal mic source; only MultiMedia2/hw:0,1 opens and remains exact-zero through ALSA and transient PipeWire, so continue the non-kernel chain with nd-zthm mixer-control audit.
+
+**2026-06-16T12:38:24Z**
+
+HANDOFF from nd-zthm: mixer audit found high-gain ADC4 TX7/TX0 deltas can produce non-zero ALSA samples while speaker playback stays positive; conservative helper route remains exact-zero, so nd-vnpn should compare UCM/vendor routes with those gain/selector clues rather than more endpoint enumeration.
