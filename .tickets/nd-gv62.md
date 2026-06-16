@@ -67,3 +67,7 @@ HANDOFF from nd-zthm: mixer audit found high-gain ADC4 TX7/TX0 deltas can produc
 **2026-06-16T12:45:16Z**
 
 HANDOFF from nd-vnpn: current UCM has no mic capture device; Oxygen maps bottom builtin_mic_1 to TX0/DEC0/ADC4 and dual TX7/TX8 ADC4+ADC3 routes, which produced only low/noise-like non-zero samples in bounded runtime trials. nd-296h should test service/PipeWire module ordering before any persistent high-gain UCM change.
+
+**2026-06-16T12:52:34Z**
+
+HANDOFF from nd-296h: current-runtime audio service ordering does not recover OnePlus bottom-mic samples; manual app-visible source remains exact-zero while speaker playback survives. nd-ts1j firmware/DSP runtime log inspection is next.

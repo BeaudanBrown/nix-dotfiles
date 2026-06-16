@@ -119,3 +119,20 @@ Candidate experiments derived from this comparison, in preferred order:
 4. Defer any persistent high-gain route (`ADC4 Volume=20`, `DEC7/DEC0 Volume=110`) until a voice/signal test distinguishes useful microphone signal from raised analog/DSP noise floor.
 
 No persistent UCM/runtime route change was made in `nd-vnpn`: vendor-aligned routes now prove that the route mismatch is in the missing UCM capture mapping and possibly service/module ordering, but the observed non-zero readings are still low/noise-like and not yet a validated microphone fix.
+
+## 2026-06-16 service ordering trials (`nd-296h`)
+
+Current runtime artifact: `/tmp/oneplus-service-order-nd-296h-20260616T124732Z`. The user services started in the intended stable shape: `pipewire`, `pipewire-pulse`, and `wireplumber` active; `oneplus-audio-route` successful but inactive as a oneshot; `oneplus-mic-source` inactive/manual-only; only the speaker monitor source visible. No persistent service or Nix change was made.
+
+Bounded one-second ordering trials found no reliable service-order recovery:
+
+| Trial | Result |
+| --- | --- |
+| Baseline default readings | speaker monitor positive (`max=0.11999878`, RMS `0.07826472`); `hw:0,1` exact zero; no internal PipeWire source visible. |
+| Baseline helper after transient AMIC4/ADC4 source load | speaker monitor positive (`max=0.11999878`, RMS `0.07423089`); transient `oneplus_bottom_mic_trial` exact zero; direct ALSA was busy while the Pulse source held `hw:O6T,1`. |
+| Restart `oneplus-audio-route.service` only with settled PipeWire/WirePlumber | `hw:O6T,1` exact zero (`48,000` samples, max/RMS `0`). |
+| Start manual `oneplus-mic-source.service` after settled PipeWire/WirePlumber | app-visible `oneplus_bottom_mic` source appeared without changing the default speaker sink, but PipeWire capture was exact zero; direct ALSA after unloading the module was exact zero. |
+| Restart `oneplus-audio-route`, then restart `pipewire`/`pipewire-pulse`/`wireplumber`, then start `oneplus-mic-source` | default speaker monitor returned; ALSA before source load was exact zero; app-visible `oneplus_bottom_mic` after manual source load was exact zero; ALSA after unloading was exact zero. |
+| Final restored state | explicit mic modules unloaded, `oneplus-audio-route` rerun, speaker monitor still positive (`max=0.11999878`, RMS `0.07525060`), `hw:0,1` exact zero. |
+
+Conclusion: in this warm current runtime, manual ordering among `oneplus-audio-route`, PipeWire, WirePlumber, and the manual `oneplus-mic-source` can safely create/remove the app-visible source and preserve speaker playback, but it does not change the lower-level exact-zero capture state. Service ordering is ruled out as a current-runtime microphone fix; the next useful non-kernel step is firmware/DSP/runtime log inspection.
