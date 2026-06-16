@@ -88,3 +88,34 @@ Trial summary, one-second S16_LE 48 kHz mono through `hw:O6T,1`:
 | TX0/DEC0/DMIC0 | positive | 48,000 samples, max `0.00820948`, RMS `0.00019112` | Digital-mic selector emits only a very low-level non-zero signal; not identified as bottom mic. |
 
 The post-trial speaker check remained positive (`speaker-monitor` max `0.11999878`, RMS `0.07627125`), while the helper's conservative known AMIC4/ADC4 route (`ADC4 Volume=12`, `DEC7 Volume=84`) still recorded exact zero through both ALSA and the transient PipeWire source. Conclusion: the exact-zero state is at least partly mixer/gain sensitive. High-gain ADC4/TX0 or TX7 routes can produce non-zero samples without breaking speaker playback, but they may be clipped/noise-only; the next ticket should compare these deltas against UCM/vendor routes before making any persistent route change.
+
+## 2026-06-16 UCM/vendor route comparison (`nd-vnpn`)
+
+Current UCM is intentionally speaker-only. The host-generated `OnePlus6T-HiFi.conf` declares only `SectionDevice."Speaker"` plus `PlaybackPCM "hw:O6T,0"`; `alsaucm -c O6T dump text` likewise exposed only `Device.Speaker` and no capture/microphone device. The upstream `alsa-ucm-conf` sdm845 profile available in the current system is the DB845c-oriented profile and also does not provide a OnePlus microphone route. No separate postmarketOS fajita UCM route file was found locally outside archived history/source-store copies.
+
+The active vendor data is `hosts/oneplus/oneplus-fajita/assets/oxygen-audio-vendor/etc/mixer_paths_tavil.xml` plus `audio_platform_info.xml`. `audio_platform_info.xml` identifies `builtin_mic_1` address `bottom` and maps `SND_DEVICE_IN_HANDSET_MIC*` to that bottom mic. The relevant vendor route/control mapping is:
+
+| Vendor route | ALSA controls / meaning | Local result |
+| --- | --- | --- |
+| `handset-mic`, `voice-rec-mic`, `unprocessed-handset-mic`, `camcorder-mic` | include `amic4`: `AIF1_CAP Mixer SLIM TX0=1`, `CDC_IF TX0 MUX=DEC0`, `ADC MUX0=AMIC`, `AMIC MUX0=ADC4`, `AMIC4_5 SEL=AMIC4`, `IIR0 INP0 MUX=DEC0`, with the runtime frontend supplied separately as `MultiMedia2 Mixer SLIMBUS_0_TX=1` for `hw:O6T,1`. | Non-zero but very low one-second sample (`max=0.00766015`, `rms=0.00024073`) when applied temporarily. |
+| `handset-mic-rec` | `amic3` / `ADC3` over `TX0/DEC0` with `ADC3 Volume=6`. | Candidate only; not tried because current bottom-mic mapping points at `ADC4`. |
+| `handset-mic-king`, `handset-dmic-endfire`, `voice-dmic-ef`, `voice-rec-dmic-ef`, `voice-speaker-dmic-ef`, `voice-speaker-voip-mic` | dual route: `AIF1_CAP Mixer SLIM TX7=1`, `AIF1_CAP Mixer SLIM TX8=1`, `CDC_IF TX7 MUX=DEC7`, `ADC MUX7=AMIC`, `AMIC MUX7=ADC4`, `AMIC4_5 SEL=AMIC4`, `CDC_IF TX8 MUX=DEC8`, `ADC MUX8=AMIC`, `AMIC MUX8=ADC3`, `SLIM_0_TX Channels=Two`; some `voice-rec-*` routes add `IIR0 INP0 MUX=DEC7`. | Matches the nd-zthm TX7 clue and vendor dual-mic direction. |
+| `handset-mic-re-*` OnePlus vendor edit routes | same dual `TX7/TX8` ADC4+ADC3 route, with `DEC7/DEC8 Volume=90` and `ADC3/ADC4 Volume=6`. | Non-zero but very low (`max=0.00070193`, `rms=0.00010967`) when applied temporarily. |
+
+Runtime comparison artifact: `/tmp/oneplus-ucm-vendor-nd-vnpn-20260616T124219Z`. The one-shot test saved ALSA state, applied each route for a one-second `arecord -D hw:O6T,1 -f S16_LE -r 48000 -c 1`, then restored ALSA state. `alsactl restore` only warned about read-only impedance/type controls. Summary:
+
+| Trial | Result |
+| --- | --- |
+| Baseline after restore from previous audit state | exact zero: `max=0.00000000`, `rms=0.00000000` |
+| Vendor `handset-mic`/`amic4` single `TX0/DEC0/ADC4` plus `MultiMedia2 Mixer SLIMBUS_0_TX` | low non-zero: `max=0.00766015`, `rms=0.00024073` |
+| Vendor `handset-mic-re-default` dual `TX7/TX8`, ADC4+ADC3, vendor low gains `DEC7/8=90`, `ADC3/4=6` | low non-zero: `max=0.00070193`, `rms=0.00010967` |
+| Minimal `TX7/DEC7/ADC4` with vendor-ish `DEC7=90`, `ADC4=6` | non-zero: `max=0.03085421`, `rms=0.00096922` |
+
+Candidate experiments derived from this comparison, in preferred order:
+
+1. Temporary UCM capture device for the vendor `handset-mic` single `TX0/DEC0/ADC4` route on `hw:O6T,1`, because it is the Android route mapped to bottom `builtin_mic_1` and is less invasive than the dual route.
+2. If app-visible source setup is needed, expose that route only through an explicit manual service/PipeWire module load, not boot-time autostart, and compare ALSA direct capture before and after module load.
+3. If `TX0/DEC0` remains noise-only, try a temporary dual `TX7/TX8` ADC4+ADC3 UCM route matching OnePlus `handset-mic-re-default`, then inspect whether channel count/`SLIM_0_TX Channels=Two` changes app-visible behavior.
+4. Defer any persistent high-gain route (`ADC4 Volume=20`, `DEC7/DEC0 Volume=110`) until a voice/signal test distinguishes useful microphone signal from raised analog/DSP noise floor.
+
+No persistent UCM/runtime route change was made in `nd-vnpn`: vendor-aligned routes now prove that the route mismatch is in the missing UCM capture mapping and possibly service/module ordering, but the observed non-zero readings are still low/noise-like and not yet a validated microphone fix.
