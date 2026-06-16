@@ -51,3 +51,7 @@ QUEUE UPDATE: user cancelled nd-qa6a patchable-kernel work. Current OnePlus audi
 **2026-06-16T12:20:18Z**
 
 MIC QUEUE UPDATE: added a non-kernel microphone exploration chain before Bluetooth: nd-iwoo measurement validation -> nd-h6lz ALSA/PipeWire matrix -> nd-zthm mixer controls -> nd-vnpn UCM/vendor route comparison -> nd-296h service ordering -> nd-ts1j firmware/DSP runtime logs -> nd-y7b7 fallback input options. nd-d6hc now waits for this sweep; nd-y7lt blocks on all new actionable mic tickets.
+
+**2026-06-16T12:27:30Z**
+
+HANDOFF from nd-iwoo: OnePlus bottom-mic exact-zero was reproduced across helper, direct ALSA, and direct PipeWire capture/analysis paths; docs/oneplus-audio-readings.md now records commands and evidence. nd-h6lz can proceed with ALSA/PipeWire matrix work without first debugging the measurement helper.
