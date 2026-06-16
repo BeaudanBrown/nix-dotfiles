@@ -55,3 +55,7 @@ MIC QUEUE UPDATE: added a non-kernel microphone exploration chain before Bluetoo
 **2026-06-16T12:27:30Z**
 
 HANDOFF from nd-iwoo: OnePlus bottom-mic exact-zero was reproduced across helper, direct ALSA, and direct PipeWire capture/analysis paths; docs/oneplus-audio-readings.md now records commands and evidence. nd-h6lz can proceed with ALSA/PipeWire matrix work without first debugging the measurement helper.
+
+**2026-06-16T12:32:56Z**
+
+HANDOFF from nd-h6lz: current ALSA/PipeWire endpoint matrix found no non-zero internal mic source; only MultiMedia2/hw:0,1 opens and remains exact-zero through ALSA and transient PipeWire, so continue the non-kernel chain with nd-zthm mixer-control audit.
