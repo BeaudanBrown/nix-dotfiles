@@ -75,7 +75,7 @@ Speaker playback is the stable supported audio path. The host keeps a conservati
 - `oneplus-mic-source.service` is manual-only;
 - bottom-mic work should use `docs/oneplus-debug-tools.md` and active tickets.
 
-The current bottom-mic work is non-kernel focused under `nd-ihy2`: seek repeatable positive/zero readings through ALSA/PipeWire/WirePlumber/UCM/mixer/service experiments while preserving speaker playback. Do not compile kernels, add kernel patches, or create a test-kernel path for this loop. Avoid broad UCM/PipeWire microphone rewrites unless current evidence and the active ticket justify a small reversible experiment.
+The current bottom-mic work is non-kernel focused under `nd-ihy2`: seek repeatable positive/zero readings through ALSA/PipeWire/WirePlumber/UCM/mixer/service experiments while preserving speaker playback. Do not compile kernels, add kernel patches, or create a test-kernel path for this loop. Avoid broad UCM/PipeWire microphone rewrites unless current evidence and the active ticket justify a small reversible experiment. The repeatable readings procedure and latest current-runtime speaker-positive/mic-zero result are in `docs/oneplus-audio-readings.md`.
 
 ### Camera / battery / RTC / other hardware
 

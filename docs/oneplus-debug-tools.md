@@ -16,6 +16,19 @@ Traceable wrapper around `debug-oneplus-mic` that writes a short Markdown trial 
 
 Use for microphone experiments that future agents may compare.
 
+### `nix run .#oneplus-audio-readings`
+
+Bounded non-kernel audio reading helper for the current OnePlus runtime. It plays a short speaker probe and records the PipeWire sink monitor, then records each currently visible ALSA/PipeWire capture source and reports `max`/`rms` readings in a TSV summary. By default it does not change mixer routing.
+
+Examples:
+
+```sh
+nix run .#oneplus-audio-readings -- --seconds 2
+nix run .#oneplus-audio-readings -- --seconds 2 --route-bottom-mic
+```
+
+Use `--route-bottom-mic` only for an explicit reversible experiment: it applies the known AMIC4/ADC4 route, loads a transient `oneplus_bottom_mic_trial` PipeWire Pulse source, records it, and unloads the module before exit. Review the generated `/tmp/oneplus-audio-readings-*` artifact and copy durable conclusions into tk/docs; the tool does not commit.
+
 ### `scripts/record-oneplus-touch-events.sh`
 
 Touch/gesture capture helper for touchscreen, lisgd/niri, and terminal-scroll investigations. Use or extend it before creating new touch debugging snippets.

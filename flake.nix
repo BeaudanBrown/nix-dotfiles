@@ -36,6 +36,7 @@
           oneplus-mic-trial = pkgs.callPackage ./scripts/oneplus-mic-trial.nix {
             debug-oneplus-mic = self.packages.${system}.debug-oneplus-mic;
           };
+          oneplus-audio-readings = pkgs.callPackage ./scripts/oneplus-audio-readings.nix { };
           oneplus-loop-seed-reboot = pkgs.callPackage ./scripts/oneplus-loop-seed-reboot.nix { };
           oneplus-key = pkgs.callPackage ./scripts/oneplus-key.nix { };
           oneplus-screenshot = pkgs.callPackage ./scripts/oneplus-screenshot.nix { };
@@ -50,6 +51,9 @@
         apps = {
           debug-oneplus-mic = flake-utils.lib.mkApp { drv = self.packages.${system}.debug-oneplus-mic; };
           oneplus-mic-trial = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-mic-trial; };
+          oneplus-audio-readings = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.oneplus-audio-readings;
+          };
           oneplus-loop-seed-reboot = flake-utils.lib.mkApp {
             drv = self.packages.${system}.oneplus-loop-seed-reboot;
           };

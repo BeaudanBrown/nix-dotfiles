@@ -1,6 +1,6 @@
 ---
 id: nd-ihy2
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-16T00:57:56Z
@@ -27,3 +27,11 @@ A repeatable non-kernel procedure records positive/zero readings for speaker pla
 **2026-06-16T11:55:34Z**
 
 Retargeted per user direction: pursue non-kernel speaker/microphone reading stabilization only. Do not compile kernels, create a test-kernel path, or add kernel patches; focus on ALSA/PipeWire/WirePlumber/UCM/mixer/service experiments and repeatable positive/zero measurements.
+
+**2026-06-16T12:07:24Z**
+
+HANDOFF: Added nix run .#oneplus-audio-readings bounded helper plus docs/oneplus-audio-readings.md. Current runtime evidence: speaker sink monitor positive (max 0.11999878/rms 0.07627125); transient AMIC4/ADC4 bottom-mic PipeWire and ALSA captures open but record exact zero (48000 samples, max/rms 0). Tests: bash -n, helper --help, direct --route-bottom-mic run, nix eval flake app, git diff --check. Remaining risk: physical bottom mic still zero via non-kernel userspace route; no kernel build/patch/switch used.
+
+**2026-06-16T12:07:24Z**
+
+HANDOFF from nd-ihy2: Audio loop now has a repeatable non-kernel one-shot readings app. Bluetooth/stop-sentinel tickets can proceed after this unless user wants deeper non-kernel mic experiments despite exact-zero AMIC4/ADC4 captures.
