@@ -1,6 +1,6 @@
 ---
 id: nd-nebp
-status: open
+status: closed
 deps: [nd-87m2, nd-o9qo, nd-bcqi, nd-jiqb, nd-pq7i, nd-y6z0, nd-3wfg, nd-fuc6, nd-24hg, nd-pcdw, nd-wzyq, nd-843d, nd-hr89, nd-n819]
 links: []
 created: 2026-06-15T14:00:59Z
@@ -21,3 +21,9 @@ When this ticket becomes ready, do not close it immediately. First scan tk ready
 ## Acceptance Criteria
 
 All known OnePlus issue tickets are closed, blocked by explicit kernel-work/future-work tickets, or superseded. A final scan found no new actionable hardware/configuration issues. The epic has a closeout note telling future agents there is no remaining work and they should stop.
+
+## Notes
+
+**2026-06-16T00:58:01Z**
+
+SUPERSEDED: replaced by current clean OnePlus loop epic nd-gv62 and its child tickets. Retained only as historical evidence; fresh agents must start from docs/oneplus-loop-bootstrap.md and current tk ready tickets instead of this old backlog.

@@ -1,6 +1,6 @@
 ---
 id: nd-8dw3
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-15T13:54:53Z
@@ -82,3 +82,7 @@ HANDOFF from nd-hr89: current generation 74/75 bottom-mic trial still exact-zero
 **2026-06-15T14:45:47Z**
 
 HANDOFF from nd-n819: selected kernel-development ticket cannot progress in normal /aloop because OnePlus currently boots a fetched pinned kernel closure, not a patchable source derivation. Created prerequisite nd-1q85 for an explicit patchable kernel flow; nd-n819 now depends on it and remains the bottom-mic trace/patch target.
+
+**2026-06-16T00:58:01Z**
+
+SUPERSEDED: replaced by current clean OnePlus loop epic nd-gv62 and its child tickets. Retained only as historical evidence; fresh agents must start from docs/oneplus-loop-bootstrap.md and current tk ready tickets instead of this old backlog.
