@@ -24,7 +24,7 @@ Iteration contract:
 2. Pick one ready child ticket under `nd-gv62`.
 3. Inspect current runtime/log/code state before trusting prior conclusions.
 4. Implement one fix, one experiment, or one documentation/ticket cleanup.
-5. Promote reusable scripts into Nix-wrapped repo tools when practical.
+5. Promote reusable scripts into Nix-wrapped repo tools when practical; extend the existing OnePlus UI/tool library instead of writing ad-hoc snippets.
 6. Add a concise tk note with evidence, commands, result, and next suggested inquiry.
 7. Create one coherent commit for the iteration. Diagnostic tools must not commit.
 8. Amend/squash/rebase your own local commits when needed so the history stays meaningful.
@@ -48,6 +48,8 @@ When an agent discovers new work, decide where it belongs in the chain:
 3. If it is optional or speculative, add a note/link rather than unblocking the queue.
 
 At handoff, ticket notes should say what changed, what evidence was checked, and which ticket should become ready next.
+
+For UI/display/touch/app-navigation work, prefer the shared observe-control tools in `docs/oneplus-debug-tools.md`: capture a screenshot, read it, perform one explicit touch/key action, capture again, then record the result. New UI helpers should be flake apps with `--help`, dry-run support for actions, bounded one-shot behavior, and no auto-commit behavior.
 
 ## History policy
 

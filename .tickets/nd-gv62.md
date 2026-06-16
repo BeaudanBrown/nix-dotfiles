@@ -35,3 +35,7 @@ GIT POLICY UPDATE: removed oneplus-mic-trial auto-commit behavior (--commit now 
 **2026-06-16T02:03:16Z**
 
 ORDERING UPDATE: top-level loop work is intentionally dependency-gated so /aloop picks up the previous iteration cleanly: nd-qbd8 current scan first, then nd-6g7r display classification, then nd-qa6a patchable kernel flow, then nd-ihy2 mic tracing, then nd-y7lt sentinel. Future agents should add new tickets into this chain by dependency, not by relying only on prose.
+
+**2026-06-16T02:20:09Z**
+
+TOOL LIBRARY UPDATE: added closed child nd-1jlj for OnePlus agent UI observe/control tools. Future agents should extend docs/oneplus-debug-tools.md and the flake-wrapped scripts rather than creating ad-hoc screenshot/touch snippets.

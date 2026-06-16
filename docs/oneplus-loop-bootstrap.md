@@ -58,11 +58,11 @@ Do not use tooling that auto-commits results. Tools may write artifacts or ticke
 
 ## Tooling rule
 
-Before writing new scripts, check `docs/oneplus-debug-tools.md`. If you create a reusable diagnostic or helper, promote it into the repo when practical:
+Before writing new scripts, check `docs/oneplus-debug-tools.md`. For UI/display/touch/app-navigation tickets, use the shared screenshot/touch/key tools there before inventing new snippets. If you create a reusable diagnostic or helper, promote it into the repo when practical:
 
 1. script under `scripts/`;
 2. Nix wrapper/package/app in the flake when useful;
-3. short entry in `docs/oneplus-debug-tools.md`;
+3. short entry in `docs/oneplus-debug-tools.md` with `--help`/dry-run examples when relevant;
 4. ticket note showing how it was used.
 
 One-off shell snippets are fine for small inspection, but repeated or complex diagnostics should become reusable tools.

@@ -52,7 +52,15 @@ The host enables NixOS Bluetooth support directly because the phone does not imp
 
 The current UI stack is Niri/Ghostty with OnePlus-specific startup and gesture helpers. A focused terminal-scroll bridge exists in `hosts/oneplus/oneplus-fajita/ui/niri.nix` and should be validated/tuned from current touch behavior if needed.
 
-Display/GPU warnings should be investigated under current tickets only when they recur or correlate with visible instability. Use current `dmesg`/journal evidence; do not chase historical warning clusters by default.
+Agents can now observe and interact with the live UI through flake tools documented in `docs/oneplus-debug-tools.md`:
+
+- `nix run .#oneplus-screenshot -- --label before` captures a PNG and prints a Pi image `read` hint.
+- `nix run .#oneplus-touch -- tap 540 1200` or `swipe ...` sends one explicit pointer action through ydotool.
+- `nix run .#oneplus-key -- enter` or `text ...` sends one explicit key/text action.
+
+Use observe → act → observe for UI/display/touch work and record conclusions in tk. Do not commit screenshots by default.
+
+Display/GPU warnings should be investigated under current tickets only when they recur or correlate with visible instability. Use current `dmesg`/journal evidence plus screenshots when useful; do not chase historical warning clusters by default.
 
 ### Audio / microphone
 

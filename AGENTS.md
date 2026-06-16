@@ -109,6 +109,8 @@ When adding OnePlus follow-up work, create a focused child ticket under `nd-gv62
 
 Each OnePlus loop iteration should leave a tk note naming the evidence checked, the result, and the next ticket expected to become ready. Do not rely on stale docs, archive history, or ticket creation time for ordering.
 
+For OnePlus UI/display/touch/app-navigation work, use and extend the reusable tool library in `docs/oneplus-debug-tools.md`. The baseline flake apps are `oneplus-screenshot`, `oneplus-touch`, and `oneplus-key`; new helpers should be one-shot, documented, dry-run-capable when they perform actions, and must not auto-commit.
+
 ## Golden Rules
 
 ### Formatting
