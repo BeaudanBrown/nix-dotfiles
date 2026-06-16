@@ -1,7 +1,7 @@
 ---
 id: nd-d6hc
 status: open
-deps: [nd-ihy2]
+deps: [nd-ihy2, nd-y7b7]
 links: [nd-qbd8]
 created: 2026-06-16T10:54:43Z
 type: task

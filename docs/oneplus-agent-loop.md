@@ -38,7 +38,7 @@ The current OnePlus loop uses tk dependencies as the queue, not just priority or
 - Keep `nd-qbd8` as the current-runtime scan/reset point.
 - Gate display work after the scan: `nd-6g7r <- nd-qbd8`.
 - Treat `nd-qa6a` as cancelled unless a future user explicitly requests kernel builds again.
-- Keep bottom-mic/speaker work non-kernel focused under `nd-ihy2`; do not compile kernels or create a test-kernel path in normal loop work.
+- Keep bottom-mic/speaker work non-kernel focused. The current mic sweep is ordered as `nd-iwoo -> nd-h6lz -> nd-zthm -> nd-vnpn -> nd-296h -> nd-ts1j -> nd-y7b7` before returning to Bluetooth `nd-d6hc`.
 - Keep `nd-y7lt` blocked on every known actionable ticket.
 
 When an agent discovers new work, decide where it belongs in the chain:

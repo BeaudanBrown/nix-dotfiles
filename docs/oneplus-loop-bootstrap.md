@@ -34,9 +34,16 @@ Pick the next ready child ticket under `nd-gv62`. Do not work the epic itself un
 
 1. `nd-qbd8` — current runtime scan and issue selection
 2. `nd-6g7r` — display stability classification, depends on `nd-qbd8`
-3. `nd-ihy2` — non-kernel speaker/microphone reading stabilization, depends on display classification only through the completed queue history
-4. `nd-d6hc` — Bluetooth controller classification, depends on `nd-ihy2`
-5. `nd-y7lt` — stop sentinel, depends on all actionable work
+3. `nd-ihy2` — completed initial non-kernel speaker/microphone reading stabilization
+4. `nd-iwoo` — validate mic measurement path
+5. `nd-h6lz` — ALSA/PipeWire capture matrix, depends on `nd-iwoo`
+6. `nd-zthm` — mic mixer controls, depends on `nd-h6lz`
+7. `nd-vnpn` — UCM/vendor route comparison, depends on `nd-zthm`
+8. `nd-296h` — audio service ordering, depends on `nd-vnpn`
+9. `nd-ts1j` — firmware/DSP runtime logs, depends on `nd-296h`
+10. `nd-y7b7` — microphone fallback input options, depends on `nd-ts1j`
+11. `nd-d6hc` — Bluetooth controller classification, depends on `nd-y7b7`
+12. `nd-y7lt` — stop sentinel, depends on all actionable work
 
 If no focused ticket is ready, use `nd-qbd8` or create a new small child ticket under `nd-gv62` and insert it into this chain with `tk dep` rather than relying on prose ordering.
 

@@ -26,7 +26,14 @@ Use `tk ready` and choose the next dependency-unblocked child ticket under `nd-g
 
 - `nd-qbd8` — scan current runtime and choose/create the next hardware issue; first reset point
 - `nd-6g7r` — classify current display stability warnings; depends on `nd-qbd8`
-- `nd-ihy2` — stabilize speaker and bottom microphone readings with non-kernel userspace/runtime exploration
+- `nd-ihy2` — completed initial non-kernel speaker/microphone reading stabilization
+- `nd-iwoo` — validate mic measurement path
+- `nd-h6lz` — ALSA/PipeWire capture matrix
+- `nd-zthm` — mic mixer controls
+- `nd-vnpn` — UCM/vendor route comparison
+- `nd-296h` — audio service ordering
+- `nd-ts1j` — firmware/DSP runtime logs
+- `nd-y7b7` — microphone fallback input options
 - `nd-d6hc` — classify missing Bluetooth controller after audio work
 - `nd-y7lt` — stop sentinel; depends on all actionable work and closes the loop when no actionable work remains
 

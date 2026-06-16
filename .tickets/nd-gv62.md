@@ -47,3 +47,7 @@ HANDOFF from nd-qbd8: current scan found no failed units and no current display/
 **2026-06-16T11:52:27Z**
 
 QUEUE UPDATE: user cancelled nd-qa6a patchable-kernel work. Current OnePlus audio focus is non-kernel exploration to get consistent positive speaker and microphone readings; nd-ihy2 is unblocked and should avoid kernel builds/patches.
+
+**2026-06-16T12:20:18Z**
+
+MIC QUEUE UPDATE: added a non-kernel microphone exploration chain before Bluetooth: nd-iwoo measurement validation -> nd-h6lz ALSA/PipeWire matrix -> nd-zthm mixer controls -> nd-vnpn UCM/vendor route comparison -> nd-296h service ordering -> nd-ts1j firmware/DSP runtime logs -> nd-y7b7 fallback input options. nd-d6hc now waits for this sweep; nd-y7lt blocks on all new actionable mic tickets.
