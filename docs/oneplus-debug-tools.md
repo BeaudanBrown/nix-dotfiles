@@ -31,7 +31,7 @@ Use `--route-bottom-mic` only for an explicit reversible experiment: it applies 
 
 ### `scripts/record-oneplus-touch-events.sh`
 
-Touch/gesture capture helper for touchscreen, lisgd/niri, and terminal-scroll investigations. Use or extend it before creating new touch debugging snippets.
+Touch/gesture capture helper for touchscreen, lisgd/compositor, and terminal-scroll investigations. Use or extend it before creating new touch debugging snippets.
 
 ### `nix run .#oneplus-screenshot`
 

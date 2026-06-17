@@ -177,7 +177,7 @@ in
     ./networking/ssh.nix
     ./networking/wireless.nix
     ./ui/greetd.nix
-    ./ui/niri.nix
+    ./ui/hyprland.nix
     # ./ui/phosh.nix
   ];
   boot.loader = {

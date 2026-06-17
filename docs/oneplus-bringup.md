@@ -59,7 +59,7 @@ The host enables NixOS Bluetooth support directly because the phone does not imp
 
 ### Display / UI / touch
 
-The current UI stack is Niri/Ghostty with OnePlus-specific startup and gesture helpers. A focused terminal-scroll bridge exists in `hosts/oneplus/oneplus-fajita/ui/niri.nix` and should be validated/tuned from current touch behavior if needed.
+The current UI stack is Hyprland/Ghostty with OnePlus-specific startup and gesture helpers. The previous Niri config remains in `hosts/oneplus/oneplus-fajita/ui/niri.nix` as the quick rollback reference; the active Hyprland config is `hosts/oneplus/oneplus-fajita/ui/hyprland.nix`. A focused terminal-scroll bridge exists there and should be validated/tuned from current touch behavior if needed.
 
 Agents can now observe and interact with the live UI through flake tools documented in `docs/oneplus-debug-tools.md`:
 
