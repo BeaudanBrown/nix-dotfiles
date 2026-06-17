@@ -18,27 +18,27 @@ views:
     base:
         - "Tab-small Ctrl Alt Shift ↑ ↓ ← →"
         - "q w e r t y u i o p"
-        - ".-thin a s d f g h j k l --thin"
+        - "--thin a s d f g h j k l --thin"
         - "show_upper z x c v b n m BackSpace"
-        - "show_numbers preferences space Return"
+        - "show_numbers Super space Return"
     upper:
         - "Tab-small Ctrl Alt Shift PageUp PageDown Home End"
         - "Q W E R T Y U I O P"
         - "/-thin A S D F G H J K L |-thin"
         - "show_upper Z X C V B N M BackSpace"
-        - "show_numbers preferences space Return"
+        - "show_numbers Super space Return"
     numbers:
         - "Tab-small Ctrl Alt Shift ↑ ↓ ← →"
         - "1 2 3 4 5 6 7 8 9 0"
         - "\\ * # $ / & - + ( ) _"
         - "show_symbols , \" ' : ; ! ? BackSpace"
-        - "show_letters preferences space . Return"
+        - "show_letters Super space . Return"
     symbols:
         - "Tab-small Ctrl Alt Shift ↑ ↓ ← →"
         - "~ ` · √ π τ ÷ × ¶ @"
         - "\\ © ® £ € ¥ ^ ° { } _"
         - "show_numbers_from_symbols % | < > = [ ] BackSpace"
-        - "show_letters preferences space . Return"
+        - "show_letters Super space . Return"
     actions:
         - "Tab-small Ctrl Alt Shift PageUp PageDown Home End"
         - "F1  F2  F3  F4  F5  F6"
@@ -58,10 +58,10 @@ buttons:
         outline: "special-2"
         icon: "edit-clear-symbolic"
         action: "erase"
-    preferences:
-        action: "show_prefs"
+    Super:
+        modifier: "Mod4"
         outline: "special"
-        icon: "keyboard-mode-symbolic"
+        label: "Super"
     show_numbers:
         action:
             set_view: "numbers"

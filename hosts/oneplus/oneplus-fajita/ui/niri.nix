@@ -255,6 +255,9 @@ in
 {
   hardware.graphics.enable = true;
 
+  programs.feedbackd.enable = true;
+  users.users.${primaryUser}.extraGroups = [ "feedbackd" ];
+
   programs = {
     kdeconnect.enable = true;
 
