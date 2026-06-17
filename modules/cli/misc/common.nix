@@ -14,5 +14,6 @@
     lsof
     curl
     procps
+    python3
   ];
 }
