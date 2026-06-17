@@ -74,11 +74,45 @@ let
   oneplusKeyboard = pkgs.writeShellScriptBin "oneplus-keyboard" ''
     set -eu
 
-    if ${pkgs.procps}/bin/pgrep -u ${primaryUser} -x wvkbd-mobintl >/dev/null; then
-      exec ${pkgs.procps}/bin/pkill -u ${primaryUser} -x wvkbd-mobintl
+    uid="$(${pkgs.coreutils}/bin/id -u ${primaryUser})"
+    if [ "$(${pkgs.coreutils}/bin/id -u)" != "$uid" ]; then
+      exec ${pkgs.util-linux}/bin/runuser -u ${primaryUser} -- "$0" "$@"
     fi
 
-    exec ${oneplusSpawn}/bin/oneplus-spawn ${pkgs.wvkbd}/bin/wvkbd-mobintl
+    runtime_dir="/run/user/$uid"
+    export XDG_RUNTIME_DIR="$runtime_dir"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus"
+
+    mode="''${1:-toggle}"
+    case "$mode" in
+      show)
+        visible=true
+        ;;
+      hide)
+        visible=false
+        ;;
+      toggle)
+        current="$(${pkgs.glib}/bin/gdbus call --session \
+          --dest sm.puri.OSK0 \
+          --object-path /sm/puri/OSK0 \
+          --method org.freedesktop.DBus.Properties.Get \
+          sm.puri.OSK0 Visible 2>/dev/null || true)"
+        if printf '%s\n' "$current" | ${pkgs.gnugrep}/bin/grep -q true; then
+          visible=false
+        else
+          visible=true
+        fi
+        ;;
+      *)
+        echo "Usage: oneplus-keyboard [show|hide|toggle]" >&2
+        exit 64
+        ;;
+    esac
+
+    exec ${pkgs.glib}/bin/gdbus call --session \
+      --dest sm.puri.OSK0 \
+      --object-path /sm/puri/OSK0 \
+      --method sm.puri.OSK0.SetVisible "$visible"
   '';
   oneplusTerminalScroll = pkgs.writeShellScriptBin "oneplus-terminal-scroll" ''
     set -eu
@@ -239,10 +273,10 @@ let
       -g '1,DU,B,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer' \
       -g '1,DU,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll down' \
       -g '1,UD,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll up' \
-      -g '1,LR,L,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch movefocus l' \
-      -g '1,RL,R,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch movefocus r' \
-      -g '2,DU,*,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer' \
-      -g '2,UD,*,*,R,${oneplusSttDictate}/bin/oneplus-stt-dictate'
+      -g '1,LR,L,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace e-1' \
+      -g '1,RL,R,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace e+1' \
+      -g '2,DU,*,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch overview:toggle' \
+      -g '2,UD,*,*,R,${oneplusKeyboard}/bin/oneplus-keyboard toggle'
   '';
 in
 {
@@ -370,6 +404,7 @@ in
     enable = true;
     xwayland.enable = true;
     systemd.enable = false;
+    plugins = [ pkgs.hyprlandPlugins.hyprspace ];
 
     settings = {
       monitor = [ "DSI-1, 1080x2340@60, 0x0, 2" ];
@@ -397,6 +432,11 @@ in
 
       master.mfact = 1.0;
 
+      binds = {
+        allow_workspace_cycles = true;
+        workspace_back_and_forth = true;
+      };
+
       decoration = {
         rounding = 0;
         shadow.enabled = false;
@@ -410,6 +450,20 @@ in
         enable_anr_dialog = false;
         mouse_move_focuses_monitor = false;
       };
+
+      "plugin:overview:panelHeight" = 600;
+      "plugin:overview:onBottom" = true;
+      "plugin:overview:showNewWorkspace" = true;
+      "plugin:overview:exitOnSwitch" = true;
+      "plugin:overview:exitOnClick" = true;
+
+      windowrule = [
+        {
+          name = "new-apps-on-empty-workspace";
+          "match:class" = ".*";
+          workspace = "emptynm";
+        }
+      ];
 
       exec-once = [
         "ashell"
