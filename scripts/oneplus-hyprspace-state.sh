@@ -19,4 +19,7 @@ run hyprctl getoption plugin:overview:exitOnSwitch
 run hyprctl getoption plugin:overview:switchOnDrop
 run hyprctl getoption plugin:overview:previewDrag
 run hyprctl getoption plugin:overview:previewDragCreateWorkspaceOnEmptyDrop
+run hyprctl getoption plugin:overview:previewDragEdgeScroll
+run hyprctl getoption plugin:overview:previewDragEdgeScrollMargin
+run hyprctl getoption plugin:overview:previewDragEdgeScrollSpeed
 run hyprctl getoption plugin:overview:debugHitboxes
