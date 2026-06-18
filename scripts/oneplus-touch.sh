@@ -7,7 +7,7 @@ Usage: oneplus-touch [--dry-run] tap <x> <y>
        oneplus-touch [--dry-run] swipe <x1> <y1> <x2> <y2> [--duration-ms <ms>] [--steps <n>]
 
 Perform one bounded pointer interaction through ydotool.
-Coordinates are absolute screen coordinates. This helper never loops, commits, rebuilds, or reboots.
+Coordinates are Hyprland logical absolute coordinates when hyprctl is available, otherwise backend absolute coordinates. This helper never loops, commits, rebuilds, or reboots.
 EOF
 }
 
@@ -21,6 +21,15 @@ require_uint() {
 	if ! is_uint "$value"; then
 		echo "$name must be a non-negative integer: $value" >&2
 		exit 2
+	fi
+}
+
+move_pointer() {
+	local x="$1" y="$2"
+	if command -v hyprctl >/dev/null 2>&1 && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+		hyprctl dispatch movecursor "$x" "$y" >/dev/null
+	else
+		ydotool mousemove --absolute -- "$x" "$y"
 	fi
 }
 
@@ -63,7 +72,7 @@ tap)
 		exit 0
 	fi
 	require_backend
-	ydotool mousemove --absolute "$x" "$y"
+	move_pointer "$x" "$y"
 	ydotool click 0xC0
 	printf 'Tapped absolute coordinate (%s, %s) using ydotool\n' "$x" "$y"
 	;;
@@ -121,12 +130,12 @@ swipe)
 	fi
 	require_backend
 	sleep_s="$(awk -v ms="$duration_ms" -v steps="$steps" 'BEGIN { printf "%.3f", (ms / 1000) / steps }')"
-	ydotool mousemove --absolute "$x1" "$y1"
+	move_pointer "$x1" "$y1"
 	ydotool click 0x40
 	for ((i = 1; i <= steps; i++)); do
 		x=$((x1 + ((x2 - x1) * i / steps)))
 		y=$((y1 + ((y2 - y1) * i / steps)))
-		ydotool mousemove --absolute "$x" "$y"
+		move_pointer "$x" "$y"
 		sleep "$sleep_s"
 	done
 	ydotool click 0x80

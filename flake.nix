@@ -41,6 +41,13 @@
           oneplus-key = pkgs.callPackage ./scripts/oneplus-key.nix { };
           oneplus-screenshot = pkgs.callPackage ./scripts/oneplus-screenshot.nix { };
           oneplus-touch = pkgs.callPackage ./scripts/oneplus-touch.nix { };
+          oneplus-hyprspace-state = pkgs.callPackage ./scripts/oneplus-hyprspace-state.nix { };
+          oneplus-hyprspace-setup-test = pkgs.callPackage ./scripts/oneplus-hyprspace-setup-test.nix { };
+          oneplus-hyprspace-hitboxes = pkgs.callPackage ./scripts/oneplus-hyprspace-hitboxes.nix { };
+          oneplus-hyprspace-drag-preview = pkgs.callPackage ./scripts/oneplus-hyprspace-drag-preview.nix {
+            oneplus-screenshot = self.packages.${system}.oneplus-screenshot;
+            oneplus-touch = self.packages.${system}.oneplus-touch;
+          };
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
           oneplus-uboot-bootimg =
             pkgs.pkgsCross.aarch64-multiplatform.callPackage
@@ -60,6 +67,18 @@
           oneplus-key = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-key; };
           oneplus-screenshot = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-screenshot; };
           oneplus-touch = flake-utils.lib.mkApp { drv = self.packages.${system}.oneplus-touch; };
+          oneplus-hyprspace-state = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.oneplus-hyprspace-state;
+          };
+          oneplus-hyprspace-setup-test = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.oneplus-hyprspace-setup-test;
+          };
+          oneplus-hyprspace-hitboxes = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.oneplus-hyprspace-hitboxes;
+          };
+          oneplus-hyprspace-drag-preview = flake-utils.lib.mkApp {
+            drv = self.packages.${system}.oneplus-hyprspace-drag-preview;
+          };
         };
         checks = (import ./lib/checks.nix { inherit inputs system pkgs; }) // {
           fleet-installer = fleetInstaller;
@@ -117,6 +136,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    hyprspace-local = {
+      url = "path:/home/beau/documents/Hyprspace";
+      flake = false;
+    };
 
     # Keep the OnePlus kernel pinned to the known-good build while allowing
     # the rest of the system inputs to move forward.

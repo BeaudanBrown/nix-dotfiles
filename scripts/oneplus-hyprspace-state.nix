@@ -1,14 +1,12 @@
 { pkgs }:
 
 pkgs.writeShellApplication {
-  name = "oneplus-touch";
+  name = "oneplus-hyprspace-state";
 
   runtimeInputs = with pkgs; [
     coreutils
-    gawk
     hyprland
-    ydotool
   ];
 
-  text = builtins.readFile ./oneplus-touch.sh;
+  text = builtins.readFile ./oneplus-hyprspace-state.sh;
 }

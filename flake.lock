@@ -702,6 +702,19 @@
         "type": "github"
       }
     },
+    "hyprspace-local": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781752867,
+        "narHash": "sha256-H3+4KK6NmY/yx+kh/Rhf91wDXFqzbaU1GU35a8w5T4w=",
+        "path": "/home/beau/documents/Hyprspace",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/beau/documents/Hyprspace",
+        "type": "path"
+      }
+    },
     "invoice-ai": {
       "inputs": {
         "flake-parts": "flake-parts_2",
@@ -1289,6 +1302,7 @@
         "fenix": "fenix",
         "flake-utils": "flake-utils_5",
         "home-manager": "home-manager",
+        "hyprspace-local": "hyprspace-local",
         "invoice-ai": "invoice-ai",
         "joan-flash": "joan-flash",
         "llama-cpp": "llama-cpp",

@@ -60,6 +60,35 @@ nix run .#oneplus-touch -- swipe 540 1800 540 600 --duration-ms 400
 
 If it reports a missing `ydotool` socket, boot into a generation with the OnePlus-local `programs.ydotool` config and ensure the user session is in the `ydotool` group. Do not script unattended interaction loops.
 
+### `nix run .#oneplus-hyprspace-state`
+
+Prints a bounded Hyprland/Hyprspace runtime snapshot: plugin list, monitors, active workspace, clients, layout, and relevant overview options such as `previewDrag` and `debugHitboxes`.
+
+### `nix run .#oneplus-hyprspace-setup-test`
+
+Creates deterministic `hyprspace-test-*` Ghostty windows, moves them to known workspaces, focuses workspace 1, optionally opens overview, and prints a concise clients summary.
+
+Example:
+
+```sh
+nix run .#oneplus-hyprspace-setup-test -- --windows 3 --open-overview
+```
+
+### `nix run .#oneplus-hyprspace-hitboxes`
+
+Reads recent Hyprspace debug hitbox logs from the user journal and Hyprland runtime logs. Enable `plugin:overview:debugHitboxes = 1` and open overview once before using it.
+
+### `nix run .#oneplus-hyprspace-drag-preview`
+
+Performs exactly one deterministic preview drag gesture. Supports `--dry-run` and prints coordinates/backend before acting. Coordinates are Hyprspace/Hyprland logical coordinates matching `oneplus-hyprspace-hitboxes` output. Add `--screenshot-label <label>` to pause with the pointer held down, capture one screenshot, then release; this is useful for drag-ghost validation.
+
+Examples:
+
+```sh
+nix run .#oneplus-hyprspace-drag-preview -- --from 150 1060 --to 270 1040 --duration-ms 600
+nix run .#oneplus-hyprspace-drag-preview -- --from 150 1060 --to 270 1040 --duration-ms 800 --screenshot-label preview-rect-ghost
+```
+
 ### `nix run .#oneplus-key`
 
 Sends one bounded key or text action. Basic key names include `enter`, `escape`, `tab`, `backspace`, arrows, `back`, `home`, `volume-up`, `volume-down`, and `power`. Text input prefers `wtype` under Wayland and falls back to `ydotool type`.
