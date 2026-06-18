@@ -148,6 +148,44 @@ let
     ${oneplusKeyboard}/bin/oneplus-keyboard hide >/dev/null 2>&1 || true
     exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch "overview:$action"
   '';
+  oneplusWorkspaceNav = pkgs.writeShellScriptBin "oneplus-workspace-nav" ''
+    set -eu
+
+    direction="''${1:-}"
+    case "$direction" in
+      next|prev) ;;
+      *)
+        echo "Usage: oneplus-workspace-nav next|prev" >&2
+        exit 64
+        ;;
+    esac
+
+    active="$(${oneplusHyprctl}/bin/oneplus-hyprctl -j activeworkspace)"
+    current_id="$(printf '%s\n' "$active" | ${pkgs.jq}/bin/jq -r '.id')"
+    monitor_id="$(printf '%s\n' "$active" | ${pkgs.jq}/bin/jq -r '.monitorID')"
+
+    workspaces="$(${oneplusHyprctl}/bin/oneplus-hyprctl -j workspaces \
+      | ${pkgs.jq}/bin/jq -r --argjson monitor "$monitor_id" '.[] | select(.monitorID == $monitor and .id >= 1) | .id' \
+      | ${pkgs.coreutils}/bin/sort -n)"
+
+    [ -n "$workspaces" ] || exit 0
+
+    target=""
+    if [ "$direction" = next ]; then
+      target="$(printf '%s\n' "$workspaces" | ${pkgs.gawk}/bin/awk -v cur="$current_id" '$1 > cur { print $1; exit }')"
+      if [ -z "$target" ]; then
+        target="$(printf '%s\n' "$workspaces" | ${pkgs.coreutils}/bin/head -n1)"
+      fi
+    else
+      target="$(printf '%s\n' "$workspaces" | ${pkgs.gawk}/bin/awk -v cur="$current_id" '$1 < cur { last=$1 } END { print last }')"
+      if [ -z "$target" ]; then
+        target="$(printf '%s\n' "$workspaces" | ${pkgs.coreutils}/bin/tail -n1)"
+      fi
+    fi
+
+    [ -n "$target" ] || exit 0
+    exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace "$target"
+  '';
   oneplusTerminalScroll = pkgs.writeShellScriptBin "oneplus-terminal-scroll" ''
     set -eu
 
@@ -307,8 +345,8 @@ let
       -g '1,DU,B,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer' \
       -g '1,DU,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll down' \
       -g '1,UD,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll up' \
-      -g '1,LR,L,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace e-1' \
-      -g '1,RL,R,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace e+1' \
+      -g '1,LR,L,*,R,${oneplusWorkspaceNav}/bin/oneplus-workspace-nav prev' \
+      -g '1,RL,R,*,R,${oneplusWorkspaceNav}/bin/oneplus-workspace-nav next' \
       -g '2,DU,*,*,R,${oneplusOverview}/bin/oneplus-overview toggle' \
       -g '2,UD,*,*,R,${oneplusKeyboard}/bin/oneplus-keyboard toggle'
   '';
@@ -354,6 +392,7 @@ in
     oneplusSpawn
     oneplusSttDictate
     oneplusTerminalScroll
+    oneplusWorkspaceNav
     oneplusHyprctl
     sttDictate
     pavucontrol
