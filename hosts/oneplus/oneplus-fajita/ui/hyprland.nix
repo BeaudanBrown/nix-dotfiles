@@ -29,6 +29,25 @@ let
       exit 64
     fi
 
+    active="$(${oneplusHyprctl}/bin/oneplus-hyprctl -j activeworkspace)"
+    current_id="$(printf '%s\n' "$active" | ${pkgs.jq}/bin/jq -r '.id')"
+    monitor_id="$(printf '%s\n' "$active" | ${pkgs.jq}/bin/jq -r '.monitorID')"
+
+    base=10
+    if [ "$current_id" -lt "$base" ]; then
+      target="$base"
+    else
+      target=$((current_id + 1))
+    fi
+
+    used="$(${oneplusHyprctl}/bin/oneplus-hyprctl -j workspaces \
+      | ${pkgs.jq}/bin/jq -r --argjson monitor "$monitor_id" '.[] | select(.monitorID == $monitor and .id >= 1) | .id' \
+      | ${pkgs.coreutils}/bin/sort -n)"
+    while printf '%s\n' "$used" | ${pkgs.gnugrep}/bin/grep -qx "$target"; do
+      target=$((target + 1))
+    done
+
+    ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace "$target" >/dev/null
     exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch exec "$*"
   '';
   oneplusBrave = pkgs.writeShellScriptBin "oneplus-brave" ''
@@ -113,6 +132,21 @@ let
       --dest sm.puri.OSK0 \
       --object-path /sm/puri/OSK0 \
       --method sm.puri.OSK0.SetVisible "$visible"
+  '';
+  oneplusOverview = pkgs.writeShellScriptBin "oneplus-overview" ''
+    set -eu
+
+    action="''${1:-toggle}"
+    case "$action" in
+      open|close|toggle) ;;
+      *)
+        echo "Usage: oneplus-overview [open|close|toggle]" >&2
+        exit 64
+        ;;
+    esac
+
+    ${oneplusKeyboard}/bin/oneplus-keyboard hide >/dev/null 2>&1 || true
+    exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch "overview:$action"
   '';
   oneplusTerminalScroll = pkgs.writeShellScriptBin "oneplus-terminal-scroll" ''
     set -eu
@@ -275,7 +309,7 @@ let
       -g '1,UD,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll up' \
       -g '1,LR,L,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace e-1' \
       -g '1,RL,R,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace e+1' \
-      -g '2,DU,*,*,R,${oneplusHyprctl}/bin/oneplus-hyprctl dispatch overview:toggle' \
+      -g '2,DU,*,*,R,${oneplusOverview}/bin/oneplus-overview toggle' \
       -g '2,UD,*,*,R,${oneplusKeyboard}/bin/oneplus-keyboard toggle'
   '';
 in
@@ -315,6 +349,7 @@ in
     oneplusBrave
     oneplusClipboard
     oneplusKeyboard
+    oneplusOverview
     oneplusScreenRecord
     oneplusSpawn
     oneplusSttDictate
@@ -462,16 +497,9 @@ in
       "plugin:overview:exitOnSwitch" = true;
       "plugin:overview:exitOnClick" = true;
 
-      windowrule = [
-        {
-          name = "new-apps-on-empty-workspace";
-          "match:class" = ".*";
-          workspace = "emptynm";
-        }
-      ];
-
       exec-once = [
         "ashell"
+        "${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace 10"
         "ghostty --gtk-single-instance=false --title=pi-boot-resume -e ${config.hostSpec.dotfiles}/scripts/pi-boot-resume.sh"
         "squeekboard"
       ];
