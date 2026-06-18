@@ -555,6 +555,10 @@ in
 
       "plugin:overview:panelHeight" = 600;
       "plugin:overview:onBottom" = true;
+      "plugin:overview:affectStrut" = false;
+      "plugin:overview:previewMode" = true;
+      "plugin:overview:previewModeActiveMargin" = 24;
+      "plugin:overview:previewModeActiveGap" = 16;
       "plugin:overview:centerActiveWorkspace" = true;
       "plugin:overview:showEmptyWorkspace" = false;
       "plugin:overview:showNewWorkspace" = false;
