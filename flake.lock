@@ -705,8 +705,8 @@
     "hyprspace-local": {
       "flake": false,
       "locked": {
-        "lastModified": 1781752867,
-        "narHash": "sha256-H3+4KK6NmY/yx+kh/Rhf91wDXFqzbaU1GU35a8w5T4w=",
+        "lastModified": 1781753818,
+        "narHash": "sha256-oPxu9wPssF4DMYa1+ORZxkQaAk3X7xyGBzhrdNR6pNg=",
         "path": "/home/beau/documents/Hyprspace",
         "type": "path"
       },

@@ -18,4 +18,5 @@ run hyprctl getoption plugin:overview:gapsOut
 run hyprctl getoption plugin:overview:exitOnSwitch
 run hyprctl getoption plugin:overview:switchOnDrop
 run hyprctl getoption plugin:overview:previewDrag
+run hyprctl getoption plugin:overview:previewDragCreateWorkspaceOnEmptyDrop
 run hyprctl getoption plugin:overview:debugHitboxes
