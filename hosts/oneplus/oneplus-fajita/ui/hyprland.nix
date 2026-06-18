@@ -453,7 +453,12 @@ in
 
       "plugin:overview:panelHeight" = 600;
       "plugin:overview:onBottom" = true;
-      "plugin:overview:showNewWorkspace" = true;
+      "plugin:overview:showEmptyWorkspace" = false;
+      "plugin:overview:showNewWorkspace" = false;
+      "plugin:overview:previewDragCreateWorkspaceGutters" = true;
+      "plugin:overview:previewDragCreateWorkspaceGutterSize" = 72;
+      "plugin:overview:previewDragCloseZone" = true;
+      "plugin:overview:previewDragCloseZoneHeight" = 160;
       "plugin:overview:exitOnSwitch" = true;
       "plugin:overview:exitOnClick" = true;
 
