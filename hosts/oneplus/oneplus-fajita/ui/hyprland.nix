@@ -133,6 +133,31 @@ let
       --object-path /sm/puri/OSK0 \
       --method sm.puri.OSK0.SetVisible "$visible"
   '';
+  oneplusOverviewKeyboardGuard = pkgs.writeShellScriptBin "oneplus-overview-keyboard-guard" ''
+    set -eu
+
+    lock="''${XDG_RUNTIME_DIR:-/tmp}/oneplus-overview-keyboard-guard.lock"
+    exec 9>"$lock"
+    ${pkgs.util-linux}/bin/flock -n 9 || exit 0
+
+    overview_active() {
+      ${oneplusHyprctl}/bin/oneplus-hyprctl -j hyprspace 2>/dev/null \
+        | ${pkgs.jq}/bin/jq -er '.active == true' >/dev/null 2>&1
+    }
+
+    i=0
+    while ! overview_active && [ "$i" -lt 50 ]; do
+      i=$((i + 1))
+      ${pkgs.coreutils}/bin/sleep 0.1
+    done
+
+    while overview_active; do
+      ${pkgs.coreutils}/bin/sleep 0.2
+    done
+
+    ${pkgs.coreutils}/bin/sleep 0.2
+    ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch exec squeekboard >/dev/null 2>&1 || true
+  '';
   oneplusOverview = pkgs.writeShellScriptBin "oneplus-overview" ''
     set -eu
 
@@ -145,8 +170,10 @@ let
         ;;
     esac
 
+    ${pkgs.procps}/bin/pkill -x squeekboard || true
     ${oneplusKeyboard}/bin/oneplus-keyboard hide >/dev/null 2>&1 || true
-    exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch "overview:$action"
+    ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch "overview:$action"
+    ${oneplusOverviewKeyboardGuard}/bin/oneplus-overview-keyboard-guard >/tmp/oneplus-overview-keyboard-guard.log 2>&1 &
   '';
   oneplusWorkspaceNav = pkgs.writeShellScriptBin "oneplus-workspace-nav" ''
     set -eu
@@ -388,6 +415,7 @@ in
     oneplusClipboard
     oneplusKeyboard
     oneplusOverview
+    oneplusOverviewKeyboardGuard
     oneplusScreenRecord
     oneplusSpawn
     oneplusSttDictate
