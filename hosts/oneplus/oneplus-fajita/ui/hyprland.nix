@@ -488,6 +488,7 @@ in
 
       "plugin:overview:panelHeight" = 600;
       "plugin:overview:onBottom" = true;
+      "plugin:overview:centerActiveWorkspace" = true;
       "plugin:overview:showEmptyWorkspace" = false;
       "plugin:overview:showNewWorkspace" = false;
       "plugin:overview:previewDragCreateWorkspaceGutters" = true;
