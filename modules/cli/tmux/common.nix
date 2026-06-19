@@ -53,6 +53,7 @@ in
           bind-key C-Space send-prefix
           unbind C-r
           bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux.conf reloaded"
+          bind b set-option -g status
           bind-key -n M-n select-window -n
           bind-key -n M-p select-window -p
           bind C-u copy-mode -u
