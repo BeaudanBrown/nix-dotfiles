@@ -34,7 +34,7 @@ buildUBoot {
     CONFIG_BOOTDELAY=5
   '';
   patches = [
-    ../patches/0001-cmd-add-read-only-qcom-ab-success-scan.patch
+    ../patches/0001-cmd-add-qcom-ab-success-command.patch
   ];
   prePatch = ''
     cp ${../assets/qcom-phone.env} board/qualcomm/qcom-phone.env

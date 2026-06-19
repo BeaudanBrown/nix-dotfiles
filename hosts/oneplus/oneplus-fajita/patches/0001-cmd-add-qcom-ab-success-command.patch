@@ -1,0 +1,274 @@
+diff -ruN uboot-orig-write/cmd/Kconfig uboot-qcom-ab-write/cmd/Kconfig
+--- uboot-orig-write/cmd/Kconfig	2026-06-13 12:50:50.706209786 +1000
++++ uboot-qcom-ab-write/cmd/Kconfig	2026-06-13 12:50:53.521436839 +1000
+@@ -1271,6 +1271,15 @@
+ 	  partitions via the 'gpt swap' command or to rename single
+ 	  partitions via the 'rename' command.
+
++config CMD_QCOM_AB_SUCCESS
++	bool "qcom_ab_success"
++	depends on CMDLINE && BLK && EFI_PARTITION
++	help
++	  Qualcomm Android A/B GPT boot partition helper. By default it
++	  performs a read-only scan of boot_a and boot_b. The explicit mark
++	  subcommand sets only the boot-successful bit and clears only the
++	  unbootable bit on boot_a and boot_b.
++
+ config CMD_IDE
+ 	bool "ide - Support for IDE drivers"
+ 	select IDE
+diff -ruN uboot-orig-write/cmd/Makefile uboot-qcom-ab-write/cmd/Makefile
+--- uboot-orig-write/cmd/Makefile	2026-06-13 12:50:50.706209786 +1000
++++ uboot-qcom-ab-write/cmd/Makefile	2026-06-13 12:50:53.517436784 +1000
+@@ -220,6 +220,7 @@
+
+ obj-$(CONFIG_CMD_DFU) += dfu.o
+ obj-$(CONFIG_CMD_GPT) += gpt.o
++obj-$(CONFIG_CMD_QCOM_AB_SUCCESS) += qcom_ab_success.o
+ obj-$(CONFIG_CMD_MBR) += mbr.o
+ obj-$(CONFIG_CMD_ETHSW) += ethsw.o
+ obj-$(CONFIG_CMD_AXI) += axi.o
+diff -ruN uboot-orig-write/cmd/qcom_ab_success.c uboot-qcom-ab-write/cmd/qcom_ab_success.c
+--- uboot-orig-write/cmd/qcom_ab_success.c	1970-01-01 10:00:00.000000000 +1000
++++ uboot-qcom-ab-write/cmd/qcom_ab_success.c	2026-06-13 12:50:53.524436881 +1000
+@@ -0,0 +1,240 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Qualcomm Android A/B GPT boot partition attribute helper.
++ *
++ * The OnePlus 6T / SDM845 stock boot chain stores A/B slot state in
++ * GPT partition attribute bits. The default mode is read-only. The explicit
++ * "mark" mode touches only boot_a and boot_b, setting the boot-successful bit
++ * and clearing the unbootable bit.
++ */
++
++#include <blk.h>
++#include <command.h>
++#include <part.h>
++#include <part_efi.h>
++#include <vsprintf.h>
++#include <linux/types.h>
++
++#define QCOM_AB_MAX_SCSI_DEVS 8
++
++/* Qualcomm Android A/B flags live in GPT attribute byte offset 6. */
++#define QCOM_AB_SLOT_ACTIVE     (1ULL << 50)
++#define QCOM_AB_BOOT_SUCCESSFUL (1ULL << 54)
++#define QCOM_AB_UNBOOTABLE      (1ULL << 55)
++
++struct qcom_ab_seen {
++	int boot_a;
++	int boot_b;
++};
++
++static void gpt_name_to_cstr(const gpt_entry *entry, char *out, int out_len)
++{
++	int i;
++
++	if (out_len <= 0)
++		return;
++
++	for (i = 0; i < out_len - 1 && i < PARTNAME_SZ; i++) {
++		unsigned int ch = le16_to_cpu(entry->partition_name[i]);
++
++		if (!ch)
++			break;
++
++		out[i] = ch < 0x80 ? (char)ch : '?';
++	}
++
++	out[i] = '\0';
++}
++
++static bool is_boot_slot_name(const char *name)
++{
++	return !strcmp(name, "boot_a") || !strcmp(name, "boot_b");
++}
++
++static void note_seen(struct qcom_ab_seen *seen, const char *name)
++{
++	if (!strcmp(name, "boot_a"))
++		seen->boot_a++;
++	else if (!strcmp(name, "boot_b"))
++		seen->boot_b++;
++}
++
++static void print_attrs(const char *name, u64 attrs)
++{
++	u8 ab = (attrs >> 48) & 0xff;
++
++	printf("%-8s attrs 0x%016llx ab_byte 0x%02x pri %u active %u successful %u unbootable %u\n",
++	       name, attrs, ab, ab & 0xf,
++	       !!(attrs & QCOM_AB_SLOT_ACTIVE),
++	       !!(attrs & QCOM_AB_BOOT_SUCCESSFUL),
++	       !!(attrs & QCOM_AB_UNBOOTABLE));
++}
++
++static u64 marked_attrs(u64 attrs)
++{
++	return (attrs | QCOM_AB_BOOT_SUCCESSFUL) & ~QCOM_AB_UNBOOTABLE;
++}
++
++static void print_plan(u64 attrs)
++{
++	u64 new_attrs = marked_attrs(attrs);
++
++	if (new_attrs == attrs) {
++		printf("  plan: no change needed\n");
++		return;
++	}
++
++	printf("  plan: mark boot successful: 0x%016llx -> 0x%016llx\n",
++	       attrs, new_attrs);
++}
++
++static int scan_device(int devnum, struct qcom_ab_seen *seen)
++{
++	struct blk_desc *desc;
++	struct gpt_table tbl;
++	int entries, i, ret;
++	bool printed_header = false;
++
++	desc = blk_get_dev("scsi", devnum);
++	if (!desc)
++		return 0;
++
++	ret = gpt_table_load(desc, &tbl);
++	if (ret)
++		return 0;
++
++	entries = le32_to_cpu(tbl.header.num_partition_entries);
++
++	for (i = 0; i < entries; i++) {
++		char name[PARTNAME_SZ + 1];
++		u64 attrs;
++
++		gpt_name_to_cstr(&tbl.entries[i], name, sizeof(name));
++		if (!is_boot_slot_name(name))
++			continue;
++
++		attrs = le64_to_cpu(tbl.entries[i].attributes.raw);
++		note_seen(seen, name);
++
++		if (!printed_header) {
++			printf("scsi %d:\n", devnum);
++			printed_header = true;
++		}
++
++		printf("  part %d ", i + 1);
++		print_attrs(name, attrs);
++		print_plan(attrs);
++	}
++
++	gpt_table_free(&tbl);
++	return 0;
++}
++
++static int mark_device(int devnum)
++{
++	struct blk_desc *desc;
++	struct gpt_table tbl;
++	int entries, i, ret;
++	bool changed = false;
++	bool printed_header = false;
++
++	desc = blk_get_dev("scsi", devnum);
++	if (!desc)
++		return 0;
++
++	ret = gpt_table_load(desc, &tbl);
++	if (ret)
++		return 0;
++
++	entries = le32_to_cpu(tbl.header.num_partition_entries);
++
++	for (i = 0; i < entries; i++) {
++		char name[PARTNAME_SZ + 1];
++		u64 attrs, new_attrs;
++
++		gpt_name_to_cstr(&tbl.entries[i], name, sizeof(name));
++		if (!is_boot_slot_name(name))
++			continue;
++
++		attrs = le64_to_cpu(tbl.entries[i].attributes.raw);
++		new_attrs = marked_attrs(attrs);
++
++		if (!printed_header) {
++			printf("scsi %d writes:\n", devnum);
++			printed_header = true;
++		}
++
++		if (new_attrs == attrs) {
++			printf("  part %d %-8s unchanged 0x%016llx\n", i + 1, name, attrs);
++			continue;
++		}
++
++		printf("  part %d %-8s 0x%016llx -> 0x%016llx\n",
++		       i + 1, name, attrs, new_attrs);
++		tbl.entries[i].attributes.raw = cpu_to_le64(new_attrs);
++		changed = true;
++	}
++
++	if (changed) {
++		ret = gpt_table_write(&tbl);
++		if (ret)
++			printf("  ERROR: failed to write GPT for scsi %d\n", devnum);
++	}
++
++	gpt_table_free(&tbl);
++	return ret;
++}
++
++static int do_qcom_ab_success(struct cmd_tbl *cmdtp, int flag, int argc,
++			      char *const argv[])
++{
++	struct qcom_ab_seen seen = { 0 };
++	bool mark = false;
++	int devnum, ret;
++
++	if (argc > 2)
++		return CMD_RET_USAGE;
++
++	if (argc == 2) {
++		if (!strcmp(argv[1], "mark"))
++			mark = true;
++		else if (strcmp(argv[1], "scan") && strcmp(argv[1], "dry-run"))
++			return CMD_RET_USAGE;
++	}
++
++	printf("qcom_ab_success: scanning boot_a/boot_b GPT attributes\n");
++	printf("qcom_ab_success: operation is: attrs |= 0x%016llx; attrs &= ~0x%016llx\n",
++	       QCOM_AB_BOOT_SUCCESSFUL, QCOM_AB_UNBOOTABLE);
++
++	for (devnum = 0; devnum < QCOM_AB_MAX_SCSI_DEVS; devnum++)
++		scan_device(devnum, &seen);
++
++	if (seen.boot_a != 1 || seen.boot_b != 1) {
++		printf("ERROR: expected exactly one boot_a and one boot_b; found boot_a=%d boot_b=%d\n",
++		       seen.boot_a, seen.boot_b);
++		return CMD_RET_FAILURE;
++	}
++
++	if (!mark) {
++		printf("qcom_ab_success: read-only mode; no GPT writes performed\n");
++		return CMD_RET_SUCCESS;
++	}
++
++	printf("qcom_ab_success: MARK MODE; writing only boot_a and boot_b GPT attributes\n");
++	for (devnum = 0; devnum < QCOM_AB_MAX_SCSI_DEVS; devnum++) {
++		ret = mark_device(devnum);
++		if (ret)
++			return CMD_RET_FAILURE;
++	}
++
++	return CMD_RET_SUCCESS;
++}
++
++U_BOOT_CMD(qcom_ab_success, 2, 0, do_qcom_ab_success,
++	   "scan or mark Qualcomm Android A/B boot GPT attributes",
++	   "[scan|dry-run|mark]\n"
++	   "    With no argument, scan scsi devices for boot_a and boot_b,\n"
++	   "    report slot attributes, and print the exact successful-bit\n"
++	   "    change that would be made. This default mode does not write GPT.\n"
++	   "    mark: explicitly write only boot_a and boot_b by setting the\n"
++	   "    successful bit and clearing the unbootable bit.");
