@@ -7,6 +7,43 @@ let
   llm = import ./new_gpt_chat.nix { inherit pkgs; };
   nr = import ../aliases/nr.nix { inherit pkgs config; };
   tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
+  tmux_copy_system = pkgs.writeShellApplication {
+    name = "tmux-copy-system";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.tmux
+    ];
+    text = ''
+      set -euo pipefail
+
+      tmp="$(mktemp)"
+      trap 'rm -f "$tmp"' EXIT
+      cat > "$tmp"
+
+      # Always preserve the selection in tmux's own paste buffer.
+      tmux load-buffer "$tmp"
+
+      # Route OSC52 clipboard writes through the base session. This avoids
+      # popup/nested tmux clients swallowing the clipboard update while still
+      # preserving SSH forwarding through the base tmux client.
+      egress_session="''${TMUX_COPY_EGRESS_SESSION:-default}"
+      target="$(
+        tmux list-clients -F '#{client_name}	#{session_name}	#{client_termfeatures}' 2>/dev/null \
+          | while IFS=$'\t' read -r client session features; do
+              if [[ "$session" == "$egress_session" && ",$features," == *,clipboard,* ]]; then
+                printf '%s\n' "$client"
+                break
+              fi
+            done
+      )"
+
+      if [[ -n "$target" ]]; then
+        tmux load-buffer -w -t "$target" "$tmp"
+      else
+        tmux load-buffer -w "$tmp"
+      fi
+    '';
+  };
 in
 {
   nixpkgs.overlays = [
@@ -23,6 +60,7 @@ in
     llm
     nr
     tmux_toggle_popup
+    tmux_copy_system
   ];
 
   hm.primary.programs.tmux = {
@@ -41,7 +79,7 @@ in
         plugin = yank;
         extraConfig = ''
           set -g @yank_action 'copy-pipe'
-          set -g @override_copy_command 'tmux load-buffer -w -'
+          set -g @override_copy_command 'tmux-copy-system'
         '';
       }
     ];
@@ -59,8 +97,9 @@ in
           bind C-u copy-mode -u
 
           set -g set-clipboard on
-          set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title'
-          set -as terminal-features ',xterm-ghostty:clipboard'
+          set -g copy-command 'tmux-copy-system'
+          set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
+          set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
           set-environment -g ESCDELAY 1
           set-environment -g KEYTIMEOUT 1
           set -g extended-keys on
@@ -91,8 +130,8 @@ in
           bind-key -T copy-mode-vi 'M-j' if-shell -F '#{pane_at_bottom}' {} { select-pane -D }
           bind-key -T copy-mode-vi 'M-k' if-shell -F '#{pane_at_top}'    {} { select-pane -U }
           bind-key -T copy-mode-vi 'M-l' if-shell -F '#{pane_at_right}'  {} { select-pane -R }
-          bind-key -T copy-mode-vi Enter send-keys -X copy-pipe 'tmux load-buffer -w -'
-          bind-key -T copy-mode-vi C-j send-keys -X copy-pipe 'tmux load-buffer -w -'
+          bind-key -T copy-mode-vi Enter send-keys -X copy-pipe 'tmux-copy-system'
+          bind-key -T copy-mode-vi C-j send-keys -X copy-pipe 'tmux-copy-system'
 
 
         # Toggle scratchpad terminal
