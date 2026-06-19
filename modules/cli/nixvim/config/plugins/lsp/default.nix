@@ -15,7 +15,10 @@
         packageFallback = true;
       };
       gopls.enable = true;
-      htmx.enable = true;
+      htmx = {
+        enable = true;
+        filetypes = [ "html" ];
+      };
       jsonls.enable = true;
       pyright.enable = true;
       nixd = {

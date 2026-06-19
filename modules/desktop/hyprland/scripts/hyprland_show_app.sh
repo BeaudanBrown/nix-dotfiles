@@ -64,12 +64,47 @@ fi
 
 PID_PATH="/tmp/$WORKSPACE_NAME"
 
+find_app_pid() {
+	if [[ -n $CLASS_NAME ]]; then
+		echo "Searching by classname" >&2
+		hyprctl clients -j | jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1
+	elif [[ -n $TITLE ]]; then
+		echo "Searching by title" >&2
+		hyprctl clients -j | jq -r --arg title "$TITLE" '.[] | select(.initialTitle == $title) | .pid' | tail -n1
+	else
+		echo "Searching by appname" >&2
+		hyprctl clients -j | jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1
+	fi
+}
+
+wait_for_app_pid() {
+	for _ in {1..50}; do
+		APP_PID=$(find_app_pid)
+		if [[ -n $APP_PID ]]; then
+			echo "$APP_PID"
+			return 0
+		fi
+		sleep 0.1
+	done
+	return 1
+}
+
 launch_app() {
 	echo "Launching $APP_NAME"
 
 	if [ "$PULL" = false ] && [ "$CUR_WORKSPACE_NAME" != "$WORKSPACE_NAME" ]; then
 		echo "Launching on app workspace"
 		hyprctl dispatch exec "[workspace name:$WORKSPACE_NAME] $APP_NAME"
+
+		# Some apps (notably Chromium/Brave single-instance launches) can ignore
+		# Hyprland's exec workspace token and map on the currently focused
+		# workspace.  Correct that first-launch race here so the second keypress
+		# is not required to move the window.
+		if APP_PID=$(wait_for_app_pid); then
+			echo "$APP_PID" >"$PID_PATH"
+			hyprctl dispatch movetoworkspace name:"$WORKSPACE_NAME",pid:"$APP_PID"
+			hyprctl dispatch focuswindow pid:"$APP_PID"
+		fi
 	else
 		echo "Launching app where it is"
 		eval "$APP_NAME"
@@ -86,16 +121,7 @@ fi
 if [[ -z $WINDOW_ID ]]; then
 	APP_PID=""
 	echo "Can't find window with that pid"
-	if [[ -n $CLASS_NAME ]]; then
-		echo "Searching by classname"
-		APP_PID=$(hyprctl clients -j | jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
-	elif [[ -n $TITLE ]]; then
-		echo "Searching by title"
-		APP_PID=$(hyprctl clients -j | jq -r --arg title "$TITLE" '.[] | select(.initialTitle == $title) | .pid' | tail -n1)
-	else
-		echo "Searching by appname"
-		APP_PID=$(hyprctl clients -j | jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1)
-	fi
+	APP_PID=$(find_app_pid)
 	if [[ -z $APP_PID ]]; then
 		echo "Couldn't find window by classname or none provided, launching app"
 		launch_app
