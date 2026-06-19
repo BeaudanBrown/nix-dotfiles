@@ -12,7 +12,7 @@
       wireless.iwd = {
         enable = true;
         settings.General.EnableNetworkConfiguration = false;
-        settings.General.AddressRandomization = "once";
+        settings.General.AddressRandomization = "disabled";
       };
     };
   };

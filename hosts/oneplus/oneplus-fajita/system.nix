@@ -93,6 +93,107 @@ let
       fi
     '';
   };
+  oneplusPstoreStatus = pkgs.writeShellApplication {
+    name = "oneplus-pstore-status";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.file
+      pkgs.gnugrep
+      pkgs.gnused
+    ];
+    text = ''
+      set -eu
+
+      echo "-- active pstore backend --"
+      for f in /sys/module/pstore/parameters/backend /sys/module/pstore/parameters/compress /sys/module/pstore/parameters/kmsg_bytes; do
+        if [ -r "$f" ]; then
+          printf '%s=' "$f"
+          cat "$f"
+        fi
+      done
+
+      echo "-- current /sys/fs/pstore --"
+      if [ -d /sys/fs/pstore ]; then
+        ls -la /sys/fs/pstore
+      else
+        echo "/sys/fs/pstore is not mounted"
+      fi
+
+      echo "-- archived systemd-pstore files --"
+      if [ -d /var/lib/systemd/pstore ]; then
+        ls -lah /var/lib/systemd/pstore
+        find /var/lib/systemd/pstore -maxdepth 1 -type f -print0 \
+          | xargs -0 -r file
+      else
+        echo "/var/lib/systemd/pstore does not exist"
+      fi
+
+      echo "-- recent pstore/ramoops kernel messages --"
+      dmesg -T 2>/dev/null \
+        | grep -Ei 'pstore|ramoops|persistent|oops|panic|watchdog|hard lockup|soft lockup' \
+        | tail -80 || true
+    '';
+  };
+  oneplusHangSnapshot = pkgs.writeShellApplication {
+    name = "oneplus-hang-snapshot";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.gnugrep
+      pkgs.procps
+      pkgs.util-linux
+    ];
+    text = ''
+      set -eu
+
+      out_dir=/var/log/oneplus-hang-watch
+      log="$out_dir/snapshots.log"
+      tmp="$out_dir/snapshots.tmp"
+      install -d -m 0755 "$out_dir"
+
+      {
+        echo "===== oneplus hang snapshot $(date -Ins) ====="
+        printf 'boot_id='; cat /proc/sys/kernel/random/boot_id 2>/dev/null || true
+        printf 'uptime='; cat /proc/uptime 2>/dev/null || true
+        printf 'loadavg='; cat /proc/loadavg 2>/dev/null || true
+
+        echo "-- memory --"
+        grep -E '^(MemTotal|MemAvailable|MemFree|Buffers|Cached|SwapTotal|SwapFree|SReclaimable|SUnreclaim):' /proc/meminfo 2>/dev/null || true
+
+        echo "-- pressure --"
+        for f in /proc/pressure/cpu /proc/pressure/memory /proc/pressure/io; do
+          if [ -r "$f" ]; then
+            printf '%s: ' "$f"
+            tr '\n' ' ' < "$f"
+            echo
+          fi
+        done
+
+        echo "-- drm status --"
+        for f in /sys/class/drm/card*-*/status /sys/class/drm/card*-*/enabled /sys/class/drm/card*-*/modes /sys/class/drm/card*-*/dpms; do
+          if [ -e "$f" ]; then
+            printf '%s=' "$f"
+            tr '\n' ' ' < "$f" 2>/dev/null || true
+            echo
+          fi
+        done
+
+        echo "-- dmesg display/hang tail --"
+        dmesg -T 2>/dev/null \
+          | grep -Ei 'drm|dpu|msm|adreno|gpu|smmu|vblank|encoder|watchdog|rcu|blocked|oom|panic|memory pressure|hung' \
+          | tail -80 || true
+
+        echo "-- largest processes --"
+        ps -eo pid,ppid,stat,comm,%cpu,%mem,rss,args --sort=-rss 2>/dev/null | head -30 || true
+        echo
+      } >> "$log"
+
+      size=$(stat -c %s "$log" 2>/dev/null || echo 0)
+      if [ "$size" -gt 4194304 ]; then
+        tail -n 3000 "$log" > "$tmp"
+        mv "$tmp" "$log"
+      fi
+    '';
+  };
   oneplusUcm = pkgs.runCommand "oneplus-alsa-ucm-conf" { } ''
     mkdir -p $out/share/alsa
     cp -r ${pkgs.alsa-ucm-conf}/share/alsa/ucm2 $out/share/alsa/ucm2
@@ -214,12 +315,26 @@ in
       "root=fstab"
       "loglevel=8"
       "lsm=landlock,yama,bpf"
+
+      # Prefer the reserved-memory ramoops backend for post-crash evidence. The
+      # device tree provides 4 MiB at ramoops@ac300000; keep EFI pstore from
+      # racing the useful backend if module load ordering changes.
+      "pstore.backend=ramoops"
     ];
 
     # Make `/proc/sysrq-trigger` fully available for the local reboot/poweroff
     # wrappers below. SysRq s/u/b avoids the broken orderly qcom_q6v5_mss stop
     # path and remounts filesystems read-only before emergency reboot.
-    kernel.sysctl."kernel.sysrq" = 1;
+    kernel.sysctl = {
+      "kernel.sysrq" = 1;
+
+      # Keep random hard-freeze evidence in the journal instead of waiting for a
+      # manual repro. These log warnings but do not panic/reboot the phone.
+      "kernel.hung_task_timeout_secs" = 60;
+      "kernel.hung_task_check_interval_secs" = 30;
+      "kernel.hung_task_panic" = 0;
+      "kernel.watchdog" = 1;
+    };
   };
   custom.atticCache.upload.enable = true;
 
@@ -245,6 +360,20 @@ in
     };
 
     upower.enable = true;
+
+    # Let userspace handle the phone's power key instead of treating a short
+    # press as a shutdown request. Long press remains available as an emergency
+    # poweroff path when the kernel/input stack exposes it separately.
+    logind.settings.Login = {
+      HandlePowerKey = "ignore";
+      HandlePowerKeyLongPress = "poweroff";
+    };
+
+    journald.extraConfig = ''
+      Storage=persistent
+      SystemMaxUse=256M
+      RuntimeMaxUse=64M
+    '';
   };
 
   # The PMIC RTC currently persists/returns a 1970-era clock. Keep a monotonic
@@ -287,18 +416,38 @@ in
         };
       };
 
+      oneplus-hang-snapshot = {
+        description = "Record bounded OnePlus hang-debug snapshots";
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${oneplusHangSnapshot}/bin/oneplus-hang-snapshot";
+        };
+      };
+
       tailscaled = lib.mkIf config.services.tailscale.enable {
         wants = [ "time-sync.target" ];
         after = [ "time-sync.target" ];
       };
     };
 
-    timers.oneplus-time-save = {
-      wantedBy = [ "timers.target" ];
-      timerConfig = {
-        OnBootSec = "5min";
-        OnUnitActiveSec = "15min";
-        Persistent = true;
+    timers = {
+      oneplus-time-save = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "5min";
+          OnUnitActiveSec = "15min";
+          Persistent = true;
+        };
+      };
+
+      oneplus-hang-snapshot = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnBootSec = "2min";
+          OnUnitActiveSec = "30s";
+          AccuracySec = "1s";
+          Persistent = false;
+        };
       };
     };
   };
@@ -312,6 +461,7 @@ in
   environment.systemPackages = lib.mkBefore [
     (lib.hiPrio oneplusForceReboot)
     (lib.hiPrio oneplusForceShutdown)
+    oneplusPstoreStatus
 
     # Keep camera/media graph inspection tools available on-device. The phone
     # exposes CAMSS sensors and actuator subdevices directly through V4L2/media;
@@ -322,6 +472,16 @@ in
   ];
 
   environment.sessionVariables.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
+
+  # Be explicit about archiving pstore records to disk and clearing the tiny
+  # reserved RAM area after systemd has copied it. This prevents stale/corrupt
+  # ramoops slots from being re-archived forever and keeps the next crash record
+  # room clean.
+  environment.etc."systemd/pstore.conf".text = ''
+    [PStore]
+    Storage=external
+    Unlink=yes
+  '';
 
   systemd.user.services.pipewire.environment.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";
   systemd.user.services.wireplumber = {

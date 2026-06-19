@@ -132,12 +132,14 @@ Use an observe → act → observe loop for display/touch/app-navigation tickets
 
 ### `nix run .#oneplus-loop-seed-reboot`
 
-Seeds a OnePlus `/aloop` reboot handoff by writing `.pi/boot-task.md` and optional `.pi/boot-next-loop.md`. It records the active ticket, current commit, post-boot checks, and an advisory `/aloop 1 nd-gv62` continuation. It deliberately does **not** commit, run `nr`, or reboot.
+Seeds a OnePlus reboot handoff by writing `.pi/boot-task.md`. It records the active ticket, current commit, and post-boot checks. It deliberately does **not** commit, run `nr`, reboot, or seed a follow-up `/aloop` unless `--next-loop` is passed.
 
 Example:
 
 ```sh
 nix run .#oneplus-loop-seed-reboot -- nd-xxxx --checks "Confirm display returns, inspect failed units, and record PASS/FAIL in tk."
+# Opt in to an advisory follow-up loop only when wanted:
+nix run .#oneplus-loop-seed-reboot -- nd-xxxx --checks "..." --next-loop
 ```
 
 ### `scripts/pi-boot-seed.sh`
@@ -152,7 +154,19 @@ scripts/pi-boot-seed.sh "Continue ticket nd-xxxx after reboot. Do not reboot aga
 
 ### `scripts/pi-boot-resume.sh`
 
-Started by the OnePlus graphical session to reopen pi/tmux after login and send `.pi/boot-system.md` plus `.pi/boot-task.md` and optional `.pi/boot-next-loop.md` into the newest Pi session.
+Manual boot-resume helper that reopens pi/tmux after login and sends `.pi/boot-system.md` plus `.pi/boot-task.md` and optional `.pi/boot-next-loop.md` into the newest Pi session. The OnePlus graphical session no longer autostarts it; run the script explicitly when a reboot validation needs the prompt.
+
+### Random hang breadcrumbs
+
+The OnePlus host runs `oneplus-hang-snapshot.timer` every 30 seconds. It appends bounded snapshots to `/var/log/oneplus-hang-watch/snapshots.log`, including boot id, uptime, memory/PSI pressure, DRM connector state, relevant DPU/GPU/hang dmesg lines, and largest processes. After an unexplained freeze/reboot, inspect it with:
+
+```sh
+sudo tail -n 300 /var/log/oneplus-hang-watch/snapshots.log
+journalctl -b -1 -k --no-pager | rg -i 'drm|dpu|msm|adreno|gpu|smmu|vblank|encoder|watchdog|rcu|blocked|oom|panic|memory pressure|hung'
+oneplus-pstore-status
+```
+
+`oneplus-pstore-status` reports the active pstore backend, current `/sys/fs/pstore` contents, archived `/var/lib/systemd/pstore` files, and recent ramoops/pstore kernel messages. The host pins `pstore.backend=ramoops` and archives pstore records with `Storage=external`/`Unlink=yes` so stale reserved-RAM entries are cleared after systemd copies them.
 
 ### `nr`
 
