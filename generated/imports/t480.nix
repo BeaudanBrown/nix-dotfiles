@@ -5,7 +5,6 @@
   ../../modules/cli/starship/t480.nix
   ../../modules/desktop/hyprland/keybinds/t480.nix
   ../../modules/desktop/hyprland/t480.nix
-  ../../modules/desktop/niri/t480.nix
   ../../modules/services/deskflow/t480.nix
   ../../modules/services/lan-mouse/t480.nix
   ../../modules/services/windows-vm/t480.nix
