@@ -50,6 +50,18 @@ let
     ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace "$target" >/dev/null
     exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch exec "$*"
   '';
+  oneplusLauncher = pkgs.writeShellScriptBin "oneplus-launcher" ''
+    set -eu
+
+    exec ${pkgs.fuzzel}/bin/fuzzel --show drun "$@"
+  '';
+  oneplusRestartSqueekboard = pkgs.writeShellScriptBin "oneplus-restart-squeekboard" ''
+    set -eu
+
+    ${pkgs.procps}/bin/pkill -x squeekboard || true
+    ${pkgs.coreutils}/bin/sleep 0.2
+    exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch exec squeekboard
+  '';
   oneplusBrave = pkgs.writeShellScriptBin "oneplus-brave" ''
     set -eu
 
@@ -133,31 +145,6 @@ let
       --object-path /sm/puri/OSK0 \
       --method sm.puri.OSK0.SetVisible "$visible"
   '';
-  oneplusOverviewKeyboardGuard = pkgs.writeShellScriptBin "oneplus-overview-keyboard-guard" ''
-    set -eu
-
-    lock="''${XDG_RUNTIME_DIR:-/tmp}/oneplus-overview-keyboard-guard.lock"
-    exec 9>"$lock"
-    ${pkgs.util-linux}/bin/flock -n 9 || exit 0
-
-    overview_active() {
-      ${oneplusHyprctl}/bin/oneplus-hyprctl -j hyprspace 2>/dev/null \
-        | ${pkgs.jq}/bin/jq -er '.active == true' >/dev/null 2>&1
-    }
-
-    i=0
-    while ! overview_active && [ "$i" -lt 50 ]; do
-      i=$((i + 1))
-      ${pkgs.coreutils}/bin/sleep 0.1
-    done
-
-    while overview_active; do
-      ${pkgs.coreutils}/bin/sleep 0.2
-    done
-
-    ${pkgs.coreutils}/bin/sleep 0.2
-    ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch exec squeekboard >/dev/null 2>&1 || true
-  '';
   oneplusOverview = pkgs.writeShellScriptBin "oneplus-overview" ''
     set -eu
 
@@ -170,10 +157,8 @@ let
         ;;
     esac
 
-    ${pkgs.procps}/bin/pkill -x squeekboard || true
     ${oneplusKeyboard}/bin/oneplus-keyboard hide >/dev/null 2>&1 || true
-    ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch "overview:$action"
-    ${oneplusOverviewKeyboardGuard}/bin/oneplus-overview-keyboard-guard >/tmp/oneplus-overview-keyboard-guard.log 2>&1 &
+    exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch "overview:$action"
   '';
   oneplusWorkspaceNav = pkgs.writeShellScriptBin "oneplus-workspace-nav" ''
     set -eu
@@ -369,7 +354,7 @@ let
       -t 60 \
       -r 35 \
       -s 2 \
-      -g '1,DU,B,*,R,${oneplusSpawn}/bin/oneplus-spawn ${pkgs.nwg-drawer}/bin/nwg-drawer' \
+      -g '1,DU,B,*,R,${oneplusSpawn}/bin/oneplus-spawn ${oneplusLauncher}/bin/oneplus-launcher' \
       -g '1,DU,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll down' \
       -g '1,UD,C,*,R,${oneplusTerminalScroll}/bin/oneplus-terminal-scroll up' \
       -g '1,LR,L,*,R,${oneplusWorkspaceNav}/bin/oneplus-workspace-nav prev' \
@@ -385,6 +370,7 @@ in
   users.users.${primaryUser}.extraGroups = [ "feedbackd" ];
 
   programs = {
+    dconf.enable = true;
     kdeconnect.enable = true;
 
     hyprland = {
@@ -406,16 +392,17 @@ in
     brave
     brightnessctl
     fd
+    fuzzel
     iwgtk
     linuxConsoleTools
     lisgd
     maliit-keyboard
-    nwg-drawer
     oneplusBrave
     oneplusClipboard
     oneplusKeyboard
+    oneplusLauncher
     oneplusOverview
-    oneplusOverviewKeyboardGuard
+    oneplusRestartSqueekboard
     oneplusScreenRecord
     oneplusSpawn
     oneplusSttDictate
@@ -438,7 +425,9 @@ in
     indicator = true;
   };
 
-  hm.primary.programs.ghostty.settings.font-size = 10;
+  hm.primary.dconf.settings."org/gnome/desktop/a11y/applications" = {
+    screen-keyboard-enabled = false;
+  };
 
   hm.primary.xdg.desktopEntries = {
     oneplus-brave = {
@@ -532,7 +521,10 @@ in
         layout = "master";
       };
 
-      master.mfact = 1.0;
+      master = {
+        mfact = 0.5;
+        orientation = "top";
+      };
 
       binds = {
         allow_workspace_cycles = true;
@@ -544,7 +536,18 @@ in
         shadow.enabled = false;
       };
 
-      animations.enabled = false;
+      animations = {
+        enabled = true;
+        bezier = [
+          "workspaceSlide,0.22,1,0.36,1"
+        ];
+        animation = [
+          "windows,0,0,default"
+          "fade,0,0,default"
+          "border,0,0,default"
+          "workspaces,1,4,workspaceSlide,slide"
+        ];
+      };
 
       misc = {
         disable_hyprland_logo = true;
@@ -553,7 +556,9 @@ in
         mouse_move_focuses_monitor = false;
       };
 
-      "plugin:overview:panelHeight" = 600;
+      "plugin:overview:panelHeight" = 260;
+      "plugin:overview:gapsIn" = 20;
+      "plugin:overview:gapsOut" = 200;
       "plugin:overview:onBottom" = true;
       "plugin:overview:affectStrut" = false;
       "plugin:overview:previewMode" = true;
@@ -566,13 +571,14 @@ in
       "plugin:overview:previewDragCreateWorkspaceGutterSize" = 72;
       "plugin:overview:previewDragCloseZone" = true;
       "plugin:overview:previewDragCloseZoneHeight" = 160;
-      "plugin:overview:exitOnSwitch" = true;
+      "plugin:overview:disableBlur" = true;
+      "plugin:overview:exitOnSwitch" = false;
       "plugin:overview:exitOnClick" = true;
 
       exec-once = [
         "ashell"
         "${oneplusHyprctl}/bin/oneplus-hyprctl dispatch workspace 10"
-        "ghostty --gtk-single-instance=false --title=pi-boot-resume -e ${config.hostSpec.dotfiles}/scripts/pi-boot-resume.sh"
+        "ghostty --gtk-single-instance=false"
         "squeekboard"
       ];
     };
@@ -580,6 +586,47 @@ in
 
   hm.primary.home.file.".local/share/squeekboard/keyboards/terminal/us.yaml".source =
     ./squeekboard-keyboards/terminal/us.yaml;
+
+  hm.primary.systemd.user.services.oneplus-restart-squeekboard = {
+    Unit.Description = "Restart Squeekboard after OnePlus keyboard layout changes";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${oneplusRestartSqueekboard}/bin/oneplus-restart-squeekboard";
+    };
+  };
+
+  hm.primary.systemd.user.paths.oneplus-restart-squeekboard = {
+    Unit.Description = "Watch OnePlus Squeekboard keyboard layout for changes";
+    Path.PathChanged = "%h/.local/share/squeekboard/keyboards/terminal/us.yaml";
+    Install.WantedBy = [ "default.target" ];
+  };
+
+  hm.primary.home.file.".config/fuzzel/fuzzel.ini".text = ''
+    [main]
+    font=monospace:size=18
+    dpi-aware=no
+    layer=top
+    width=32
+    lines=10
+    tabs=4
+    horizontal-pad=24
+    vertical-pad=18
+    inner-pad=10
+    prompt=›
+    terminal=ghostty
+
+    [colors]
+    background=1f1f28f2
+    text=dcd7baff
+    match=ffa066ff
+    selection=2d4f67ff
+    selection-text=dcd7baff
+    border=7e9cd8ff
+
+    [border]
+    width=2
+    radius=12
+  '';
 
   hm.primary.home.file.".config/ashell/config.toml".text = ''
     log_level = "warn"

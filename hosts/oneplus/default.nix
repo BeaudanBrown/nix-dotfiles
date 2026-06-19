@@ -1,6 +1,7 @@
 {
   inputs,
   host,
+  lib,
   nixpkgsUnstable,
   ...
 }:
@@ -33,8 +34,19 @@
         system = prev.stdenv.hostPlatform.system;
         config.allowUnfree = true;
       };
+
+      hyprlandPlugins = prev.hyprlandPlugins // {
+        hyprspace = prev.hyprlandPlugins.hyprspace.overrideAttrs (_old: {
+          version = "0-unstable-2026-05-28-local-preview-drag";
+          src = inputs.hyprspace-local;
+        });
+      };
     })
   ];
+
+  nix.settings.cores = 2;
+
+  stylix.fonts.sizes.terminal = lib.mkForce 8;
 
   system.stateVersion = "25.11";
 }
