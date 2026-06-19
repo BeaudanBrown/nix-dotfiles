@@ -3,16 +3,16 @@ set -euo pipefail
 
 usage() {
 	cat <<'EOF'
-Usage: oneplus-loop-seed-reboot <ticket-id> [--epic <epic-id>] [--checks <text>] [--no-next-loop]
+Usage: oneplus-loop-seed-reboot <ticket-id> [--epic <epic-id>] [--checks <text>] [--next-loop]
 
 Seed .pi/boot-task.md for a one-shot OnePlus reboot validation handoff.
-This helper writes prompt files only; it never commits, rebuilds, or reboots.
+This helper writes prompt files only; it never commits, rebuilds, reboots, or seeds a follow-up loop unless --next-loop is passed.
 EOF
 }
 
 epic_id="nd-gv62"
 checks=""
-write_next_loop=1
+write_next_loop=0
 
 if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
 	usage
@@ -44,6 +44,10 @@ while [[ $# -gt 0 ]]; do
 		}
 		checks="$2"
 		shift 2
+		;;
+	--next-loop)
+		write_next_loop=1
+		shift
 		;;
 	--no-next-loop)
 		write_next_loop=0
@@ -94,7 +98,7 @@ Required first steps:
    ${checks}
 4. Add a tk note to ${ticket_id} with PASS/FAIL evidence and remaining risk.
 5. If the change failed, revert/amend/create follow-up work as appropriate before continuing.
-6. If the result is validated and more work remains, use the optional next-loop instruction below. Do not start another reboot unless a later ticket explicitly seeds a new one-shot handoff.
+6. If the result is validated and more work remains, start any follow-up loop manually and intentionally. Do not start another reboot unless a later ticket explicitly seeds a new one-shot handoff.
 EOF
 
 if [[ $write_next_loop -eq 1 ]]; then

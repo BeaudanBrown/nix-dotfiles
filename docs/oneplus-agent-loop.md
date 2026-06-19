@@ -66,18 +66,20 @@ If evidence points below userspace, record the blocker and exact evidence in tk/
 A single ticket-scoped OnePlus reboot handoff is allowed when boot validation is genuinely needed. Before rebooting:
 
 1. commit the coherent state;
-2. seed `.pi/boot-task.md` and optional `.pi/boot-next-loop.md` with:
+2. seed `.pi/boot-task.md` with:
 
    ```sh
    nix run .#oneplus-loop-seed-reboot -- <ticket-id> --checks "<post-boot checks>"
    ```
+
+   Add `--next-loop` only when an advisory `.pi/boot-next-loop.md` continuation is explicitly wanted.
 
 3. run `nr` only if preparing a new boot generation;
 4. confirm `/run/current-system/sw/bin/reboot` is the OnePlus wrapper and `kernel.sysrq = 1` when relying on the approved wrapper;
 5. run at most one `sudo -n /run/current-system/sw/bin/reboot`;
 6. finish the `/aloop` worker with `ALOOP_RESULT: needs_reboot` so the live supervisor stops cleanly.
 
-The resumed agent must inspect the result, record evidence, and decide close/revert/split/continue. It may use `.pi/boot-next-loop.md` to run `/aloop 1 nd-gv62` only after validation is recorded and the worktree is clean. It must not chain another reboot automatically.
+The resumed agent must inspect the result, record evidence, and decide close/revert/split/continue. It may use `.pi/boot-next-loop.md`, when explicitly seeded, to run `/aloop 1 nd-gv62` only after validation is recorded and the worktree is clean. It must not chain another reboot automatically.
 
 If no reboot is needed, finish by leaving tk notes clear enough for a fresh agent to start the next iteration from the bootstrap.
 

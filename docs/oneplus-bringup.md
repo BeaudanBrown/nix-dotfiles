@@ -47,7 +47,7 @@ The previous backlog and its child tickets are superseded and should not guide n
 
 ### Boot / resume
 
-The graphical OnePlus session starts Ghostty and `scripts/pi-boot-resume.sh`, which attaches to tmux and sends `.pi/boot-system.md` plus `.pi/boot-task.md` and optional `.pi/boot-next-loop.md` into the newest Pi session. These `.pi` task files are untracked and should be rewritten for each reboot validation.
+Boot-resume is manual-only: run `scripts/pi-boot-resume.sh` when a reboot validation needs a prompt. The helper attaches to tmux and sends `.pi/boot-system.md` plus `.pi/boot-task.md` and optional `.pi/boot-next-loop.md` into the newest Pi session. These `.pi` task files are untracked and should be rewritten for each reboot validation.
 
 ### Networking
 

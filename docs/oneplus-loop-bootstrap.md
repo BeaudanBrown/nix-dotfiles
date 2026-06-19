@@ -81,16 +81,18 @@ For Nix config changes, run focused evaluation when practical. Do not run broad 
 If a boot generation or reboot is needed:
 
 1. Commit the coherent state first, keeping the commit focused and reviewable.
-2. Seed `.pi/boot-task.md` and the optional next-loop advisory with:
+2. Seed `.pi/boot-task.md` with:
 
    ```sh
    nix run .#oneplus-loop-seed-reboot -- <ticket-id> --checks "<post-boot checks>"
    ```
 
+   Add `--next-loop` only when an advisory follow-up `/aloop 1 nd-gv62` prompt is explicitly wanted.
+
 3. Run `nr` only when preparing the next boot generation; do not run `nix eval` immediately before `nr`.
 4. On OnePlus, a single `sudo -n /run/current-system/sw/bin/reboot` handoff is allowed only for a ticket that explicitly needs boot validation.
 5. If running inside `/aloop`, finish with `ALOOP_RESULT: needs_reboot` so the live supervisor stops and the selected ticket may remain open for post-boot validation.
-6. The resumed agent must assess the result and must not automatically start another reboot. It may run the optional `/aloop 1 nd-gv62` continuation only after recording evidence and confirming the worktree is clean.
+6. The resumed agent must assess the result and must not automatically start another reboot. It may start a follow-up `/aloop 1 nd-gv62` only after recording evidence and confirming the worktree is clean.
 
 If no reboot is chosen, finish by leaving the repo/tickets in a state where a new fresh agent can start from this bootstrap and continue.
 
