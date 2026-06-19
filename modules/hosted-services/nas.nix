@@ -15,19 +15,53 @@ let
   tailIP = config.hostSpec.tailIP;
   tailServices = services |> filter (s: s.tailnet);
 
-  corednsConfig =
-    tailServices
-    |> map (s: ''
-      ${s.domain}:53 {
-        bind ${tailIP}
-        hosts {
-          ${if s.dnsTarget != null then s.dnsTarget else tailIP} ${s.domain}
-          ttl 60
-        }
-        log
-        errors
+  blockedZones = [
+    "facebook.com"
+    "facebook.net"
+    "fbcdn.net"
+    "fbsbx.com"
+    "messenger.com"
+    "youtube.com"
+    "youtu.be"
+    "youtube-nocookie.com"
+    "ytimg.com"
+    "googlevideo.com"
+  ];
+
+  blockedZoneArgs = blockedZones |> concatStringsSep " ";
+
+  blocklistConfig = ''
+    .:53 {
+      bind ${tailIP}
+
+      template IN ANY ${blockedZoneArgs} {
+        rcode NXDOMAIN
+        authority "{{ .Zone }} 60 IN SOA ns.{{ .Zone }} hostmaster.{{ .Zone }} (1 60 60 60 60)"
       }
-    '')
+
+      forward . 1.1.1.1 9.9.9.9
+      cache 300
+      log
+      errors
+    }
+  '';
+
+  corednsConfig =
+    [ blocklistConfig ]
+    ++ (
+      tailServices
+      |> map (s: ''
+        ${s.domain}:53 {
+          bind ${tailIP}
+          hosts {
+            ${if s.dnsTarget != null then s.dnsTarget else tailIP} ${s.domain}
+            ttl 60
+          }
+          log
+          errors
+        }
+      '')
+    )
     |> concatStringsSep "\n\n";
 
   headscaleSplit = tailServices |> map (s: nameValuePair s.domain [ tailIP ]) |> listToAttrs;
