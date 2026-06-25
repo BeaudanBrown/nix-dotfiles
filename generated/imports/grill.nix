@@ -10,6 +10,7 @@
   ../../modules/services/deskflow/grill.nix
   ../../modules/services/lan-mouse/grill.nix
   ../../modules/services/ollama/grill.nix
+  ../../modules/services/oneplus-vnc/grill.nix
   ../../modules/services/sunshine/grill.nix
   ../../modules/services/thought-capture/grill.nix
   ../../modules/system/boot/grill.nix
