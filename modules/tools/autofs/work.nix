@@ -19,7 +19,7 @@
   systemd.tmpfiles.rules = [
     "d /mnt 0755 root root - -"
     "d /mnt/monash-shared 0755 root root - -"
-    "L+ /s - - - - /mnt/monash-shared"
+    "L+ ${config.hostSpec.home}/s - - - - /mnt/monash-shared"
   ];
 
   services.autofs = {

@@ -258,7 +258,7 @@ in
       key = "g";
       app = "steam";
       workspace = "Steam";
-      class = "Steam";
+      class = "steam";
     }
     {
       key = "d";

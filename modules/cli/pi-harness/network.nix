@@ -92,6 +92,7 @@ let
       defaultProvider = "openai-codex";
       defaultModel = "gpt-5.5";
       defaultThinkingLevel = "medium";
+      showHardwareCursor = true;
       # Extensions, skills, prompts, and themes are injected by the Nix-built
       # pi-harness wrapper so Pi does not auto-load duplicate mutable paths.
       enableSkillCommands = true;
