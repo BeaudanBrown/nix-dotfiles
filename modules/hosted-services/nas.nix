@@ -64,7 +64,9 @@ let
     )
     |> concatStringsSep "\n\n";
 
-  headscaleSplit = tailServices |> map (s: nameValuePair s.domain [ tailIP ]) |> listToAttrs;
+  headscaleServiceSplit = tailServices |> map (s: nameValuePair s.domain [ tailIP ]) |> listToAttrs;
+  headscaleBlocklistSplit = blockedZones |> map (zone: nameValuePair zone [ tailIP ]) |> listToAttrs;
+  headscaleSplit = headscaleServiceSplit // headscaleBlocklistSplit;
 in
 {
   config = {

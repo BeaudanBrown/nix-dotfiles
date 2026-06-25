@@ -26,8 +26,7 @@ in
       dns = {
         base_domain = "lan";
         magic_dns = true;
-        override_local_dns = true;
-        nameservers.global = [ config.hostSpec.tailIP ];
+        override_local_dns = false;
       };
       tls_cert_path = null;
       tls_key_path = null;

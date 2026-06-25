@@ -260,7 +260,10 @@ in
       in
       {
         image = "docker.litellm.ai/berriai/litellm-database:main-stable";
-        pull = "always";
+        # Prefer serving from the cached image when registries or DNS are
+        # temporarily unavailable; updates happen on rebuild/deploy instead of
+        # blocking service startup.
+        pull = "missing";
         autoStart = true;
         # Use host networking so the container shares the host's network stack,
         # giving it access to tailscale0 and tailnet DNS (needed to reach m3:8080).
