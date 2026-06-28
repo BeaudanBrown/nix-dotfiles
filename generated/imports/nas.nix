@@ -31,6 +31,7 @@
   ../../modules/services/jitsi-meet/nas.nix
   ../../modules/services/lachy-vm/nas.nix
   ../../modules/services/litellm/nas.nix
+  ../../modules/services/matrix/nas.nix
   ../../modules/services/mealie/nas.nix
   ../../modules/services/meshcentral/nas.nix
   ../../modules/services/moonlight/nas.nix
