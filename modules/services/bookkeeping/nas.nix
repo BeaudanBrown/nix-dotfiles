@@ -1,0 +1,366 @@
+{
+  config,
+  pkgs,
+  ...
+}:
+let
+  domain = "books.bepis.lol";
+  portKey = "bookkeeping-fava";
+  dataDir = "/var/lib/bookkeeping/bepis";
+  username = config.hostSpec.username;
+
+  pythonEnv = pkgs.python3.withPackages (ps: [
+    ps.requests
+    ps.stripe
+  ]);
+
+  stripeImporter = pkgs.writeText "stripe-to-beancount.py" ''
+    #!/usr/bin/env python3
+    import argparse
+    import json
+    import os
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    import stripe
+
+
+    def aud(cents):
+        return f"{cents / 100:.2f} AUD"
+
+
+    def date_from_ts(ts):
+        return datetime.fromtimestamp(ts, timezone.utc).date().isoformat()
+
+
+    def load_key(path):
+        return Path(path).read_text().strip()
+
+
+    def load_json(path, default):
+        if path.exists():
+            return json.loads(path.read_text())
+        return default
+
+
+    def write_json(path, value):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+
+
+    def fetch_balance_transactions(api_key, since):
+        stripe.api_key = api_key
+        params = {"limit": 100, "expand": ["data.source"]}
+        if since is not None:
+            params["created"] = {"gte": since}
+
+        rows = []
+        for txn in stripe.BalanceTransaction.list(**params).auto_paging_iter():
+            rows.append(txn.to_dict_recursive())
+        return rows
+
+
+    def txn_description(txn):
+        source = txn.get("source") or {}
+        source_obj = source if isinstance(source, dict) else {}
+        billing = source_obj.get("billing_details") or {}
+        name = billing.get("name") or source_obj.get("description") or txn.get("description") or txn.get("type")
+        return str(name).replace('"', '\\"')
+
+
+    def render_balance_txn(txn):
+        txn_id = txn["id"]
+        typ = txn.get("type", "unknown")
+        date = date_from_ts(txn["created"])
+        amount = int(txn.get("amount") or 0)
+        fee = int(txn.get("fee") or 0)
+        net = int(txn.get("net") or 0)
+        desc = txn_description(txn)
+        source = txn.get("source")
+        source_id = source.get("id") if isinstance(source, dict) else source
+
+        lines = [
+            f'{date} * "Stripe" "{desc}"',
+            f'  stripe_balance_transaction: "{txn_id}"',
+            f'  stripe_type: "{typ}"',
+        ]
+        if source_id:
+            lines.append(f'  stripe_source: "{source_id}"')
+
+        if typ == "payout":
+            payout_amount = -amount
+            lines.extend([
+                f"  Assets:Bank:Business              {aud(payout_amount)}",
+                f"  Assets:Stripe                    -{aud(payout_amount)}",
+            ])
+        elif amount > 0:
+            lines.append(f"  Assets:Stripe                    {aud(net)}")
+            if fee:
+                lines.append(f"  Expenses:PaymentProcessing:Stripe {aud(fee)}")
+            lines.append(f"  Income:Subscriptions:Bepis      -{aud(amount)}")
+        elif amount < 0:
+            # Refunds/adjustments. Review these after import; they are kept explicit.
+            lines.append(f"  Assets:Stripe                   -{aud(abs(net))}")
+            if fee:
+                lines.append(f"  Expenses:PaymentProcessing:Stripe -{aud(abs(fee))}")
+            lines.append(f"  Income:Subscriptions:Bepis       {aud(abs(amount))}")
+        else:
+            lines.extend([
+                "  Assets:Stripe                     0.00 AUD",
+                "  Equity:OpeningBalances",
+            ])
+
+        return "\n".join(lines) + "\n"
+
+
+    def main():
+        parser = argparse.ArgumentParser(description="Fetch Stripe balance transactions and render Beancount.")
+        parser.add_argument("--books-dir", default=os.environ.get("BOOKS_DIR", "."))
+        parser.add_argument("--api-key-file", default=os.environ.get("STRIPE_API_KEY_FILE"))
+        parser.add_argument("--since", type=int, default=None, help="Unix timestamp lower bound for first sync")
+        args = parser.parse_args()
+
+        if not args.api_key_file:
+            raise SystemExit("Set STRIPE_API_KEY_FILE or pass --api-key-file")
+
+        books_dir = Path(args.books_dir)
+        state_path = books_dir / "state" / "stripe-sync.json"
+        raw_path = books_dir / "raw" / "stripe" / "balance-transactions.json"
+        out_path = books_dir / "generated" / "stripe.bean"
+
+        state = load_json(state_path, {})
+        existing = {row["id"]: row for row in load_json(raw_path, [])}
+        since = args.since if args.since is not None else state.get("last_created")
+
+        fetched = fetch_balance_transactions(load_key(args.api_key_file), since)
+        for row in fetched:
+            existing[row["id"]] = row
+
+        rows = sorted(existing.values(), key=lambda row: (row.get("created", 0), row.get("id", "")))
+        write_json(raw_path, rows)
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with out_path.open("w") as f:
+            f.write("; Generated by books-fetch-stripe. Do not edit by hand.\n")
+            f.write("; Review unusual/refund/adjustment entries before monthly close.\n\n")
+            for row in rows:
+                f.write(render_balance_txn(row))
+                f.write("\n")
+
+        if rows:
+            state["last_created"] = max(int(row.get("created") or 0) for row in rows)
+        state["last_sync"] = datetime.now(timezone.utc).isoformat()
+        write_json(state_path, state)
+
+
+    if __name__ == "__main__":
+        main()
+  '';
+
+  booksInit = pkgs.writeShellApplication {
+    name = "books-init";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+            set -euo pipefail
+            books_dir="''${1:-${dataDir}}"
+
+            mkdir -p "$books_dir" "$books_dir/generated" "$books_dir/manual" "$books_dir/raw/stripe" "$books_dir/raw/bank" "$books_dir/receipts" "$books_dir/rules" "$books_dir/state" "$books_dir/secrets"
+
+            if [ ! -e "$books_dir/main.bean" ]; then
+              cat > "$books_dir/main.bean" <<'EOF'
+      option "title" "Bepis Company Books"
+      option "operating_currency" "AUD"
+
+      include "accounts.bean"
+      include "manual.bean"
+      include "generated/stripe.bean"
+      include "generated/bank.bean"
+      EOF
+            fi
+
+            if [ ! -e "$books_dir/accounts.bean" ]; then
+              cat > "$books_dir/accounts.bean" <<'EOF'
+      ; Bepis company chart of accounts. Adjust with your accountant before relying on BAS/tax reports.
+
+      1970-01-01 open Assets:Bank:Business AUD
+      1970-01-01 open Assets:Stripe AUD
+      1970-01-01 open Assets:AccountsReceivable AUD
+
+      1970-01-01 open Liabilities:DirectorLoan:Beau AUD
+      1970-01-01 open Liabilities:GST:Collected AUD
+      1970-01-01 open Liabilities:GST:Paid AUD
+
+      1970-01-01 open Equity:OpeningBalances AUD
+      1970-01-01 open Equity:ShareCapital AUD
+      1970-01-01 open Equity:RetainedEarnings AUD
+
+      1970-01-01 open Income:Subscriptions:Bepis AUD
+      1970-01-01 open Income:SetupFees AUD
+      1970-01-01 open Income:Uncategorized AUD
+
+      1970-01-01 open Expenses:PaymentProcessing:Stripe AUD
+      1970-01-01 open Expenses:Hosting AUD
+      1970-01-01 open Expenses:Domains AUD
+      1970-01-01 open Expenses:Software AUD
+      1970-01-01 open Expenses:Accounting AUD
+      1970-01-01 open Expenses:Legal AUD
+      1970-01-01 open Expenses:Contractors AUD
+      1970-01-01 open Expenses:Office AUD
+      1970-01-01 open Expenses:Uncategorized AUD
+      EOF
+            fi
+
+            [ -e "$books_dir/manual.bean" ] || cat > "$books_dir/manual.bean" <<'EOF'
+      ; Manual entries live here: initial director loans, share capital, corrections, year-end journals.
+      ;
+      ; Example initial director loan:
+      ; 2026-06-12 * "Beau" "Initial director loan to company"
+      ;   Assets:Bank:Business              2000.00 AUD
+      ;   Liabilities:DirectorLoan:Beau    -2000.00 AUD
+      EOF
+
+            [ -e "$books_dir/generated/stripe.bean" ] || printf '; Generated Stripe entries will appear here.\n' > "$books_dir/generated/stripe.bean"
+            [ -e "$books_dir/generated/bank.bean" ] || printf '; Generated bank entries will appear here.\n' > "$books_dir/generated/bank.bean"
+    '';
+  };
+
+  booksCheck = pkgs.writeShellApplication {
+    name = "books-check";
+    runtimeInputs = [ pkgs.beancount ];
+    text = ''
+      set -euo pipefail
+      books_dir="''${1:-${dataDir}}"
+      exec bean-check "$books_dir/main.bean"
+    '';
+  };
+
+  booksFetchStripe = pkgs.writeShellApplication {
+    name = "books-fetch-stripe";
+    runtimeInputs = [
+      pythonEnv
+      pkgs.beancount
+    ];
+    text = ''
+      set -euo pipefail
+      books_dir="''${BOOKS_DIR:-${dataDir}}"
+      api_key_file="''${STRIPE_API_KEY_FILE:-$books_dir/secrets/stripe-api-key}"
+      python ${stripeImporter} --books-dir "$books_dir" --api-key-file "$api_key_file" "$@"
+      bean-check "$books_dir/main.bean"
+    '';
+  };
+
+  booksFava = pkgs.writeShellApplication {
+    name = "books-fava";
+    runtimeInputs = [ pkgs.fava ];
+    text = ''
+      set -euo pipefail
+      books_dir="''${1:-${dataDir}}"
+      exec fava --host 127.0.0.1 --port ${
+        toString config.custom.ports.assigned.${portKey}
+      } "$books_dir/main.bean"
+    '';
+  };
+in
+{
+  custom.ports.requests = [ { key = portKey; } ];
+
+  users.groups.bookkeeping = { };
+  users.users.bookkeeping = {
+    isSystemUser = true;
+    group = "bookkeeping";
+    home = dataDir;
+  };
+  users.users.${username}.extraGroups = [ "bookkeeping" ];
+
+  environment.systemPackages = [
+    pkgs.beancount
+    pkgs.beanquery
+    pkgs.fava
+    booksInit
+    booksCheck
+    booksFetchStripe
+    booksFava
+  ];
+
+  systemd.tmpfiles.rules = [
+    "d /var/lib/bookkeeping 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir} 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/generated 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/manual 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/raw 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/raw/stripe 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/raw/bank 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/receipts 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/rules 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/state 0750 bookkeeping bookkeeping - -"
+    "d ${dataDir}/secrets 0700 bookkeeping bookkeeping - -"
+  ];
+
+  systemd.services.bookkeeping-init = {
+    description = "Initialise Bepis Beancount bookkeeping directory";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "bookkeeping";
+      Group = "bookkeeping";
+      ExecStart = "${booksInit}/bin/books-init ${dataDir}";
+    };
+  };
+
+  systemd.services.fava-bepis-books = {
+    description = "Fava web UI for Bepis Beancount books";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "bookkeeping-init.service" ];
+    requires = [ "bookkeeping-init.service" ];
+    serviceConfig = {
+      User = "bookkeeping";
+      Group = "bookkeeping";
+      WorkingDirectory = dataDir;
+      ExecStart = "${booksFava}/bin/books-fava ${dataDir}";
+      Restart = "on-failure";
+      RestartSec = "10s";
+    };
+  };
+
+  systemd.services.bookkeeping-stripe-sync = {
+    description = "Fetch Stripe accounting data into Bepis Beancount books";
+    after = [
+      "network-online.target"
+      "bookkeeping-init.service"
+    ];
+    wants = [ "network-online.target" ];
+    requires = [ "bookkeeping-init.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "bookkeeping";
+      Group = "bookkeeping";
+      WorkingDirectory = dataDir;
+      ExecStart = "${booksFetchStripe}/bin/books-fetch-stripe";
+      # Add a restricted read-only Stripe key here, or wire this path from sops-nix later.
+      Environment = [
+        "BOOKS_DIR=${dataDir}"
+        "STRIPE_API_KEY_FILE=${dataDir}/secrets/stripe-api-key"
+      ];
+    };
+    unitConfig.ConditionPathExists = "${dataDir}/secrets/stripe-api-key";
+  };
+
+  systemd.timers.bookkeeping-stripe-sync = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+      RandomizedDelaySec = "30m";
+      Unit = "bookkeeping-stripe-sync.service";
+    };
+  };
+
+  hostedServices = [
+    {
+      inherit domain;
+      upstreamHost = "127.0.0.1";
+      upstreamPort = toString config.custom.ports.assigned.${portKey};
+      tailnet = true;
+    }
+  ];
+}
