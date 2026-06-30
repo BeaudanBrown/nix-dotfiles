@@ -133,6 +133,9 @@ in
   }
   // lib.optionalAttrs (lib.hasAttrByPath [ "services" "pi-harness" "lsp" "enable" ] options) {
     lsp.enable = true;
+  }
+  // lib.optionalAttrs (lib.hasAttrByPath [ "services" "pi-harness" "diagrams" "enable" ] options) {
+    diagrams.enable = true;
   };
 
   hm.primary.home.file = {
