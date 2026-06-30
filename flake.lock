@@ -1079,11 +1079,11 @@
         "pi-lsp-extension-src": "pi-lsp-extension-src_2"
       },
       "locked": {
-        "lastModified": 1782782680,
-        "narHash": "sha256-ZZgt8iEBMDGwF2yjcI71tRkP/rjp51uCE/RSkpFlmKc=",
+        "lastModified": 1782783533,
+        "narHash": "sha256-grwqNNGvKOGy3GhQgTCVInSgY4lnErLNHMxMvNbH7h8=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "332f5285284bef8f485264a281e0ec346f1522f9",
+        "rev": "f0d540a8aeab02fa51216408deea82c97f7572c2",
         "type": "github"
       },
       "original": {
