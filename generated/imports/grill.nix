@@ -64,6 +64,7 @@
   ../../modules/services/syncthing/main.nix
   ../../modules/triage/main.nix
   ../../modules/apps/brave/work.nix
+  ../../modules/apps/element/work.nix
   ../../modules/apps/ghostty/work.nix
   ../../modules/apps/imagemagick/work.nix
   ../../modules/apps/inkscape/work.nix

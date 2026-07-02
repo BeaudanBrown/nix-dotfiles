@@ -15,6 +15,7 @@
   ../../modules/services/attic/nas.nix
   ../../modules/services/atuin/nas.nix
   ../../modules/services/authentik/nas.nix
+  ../../modules/services/bookkeeping/nas.nix
   ../../modules/services/bookstack/nas.nix
   ../../modules/services/chhoto-url/nas.nix
   ../../modules/services/container-registry-auth/nas.nix

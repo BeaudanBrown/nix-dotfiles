@@ -6,7 +6,7 @@
 let
   llm = import ./new_gpt_chat.nix { inherit pkgs; };
   nr = import ../aliases/nr.nix { inherit pkgs config; };
-  tmux_toggle_popup = import ./tmux_toggle_popup.nix { inherit pkgs; };
+  tmux_project = import ./tmux_project.nix { inherit pkgs; };
   tmux_copy_system = pkgs.writeShellApplication {
     name = "tmux-copy-system";
     runtimeInputs = [
@@ -59,7 +59,7 @@ in
   environment.systemPackages = [
     llm
     nr
-    tmux_toggle_popup
+    tmux_project
     tmux_copy_system
   ];
 
@@ -94,6 +94,14 @@ in
           bind b set-option -g status
           bind-key -n M-n select-window -n
           bind-key -n M-p select-window -p
+          bind-key -n M-S-Space run-shell "tmux_project launcher-popup '#{client_name}'"
+          bind-key -n M-N run-shell "tmux_project switch next '#{client_name}'"
+          bind-key -n M-P run-shell "tmux_project switch prev '#{client_name}'"
+          bind-key -n M-S-n run-shell "tmux_project switch next '#{client_name}'"
+          bind-key -n M-S-p run-shell "tmux_project switch prev '#{client_name}'"
+          bind-key -n M-S-N run-shell "tmux_project switch next '#{client_name}'"
+          bind-key -n M-S-P run-shell "tmux_project switch prev '#{client_name}'"
+          bind-key -n M-b run-shell "tmux_project build '#{client_name}'"
           bind C-u copy-mode -u
 
           set -g set-clipboard on
@@ -105,6 +113,7 @@ in
           set -g extended-keys on
           set -g extended-keys-format csi-u
           set -g allow-passthrough on
+          set-hook -g session-closed 'run-shell "tmux_project cleanup-session \"#{hook_session_name}\""'
 
           bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
           bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane
@@ -138,25 +147,21 @@ in
 
           set -gF '@last_scratch_name' scratch
 
-          bind-key -n M-Space if-shell -F '#{==:#{session_name},default}' {
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
-          } {
-            detach-client
-          }
+          bind-key -n M-Space run-shell "tmux_project toggle-last-popup '#{client_name}'"
 
-          bind-key -n M-Enter run-shell "tmux_toggle_popup scratch"
-          bind-key -n M-S-Enter run-shell "tmux_toggle_popup -n scratch"
+          bind-key -n M-Enter run-shell "tmux_project scratch '#{client_name}'"
+          bind-key -n M-S-Enter run-shell "tmux_project scratch-new-window '#{client_name}'"
 
           bind-key -n M-r \
-                run-shell "tmux_toggle_popup -k --split-right '${pkgs.btop}/bin/btop -u 500' rebuild"
+                run-shell "tmux_project rebuild '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
 
           bind-key -n M-R \
-                run-shell "tmux_toggle_popup -f rebuild '${nr}/bin/nr'"
+                run-shell "tmux_project rebuild-run '#{client_name}' '${nr}/bin/nr'"
 
-          bind-key -n M-m run-shell "tmux_toggle_popup LLM LLM"
+          bind-key -n M-m run-shell "tmux_project llm '#{client_name}'"
 
 
-          bind-key -n M-o run-shell "tmux_toggle_popup obsidian \"mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md\""
+          bind-key -n M-o run-shell "tmux_project obsidian '#{client_name}'"
 
           bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
             run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'
