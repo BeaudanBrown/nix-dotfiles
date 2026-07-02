@@ -29,6 +29,11 @@ let
   ];
 
   blockedZoneArgs = blockedZones |> concatStringsSep " ";
+  hostedServiceHosts =
+    tailServices
+    |> map (s: "${if s.dnsTarget != null then s.dnsTarget else tailIP} ${s.domain}")
+    |> concatStringsSep "\n";
+  hostedRouteDomains = tailServices |> map (s: "~${s.domain}");
 
   blocklistConfig = ''
     .:53 {
@@ -46,15 +51,34 @@ let
     }
   '';
 
+  nasLocalResolverConfig = ''
+    .:53 {
+      bind 127.0.0.55
+
+      hosts {
+        ${hostedServiceHosts}
+        fallthrough
+      }
+
+      forward . 1.1.1.1 9.9.9.9
+      cache 300
+      log
+      errors
+    }
+  '';
+
   corednsConfig =
-    [ blocklistConfig ]
+    [
+      blocklistConfig
+      nasLocalResolverConfig
+    ]
     ++ (
       tailServices
       |> map (s: ''
         ${s.domain}:53 {
           bind ${tailIP}
           hosts {
-            ${if s.dnsTarget != null then s.dnsTarget else tailIP} ${s.domain}
+            ${hostedServiceHosts}
             ttl 60
           }
           log
@@ -77,6 +101,11 @@ in
     services.coredns = {
       enable = true;
       config = corednsConfig;
+    };
+
+    services.resolved.settings.Resolve = {
+      DNS = [ "127.0.0.55" ];
+      Domains = hostedRouteDomains;
     };
 
     systemd.services.coredns = {
