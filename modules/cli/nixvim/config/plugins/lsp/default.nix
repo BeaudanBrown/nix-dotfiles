@@ -7,6 +7,19 @@
       vim.keymap.del('n', 'grn')
       vim.keymap.del('n', 'gra')
       vim.keymap.del('n', 'gri')
+
+      -- R formatting is handled by the `air` LSP. Keep `r_language_server`
+      -- attached for lintr diagnostics, but prevent it from participating in
+      -- vim.lsp.buf.format() to avoid slow format requests timing out.
+      vim.api.nvim_create_autocmd('LspAttach', {
+        callback = function(args)
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          if client and client.name == 'r_language_server' then
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+          end
+        end,
+      })
     '';
     servers = {
       hls = {

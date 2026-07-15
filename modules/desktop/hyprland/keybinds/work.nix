@@ -249,9 +249,9 @@ in
     }
     {
       key = "n";
-      app = "caprine";
-      workspace = "Caprine";
-      title = "Caprine";
+      app = "element-desktop";
+      workspace = "Element";
+      class = "element";
     }
     config.hypr.windowsLauncher
     {
