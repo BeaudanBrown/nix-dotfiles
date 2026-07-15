@@ -106,6 +106,7 @@ in
 
           set -g set-clipboard on
           set -g copy-command 'tmux-copy-system'
+          set -ga update-environment ' WAYLAND_DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR DISPLAY'
           set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
           set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
           set-environment -g ESCDELAY 1
@@ -113,7 +114,10 @@ in
           set -g extended-keys on
           set -g extended-keys-format csi-u
           set -g allow-passthrough on
-          set-hook -g session-closed 'run-shell "tmux_project cleanup-session \"#{hook_session_name}\""'
+          set -g detach-on-destroy previous
+          set-hook -g client-session-changed 'run-shell "tmux_project note-root-focus \"#{client_name}\" \"#{session_name}\""'
+          set-hook -g session-closed 'run-shell "tmux_project session-closed \"#{hook_session_name}\""'
+          run-shell "tmux_project note-root-focus '#{client_name}' '#{session_name}'"
 
           bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
           bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane
@@ -143,9 +147,7 @@ in
           bind-key -T copy-mode-vi C-j send-keys -X copy-pipe 'tmux-copy-system'
 
 
-        # Toggle scratchpad terminal
-
-          set -gF '@last_scratch_name' scratch
+        # Toggle project popups
 
           bind-key -n M-Space run-shell "tmux_project toggle-last-popup '#{client_name}'"
 
@@ -163,29 +165,6 @@ in
 
           bind-key -n M-o run-shell "tmux_project obsidian '#{client_name}'"
 
-          bind -n M-\\ if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
-            run-shell 'tmux break-pane -s "#{@last_scratch_name}" -t default'
-            detach-client
-          } {
-            if-shell '! tmux has-session -t "#{@last_scratch_name}"' {
-              run-shell 'tmux new-session -d -s #{@last_scratch_name}'
-            }
-            run-shell 'tmux break-pane -t "#{@last_scratch_name}"'
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
-          }
-
-          bind -n M-| if-shell -F '#{==:#{session_name},#{@last_scratch_name}}' {
-            run-shell 'tmux join-pane -h -s "#{@last_scratch_name}" -t default:$(tmux display-message -p -t default "#{l:#{window_index}}")'
-            if-shell 'tmux has-session -t "#{@last_scratch_name}"' {
-              detach-client
-            }
-          } {
-            if-shell '! tmux has-session -t "#{@last_scratch_name}"' {
-              run-shell 'tmux new-session -d -s #{@last_scratch_name}'
-            }
-            run-shell 'tmux break-pane -s "#S:#I.#P" -t "#{@last_scratch_name}"'
-            run-shell 'tmux display-popup -E -w 95% -h 95% "tmux new-session -A -s #{@last_scratch_name} "'
-          }
       '';
   };
 

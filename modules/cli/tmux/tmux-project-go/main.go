@@ -14,7 +14,7 @@ import (
 )
 
 type Session struct {
-	Name, Root, Parent, Role, Group, ToolKind, PopupOwner, PopupRoot string
+	Name, Root, Parent, Role, Group, PopupOwner, PopupRoot string
 }
 
 const (
@@ -56,11 +56,13 @@ func main() {
 		err = openGlobalCommandPopup("obsidian", arg(2), "mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md", false, false)
 	case "toggle-last-popup":
 		err = toggleLastPopup(arg(2))
-	case "cleanup-session", "session-closed":
+	case "note-root-focus":
+		err = noteRootFocus(arg(2), arg(3))
+	case "session-closed":
 		if len(os.Args) < 3 {
 			os.Exit(0)
 		}
-		err = cleanupSession(os.Args[2])
+		err = sessionClosed(os.Args[2])
 	default:
 		usage()
 	}
@@ -71,7 +73,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "tmux_project <launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|cleanup-session>")
+	fmt.Fprintln(os.Stderr, "tmux_project <launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|note-root-focus|session-closed>")
 	os.Exit(1)
 }
 
@@ -122,10 +124,22 @@ func setSessionOption(session, key, value string) {
 	_, _ = tmux("set-option", "-t", session, key, value)
 }
 
+func globalOption(key string) string {
+	out, err := tmux("show-option", "-gqv", key)
+	if err != nil {
+		return ""
+	}
+	return out
+}
+
+func setGlobalOption(key, value string) {
+	_, _ = tmux("set-option", "-g", key, value)
+}
+
 func allSessions() ([]Session, error) {
 	format := strings.Join([]string{
 		"#{session_name}", "#{@project_root}", "#{@project_parent}", "#{@project_role}",
-		"#{@project_group}", "#{@tmux_tool_kind}", "#{@project_popup_owner}", "#{@project_popup_root}",
+		"#{@project_group}", "#{@project_popup_owner}", "#{@project_popup_root}",
 	}, "\t")
 	out, err := tmux("list-sessions", "-F", format)
 	if err != nil {
@@ -135,16 +149,16 @@ func allSessions() ([]Session, error) {
 	s := bufio.NewScanner(strings.NewReader(out))
 	for s.Scan() {
 		parts := strings.Split(s.Text(), "\t")
-		for len(parts) < 8 {
+		for len(parts) < 7 {
 			parts = append(parts, "")
 		}
-		sessions = append(sessions, Session{parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7]})
+		sessions = append(sessions, Session{parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]})
 	}
 	return sessions, nil
 }
 
 func isRoot(s Session) bool {
-	return s.Role == roleRoot || (s.Role == "" && s.Parent == "" && s.ToolKind == "" && (s.Root != "" || s.Name == "default"))
+	return s.Role == roleRoot
 }
 
 func sessionByName(name string) Session {
@@ -228,12 +242,76 @@ func ensureProjectSession(path string) (string, error) {
 }
 
 func switchTo(session, client string) error {
+	var err error
 	if client != "" {
-		_, err := tmux("switch-client", "-c", client, "-t", "="+session)
-		return err
+		_, err = tmux("switch-client", "-c", client, "-t", "="+session)
+	} else {
+		_, err = tmux("switch-client", "-t", "="+session)
 	}
-	_, err := tmux("switch-client", "-t", "="+session)
+	if err == nil {
+		maybeCleanupDefault(session)
+	}
 	return err
+}
+
+func maybeCleanupDefault(activeRoot string) {
+	if activeRoot == "" || activeRoot == "default" || !tmuxOk("has-session", "-t", "=default") {
+		return
+	}
+	if !isRoot(sessionByName(activeRoot)) {
+		return
+	}
+	if defaultHasClients() || !defaultIsIdle() {
+		return
+	}
+	_, _ = tmux("kill-session", "-t", "=default")
+}
+
+func defaultHasClients() bool {
+	out, err := tmux("list-clients", "-F", "#{session_name}")
+	if err != nil {
+		return false
+	}
+	s := bufio.NewScanner(strings.NewReader(out))
+	for s.Scan() {
+		if s.Text() == "default" {
+			return true
+		}
+	}
+	return false
+}
+
+func defaultIsIdle() bool {
+	windows, err := tmux("list-windows", "-t", "=default", "-F", "#{window_id}")
+	if err != nil || countLines(windows) != 1 {
+		return false
+	}
+	panes, err := tmux("list-panes", "-t", "=default:", "-F", "#{pane_current_command}\t#{pane_current_path}")
+	if err != nil || countLines(panes) != 1 {
+		return false
+	}
+	parts := strings.SplitN(panes, "\t", 2)
+	if len(parts) != 2 || !isShellCommand(parts[0]) {
+		return false
+	}
+	home, _ := os.UserHomeDir()
+	return parts[1] == home
+}
+
+func countLines(s string) int {
+	if s == "" {
+		return 0
+	}
+	return len(strings.Split(s, "\n"))
+}
+
+func isShellCommand(command string) bool {
+	switch filepath.Base(command) {
+	case "sh", "bash", "zsh", "fish":
+		return true
+	default:
+		return false
+	}
 }
 
 func rootSessions() []Session {
@@ -326,9 +404,22 @@ func candidates() []Candidate {
 	return cs
 }
 
+func color(code, text string) string {
+	return "\033[" + code + "m" + text + "\033[0m"
+}
+
+func candidateDisplay(c Candidate) (name, path string) {
+	path = color("2", c.Path)
+	if c.Kind == "session" {
+		return color("1;36", c.Name), path
+	}
+	return color("1;33", c.Name), path
+}
+
 func printCandidates() error {
 	for _, c := range candidates() {
-		fmt.Printf("%s\t%s\t%s\t%s\n", c.Kind, c.Value, c.Name, c.Path)
+		name, path := candidateDisplay(c)
+		fmt.Printf("%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path)
 	}
 	return nil
 }
@@ -370,9 +461,10 @@ func launcher(clientArg string) error {
 	}
 	var input strings.Builder
 	for _, c := range candidates() {
-		fmt.Fprintf(&input, "%s\t%s\t%s\t%s\n", c.Kind, c.Value, c.Name, c.Path)
+		name, path := candidateDisplay(c)
+		fmt.Fprintf(&input, "%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path)
 	}
-	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--tiebreak=index", "--nth=1,2", "--with-nth=3,4", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Search sessions and paths.")
+	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--nth=1,2", "--with-nth=3,4", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Search sessions and paths.")
 	cmd.Env = append(os.Environ(), "FZF_DEFAULT_OPTS=")
 	cmd.Stdin = strings.NewReader(input.String())
 	out, err := cmd.Output()
@@ -418,6 +510,11 @@ func switchProject(direction, clientArg string) error {
 	if err != nil {
 		return err
 	}
+	cur := sessionByName(current)
+	targetClient := client
+	if cur.PopupOwner != "" {
+		targetClient = cur.PopupOwner
+	}
 	project := rootForSession(current)
 	roots := rootSessions()
 	if len(roots) == 0 {
@@ -430,15 +527,22 @@ func switchProject(direction, clientArg string) error {
 			break
 		}
 	}
-	if idx < 0 {
-		return switchTo(roots[0].Name, client)
+	target := roots[0].Name
+	if idx >= 0 {
+		if direction == "next" {
+			idx = (idx + 1) % len(roots)
+		} else {
+			idx = (idx + len(roots) - 1) % len(roots)
+		}
+		target = roots[idx].Name
 	}
-	if direction == "next" {
-		idx = (idx + 1) % len(roots)
-	} else {
-		idx = (idx + len(roots) - 1) % len(roots)
+	if err := switchTo(target, targetClient); err != nil {
+		return err
 	}
-	return switchTo(roots[idx].Name, client)
+	if targetClient != client {
+		_, _ = tmux("detach-client", "-t", client)
+	}
+	return nil
 }
 
 func openGlobalPopup(group, clientArg string) error {
@@ -637,14 +741,119 @@ func detachPopups(owner, keep string) {
 	}
 }
 
-func cleanupSession(closed string) error {
-	sessions, _ := allSessions()
-	for _, s := range sessions {
-		if s.Parent == closed || sessionOption(s.Name, "@scratch_for") == closed {
-			_, _ = tmux("kill-session", "-t", "="+s.Name)
+func noteRootFocus(client, session string) error {
+	if session == "" {
+		var err error
+		session, err = currentSession(client)
+		if err != nil {
+			return err
+		}
+	}
+	if !tmuxOk("has-session", "-t", "="+session) {
+		return nil
+	}
+	s := sessionByName(session)
+	switch s.Role {
+	case roleRoot:
+		if s.Root == "" {
+			markRoot(session, sessionRoot(session))
+		}
+		updateRootMRU(session)
+	case "":
+		markRoot(session, sessionRoot(session))
+		updateRootMRU(session)
+	}
+	return nil
+}
+
+func rootMRU() []string {
+	value := globalOption("@project_root_mru")
+	if value == "" {
+		return nil
+	}
+	parts := strings.Split(value, "\t")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
+}
+
+func setRootMRU(items []string) {
+	setGlobalOption("@project_root_mru", strings.Join(items, "\t"))
+}
+
+func updateRootMRU(session string) {
+	items := []string{session}
+	for _, item := range rootMRU() {
+		if item != session && tmuxOk("has-session", "-t", "="+item) && isRoot(sessionByName(item)) {
+			items = append(items, item)
+		}
+	}
+	setRootMRU(items)
+}
+
+func removeRootMRU(session string) {
+	items := make([]string, 0)
+	for _, item := range rootMRU() {
+		if item != session && tmuxOk("has-session", "-t", "="+item) && isRoot(sessionByName(item)) {
+			items = append(items, item)
+		}
+	}
+	setRootMRU(items)
+}
+
+func fallbackRoot(exclude string) string {
+	for _, item := range rootMRU() {
+		if item != exclude && tmuxOk("has-session", "-t", "="+item) && isRoot(sessionByName(item)) {
+			return item
+		}
+	}
+	for _, s := range rootSessions() {
+		if s.Name != exclude {
+			return s.Name
+		}
+	}
+	return ""
+}
+
+func sessionClosed(closed string) error {
+	removeRootMRU(closed)
+	cleanupSatellites(closed)
+	fallback := fallbackRoot(closed)
+	if fallback == "" {
+		return nil
+	}
+	clients, err := tmux("list-clients", "-F", "#{client_name}\t#{session_name}")
+	if err != nil {
+		return nil
+	}
+	s := bufio.NewScanner(strings.NewReader(clients))
+	for s.Scan() {
+		parts := strings.Split(s.Text(), "\t")
+		if len(parts) < 2 {
+			continue
+		}
+		client, session := parts[0], parts[1]
+		if session == fallback {
+			continue
+		}
+		if !isRoot(sessionByName(session)) {
+			_ = switchTo(fallback, client)
 		}
 	}
 	return nil
+}
+
+func cleanupSatellites(closed string) {
+	sessions, _ := allSessions()
+	for _, s := range sessions {
+		if s.Role == roleSatellite && s.Parent == closed {
+			_, _ = tmux("kill-session", "-t", "="+s.Name)
+		}
+	}
 }
 
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'" }
