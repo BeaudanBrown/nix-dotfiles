@@ -97,6 +97,7 @@ Name your file after the root it should be imported for:
 - Do not report a Nix change as done until you have run at least one relevant validation command, or explicitly stated that you did not run validation.
 - By default, use evaluation-only checks such as `nix eval .#nixosConfigurations.<host>.config.system.build.toplevel.drvPath`, option evaluations, or focused syntax/format checks.
 - **Do not run Nix builds** (`nix build`, `nixos-rebuild build`, `nixos-rebuild switch`, `nix flake check`, or any command that realizes/builds Nix outputs) unless the user explicitly instructs you to build.
+- **Do not rebuild or switch the current system yourself** unless the user explicitly instructs you to do so. When a change needs activation, report back that a rebuild/switch is needed and provide the appropriate command for the user to run.
 - If the user explicitly requests a build, use a targeted build for host-specific changes such as `nix build .#nixosConfigurations.<host>.config.system.build.toplevel`; use `nix flake check` only for broad validation when requested.
 - If you edit shell code inside a Nix indented string, escape shell parameter expansions like `${1:-default}` as `''${1:-default}` so Nix does not parse them as interpolation.
 - When validation is skipped or blocked, say so clearly before claiming completion.
