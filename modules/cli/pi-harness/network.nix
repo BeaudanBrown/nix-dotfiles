@@ -78,28 +78,28 @@ let
               contextWindow = 128000;
               maxTokens = 16384;
             }
+            {
+              id = "kimi-k2.7-code";
+              api = "openai-completions";
+              reasoning = true;
+              input = [
+                "text"
+                "image"
+              ];
+              contextWindow = 262144;
+              maxTokens = 16384;
+              cost = {
+                input = 0.95;
+                output = 4.00;
+                cacheRead = 0.19;
+                cacheWrite = 0.95;
+              };
+              thinkingLevelMap = {
+                off = null;
+              };
+            }
           ];
         };
-      };
-    }
-  );
-  piSettingsFile = pkgs.writeText "pi-settings.json" (
-    builtins.toJSON {
-      "$schema" =
-        "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/core/settings-schema.json";
-      # defaultProvider = "litellm";
-      # defaultModel = "sub-gpt-5.5";
-      defaultProvider = "openai-codex";
-      defaultModel = "gpt-5.5";
-      defaultThinkingLevel = "medium";
-      showHardwareCursor = true;
-      # Extensions, skills, prompts, and themes are injected by the Nix-built
-      # pi-harness wrapper so Pi does not auto-load duplicate mutable paths.
-      enableSkillCommands = true;
-      compaction = {
-        enabled = true;
-        reserveTokens = 16384;
-        keepRecentTokens = 20000;
       };
     }
   );
@@ -136,9 +136,5 @@ in
   }
   // lib.optionalAttrs (lib.hasAttrByPath [ "services" "pi-harness" "diagrams" "enable" ] options) {
     diagrams.enable = true;
-  };
-
-  hm.primary.home.file = {
-    ".pi/agent/settings.json".source = piSettingsFile;
   };
 }

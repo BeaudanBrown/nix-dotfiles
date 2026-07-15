@@ -102,12 +102,12 @@ let
       };
     }
     {
-      model_name = "sub-gpt-5.4-mini";
+      model_name = "sub-gpt-5.5-mini";
       model_info = {
         mode = "responses";
       };
       litellm_params = {
-        model = "chatgpt/gpt-5.4-mini";
+        model = "chatgpt/gpt-5.5-mini";
       };
     }
     {
@@ -205,6 +205,25 @@ let
       };
     }
     {
+      model_name = "kimi-k2.7-code";
+      litellm_params = {
+        model = "moonshot/kimi-k2.7-code";
+        api_key = "os.environ/MOONSHOT_API_KEY";
+        thinking = {
+          type = "enabled";
+          budget_tokens = 8192;
+        };
+      };
+      model_info = {
+        supports_reasoning = true;
+        supports_vision = true;
+        input_cost_per_token = 0.00000095;
+        output_cost_per_token = 0.000004;
+        cache_creation_input_token_cost = 0.00000095;
+        cache_read_input_token_cost = 0.00000019;
+      };
+    }
+    {
       model_name = "kimi-k2.5-no-think";
       litellm_params = {
         model = "moonshot/kimi-k2.5-no-think";
@@ -289,6 +308,17 @@ in
         ];
         cmd = [ "--config=/app/config.yaml" ];
       };
+  };
+
+  systemd.services.podman-litellm = {
+    after = [
+      "postgresql.service"
+      "postgresql-setup.service"
+    ];
+    requires = [
+      "postgresql.service"
+      "postgresql-setup.service"
+    ];
   };
 
   services.postgresql = {
