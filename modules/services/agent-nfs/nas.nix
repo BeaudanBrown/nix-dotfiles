@@ -2,42 +2,37 @@
 let
   agentRoot = "/pool1/agent";
   agentMount = "${config.hostSpec.home}/agent";
-  sharedFolders = [
+  sharedExports = [
     {
-      name = "documents";
-      source = "${config.hostSpec.home}/documents";
+      path = "${config.hostSpec.home}/documents";
+      fsid = 101;
     }
     {
-      name = "monash";
-      source = "${config.hostSpec.home}/monash";
+      path = "${config.hostSpec.home}/monash";
+      fsid = 102;
     }
     {
-      name = "collab";
-      source = "${config.hostSpec.home}/collab";
+      path = "${config.hostSpec.home}/collab";
+      fsid = 103;
     }
   ];
-  sharedRoots = sharedFolders |> map (folder: folder.source);
-  sharedSyncMounts =
-    sharedFolders
-    |> map (folder: {
-      source = folder.source;
-      target = "${config.hostSpec.home}/sync/${folder.name}";
-    });
   tailnetCidr = "100.64.0.0/10";
+  sharedExportOptions = "rw,sync,no_subtree_check,root_squash";
   nfsExports =
-    [ agentRoot ] ++ sharedRoots
-    |> map (path: "${path} ${tailnetCidr}(rw,sync,no_subtree_check,root_squash,crossmnt)")
+    [ "${agentRoot} ${tailnetCidr}(${sharedExportOptions},crossmnt)" ]
+    ++ (
+      sharedExports
+      |> map (
+        export: "${export.path} ${tailnetCidr}(${sharedExportOptions},fsid=${toString export.fsid})"
+      )
+    )
     |> builtins.concatStringsSep "\n";
 in
 {
   systemd.tmpfiles.rules = [
     "d ${agentRoot} 0770 ${config.hostSpec.username} users - -"
     "d ${agentMount} 0755 ${config.hostSpec.username} users - -"
-    "d ${config.hostSpec.home}/sync 0755 ${config.hostSpec.username} users - -"
-  ]
-  ++ (
-    sharedSyncMounts |> map (mount: "d ${mount.target} 0755 ${config.hostSpec.username} users - -")
-  );
+  ];
 
   systemd.services.agent-home-bind-mount = {
     description = "Bind mount NAS agent storage into the primary user's home";
@@ -83,67 +78,6 @@ in
         echo "${agentMount} mounted from $current_source but does not match ${agentRoot}" >&2
         exit 1
       fi
-    '';
-  };
-
-  systemd.services.shared-sync-bind-mount = {
-    description = "Bind mount shared NAS datasets into the Syncthing source";
-    wantedBy = [ "multi-user.target" ];
-    requiredBy = [ "syncthing.service" ];
-    before = [ "syncthing.service" ];
-    after = [
-      "local-fs.target"
-      "systemd-tmpfiles-setup.service"
-    ];
-    wants = [ "local-fs.target" ];
-    path = with pkgs; [
-      coreutils
-      findutils
-      util-linux
-    ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      set -euo pipefail
-
-      bind_shared_path() {
-        source_path="$1"
-        target_path="$2"
-
-        mkdir -p "$source_path" "$target_path"
-        source_identity="$(stat -Lc '%d:%i' "$source_path")"
-
-        if mountpoint -q "$target_path"; then
-          target_identity="$(stat -Lc '%d:%i' "$target_path")"
-          if [ "$target_identity" = "$source_identity" ]; then
-            return
-          fi
-
-          current_source="$(findmnt -n -o SOURCE --target "$target_path" || true)"
-          echo "$target_path is already mounted from $current_source and does not match $source_path; refusing to replace it" >&2
-          exit 1
-        fi
-
-        if [ -n "$(find "$target_path" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
-          echo "$target_path is not empty; move its current contents before enabling the shared bind mounts" >&2
-          exit 1
-        fi
-
-        mount --bind "$source_path" "$target_path"
-
-        target_identity="$(stat -Lc '%d:%i' "$target_path")"
-        if [ "$target_identity" != "$source_identity" ]; then
-          current_source="$(findmnt -n -o SOURCE --target "$target_path" || true)"
-          echo "$target_path mounted from $current_source but does not match $source_path" >&2
-          exit 1
-        fi
-      }
-
-      bind_shared_path ${config.hostSpec.home}/documents ${config.hostSpec.home}/sync/documents
-      bind_shared_path ${config.hostSpec.home}/monash ${config.hostSpec.home}/sync/monash
-      bind_shared_path ${config.hostSpec.home}/collab ${config.hostSpec.home}/sync/collab
     '';
   };
 
