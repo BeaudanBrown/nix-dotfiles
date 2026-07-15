@@ -2,26 +2,27 @@
 let
   agentRoot = "/pool1/agent";
   agentMount = "${config.hostSpec.home}/agent";
-  sharedRoot = "/pool1/shared";
-  sharedFolderNames = [
-    "documents"
-    "monash"
-    "collab"
-  ];
-  sharedRoots = sharedFolderNames |> map (name: "${sharedRoot}/${name}");
-  sharedHomeMounts = [
+  sharedFolders = [
     {
-      source = sharedRoot;
-      target = "${config.hostSpec.home}/sync";
+      name = "documents";
+      source = "${config.hostSpec.home}/documents";
     }
-  ]
-  ++ (
-    sharedFolderNames
-    |> map (name: {
-      source = "${sharedRoot}/${name}";
-      target = "${config.hostSpec.home}/${name}";
-    })
-  );
+    {
+      name = "monash";
+      source = "${config.hostSpec.home}/monash";
+    }
+    {
+      name = "collab";
+      source = "${config.hostSpec.home}/collab";
+    }
+  ];
+  sharedRoots = sharedFolders |> map (folder: folder.source);
+  sharedSyncMounts =
+    sharedFolders
+    |> map (folder: {
+      source = folder.source;
+      target = "${config.hostSpec.home}/sync/${folder.name}";
+    });
   tailnetCidr = "100.64.0.0/10";
   nfsExports =
     [ agentRoot ] ++ sharedRoots
@@ -32,11 +33,10 @@ in
   systemd.tmpfiles.rules = [
     "d ${agentRoot} 0770 ${config.hostSpec.username} users - -"
     "d ${agentMount} 0755 ${config.hostSpec.username} users - -"
-    "d ${sharedRoot} 0770 ${config.hostSpec.username} users - -"
+    "d ${config.hostSpec.home}/sync 0755 ${config.hostSpec.username} users - -"
   ]
-  ++ (sharedRoots |> map (path: "d ${path} 0770 ${config.hostSpec.username} users - -"))
   ++ (
-    sharedHomeMounts |> map (mount: "d ${mount.target} 0755 ${config.hostSpec.username} users - -")
+    sharedSyncMounts |> map (mount: "d ${mount.target} 0755 ${config.hostSpec.username} users - -")
   );
 
   systemd.services.agent-home-bind-mount = {
@@ -86,8 +86,8 @@ in
     '';
   };
 
-  systemd.services.shared-home-bind-mount = {
-    description = "Bind mount shared NAS storage into the primary user's home";
+  systemd.services.shared-sync-bind-mount = {
+    description = "Bind mount shared NAS datasets into the Syncthing source";
     wantedBy = [ "multi-user.target" ];
     requiredBy = [ "syncthing.service" ];
     before = [ "syncthing.service" ];
@@ -96,7 +96,6 @@ in
       "systemd-tmpfiles-setup.service"
     ];
     wants = [ "local-fs.target" ];
-    unitConfig.RequiresMountsFor = sharedRoot;
     path = with pkgs; [
       coreutils
       findutils
@@ -142,10 +141,9 @@ in
         fi
       }
 
-      bind_shared_path ${sharedRoot} ${config.hostSpec.home}/sync
-      bind_shared_path ${sharedRoot}/documents ${config.hostSpec.home}/documents
-      bind_shared_path ${sharedRoot}/monash ${config.hostSpec.home}/monash
-      bind_shared_path ${sharedRoot}/collab ${config.hostSpec.home}/collab
+      bind_shared_path ${config.hostSpec.home}/documents ${config.hostSpec.home}/sync/documents
+      bind_shared_path ${config.hostSpec.home}/monash ${config.hostSpec.home}/sync/monash
+      bind_shared_path ${config.hostSpec.home}/collab ${config.hostSpec.home}/sync/collab
     '';
   };
 

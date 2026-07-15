@@ -36,9 +36,9 @@
           ${config.hostSpec.home}/agent -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/pool1/agent
         '';
         sharedConf = pkgs.writeText "auto.shared-nfs" ''
-          ${config.hostSpec.home}/documents -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/pool1/shared/documents
-          ${config.hostSpec.home}/monash -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/pool1/shared/monash
-          ${config.hostSpec.home}/collab -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/pool1/shared/collab
+          ${config.hostSpec.home}/documents -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/home/beau/documents
+          ${config.hostSpec.home}/monash -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/home/beau/monash
+          ${config.hostSpec.home}/collab -fstype=nfs4,rw,hard,noatime,proto=tcp,port=2049,_netdev ${config.hostSpecs.nas.tailIP}:/home/beau/collab
         '';
       in
       ''
