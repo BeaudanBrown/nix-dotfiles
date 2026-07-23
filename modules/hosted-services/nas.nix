@@ -13,6 +13,7 @@ let
 
   services = config.hostedServices;
   tailIP = config.hostSpec.tailIP;
+  devTunnelPort = 18000;
   tailServices = services |> filter (s: s.tailnet);
 
   blockedZones = [
@@ -94,6 +95,19 @@ let
 in
 {
   config = {
+    # A stable public HTTPS slot for an operator-started SSH reverse tunnel.
+    # The remote listener stays on NAS loopback; only nginx exposes the slot.
+    custom.ports.reserved = [ devTunnelPort ];
+    hostedServices = [
+      {
+        domain = "dev.bepis.lol";
+        upstreamHost = "127.0.0.1";
+        upstreamPort = toString devTunnelPort;
+        tailnet = false;
+        webSockets = true;
+      }
+    ];
+
     services.headscale.settings.dns = {
       nameservers.split = headscaleSplit;
     };
