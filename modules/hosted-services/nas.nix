@@ -13,7 +13,7 @@ let
 
   services = config.hostedServices;
   tailIP = config.hostSpec.tailIP;
-  devTunnelPort = 18000;
+  devTunnelPort = 20080;
   tailServices = services |> filter (s: s.tailnet);
 
   blockedZones = [
