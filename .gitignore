@@ -6,3 +6,4 @@ latest.iso
 .pre-commit-config.yaml
 .claude
 .mcp.json
+.pi/
