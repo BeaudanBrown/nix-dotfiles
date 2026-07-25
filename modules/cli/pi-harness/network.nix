@@ -120,12 +120,6 @@ in
   };
 
   hm.primary.home.file.".pi/agent/models.json".source = piModelsFile;
-  hm.primary.home.sessionVariables = {
-    PI_WEB_SEARCH_BASE_URL = "https://litellm.bepis.lol/openai_passthrough/v1";
-    PI_WEB_SEARCH_MODEL = "gpt-5-mini";
-    PI_WEB_SEARCH_API_KEY_COMMAND = "cat ${config.sops.secrets."pi/litellm_api".path}";
-  };
-
   services.pi-harness = {
     enable = true;
     package = piHarnessPackage;
