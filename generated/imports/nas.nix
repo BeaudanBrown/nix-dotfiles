@@ -91,6 +91,7 @@
   ../../modules/cli/ticket/main.nix
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
+  ../../modules/scripts/dev-tunnel/main.nix
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/litellm/main.nix
