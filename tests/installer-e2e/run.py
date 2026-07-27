@@ -214,9 +214,10 @@ creation_rules:
         env=env,
         check=True,
     )
-    subprocess.run(["nix", "flake", "lock"], cwd=repo, check=True)
     (repo / ".gitignore").write_text((repo / ".gitignore").read_text() + ".test-*-remote.git/\n")
     subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run(["nix", "flake", "lock"], cwd=repo, check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "flake.lock"], check=True)
     subprocess.run(["git", "-C", str(repo), "commit", "--quiet", "-m", "installer test fixture"], check=True)
     dotfiles_remote = repo / ".test-dotfiles-remote.git"
     subprocess.run(["git", "init", "--bare", "--quiet", str(dotfiles_remote)], check=True)
