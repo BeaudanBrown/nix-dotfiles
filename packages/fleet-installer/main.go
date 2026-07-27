@@ -271,7 +271,7 @@ func repositoryRoot(r runner) (string, error) {
 }
 
 func provisionUSB(r runner, p prompt) error {
-	if os.Geteuid() == 0 {
+	if os.Geteuid() == 0 && os.Getenv("FLEET_INSTALLER_TEST_ALLOW_ROOT") != "1" {
 		return errors.New("run provision-usb as your normal user; it invokes sudo only when needed")
 	}
 	repo, err := repositoryRoot(r)
@@ -337,7 +337,11 @@ func provisionUSB(r runner, p prompt) error {
 	if err != nil {
 		return err
 	}
-	if _, err := r.Run(nil, "git", "clone", "--quiet", strings.TrimSpace(string(remote)), clonePath); err != nil {
+	if os.Getenv("FLEET_INSTALLER_TEST_COPY_REPO") == "1" {
+		if err := r.Interactive("cp", "-a", repo, clonePath); err != nil {
+			return err
+		}
+	} else if _, err := r.Run(nil, "git", "clone", "--quiet", strings.TrimSpace(string(remote)), clonePath); err != nil {
 		return err
 	}
 
@@ -360,6 +364,9 @@ func provisionUSB(r runner, p prompt) error {
 }
 
 func askPassword(r runner, message string) (string, error) {
+	if password := os.Getenv("FLEET_INSTALLER_TEST_LUKS_PASSWORD"); password != "" {
+		return password, nil
+	}
 	output, err := r.Run(nil, "systemd-ask-password", "--timeout=0", message)
 	if err != nil {
 		return "", err
@@ -419,7 +426,10 @@ func provisionPayload(r runner, repo, clonePath, staging string) error {
 		return err
 	}
 
-	secretPath := "/run/secrets/headscale/installer_pre_auth"
+	secretPath := os.Getenv("FLEET_INSTALLER_HEADSCALE_KEY_FILE")
+	if secretPath == "" {
+		secretPath = "/run/secrets/headscale/installer_pre_auth"
+	}
 	if err := r.Interactive("sudo", "test", "-s", secretPath); err != nil {
 		return fmt.Errorf("required SOPS secret %s is unavailable", secretPath)
 	}
@@ -428,7 +438,10 @@ func provisionPayload(r runner, repo, clonePath, staging string) error {
 	}
 
 	home, _ := os.UserHomeDir()
-	privateKey := filepath.Join(home, ".ssh", "id_ed25519")
+	privateKey := os.Getenv("FLEET_INSTALLER_SSH_KEY_FILE")
+	if privateKey == "" {
+		privateKey = filepath.Join(home, ".ssh", "id_ed25519")
+	}
 	publicKey := privateKey + ".pub"
 	if _, err := os.Stat(privateKey); err != nil {
 		return fmt.Errorf("Git SSH identity %s is unavailable", privateKey)
@@ -474,6 +487,9 @@ func provisionPayload(r runner, repo, clonePath, staging string) error {
 }
 
 func collectWiFiProfiles(r runner) ([]wifiProfile, error) {
+	if psk := os.Getenv("FLEET_INSTALLER_TEST_WIFI_PSK"); psk != "" {
+		return []wifiProfile{{ID: "installer-test", SSID: "installer-test", KeyMgmt: "wpa-psk", PSK: psk}}, nil
+	}
 	active, err := r.Run(nil, "nmcli", "--terse", "--fields", "NAME,TYPE", "connection", "show", "--active")
 	if err != nil {
 		return nil, err

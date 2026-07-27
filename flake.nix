@@ -51,6 +51,7 @@
             gotools
             jq
             OVMF
+            python3Packages.pexpect
             qemu
             sops
           ];
