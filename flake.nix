@@ -45,11 +45,14 @@
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
           packages = with pkgs; [
+            age
             go
             gopls
             gotools
+            jq
             OVMF
             qemu
+            sops
           ];
         };
       }

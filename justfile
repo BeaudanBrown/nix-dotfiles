@@ -25,6 +25,8 @@ installer-usb:
 # Fast installer unit and integration tests.
 test-installer:
   nix build .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).fleet-installer
+  nix build .#fleet-installer
+  nix develop -c bash tests/fleet-installer/nas-rekey.sh
 
 # Full rootless QEMU installer test.
 test-installer-e2e:

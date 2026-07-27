@@ -46,13 +46,14 @@ func (r commandRunner) command(name string, args ...string) *exec.Cmd {
 func (r commandRunner) Run(stdin io.Reader, name string, args ...string) ([]byte, error) {
 	cmd := r.command(name, args...)
 	cmd.Stdin = stdin
-	var output bytes.Buffer
-	cmd.Stdout = &output
-	cmd.Stderr = &output
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return output.Bytes(), fmt.Errorf("%s %s: %w\n%s", name, strings.Join(args, " "), err, output.String())
+		return stdout.Bytes(), fmt.Errorf("%s %s: %w\n%s", name, strings.Join(args, " "), err, stderr.String())
 	}
-	return output.Bytes(), nil
+	return stdout.Bytes(), nil
 }
 
 func (r commandRunner) Interactive(name string, args ...string) error {

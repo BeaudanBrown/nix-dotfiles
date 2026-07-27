@@ -4,6 +4,15 @@
   pkgs,
   ...
 }:
+let
+  fleetInstaller = inputs.self.packages.x86_64-linux.fleet-installer;
+  installHost = pkgs.writeShellApplication {
+    name = "install-host";
+    text = ''
+      exec sudo ${fleetInstaller}/bin/fleet-installer install-host
+    '';
+  };
+in
 {
   imports = [
     inputs.disko.nixosModules.disko
@@ -122,7 +131,7 @@
       users = [ "installer" ];
       commands = [
         {
-          command = "${inputs.self.packages.x86_64-linux.fleet-installer}/bin/fleet-installer install-host";
+          command = "${fleetInstaller}/bin/fleet-installer install-host";
           options = [ "NOPASSWD" ];
         }
       ];
@@ -142,14 +151,14 @@
   };
 
   environment = {
-    shellAliases.install-host = "sudo ${inputs.self.packages.x86_64-linux.fleet-installer}/bin/fleet-installer install-host";
     systemPackages = with pkgs; [
       age
       cryptsetup
       efibootmgr
       git
       gptfdisk
-      inputs.self.packages.x86_64-linux.fleet-installer
+      fleetInstaller
+      installHost
       jq
       just
       nixos-install-tools
