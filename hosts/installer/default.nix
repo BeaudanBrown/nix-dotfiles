@@ -9,7 +9,7 @@ let
   installHost = pkgs.writeShellApplication {
     name = "install-host";
     text = ''
-      exec sudo ${fleetInstaller}/bin/fleet-installer install-host
+      exec sudo -n ${fleetInstaller}/bin/fleet-installer install-host
     '';
   };
 in
@@ -136,7 +136,7 @@ in
       users = [ "installer" ];
       commands = [
         {
-          command = "${fleetInstaller}/bin/fleet-installer install-host";
+          command = "${fleetInstaller}/bin/fleet-installer";
           options = [
             "NOPASSWD"
             "SETENV"

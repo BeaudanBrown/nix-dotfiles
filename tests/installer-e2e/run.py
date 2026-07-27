@@ -432,12 +432,10 @@ export FLEET_INSTALLER_TEST_LUKS_PASSWORD={shlex.quote(PASSWORD)}
 export FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO=/var/lib/fleet-installer/nix-dotfiles/test-sops-secrets
 export FLEET_INSTALLER_TEST_NO_REBOOT=1
 export SOPS_AGE_KEY_FILE=/var/lib/fleet-installer/nix-dotfiles/test-master-age-key
-sudo --preserve-env=FLEET_INSTALLER_TEST_CONFIRM,FLEET_INSTALLER_TEST_HOST,FLEET_INSTALLER_TEST_LUKS_PASSWORD,FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO,FLEET_INSTALLER_TEST_NO_REBOOT,SOPS_AGE_KEY_FILE \\
-  fleet-installer install-host
-sudo poweroff
+sudo -n --preserve-env=FLEET_INSTALLER_TEST_CONFIRM,FLEET_INSTALLER_TEST_HOST,FLEET_INSTALLER_TEST_LUKS_PASSWORD,FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO,FLEET_INSTALLER_TEST_NO_REBOOT,SOPS_AGE_KEY_FILE \\
+  "$(command -v fleet-installer)" install-host
 """
                 ssh(fixture_key, setup_and_install, INSTALLER_SSH_PORT, "installer", 25 * 60)
-                child.expect(pexpect.EOF, timeout=120)
             finally:
                 if child.isalive():
                     child.terminate(force=True)

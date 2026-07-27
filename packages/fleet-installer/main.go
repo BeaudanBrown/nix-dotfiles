@@ -539,7 +539,7 @@ func collectWiFiProfiles(r runner) ([]wifiProfile, error) {
 // over, as selected by the repository owner.
 func installHost(r runner, p prompt) error {
 	if os.Geteuid() != 0 {
-		return r.Interactive("sudo", os.Args[0], "install-host")
+		return r.Interactive("sudo", "-n", os.Args[0], "install-host")
 	}
 	repo := filepath.Join(payloadDir, "nix-dotfiles")
 	logDir := filepath.Join(payloadDir, "logs")
