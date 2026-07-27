@@ -233,7 +233,8 @@ def main() -> None:
 
     tmp = ROOT / ".pi/tmp/installer-e2e-last"
     if tmp.exists():
-        shutil.rmtree(tmp)
+        stale = tmp.with_name(f"installer-e2e-stale-{int(time.time())}")
+        tmp.rename(stale)
     tmp.mkdir(parents=True)
     try:
         package_out = pathlib.Path(
@@ -290,9 +291,9 @@ def main() -> None:
             "-device",
             "usb-storage,drive=installerusb,removable=true",
             "-virtfs",
-            f"local,path={fixture_repo},mount_tag=repo,security_model=none,readonly=on",
+            f"local,path={fixture_repo},mount_tag=repo,security_model=mapped-xattr,readonly=on",
             "-virtfs",
-            f"local,path={tmp},mount_tag=fixture,security_model=none,readonly=on",
+            f"local,path={tmp},mount_tag=fixture,security_model=mapped-xattr,readonly=on",
             "-netdev",
             f"user,id=net0,hostfwd=tcp:127.0.0.1:{BUILDER_SSH_PORT}-:22",
             "-device",
