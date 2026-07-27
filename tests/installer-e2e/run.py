@@ -23,8 +23,8 @@ PASSWORD = "fleet-installer-e2e"
 SSH_PORT = "22822"
 
 
-def run(*args: str, **kwargs: object) -> str:
-    return subprocess.check_output(args, text=True, **kwargs).strip()
+def run(*args: str) -> str:
+    return subprocess.check_output(args, text=True).strip()
 
 
 def wait_for_ssh(key: pathlib.Path) -> None:
@@ -91,6 +91,7 @@ def main() -> None:
         ovmf = pathlib.Path(run("nix", "build", "--no-link", "--print-out-paths", "nixpkgs#OVMF.fd")) / "FV"
         vars_path = tmp / "OVMF_VARS.fd"
         shutil.copy2(ovmf / "OVMF_VARS.fd", vars_path)
+        vars_path.chmod(0o600)
 
         usb = tmp / "installer-usb.qcow2"
         subprocess.run(["qemu-img", "create", "-q", "-f", "qcow2", str(usb), "40G"], check=True)
