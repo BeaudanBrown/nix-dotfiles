@@ -296,15 +296,27 @@ func provisionUSB(r runner, p prompt) error {
 		size, _ := device.Size.Int64()
 		labels[index] = fmt.Sprintf("%s — %s — %s — %.1f GiB", device.Path, strings.TrimSpace(device.Model), strings.TrimSpace(device.Serial), float64(size)/(1024*1024*1024))
 	}
-	selected, err := p.choose("Removable USB devices (minimum 32 GiB):", labels)
-	if err != nil {
-		return err
+	selected := 0
+	confirmed := false
+	if os.Getenv("FLEET_INSTALLER_TEST_CONFIRM") == "1" {
+		if len(devices) == 0 {
+			return errors.New("no removable USB device available")
+		}
+		confirmed = true
+	} else {
+		selected, err = p.choose("Removable USB devices (minimum 32 GiB):", labels)
+		if err != nil {
+			return err
+		}
+		confirmed, err = p.confirm("Erase "+labels[selected]+"?", false)
+		if err != nil {
+			return err
+		}
 	}
-	device := devices[selected]
-	confirmed, err := p.confirm("Erase "+labels[selected]+"?", false)
-	if err != nil || !confirmed {
+	if !confirmed {
 		return errors.New("provisioning cancelled")
 	}
+	device := devices[selected]
 
 	password, err := askPassword(r, "USB LUKS passphrase")
 	if err != nil {

@@ -152,8 +152,9 @@ mount -t 9p -o trans=virtio,version=9p2000.L repo /repo
 mount -t 9p -o trans=virtio,version=9p2000.L fixture /fixture
 git config --global --add safe.directory /repo
 cd /repo
-printf '1\\ny\\n' | env \\
+env \\
   FLEET_INSTALLER_TEST_ALLOW_ROOT=1 \\
+  FLEET_INSTALLER_TEST_CONFIRM=1 \\
   FLEET_INSTALLER_TEST_ALLOW_DIRTY=1 \\
   FLEET_INSTALLER_TEST_COPY_REPO=1 \\
   FLEET_INSTALLER_TEST_LUKS_PASSWORD={shlex.quote(PASSWORD)} \\
