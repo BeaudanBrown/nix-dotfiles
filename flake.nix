@@ -25,10 +25,13 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        fleetInstaller = pkgs.callPackage ./packages/fleet-installer { };
       in
       {
         formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
         packages = {
+          disko = inputs.disko.packages.${system}.disko;
+          fleet-installer = fleetInstaller;
           generate-host-imports = pkgs.callPackage ./scripts/generate-host-imports.nix { };
           oneplus-uboot-bootimg =
             pkgs.pkgsCross.aarch64-multiplatform.callPackage
@@ -36,9 +39,18 @@
               { };
           ticket = pkgs.callPackage ./packages/ticket.nix { };
         };
-        checks = import ./lib/checks.nix { inherit inputs system pkgs; };
+        checks = (import ./lib/checks.nix { inherit inputs system pkgs; }) // {
+          fleet-installer = fleetInstaller;
+        };
         devShells.default = pkgs.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
+          packages = with pkgs; [
+            go
+            gopls
+            gotools
+            OVMF
+            qemu
+          ];
         };
       }
     )

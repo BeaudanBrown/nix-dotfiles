@@ -18,9 +18,17 @@ iso:
   rm -rf result
   nix build --impure .#nixosConfigurations.iso.config.system.build.isoImage && ln -sf result/iso/*.iso latest.iso
 
-# Install the latest iso to a flash drive
-iso-install DRIVE: iso
-  sudo dd if=$(ls --sort time result/iso/*.iso | tail -n1) of={{DRIVE}} bs=4M status=progress oflag=sync
+# Provision an encrypted, fleet-generic installer USB interactively.
+installer-usb:
+  nix run .#fleet-installer -- provision-usb
+
+# Fast installer unit and integration tests.
+test-installer:
+  nix build .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).fleet-installer
+
+# Full rootless QEMU installer test.
+test-installer-e2e:
+  ./tests/installer-e2e/run.sh
 
 # Copy all the config files to the remote host
 sync USER HOST PATH:

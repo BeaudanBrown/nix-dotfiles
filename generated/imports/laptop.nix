@@ -53,12 +53,14 @@
   ../../modules/cli/ticket/main.nix
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
+  ../../modules/scripts/dev-tunnel/main.nix
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/litellm/main.nix
   ../../modules/services/syncthing/main.nix
   ../../modules/triage/main.nix
   ../../modules/apps/brave/work.nix
+  ../../modules/apps/element/work.nix
   ../../modules/apps/ghostty/work.nix
   ../../modules/apps/imagemagick/work.nix
   ../../modules/apps/inkscape/work.nix
@@ -70,7 +72,6 @@
   ../../modules/apps/teams/work.nix
   ../../modules/apps/tor/work.nix
   ../../modules/apps/zathura/work.nix
-  ../../modules/cli/fl/work.nix
   ../../modules/cli/watson/work.nix
   ../../modules/cli/weechat/work.nix
   ../../modules/desktop/addons/clipboard/work.nix
@@ -87,6 +88,7 @@
   ../../modules/scripts/bootstrap-nixos/work.nix
   ../../modules/scripts/stt-assist/work.nix
   ../../modules/scripts/stt-dictate/work.nix
+  ../../modules/scripts/thought-capture/work.nix
   ../../modules/security/pam/work.nix
   ../../modules/services/agent-nfs/work.nix
   ../../modules/services/blueman/work.nix

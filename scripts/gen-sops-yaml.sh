@@ -20,7 +20,7 @@ else
 	fi
 fi
 
-echo "Generating .sops.yaml from hostSpecs into $TARGET_FILE..."
+echo "Generating .sops.yaml from hostSpecs into $TARGET_FILE..." >&2
 
 # Use nix eval to get the config structure as JSON
 # Fix: Use flake's nixpkgs instead of <nixpkgs> to avoid NIX_PATH dependency
@@ -59,4 +59,4 @@ KEYS=$(echo "$CONFIG_JSON" | jq -r '.keys[] | to_entries[] | "&\(.key) \(.value)
 	done
 } >"$TARGET_FILE"
 
-echo "✓ Generated .sops.yaml"
+echo "✓ Generated .sops.yaml" >&2

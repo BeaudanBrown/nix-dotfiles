@@ -8,7 +8,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1k3fhza4mhr8a5dl3n508m88lcnyy4lnqrfwaz3svdzecq33hzqsq77p7dv"
+          "ageUserKey": "age1k3fhza4mhr8a5dl3n508m88lcnyy4lnqrfwaz3svdzecq33hzqsq77p7dv",
+          "uid": 1000
         }
       ],
       "tailIP": "100.64.0.5",
@@ -31,7 +32,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1jwwxlvz0kqwrdg28t0p26f0mexf46nzrhl7xkamzcpuvnvzc7pxsxnm4rg"
+          "ageUserKey": "age1jwwxlvz0kqwrdg28t0p26f0mexf46nzrhl7xkamzcpuvnvzc7pxsxnm4rg",
+          "uid": 1000
         }
       ],
       "tailIP": "100.64.0.1",
@@ -51,7 +53,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1xx2x7epqxfq8rusvxswtnxx8czx4z94fzlw0jq59ncgnzds9e95suzfh45"
+          "ageUserKey": "age1xx2x7epqxfq8rusvxswtnxx8czx4z94fzlw0jq59ncgnzds9e95suzfh45",
+          "uid": 1000
         }
       ],
       "tailIP": "100.64.0.4",
@@ -73,7 +76,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1rl4hv7d8j4wnpchqlswpvw9qtweq8ek2afcvaha6cyjr5fpv2f5s5wrk6s"
+          "ageUserKey": "age1rl4hv7d8j4wnpchqlswpvw9qtweq8ek2afcvaha6cyjr5fpv2f5s5wrk6s",
+          "uid": 1000
         }
       ],
       "tailIP": "100.64.0.2",
@@ -94,7 +98,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age10wvkj53rafjcgvvvtmlyx858h2h67jcph8wtp4yp38u00q46uplq2smw3f"
+          "ageUserKey": "age10wvkj53rafjcgvvvtmlyx858h2h67jcph8wtp4yp38u00q46uplq2smw3f",
+          "uid": 1000
         }
       ],
       "tailIP": "100.64.0.7",
@@ -117,7 +122,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age170a0x33mdeghu5mzse59yxdlk4tw3m829fptahxn0gau29kcgd6qr72dlv"
+          "ageUserKey": "age170a0x33mdeghu5mzse59yxdlk4tw3m829fptahxn0gau29kcgd6qr72dlv",
+          "uid": 1000
         }
       ],
       "wifi": true,
@@ -136,13 +142,15 @@
           "username": "mikaerem",
           "email": "mccarm110@gmail.com",
           "userFullName": "Mika",
-          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf"
+          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf",
+          "uid": 1000
         },
         {
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf"
+          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf",
+          "uid": 1001
         }
       ],
       "tailIP": "100.64.0.12",
@@ -162,7 +170,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq"
+          "ageUserKey": "age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq",
+          "uid": 1000
         }
       ],
       "tailIP": "100.64.0.13",
@@ -183,7 +192,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1vl99ax4yjzfd9pyzgej0gc9nd59q9eqvmrvl9up7mufn2d9m2g8sqcs2vt"
+          "ageUserKey": "age1vl99ax4yjzfd9pyzgej0gc9nd59q9eqvmrvl9up7mufn2d9m2g8sqcs2vt",
+          "uid": 1000
         }
       ],
       "wifi": false,
@@ -202,7 +212,8 @@
           "username": "beau",
           "email": "beaudan.brown@gmail.com",
           "userFullName": "Beaudan Brown",
-          "ageUserKey": null
+          "ageUserKey": null,
+          "uid": 1000
         }
       ],
       "ageHostKey": null,
