@@ -25,8 +25,11 @@ creation_rules:
       - age:
           - *master
 EOF
-printf 'fixture: value\n' >"$tmp/plain.yaml"
-sops --config "$tmp/sops-secrets/.sops.yaml" --encrypt "$tmp/plain.yaml" >"$tmp/sops-secrets/secrets/work.yaml"
+printf 'fixture: value\n' >"$tmp/sops-secrets/secrets/work.yaml"
+(
+	cd "$tmp/sops-secrets"
+	sops --encrypt --in-place secrets/work.yaml
+)
 git -C "$tmp/sops-secrets" add .
 git -C "$tmp/sops-secrets" commit --quiet -m initial
 git -C "$tmp/sops-secrets" push --quiet -u origin main
