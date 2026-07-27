@@ -7,3 +7,5 @@ latest.iso
 .claude
 .mcp.json
 .pi/
+__pycache__/
+*.pyc
