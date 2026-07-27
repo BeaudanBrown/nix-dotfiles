@@ -93,7 +93,8 @@ def prepare_fixture_repo(tmp: pathlib.Path, public_ssh_key: str) -> pathlib.Path
     shutil.copytree(
         ROOT,
         repo,
-        ignore=shutil.ignore_patterns(".git", ".pi", "result", "__pycache__"),
+        symlinks=True,
+        ignore=shutil.ignore_patterns(".git", ".pi", "result", "latest.iso", "__pycache__"),
     )
     subprocess.run(["git", "init", "--quiet", "-b", "master", str(repo)], check=True)
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "Installer Test"], check=True)
