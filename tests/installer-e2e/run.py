@@ -8,6 +8,7 @@ QEMU disk, LUKS formatting, nixos-install, UEFI removable boot, and unlock.
 
 from __future__ import annotations
 
+import argparse
 import os
 import pathlib
 import shlex
@@ -235,6 +236,9 @@ creation_rules:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--provision-only", action="store_true")
+    args = parser.parse_args()
     if subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain"], capture_output=True, text=True).stdout:
         raise RuntimeError("E2E tests require a clean repository")
     if not os.access("/dev/kvm", os.R_OK | os.W_OK):
@@ -354,6 +358,21 @@ poweroff
             if not pidfile.exists() or not pathlib.Path(f"/proc/{pidfile.read_text().strip()}").exists():
                 break
             time.sleep(1)
+
+        cache = ROOT / ".pi/tmp/installer-e2e-cache"
+        cache.mkdir(parents=True, exist_ok=True)
+        cache_image = cache / "installer-usb-base.qcow2.tmp"
+        subprocess.run(
+            ["qemu-img", "convert", "-p", "-O", "qcow2", str(usb), str(cache_image)],
+            check=True,
+            timeout=5 * 60,
+        )
+        cache_image.replace(cache / "installer-usb-base.qcow2")
+        shutil.copy2(fixture_key, cache / "id_ed25519")
+        shutil.copy2(fixture_key.with_suffix(".pub"), cache / "id_ed25519.pub")
+        if args.provision_only:
+            print(f"provision cache ready: {cache}")
+            return
 
         installer_boot = [
             "qemu-system-x86_64",

@@ -28,6 +28,14 @@ test-installer:
   nix build .#fleet-installer
   nix develop -c bash tests/fleet-installer/nas-rekey.sh
 
+# Provision and cache a pristine encrypted installer USB in rootless QEMU.
+test-installer-e2e-provision:
+  timeout --signal=TERM --kill-after=30s 20m nix develop -c python tests/installer-e2e/run.py --provision-only
+
+# Iterate on target installation from a snapshot of the cached USB.
+test-installer-e2e-install:
+  timeout --signal=TERM --kill-after=30s 15m nix develop -c python tests/installer-e2e/install-phase.py
+
 # Full rootless QEMU installer test.
 test-installer-e2e:
   ./tests/installer-e2e/run.sh
