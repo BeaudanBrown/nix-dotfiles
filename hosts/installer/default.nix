@@ -137,7 +137,10 @@ in
       commands = [
         {
           command = "${fleetInstaller}/bin/fleet-installer install-host";
-          options = [ "NOPASSWD" ];
+          options = [
+            "NOPASSWD"
+            "SETENV"
+          ];
         }
       ];
     }

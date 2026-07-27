@@ -584,22 +584,44 @@ func installHost(r runner, p prompt) error {
 		}
 		labels[index] = host.Name + marker + " — " + strings.Join(host.Disks, ", ")
 	}
-	selected, err := p.choose("Select installation host:", labels)
-	if err != nil {
-		return err
+	selected := -1
+	if testHost := os.Getenv("FLEET_INSTALLER_TEST_HOST"); testHost != "" {
+		for index, candidate := range hosts {
+			if candidate.Name == testHost {
+				selected = index
+				break
+			}
+		}
+		if selected < 0 {
+			return fmt.Errorf("test host %q is not eligible", testHost)
+		}
+	} else {
+		selected, err = p.choose("Select installation host:", labels)
+		if err != nil {
+			return err
+		}
 	}
 	host := hosts[selected]
 	if !host.AllDisksPresent {
 		return errors.New("selected host's declared Disko devices are not all present")
 	}
 
-	regenerate, err := p.confirm("Regenerate and overwrite hosts/"+host.Name+"/hardware.nix?", false)
-	if err != nil {
-		return err
+	regenerate := false
+	if os.Getenv("FLEET_INSTALLER_TEST_CONFIRM") != "1" {
+		regenerate, err = p.confirm("Regenerate and overwrite hosts/"+host.Name+"/hardware.nix?", false)
+		if err != nil {
+			return err
+		}
 	}
 	plan := fmt.Sprintf("Install %q, rotate host/user Age identities, push both repositories, and ERASE:\n  %s", host.Name, strings.Join(host.Disks, "\n  "))
-	confirmed, err := p.confirm(plan+"\nContinue?", false)
-	if err != nil || !confirmed {
+	confirmed := os.Getenv("FLEET_INSTALLER_TEST_CONFIRM") == "1"
+	if !confirmed {
+		confirmed, err = p.confirm(plan+"\nContinue?", false)
+		if err != nil {
+			return err
+		}
+	}
+	if !confirmed {
 		return errors.New("installation cancelled")
 	}
 
@@ -649,6 +671,10 @@ func installHost(r runner, p prompt) error {
 	}
 
 	_ = live.Interactive("tailscale", "logout")
+	if os.Getenv("FLEET_INSTALLER_TEST_NO_REBOOT") == "1" {
+		fmt.Fprintln(live.Out, "Installation complete; test mode suppressed reboot.")
+		return nil
+	}
 	fmt.Fprintln(live.Out, "Installation complete. Rebooting in 10 seconds; press Ctrl-C to cancel.")
 	time.Sleep(10 * time.Second)
 	return live.Interactive("systemctl", "reboot")
@@ -811,9 +837,31 @@ func rekeyAndPush(r runner, repo, host string) error {
 		return err
 	}
 	request, _ := json.Marshal(rekeyRequest{TargetHost: host, SopsYAML: base64.StdEncoding.EncodeToString(yaml)})
-	response, err := r.Run(bytes.NewReader(request), "ssh", "nas", "installer-sops-rekey")
-	if err != nil {
-		return err
+	var response []byte
+	localSOPS := os.Getenv("FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO")
+	if localSOPS != "" {
+		previousRepo := os.Getenv("FLEET_INSTALLER_SOPS_REPO")
+		os.Setenv("FLEET_INSTALLER_TEST", "1")
+		os.Setenv("FLEET_INSTALLER_SOPS_REPO", localSOPS)
+		var localResponse bytes.Buffer
+		err = nasRekey(r, bytes.NewReader(request), &localResponse)
+		if previousRepo == "" {
+			os.Unsetenv("FLEET_INSTALLER_SOPS_REPO")
+		} else {
+			os.Setenv("FLEET_INSTALLER_SOPS_REPO", previousRepo)
+		}
+		if err != nil {
+			return err
+		}
+		response = localResponse.Bytes()
+		if _, err := r.Run(nil, "git", "-C", localSOPS, "pull", "--ff-only"); err != nil {
+			return err
+		}
+	} else {
+		response, err = r.Run(bytes.NewReader(request), "ssh", "nas", "installer-sops-rekey")
+		if err != nil {
+			return err
+		}
 	}
 	var result rekeyResponse
 	if err := json.Unmarshal(bytes.TrimSpace(response), &result); err != nil || result.Commit == "" {
@@ -822,12 +870,19 @@ func rekeyAndPush(r runner, repo, host string) error {
 	if _, err := r.Run(nil, "nix", "flake", "update", "sopsSecrets"); err != nil {
 		return err
 	}
-	if _, err := r.Run(nil, "git", "add", "modules/host-spec/all-hosts.json", "flake.lock"); err != nil {
+	addPaths := []string{"add", "modules/host-spec/all-hosts.json", "flake.lock"}
+	if os.Getenv("FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO") != "" {
+		addPaths = append(addPaths, "test-sops-secrets")
+	}
+	if _, err := r.Run(nil, "git", addPaths...); err != nil {
 		return err
 	}
 	message := "Rotate installer identities for " + host
 	if _, err := r.Run(nil, "git", "commit", "-m", message); err != nil {
 		return err
+	}
+	if os.Getenv("FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO") != "" {
+		return nil
 	}
 	_, err = r.Run(nil, "git", "push", "origin", "HEAD")
 	return err
