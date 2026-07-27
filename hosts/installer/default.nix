@@ -10,7 +10,10 @@
     inputs.nixvim.nixosModules.nixvim
   ];
 
-  nixpkgs.hostPlatform = "x86_64-linux";
+  nixpkgs = {
+    config.allowUnfree = true;
+    hostPlatform = "x86_64-linux";
+  };
   networking = {
     hostName = "fleet-installer";
     networkmanager.enable = true;
