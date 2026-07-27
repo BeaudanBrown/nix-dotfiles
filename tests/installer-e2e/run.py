@@ -21,6 +21,15 @@ import pexpect
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PASSWORD = "fleet-installer-e2e"
 SSH_PORT = "22822"
+ACTIVE_PID_FILE = ROOT / ".pi/tmp/installer-e2e-active.pid"
+
+
+def register_active_pid(pid: int | None) -> None:
+    ACTIVE_PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if pid is None:
+        ACTIVE_PID_FILE.unlink(missing_ok=True)
+    else:
+        ACTIVE_PID_FILE.write_text(f"{pid}\n")
 
 
 def run(*args: str) -> str:
@@ -67,6 +76,7 @@ def ssh(key: pathlib.Path, script: str) -> None:
             script,
         ],
         check=True,
+        timeout=20 * 60,
     )
 
 
@@ -78,6 +88,11 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory(prefix="fleet-installer-e2e-") as raw_tmp:
         tmp = pathlib.Path(raw_tmp)
+        package_out = pathlib.Path(
+            run("nix", "build", "--no-link", "--print-out-paths", f"{ROOT}#fleet-installer")
+        )
+        shutil.copy2(package_out / "bin/fleet-installer", tmp / "fleet-installer")
+        (tmp / "fleet-installer").chmod(0o755)
         iso_out = pathlib.Path(
             run(
                 "nix",
@@ -140,6 +155,7 @@ def main() -> None:
             str(pidfile),
         ]
         subprocess.run(qemu, check=True)
+        register_active_pid(int(pidfile.read_text()))
         try:
             # The custom ISO trusts the current fleet key. This key is used only
             # to control the disposable builder VM, never copied to the USB.
@@ -157,11 +173,12 @@ env \\
   FLEET_INSTALLER_TEST_CONFIRM=1 \\
   FLEET_INSTALLER_TEST_ALLOW_DIRTY=1 \\
   FLEET_INSTALLER_TEST_COPY_REPO=1 \\
+  FLEET_INSTALLER_TEST_USE_PATH_DISKO=1 \\
   FLEET_INSTALLER_TEST_LUKS_PASSWORD={shlex.quote(PASSWORD)} \\
   FLEET_INSTALLER_TEST_WIFI_PSK=fixture-password \\
   FLEET_INSTALLER_HEADSCALE_KEY_FILE=/fixture/headscale-key \\
   FLEET_INSTALLER_SSH_KEY_FILE=/fixture/id_ed25519 \\
-  nix run .#fleet-installer -- provision-usb
+  timeout --signal=TERM 15m /fixture/fleet-installer provision-usb
 poweroff
 """
             ssh(control_key, script)
@@ -171,6 +188,7 @@ poweroff
                     os.kill(int(pidfile.read_text()), 15)
                 except ProcessLookupError:
                     pass
+            register_active_pid(None)
         for _ in range(60):
             if not pidfile.exists() or not pathlib.Path(f"/proc/{pidfile.read_text().strip()}").exists():
                 break
@@ -204,6 +222,7 @@ poweroff
             "-nographic",
         ]
         child = pexpect.spawn(boot_command[0], boot_command[1:], encoding="utf-8", timeout=180)
+        register_active_pid(child.pid)
         child.logfile = open(tmp / "boot.log", "w")
         child.expect(["passphrase", "Passphrase"])
         child.sendline(PASSWORD)
@@ -211,6 +230,7 @@ poweroff
         child.sendcontrol("a")
         child.send("x")
         child.expect(pexpect.EOF)
+        register_active_pid(None)
         print("encrypted installer USB provisioned, unlocked, and booted successfully")
 
 

@@ -358,7 +358,11 @@ func provisionUSB(r runner, p prompt) error {
 	}
 
 	fmt.Fprintln(p.out, "Provisioning encrypted installer USB. This can take several minutes.")
-	if err := r.Interactive("sudo", "nix", "run", repo+"#disko", "--", "--mode", "disko", layoutPath); err != nil {
+	if os.Getenv("FLEET_INSTALLER_TEST_USE_PATH_DISKO") == "1" {
+		if err := r.Interactive("sudo", "disko", "--mode", "disko", layoutPath); err != nil {
+			return err
+		}
+	} else if err := r.Interactive("sudo", "nix", "run", repo+"#disko", "--", "--mode", "disko", layoutPath); err != nil {
 		return err
 	}
 	if err := r.Interactive("sudo", "nixos-install", "--root", "/mnt", "--flake", repo+"#installer", "--no-root-password", "--no-channel-copy"); err != nil {

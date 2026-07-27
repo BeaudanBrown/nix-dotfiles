@@ -21,6 +21,9 @@
   ++ (import ../../generated/imports/iso.nix);
 
   environment.systemPackages = with pkgs; [
+    cryptsetup
+    inputs.disko.packages.${pkgs.stdenv.hostPlatform.system}.disko
+    inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.fleet-installer
     vim
   ];
 
