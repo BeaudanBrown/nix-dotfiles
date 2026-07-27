@@ -102,12 +102,15 @@
 
   users = {
     mutableUsers = false;
-    users.installer = {
-      isNormalUser = true;
-      uid = 1000;
-      group = "users";
-      home = "/home/installer";
-      shell = pkgs.zsh;
+    users = {
+      root.hashedPassword = "$y$j9T$rxvMdBfBYR6YMFmQOTEl90$qAOeCeZFDuv8v6eFiqtjZGsL6yuB2e5mhi5dZt3Ts37";
+      installer = {
+        isNormalUser = true;
+        uid = 1000;
+        group = "users";
+        home = "/home/installer";
+        shell = pkgs.zsh;
+      };
     };
   };
 

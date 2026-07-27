@@ -11,6 +11,7 @@
   ../../modules/hosted-services/lights/nas.nix
   ../../modules/hosted-services/nas.nix
   ../../modules/nix/nas.nix
+  ../../modules/scripts/fleet-installer/nas.nix
   ../../modules/services/agent-nfs/nas.nix
   ../../modules/services/attic/nas.nix
   ../../modules/services/atuin/nas.nix

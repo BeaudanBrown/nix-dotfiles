@@ -87,6 +87,7 @@
   ../../modules/desktop/hyprland/workspace-rules/work.nix
   ../../modules/nix/work.nix
   ../../modules/scripts/bootstrap-nixos/work.nix
+  ../../modules/scripts/fleet-installer/work.nix
   ../../modules/scripts/stt-assist/work.nix
   ../../modules/scripts/stt-dictate/work.nix
   ../../modules/scripts/thought-capture/work.nix

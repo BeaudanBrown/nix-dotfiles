@@ -84,7 +84,7 @@ type boolish bool
 
 func (b *boolish) UnmarshalJSON(data []byte) error {
 	value := strings.Trim(string(data), `"`)
-	*b = value == "1" || strings.EqualFold(value, "true")
+	*b = boolish(value == "1" || strings.EqualFold(value, "true"))
 	return nil
 }
 
@@ -241,7 +241,7 @@ func requireCleanDefaultBranch(r runner, repo string) error {
 	if err != nil {
 		return errors.New("origin/HEAD is not configured")
 	}
-	if strings.TrimSpace(branch) != strings.TrimPrefix(strings.TrimSpace(string(remoteDefault)), "origin/") {
+	if strings.TrimSpace(string(branch)) != strings.TrimPrefix(strings.TrimSpace(string(remoteDefault)), "origin/") {
 		return errors.New("physical USB provisioning requires the remote default branch")
 	}
 	if _, err := r.Run(nil, "git", "-C", repo, "fetch", "--quiet", "origin"); err != nil {
