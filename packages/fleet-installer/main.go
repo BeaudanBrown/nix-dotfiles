@@ -499,7 +499,10 @@ func provisionPayload(r runner, repo, clonePath, staging string) error {
 			return err
 		}
 	}
-	return r.Interactive("sudo", "install", "-m", "0644", filepath.Join(repo, "flake.lock"), target+"/provisioned-flake.lock")
+	if err := r.Interactive("sudo", "install", "-m", "0644", filepath.Join(repo, "flake.lock"), target+"/provisioned-flake.lock"); err != nil {
+		return err
+	}
+	return r.Interactive("sudo", "chown", "-R", "1000:100", target)
 }
 
 func collectWiFiProfiles(r runner) ([]wifiProfile, error) {
