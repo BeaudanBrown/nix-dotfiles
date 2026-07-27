@@ -150,6 +150,7 @@ set -euo pipefail
 mkdir -p /repo /fixture
 mount -t 9p -o trans=virtio,version=9p2000.L repo /repo
 mount -t 9p -o trans=virtio,version=9p2000.L fixture /fixture
+git config --global --add safe.directory /repo
 cd /repo
 printf '1\\ny\\n' | env \\
   FLEET_INSTALLER_TEST_ALLOW_ROOT=1 \\
