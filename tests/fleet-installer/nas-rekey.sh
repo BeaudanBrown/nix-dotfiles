@@ -34,9 +34,20 @@ git -C "$tmp/sops-secrets" add .
 git -C "$tmp/sops-secrets" commit --quiet -m initial
 git -C "$tmp/sops-secrets" push --quiet -u origin main
 
+age-keygen -o "$tmp/new-age-key.txt" 2>"$tmp/new-age-output"
+new_public_key=$(awk '/Public key:/ { print $3 }' "$tmp/new-age-output")
+cat >"$tmp/new-sops.yaml" <<EOF
+keys:
+  - &master $new_public_key
+creation_rules:
+  - path_regex: secrets/.*\\.yaml$
+    key_groups:
+      - age:
+          - *master
+EOF
 request=$(jq -n \
 	--arg host installer-test \
-	--rawfile yaml "$tmp/sops-secrets/.sops.yaml" \
+	--rawfile yaml "$tmp/new-sops.yaml" \
 	'{targetHost: $host, sopsYamlBase64: ($yaml | @base64)}')
 response=$(printf '%s' "$request" |
 	FLEET_INSTALLER_TEST=1 \
