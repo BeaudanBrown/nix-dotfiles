@@ -33,6 +33,7 @@
   isoImage.squashfsCompression = "zstd -Xcompression-level 3";
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  nix.settings.accept-flake-config = true;
 
   services.qemuGuest.enable = true;
 

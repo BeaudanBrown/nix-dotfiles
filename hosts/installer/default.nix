@@ -178,11 +178,14 @@ in
   };
 
   nix = {
-    settings.experimental-features = [
-      "nix-command"
-      "flakes"
-      "pipe-operators"
-    ];
+    settings = {
+      accept-flake-config = true;
+      experimental-features = [
+        "nix-command"
+        "flakes"
+        "pipe-operators"
+      ];
+    };
     package = pkgs.nixVersions.latest;
   };
 

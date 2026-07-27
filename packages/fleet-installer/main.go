@@ -365,7 +365,7 @@ func provisionUSB(r runner, p prompt) error {
 	} else if err := r.Interactive("sudo", "nix", "run", repo+"#disko", "--", "--mode", "disko", layoutPath); err != nil {
 		return err
 	}
-	if err := r.Interactive("sudo", "nixos-install", "--root", "/mnt", "--flake", repo+"#installer", "--no-root-password", "--no-channel-copy"); err != nil {
+	if err := r.Interactive("sudo", "nixos-install", "--root", "/mnt", "--flake", repo+"#installer", "--no-root-password", "--no-channel-copy", "--option", "accept-flake-config", "true"); err != nil {
 		return err
 	}
 
@@ -641,7 +641,7 @@ func installHost(r runner, p prompt) error {
 	if err := seedTarget(live, repo, host, identities, logPath); err != nil {
 		return err
 	}
-	if err := live.Interactive("nixos-install", "--root", "/mnt", "--flake", repo+"#"+host.Name, "--no-root-password", "--no-channel-copy", "--show-trace"); err != nil {
+	if err := live.Interactive("nixos-install", "--root", "/mnt", "--flake", repo+"#"+host.Name, "--no-root-password", "--no-channel-copy", "--show-trace", "--option", "accept-flake-config", "true"); err != nil {
 		return err
 	}
 	if err := finalizeTarget(live, host, logPath); err != nil {
