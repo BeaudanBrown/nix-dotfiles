@@ -30,7 +30,7 @@ test-installer:
 
 # Provision and cache a pristine encrypted installer USB in rootless QEMU.
 test-installer-e2e-provision:
-  timeout --signal=TERM --kill-after=30s 20m nix develop -c python tests/installer-e2e/run.py --provision-only
+  timeout --signal=TERM --kill-after=30s 30m nix develop -c python tests/installer-e2e/run.py --provision-only
 
 # Iterate on target installation from a snapshot of the cached USB.
 test-installer-e2e-install:

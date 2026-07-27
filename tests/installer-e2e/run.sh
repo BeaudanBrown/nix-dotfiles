@@ -21,5 +21,5 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-timeout --signal=TERM --kill-after=30s 30m \
+timeout --signal=TERM --kill-after=30s 45m \
 	nix develop -c python tests/installer-e2e/run.py

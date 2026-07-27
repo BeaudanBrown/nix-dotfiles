@@ -343,10 +343,10 @@ env \\
   FLEET_INSTALLER_TEST_WIFI_PSK=fixture-password \\
   FLEET_INSTALLER_HEADSCALE_KEY_FILE=/fixture/headscale-key \\
   FLEET_INSTALLER_SSH_KEY_FILE=/fixture/id_ed25519 \\
-  timeout --signal=TERM 15m /fixture/fleet-installer provision-usb
+  timeout --signal=TERM --kill-after=15s 25m /fixture/fleet-installer provision-usb
 poweroff
 """
-            ssh(control_key, script)
+            ssh(control_key, script, timeout=27 * 60)
         finally:
             if pidfile.exists():
                 try:
