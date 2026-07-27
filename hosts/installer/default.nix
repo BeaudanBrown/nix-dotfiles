@@ -38,7 +38,7 @@ in
       fsType = "ext4";
     };
     "/boot" = {
-      device = "/dev/disk/by-label/INSTALLER_BOOT";
+      device = "/dev/disk/by-label/INST_BOOT";
       fsType = "vfat";
       options = [ "umask=0077" ];
     };

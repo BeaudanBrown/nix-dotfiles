@@ -408,7 +408,7 @@ func usbLayout(device, passwordFile string) string {
             format = "vfat";
             mountpoint = "/boot";
             mountOptions = [ "umask=0077" ];
-            extraArgs = [ "-n" "INSTALLER_BOOT" ];
+            extraArgs = [ "-n" "INST_BOOT" ];
           };
         };
         root = {
