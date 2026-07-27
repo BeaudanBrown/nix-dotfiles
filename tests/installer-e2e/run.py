@@ -13,7 +13,6 @@ import pathlib
 import shlex
 import shutil
 import subprocess
-import tempfile
 import time
 
 import pexpect
@@ -86,8 +85,11 @@ def main() -> None:
     if not os.access("/dev/kvm", os.R_OK | os.W_OK):
         raise RuntimeError("/dev/kvm is not available")
 
-    with tempfile.TemporaryDirectory(prefix="fleet-installer-e2e-") as raw_tmp:
-        tmp = pathlib.Path(raw_tmp)
+    tmp = ROOT / ".pi/tmp/installer-e2e-last"
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    tmp.mkdir(parents=True)
+    try:
         package_out = pathlib.Path(
             run("nix", "build", "--no-link", "--print-out-paths", f"{ROOT}#fleet-installer")
         )
@@ -221,17 +223,25 @@ poweroff
             "virtio-net-pci,netdev=net0",
             "-nographic",
         ]
-        child = pexpect.spawn(boot_command[0], boot_command[1:], encoding="utf-8", timeout=180)
+        child = pexpect.spawn(boot_command[0], boot_command[1:], encoding="utf-8", timeout=240)
         register_active_pid(child.pid)
-        child.logfile = open(tmp / "boot.log", "w")
-        child.expect(["passphrase", "Passphrase"])
-        child.sendline(PASSWORD)
-        child.expect("Install a detected fleet host: install-host")
-        child.sendcontrol("a")
-        child.send("x")
-        child.expect(pexpect.EOF)
-        register_active_pid(None)
+        with open(tmp / "boot.log", "w") as boot_log:
+            child.logfile = boot_log
+            try:
+                child.expect(["passphrase", "Passphrase"])
+                child.sendline(PASSWORD)
+                child.expect("Install a detected fleet host: install-host")
+                child.sendcontrol("a")
+                child.send("x")
+                child.expect(pexpect.EOF)
+            finally:
+                if child.isalive():
+                    child.terminate(force=True)
+                register_active_pid(None)
         print("encrypted installer USB provisioned, unlocked, and booted successfully")
+    except Exception:
+        print(f"E2E artifacts retained in {tmp}")
+        raise
 
 
 if __name__ == "__main__":

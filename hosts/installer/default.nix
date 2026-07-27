@@ -46,6 +46,7 @@ in
 
   boot = {
     initrd = {
+      systemd.enable = true;
       availableKernelModules = [
         "ahci"
         "nvme"
@@ -60,6 +61,10 @@ in
       ];
       luks.devices.installer-root.device = "/dev/disk/by-label/INSTALLER_LUKS";
     };
+    kernelParams = [
+      "console=tty1"
+      "console=ttyS0,115200n8"
+    ];
     loader = {
       efi.canTouchEfiVariables = false;
       systemd-boot = {
