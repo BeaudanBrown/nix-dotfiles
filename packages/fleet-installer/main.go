@@ -270,6 +270,12 @@ func repositoryRoot(r runner) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+type provisionInputs struct {
+	HeadscaleKey string
+	SSHKey       string
+	WiFiProfiles []wifiProfile
+}
+
 func provisionUSB(r runner, p prompt) error {
 	if os.Geteuid() == 0 && os.Getenv("FLEET_INSTALLER_TEST_ALLOW_ROOT") != "1" {
 		return errors.New("run provision-usb as your normal user; it invokes sudo only when needed")
@@ -282,6 +288,13 @@ func provisionUSB(r runner, p prompt) error {
 		if err := requireCleanDefaultBranch(r, repo); err != nil {
 			return err
 		}
+	}
+	inputs, err := collectProvisionInputs(r, p)
+	if err != nil {
+		return err
+	}
+	if _, err := r.Run(nil, "nix", "eval", "--raw", repo+"#nixosConfigurations.installer.config.system.build.toplevel.drvPath"); err != nil {
+		return fmt.Errorf("installer configuration does not evaluate: %w", err)
 	}
 	listing, err := r.Run(nil, "lsblk", "--json", "--bytes", "--output", "PATH,NAME,SIZE,MODEL,SERIAL,TRAN,RM,TYPE,MOUNTPOINTS")
 	if err != nil {
@@ -369,7 +382,7 @@ func provisionUSB(r runner, p prompt) error {
 		return err
 	}
 
-	if err := provisionPayload(r, repo, clonePath, staging); err != nil {
+	if err := provisionPayload(r, repo, clonePath, staging, inputs); err != nil {
 		return err
 	}
 	if err := r.Interactive("sudo", "umount", "-R", "/mnt"); err != nil {
@@ -433,7 +446,61 @@ func usbLayout(device, passwordFile string) string {
 `, device, passwordFile)
 }
 
-func provisionPayload(r runner, repo, clonePath, staging string) error {
+func collectProvisionInputs(r runner, p prompt) (provisionInputs, error) {
+	inputs := provisionInputs{}
+	inputs.HeadscaleKey = os.Getenv("FLEET_INSTALLER_HEADSCALE_KEY_FILE")
+	if inputs.HeadscaleKey == "" {
+		inputs.HeadscaleKey = "/run/secrets/headscale/installer_pre_auth"
+	}
+	if info, err := os.Stat(inputs.HeadscaleKey); err != nil || info.Size() == 0 {
+		return inputs, fmt.Errorf("required SOPS secret %s is unavailable", inputs.HeadscaleKey)
+	}
+
+	if configured := os.Getenv("FLEET_INSTALLER_SSH_KEY_FILE"); configured != "" {
+		inputs.SSHKey = configured
+	} else {
+		home, _ := os.UserHomeDir()
+		candidates, _ := filepath.Glob(filepath.Join(home, ".ssh", "id_*"))
+		var privateKeys []string
+		for _, candidate := range candidates {
+			if strings.HasSuffix(candidate, ".pub") || strings.Contains(filepath.Base(candidate), "-cert.") {
+				continue
+			}
+			if info, err := os.Stat(candidate); err == nil && info.Mode().IsRegular() {
+				if _, err := os.Stat(candidate + ".pub"); err == nil {
+					privateKeys = append(privateKeys, candidate)
+				}
+			}
+		}
+		sort.Strings(privateKeys)
+		if len(privateKeys) == 0 {
+			return inputs, errors.New("no SSH private/public identity pair found under ~/.ssh")
+		}
+		selected := 0
+		if len(privateKeys) > 1 {
+			var err error
+			selected, err = p.choose("Select the Git and NAS SSH identity:", privateKeys)
+			if err != nil {
+				return inputs, err
+			}
+		}
+		inputs.SSHKey = privateKeys[selected]
+	}
+	if info, err := os.Stat(inputs.SSHKey); err != nil || info.Size() == 0 {
+		return inputs, fmt.Errorf("Git SSH identity %s is unavailable", inputs.SSHKey)
+	}
+	if _, err := os.Stat(inputs.SSHKey + ".pub"); err != nil {
+		return inputs, fmt.Errorf("Git SSH public key %s.pub is unavailable", inputs.SSHKey)
+	}
+	profiles, err := collectWiFiProfiles(r)
+	if err != nil {
+		return inputs, err
+	}
+	inputs.WiFiProfiles = profiles
+	return inputs, nil
+}
+
+func provisionPayload(r runner, repo, clonePath, staging string, inputs provisionInputs) error {
 	target := "/mnt" + payloadDir
 	if err := r.Interactive("sudo", "install", "-d", "-m", "0700", target, target+"/wifi", target+"/ssh"); err != nil {
 		return err
@@ -442,26 +509,13 @@ func provisionPayload(r runner, repo, clonePath, staging string) error {
 		return err
 	}
 
-	secretPath := os.Getenv("FLEET_INSTALLER_HEADSCALE_KEY_FILE")
-	if secretPath == "" {
-		secretPath = "/run/secrets/headscale/installer_pre_auth"
-	}
-	if err := r.Interactive("sudo", "test", "-s", secretPath); err != nil {
-		return fmt.Errorf("required SOPS secret %s is unavailable", secretPath)
-	}
-	if err := r.Interactive("sudo", "install", "-m", "0600", secretPath, target+"/headscale-auth-key"); err != nil {
+	if err := r.Interactive("sudo", "install", "-m", "0600", inputs.HeadscaleKey, target+"/headscale-auth-key"); err != nil {
 		return err
 	}
 
 	home, _ := os.UserHomeDir()
-	privateKey := os.Getenv("FLEET_INSTALLER_SSH_KEY_FILE")
-	if privateKey == "" {
-		privateKey = filepath.Join(home, ".ssh", "id_ed25519")
-	}
+	privateKey := inputs.SSHKey
 	publicKey := privateKey + ".pub"
-	if _, err := os.Stat(privateKey); err != nil {
-		return fmt.Errorf("Git SSH identity %s is unavailable", privateKey)
-	}
 	if err := r.Interactive("sudo", "install", "-m", "0600", privateKey, target+"/ssh/id_ed25519"); err != nil {
 		return err
 	}
@@ -486,11 +540,7 @@ func provisionPayload(r runner, repo, clonePath, staging string) error {
 		}
 	}
 
-	profiles, err := collectWiFiProfiles(r)
-	if err != nil {
-		return err
-	}
-	for index, profile := range profiles {
+	for index, profile := range inputs.WiFiProfiles {
 		path := filepath.Join(staging, fmt.Sprintf("wifi-%d.nmconnection", index))
 		if err := os.WriteFile(path, []byte(renderWiFiProfile(profile)), 0o600); err != nil {
 			return err
