@@ -691,6 +691,17 @@ func installHost(r runner, p prompt) error {
 			return err
 		}
 	}
+	targetPassword := ""
+	if host.UsesLUKS {
+		targetPassword, err = askPassword(live, "Target LUKS passphrase")
+		if err != nil {
+			return err
+		}
+		confirmation, err := askPassword(live, "Repeat target LUKS passphrase")
+		if err != nil || targetPassword == "" || targetPassword != confirmation {
+			return errors.New("target LUKS passphrases do not match")
+		}
+	}
 	plan := fmt.Sprintf("Install %q, rotate host/user Age identities, push both repositories, and ERASE:\n  %s", host.Name, strings.Join(host.Disks, "\n  "))
 	confirmed := os.Getenv("FLEET_INSTALLER_TEST_CONFIRM") == "1"
 	if !confirmed {
@@ -721,15 +732,7 @@ func installHost(r runner, p prompt) error {
 
 	passwordFile := "/tmp/disko-password"
 	if host.UsesLUKS {
-		password, err := askPassword(live, "Target LUKS passphrase")
-		if err != nil {
-			return err
-		}
-		confirmation, err := askPassword(live, "Repeat target LUKS passphrase")
-		if err != nil || password == "" || password != confirmation {
-			return errors.New("target LUKS passphrases do not match")
-		}
-		if err := os.WriteFile(passwordFile, []byte(password), 0o600); err != nil {
+		if err := os.WriteFile(passwordFile, []byte(targetPassword), 0o600); err != nil {
 			return err
 		}
 		defer os.Remove(passwordFile)
@@ -1003,7 +1006,12 @@ func rekeyAndPush(r runner, repo, host string) error {
 	if _, err := r.Run(nil, "nix", "flake", "update", "sopsSecrets"); err != nil {
 		return err
 	}
-	addPaths := []string{"add", "modules/host-spec/all-hosts.json", "flake.lock"}
+	addPaths := []string{
+		"add",
+		"modules/host-spec/all-hosts.json",
+		"flake.lock",
+		filepath.Join("hosts", host, "hardware.nix"),
+	}
 	if os.Getenv("FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO") != "" {
 		addPaths = append(addPaths, "test-sops-secrets")
 	}
