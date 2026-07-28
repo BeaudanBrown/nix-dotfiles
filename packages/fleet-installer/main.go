@@ -217,7 +217,7 @@ func main() {
 	var err error
 	switch os.Args[1] {
 	case "provision-usb":
-		err = provisionUSB(commandRunner{Out: os.Stdout}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
+		err = provisionUSB(commandRunner{Out: os.Stdout, Timeout: 5 * time.Minute}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
 	case "install-host":
 		err = installHost(commandRunner{Out: os.Stdout}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
 	case "nas-rekey":
