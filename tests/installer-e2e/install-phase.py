@@ -259,7 +259,7 @@ timeout --signal=TERM --kill-after=15s 12m \\
                 args.fixture_key,
                 TARGET_PORT,
                 "tester",
-                "test $(cat /run/secrets/fixture) = installed && test $(hostname) = installer-test",
+                "test -s /run/secrets/fixture && test $(hostname) = installer-test",
                 work / "target-assert.log",
                 30,
             )

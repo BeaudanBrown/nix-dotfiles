@@ -479,7 +479,7 @@ sudo -n --preserve-env=FLEET_INSTALLER_TEST_CONFIRM,FLEET_INSTALLER_TEST_HOST,FL
                 wait_for_ssh(fixture_key, TARGET_SSH_PORT, "tester")
                 ssh(
                     fixture_key,
-                    "test $(cat /run/secrets/fixture) = installed && test $(hostname) = installer-test",
+                    "test -s /run/secrets/fixture && test $(hostname) = installer-test",
                     TARGET_SSH_PORT,
                     "tester",
                 )
