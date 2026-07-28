@@ -218,7 +218,7 @@ readlink -f "$(command -v fleet-installer)"
 sudo -n -l
 timeout --signal=TERM --kill-after=15s 12m \\
   sudo -n --preserve-env=FLEET_INSTALLER_TEST_CONFIRM,FLEET_INSTALLER_TEST_HOST,FLEET_INSTALLER_TEST_LUKS_PASSWORD,FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO,FLEET_INSTALLER_TEST_NO_REBOOT,SOPS_AGE_KEY_FILE \\
-  "$(command -v fleet-installer)" install-host
+  "$(readlink -f "$(command -v fleet-installer)")" install-host
 """
             ssh_logged(
                 args.fixture_key,
