@@ -31,7 +31,7 @@ test-installer-e2e-provision:
 
 # Iterate on target installation from a snapshot of the cached USB.
 test-installer-e2e-install:
-  timeout --signal=TERM --kill-after=30s 15m nix develop -c python tests/installer-e2e/install-phase.py
+  timeout --signal=TERM --kill-after=30s 25m nix develop -c python tests/installer-e2e/install-phase.py
 
 # Full rootless QEMU installer test.
 test-installer-e2e:

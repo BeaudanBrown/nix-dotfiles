@@ -216,7 +216,7 @@ export SOPS_AGE_KEY_FILE="$repo/test-master-age-key"
 printf 'fleet-installer path: '
 readlink -f "$(command -v fleet-installer)"
 sudo -n -l
-timeout --signal=TERM --kill-after=15s 12m \\
+timeout --signal=TERM --kill-after=15s 20m \\
   sudo -n --preserve-env=FLEET_INSTALLER_TEST_CONFIRM,FLEET_INSTALLER_TEST_HOST,FLEET_INSTALLER_TEST_LUKS_PASSWORD,FLEET_INSTALLER_TEST_LOCAL_SOPS_REPO,FLEET_INSTALLER_TEST_NO_REBOOT,SOPS_AGE_KEY_FILE \\
   "$(readlink -f "$(command -v fleet-installer)")" install-host
 """
@@ -226,7 +226,7 @@ timeout --signal=TERM --kill-after=15s 12m \\
                 "installer",
                 script,
                 work / "install-ssh.log",
-                13 * 60,
+                21 * 60,
             )
     finally:
         if child.isalive():

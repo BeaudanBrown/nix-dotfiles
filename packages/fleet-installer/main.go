@@ -32,10 +32,11 @@ type runner interface {
 }
 
 type commandRunner struct {
-	Dir     string
-	Env     []string
-	Out     io.Writer
-	Timeout time.Duration
+	Dir                string
+	Env                []string
+	Out                io.Writer
+	Timeout            time.Duration
+	InteractiveTimeout time.Duration
 }
 
 func (r commandRunner) commandContext(ctx context.Context, name string, args ...string) *exec.Cmd {
@@ -68,11 +69,23 @@ func (r commandRunner) Run(stdin io.Reader, name string, args ...string) ([]byte
 }
 
 func (r commandRunner) Interactive(name string, args ...string) error {
-	cmd := r.commandContext(context.Background(), name, args...)
+	timeout := r.InteractiveTimeout
+	if timeout == 0 {
+		timeout = 30 * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := r.commandContext(ctx, name, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = r.Out
 	cmd.Stderr = r.Out
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return fmt.Errorf("%s %s exceeded %s", name, strings.Join(args, " "), timeout)
+		}
+		return fmt.Errorf("%s %s: %w", name, strings.Join(args, " "), err)
+	}
+	return nil
 }
 
 type lsblkOutput struct {
@@ -217,11 +230,11 @@ func main() {
 	var err error
 	switch os.Args[1] {
 	case "provision-usb":
-		err = provisionUSB(commandRunner{Out: os.Stdout, Timeout: 5 * time.Minute}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
+		err = provisionUSB(commandRunner{Out: os.Stdout, Timeout: 5 * time.Minute, InteractiveTimeout: 45 * time.Minute}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
 	case "install-host":
-		err = installHost(commandRunner{Out: os.Stdout}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
+		err = installHost(commandRunner{Out: os.Stdout, Timeout: 5 * time.Minute, InteractiveTimeout: 60 * time.Minute}, prompt{bufio.NewReader(os.Stdin), os.Stdout})
 	case "nas-rekey":
-		err = nasRekey(commandRunner{Out: os.Stdout}, os.Stdin, os.Stdout)
+		err = nasRekey(commandRunner{Out: os.Stdout, Timeout: 5 * time.Minute}, os.Stdin, os.Stdout)
 	case "version":
 		fmt.Println("fleet-installer 0.1.0")
 	default:
