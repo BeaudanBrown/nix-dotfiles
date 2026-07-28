@@ -636,8 +636,9 @@ func installHost(r runner, p prompt) error {
 			"GIT_COMMITTER_NAME=Fleet Installer",
 			"GIT_COMMITTER_EMAIL=beaudan.brown@gmail.com",
 		},
-		Out:     io.MultiWriter(os.Stdout, logFile),
-		Timeout: 5 * time.Minute,
+		Out:                io.MultiWriter(os.Stdout, logFile),
+		Timeout:            5 * time.Minute,
+		InteractiveTimeout: 60 * time.Minute,
 	}
 
 	if _, err := live.Run(nil, "git", "fetch", "--quiet", "origin"); err != nil {
