@@ -1034,8 +1034,15 @@ func rekeyAndPush(r runner, repo, host string) error {
 	if err := json.Unmarshal(bytes.TrimSpace(response), &result); err != nil || result.Commit == "" {
 		return fmt.Errorf("invalid NAS rekey response: %s", response)
 	}
-	if _, err := r.Run(nil, "nix", "flake", "update", "sopsSecrets"); err != nil {
-		return err
+	if localSOPS != "" {
+		if _, err := r.Run(nil, "nix", "flake", "update", "sopsSecrets"); err != nil {
+			return err
+		}
+	} else {
+		exactInput := "git+ssh://git@github.com/BeaudanBrown/sops-secrets.git?ref=refs/heads/main&rev=" + result.Commit + "&shallow=1"
+		if _, err := r.Run(nil, "nix", "flake", "lock", "--override-input", "sopsSecrets", exactInput); err != nil {
+			return err
+		}
 	}
 	addPaths := []string{
 		"add",
