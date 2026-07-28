@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -31,33 +32,43 @@ type runner interface {
 }
 
 type commandRunner struct {
-	Dir string
-	Env []string
-	Out io.Writer
+	Dir     string
+	Env     []string
+	Out     io.Writer
+	Timeout time.Duration
 }
 
-func (r commandRunner) command(name string, args ...string) *exec.Cmd {
-	cmd := exec.Command(name, args...)
+func (r commandRunner) commandContext(ctx context.Context, name string, args ...string) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = r.Dir
 	cmd.Env = append(os.Environ(), r.Env...)
 	return cmd
 }
 
 func (r commandRunner) Run(stdin io.Reader, name string, args ...string) ([]byte, error) {
-	cmd := r.command(name, args...)
+	timeout := r.Timeout
+	if timeout == 0 {
+		timeout = 2 * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := r.commandContext(ctx, name, args...)
 	cmd.Stdin = stdin
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return stdout.Bytes(), fmt.Errorf("%s %s exceeded %s", name, strings.Join(args, " "), timeout)
+		}
 		return stdout.Bytes(), fmt.Errorf("%s %s: %w\n%s", name, strings.Join(args, " "), err, stderr.String())
 	}
 	return stdout.Bytes(), nil
 }
 
 func (r commandRunner) Interactive(name string, args ...string) error {
-	cmd := r.command(name, args...)
+	cmd := r.commandContext(context.Background(), name, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = r.Out
 	cmd.Stderr = r.Out
@@ -502,7 +513,7 @@ func collectProvisionInputs(r runner, p prompt) (provisionInputs, error) {
 
 func provisionPayload(r runner, repo, clonePath, staging string, inputs provisionInputs) error {
 	target := "/mnt" + payloadDir
-	if err := r.Interactive("sudo", "install", "-d", "-m", "0700", target, target+"/wifi", target+"/ssh"); err != nil {
+	if err := r.Interactive("sudo", "install", "-d", "-m", "0700", target, target+"/wifi", target+"/.ssh"); err != nil {
 		return err
 	}
 	if err := r.Interactive("sudo", "cp", "-a", clonePath, target+"/nix-dotfiles"); err != nil {
@@ -516,10 +527,10 @@ func provisionPayload(r runner, repo, clonePath, staging string, inputs provisio
 	home, _ := os.UserHomeDir()
 	privateKey := inputs.SSHKey
 	publicKey := privateKey + ".pub"
-	if err := r.Interactive("sudo", "install", "-m", "0600", privateKey, target+"/ssh/id_ed25519"); err != nil {
+	if err := r.Interactive("sudo", "install", "-m", "0600", privateKey, target+"/.ssh/id_ed25519"); err != nil {
 		return err
 	}
-	if err := r.Interactive("sudo", "install", "-m", "0644", publicKey, target+"/ssh/id_ed25519.pub"); err != nil {
+	if err := r.Interactive("sudo", "install", "-m", "0644", publicKey, target+"/.ssh/id_ed25519.pub"); err != nil {
 		return err
 	}
 	if err := r.Interactive("sudo", "install", "-d", "-m", "0700", "/mnt/home/installer/.ssh"); err != nil {
@@ -534,7 +545,7 @@ func provisionPayload(r runner, repo, clonePath, staging string, inputs provisio
 	for _, name := range []string{"config", "known_hosts"} {
 		source := filepath.Join(home, ".ssh", name)
 		if _, err := os.Stat(source); err == nil {
-			if err := r.Interactive("sudo", "install", "-m", "0600", source, target+"/ssh/"+name); err != nil {
+			if err := r.Interactive("sudo", "install", "-m", "0600", source, target+"/.ssh/"+name); err != nil {
 				return err
 			}
 		}
@@ -605,14 +616,15 @@ func installHost(r runner, p prompt) error {
 	live := commandRunner{
 		Dir: repo,
 		Env: []string{
-			"HOME=" + payloadDir + "/ssh-home",
-			"GIT_SSH_COMMAND=ssh -F " + payloadDir + "/ssh/config -i " + payloadDir + "/ssh/id_ed25519",
+			"HOME=" + payloadDir,
+			"GIT_SSH_COMMAND=ssh -F " + payloadDir + "/.ssh/config -i " + payloadDir + "/.ssh/id_ed25519",
 			"GIT_AUTHOR_NAME=Fleet Installer",
 			"GIT_AUTHOR_EMAIL=beaudan.brown@gmail.com",
 			"GIT_COMMITTER_NAME=Fleet Installer",
 			"GIT_COMMITTER_EMAIL=beaudan.brown@gmail.com",
 		},
-		Out: io.MultiWriter(os.Stdout, logFile),
+		Out:     io.MultiWriter(os.Stdout, logFile),
+		Timeout: 5 * time.Minute,
 	}
 
 	if _, err := live.Run(nil, "git", "fetch", "--quiet", "origin"); err != nil {
@@ -657,6 +669,19 @@ func installHost(r runner, p prompt) error {
 	host := hosts[selected]
 	if !host.AllDisksPresent {
 		return errors.New("selected host's declared Disko devices are not all present")
+	}
+	installerDevice, err := currentRootDisk(live)
+	if err != nil {
+		return fmt.Errorf("identify installer USB: %w", err)
+	}
+	for _, targetDevice := range host.Disks {
+		resolved, err := filepath.EvalSymlinks(targetDevice)
+		if err != nil {
+			return fmt.Errorf("resolve target disk %s: %w", targetDevice, err)
+		}
+		if resolved == installerDevice {
+			return fmt.Errorf("refusing to erase installer USB %s", installerDevice)
+		}
 	}
 
 	regenerate := false
@@ -731,6 +756,25 @@ func installHost(r runner, p prompt) error {
 	fmt.Fprintln(live.Out, "Installation complete. Rebooting in 10 seconds; press Ctrl-C to cancel.")
 	time.Sleep(10 * time.Second)
 	return live.Interactive("systemctl", "reboot")
+}
+
+func currentRootDisk(r runner) (string, error) {
+	sourceOutput, err := r.Run(nil, "findmnt", "--noheadings", "--output", "SOURCE", "/")
+	if err != nil {
+		return "", err
+	}
+	source := strings.TrimSpace(string(sourceOutput))
+	ancestry, err := r.Run(nil, "lsblk", "--inverse", "--noheadings", "--paths", "--output", "PATH,TYPE", source)
+	if err != nil {
+		return "", err
+	}
+	for _, line := range strings.Split(string(ancestry), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 2 && fields[1] == "disk" {
+			return filepath.EvalSymlinks(fields[0])
+		}
+	}
+	return "", fmt.Errorf("no disk ancestor found for root source %s", source)
 }
 
 type hostMetadata struct {
