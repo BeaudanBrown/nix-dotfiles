@@ -27,6 +27,7 @@ test-installer:
   nix build .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).fleet-installer
   nix build .#fleet-installer
   nix develop -c bash tests/fleet-installer/nas-rekey.sh
+  bash tests/fleet-installer/evaluate-hosts.sh
 
 # Provision and cache a pristine encrypted installer USB in rootless QEMU.
 test-installer-e2e-provision:

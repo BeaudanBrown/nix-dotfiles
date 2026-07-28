@@ -12,6 +12,7 @@
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
+    inputs."pi-harness".nixosModules.pi-harness
     {
       home-manager = {
         extraSpecialArgs = { };
