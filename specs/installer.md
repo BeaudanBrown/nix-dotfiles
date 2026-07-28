@@ -1,215 +1,135 @@
-# NixOS Installer Specification
+# Encrypted Fleet Installer Specification
 
 ## Overview
 
-The repository includes a custom NixOS installer configuration for bootstrapping new machines. This provides:
-- Pre-configured SSH access for remote installation
-- Tailscale connectivity for secure remote access
-- Repository tooling pre-installed
-- Custom partitioning scripts
+The fleet installer is a writable, fleet-generic NixOS installation on a
+LUKS2-encrypted USB. It replaces the legacy ISO and remote two-stage bootstrap
+workflow.
 
-## Directory Structure
-
-```
-nixos-installer/           # Self-contained installer flake
-├── flake.nix              # Installer-specific flake
-├── flake.lock             # Pinned dependencies
-└── ...
-
-hosts/iso/                 # ISO host configuration in main flake
-├── default.nix            # ISO-specific settings
-└── (no hardware.nix)      # Uses NixOS installer modules instead
-```
-
-## Building the Installer
-
-### Using Just Command (Recommended)
+The supported interface is:
 
 ```bash
-just iso
+# On an existing work host
+just installer-usb
+
+# After booting and unlocking the USB
+install-host
 ```
 
-This builds the installer ISO image and places it in `./result/iso/`.
+The USB selects a host after boot, rotates its host and user Age identities,
+asks NAS to rekey SOPS, partitions the declared Disko devices, and installs the
+complete host configuration directly. There is no intermediate minimal target
+installation or post-install rebuild.
 
-### Direct Nix Build
+## Security Model
+
+The USB uses:
+
+- an unencrypted EFI System Partition containing only boot artifacts;
+- a LUKS2 volume containing an ext4 installer root;
+- a passphrase entered during provisioning and on every boot;
+- root-only NetworkManager profiles generated from selected WPA Personal
+  SSID/PSK credentials;
+- a dedicated persistent Headscale pre-auth key;
+- a selected SSH identity for Git and NAS access.
+
+Secure Boot is out of scope. Anyone who knows the USB LUKS passphrase can access
+its provisioning credentials.
+
+The Headscale key is declared as:
+
+```text
+SOPS file: secrets/work.yaml
+Secret:    headscale/installer_pre_auth
+Runtime:   /run/secrets/headscale/installer_pre_auth
+```
+
+The installer logs out of Headscale before rebooting the target.
+
+## USB Provisioning
+
+`just installer-usb` runs as the normal user and invokes sudo only for disk
+operations. It:
+
+1. Requires a clean, pushed default branch.
+2. Verifies the installer configuration, Headscale secret, SSH identity, and
+   active WPA Personal profile before disk erasure.
+3. Lists USB devices reported as removable and at least 32 GiB.
+4. Requires a default-No destructive confirmation.
+5. Prompts twice for the USB LUKS passphrase.
+6. Creates a GPT disk with a FAT EFI partition and LUKS2/ext4 root.
+7. Installs `nixosConfigurations.installer`.
+8. Copies the clean dotfiles clone, Wi-Fi profiles, Headscale key, and selected
+   SSH identity into the encrypted root.
+
+The installer system includes Zsh, Starship, Nixvim, tmux, NetworkManager with
+`nmtui`, OpenSSH, Git, Disko, SOPS, Age, and the `fleet-installer` Go command.
+It automatically logs into the restricted `installer` console account.
+
+## Host Installation
+
+`install-host`:
+
+1. Fast-forwards the encrypted USB's dotfiles clone.
+2. Evaluates only isolated Disko modules to discover eligible x86_64 hosts.
+3. Suggests hosts whose declared `/dev/disk/by-id` devices exist.
+4. Refuses missing devices, NAS, non-x86 hosts, and the installer USB itself.
+5. Optionally overwrites `hosts/<host>/hardware.nix` using
+   `nixos-generate-config --no-filesystems`.
+6. Prompts twice for a target LUKS password when required.
+7. Shows one consolidated default-No confirmation.
+8. Generates a new SSH host identity and new Age key for every configured user.
+9. Updates `all-hosts.json` and sends generated `.sops.yaml` recipients to the
+   NAS helper.
+10. Updates the exact `sopsSecrets` lock, commits, and pushes dotfiles.
+11. Runs Disko and seeds host keys, user Age keys, Wi-Fi profiles, and dotfiles
+    under `/mnt`.
+12. Runs the complete selected host through `nixos-install --no-root-password`.
+13. Copies redacted logs, creates a UEFI boot entry, sets `BootNext`, logs out of
+    Headscale, and reboots after a cancellable ten-second countdown.
+
+A failed invocation is not resumed. Rerunning starts the complete workflow from
+scratch.
+
+## NAS Rekey Helper
+
+`modules/scripts/fleet-installer/nas.nix` installs
+`installer-sops-rekey` on NAS. It runs as `beau` without sudo and:
+
+1. Takes an exclusive repository lock.
+2. Requires the configured SOPS checkout to be clean and fast-forwardable.
+3. Creates a temporary Git worktree.
+4. Installs the supplied `.sops.yaml` and runs strict `sops updatekeys` over all
+   managed YAML files.
+5. Commits and pushes only after all files succeed.
+6. Returns the resulting commit as JSON.
+
+The USB does not carry the private SOPS checkout or master Age key. NAS is
+excluded as an installation target because it hosts this helper.
+
+## Validation
+
+Fast validation:
 
 ```bash
-cd nixos-installer
-nix build
+just test-installer
 ```
 
-## Testing the Installer
+This builds/tests the Go package, exercises the NAS helper against synthetic
+SOPS and Git fixtures, and evaluates every inferred installable fleet host.
 
-### In QEMU
+Rootless QEMU validation is split for fast iteration:
 
 ```bash
-just test-iso
+just test-installer-e2e-provision  # creates cached encrypted USB
+just test-installer-e2e-install    # snapshots cache and installs target
+just test-installer-e2e            # complete from-scratch path
 ```
 
-This launches QEMU with:
-- The built ISO mounted
-- Appropriate memory allocation
-- Network access for testing Tailscale
+The target phase verifies target LUKS unlock, Disko, direct `nixos-install`,
+UEFI boot, SSH, hostname, and protected SOPS secret materialization. Commands
+have explicit stage timeouts, SSH keepalives, PID cleanup, and retained logs
+under `.pi/tmp/`.
 
-### Manual QEMU Launch
-
-```bash
-qemu-system-x86_64 \
-  -enable-kvm \
-  -m 4096 \
-  -cdrom result/iso/nixos-*.iso \
-  -boot d
-```
-
-## Writing to USB
-
-```bash
-just iso-install
-```
-
-This will prompt for the target device and write the ISO.
-
-**⚠️ Warning**: This will erase all data on the target device.
-
-## ISO Host Configuration
-
-The `iso` host in the main flake has special characteristics:
-
-### Minimal Roots
-
-```nix
-roots = [ "minimal" ];
-```
-
-Only essential modules are included to keep the image small and focused.
-
-### No hardware.nix
-
-Instead of a local hardware configuration, it imports standard NixOS installer modules:
-
-```nix
-imports = lib.flatten [
-  "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
-  # ... other installer modules
-];
-```
-
-### Special Settings
-
-- **Compression**: Uses lower compression level (`zstd -3`) for faster builds
-- **Username**: Uses `nixos` instead of `beau`
-- **No Tailscale IP**: Network is configured for DHCP
-
-## Relationship to Main Flake
-
-```
-┌─────────────────────────────────────────┐
-│           Main Flake (flake.nix)        │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │    hosts/iso/default.nix        │    │
-│  │    - minimal roots only         │    │
-│  │    - installer modules          │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │    nixos-installer/             │    │
-│  │    - Self-contained flake       │    │
-│  │    - Additional installer tools │    │
-│  └─────────────────────────────────┘    │
-└─────────────────────────────────────────┘
-```
-
-The `nixos-installer/` directory contains a separate flake that can be built independently, while `hosts/iso/` integrates with the main module system.
-
-## Customizing the Installer
-
-### Adding Packages to ISO
-
-Edit `hosts/iso/default.nix` or create modules with `minimal.nix` suffix that should be included.
-
-### Adding SSH Keys
-
-Ensure SSH keys are configured in the minimal security modules so remote installation is possible.
-
-### Network Configuration
-
-The installer uses DHCP by default. For static IP or special network setup, modify the installer's network configuration.
-
-## Installation Workflow
-
-### 1. Boot from ISO
-
-Boot the target machine from the USB drive.
-
-### 2. Connect via SSH (Optional)
-
-If on the same network or via Tailscale:
-
-```bash
-ssh nixos@<ip-address>
-```
-
-### 3. Partition Disks
-
-Use disko or manual partitioning:
-
-```bash
-# With disko (recommended)
-sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko /tmp/disk-config.nix
-
-# Or manual
-sudo fdisk /dev/nvme0n1
-```
-
-### 4. Mount Filesystems
-
-```bash
-sudo mount /dev/disk/by-label/nixos /mnt
-sudo mkdir -p /mnt/boot
-sudo mount /dev/disk/by-label/boot /mnt/boot
-```
-
-### 5. Clone Repository
-
-```bash
-sudo git clone <repo-url> /mnt/etc/nixos
-```
-
-### 6. Install
-
-```bash
-sudo nixos-install --flake /mnt/etc/nixos#<hostname>
-```
-
-### 7. Reboot
-
-```bash
-sudo reboot
-```
-
-## Troubleshooting
-
-### ISO Won't Boot
-
-- Verify secure boot is disabled or keys are enrolled
-- Try legacy BIOS mode if UEFI fails
-- Check ISO integrity with checksum
-
-### No Network in Installer
-
-- Check physical connection
-- Try `sudo systemctl restart NetworkManager`
-- For WiFi: `nmcli device wifi connect <SSID> password <password>`
-
-### SSH Connection Refused
-
-- Verify SSH service is running: `systemctl status sshd`
-- Check firewall: `sudo iptables -L`
-- Ensure correct IP address
-
-## Related Specifications
-
-- [Hosts](./hosts.md) - The iso host configuration
-- [Roots](./roots.md) - Why iso only uses minimal root
-- [Tooling](./tooling.md) - Just commands for ISO operations
+The final acceptance test is a physical Grill installation performed by the
+user.

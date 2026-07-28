@@ -22,7 +22,7 @@ This is a **flake-based NixOS fleet management** repository with a modular archi
 | `/lib/`              | Custom library functions                             |
 | Private `sops-secrets` repo | Encrypted SOPS files and `.sops.yaml`        |
 | `/specs/`            | Detailed technical specifications                    |
-| `/nixos-installer/`  | Custom installer flake                               |
+| `/hosts/installer/`  | Encrypted fleet-generic USB installer configuration  |
 
 ### Specification Files
 

@@ -36,13 +36,17 @@ Some hosts have convenience wrappers:
 - `just deploy-pi4` - Deploy to Raspberry Pi
 - `just deploy-nas` - Deploy to NAS
 
-### ISO / Installer
+### Encrypted Fleet Installer
 
-| Command           | Description                              |
-|-------------------|------------------------------------------|
-| `just iso`        | Build the custom NixOS installer ISO     |
-| `just test-iso`   | Test the ISO in QEMU virtual machine     |
-| `just iso-install`| Write ISO to a USB drive                 |
+| Command | Description |
+|---------|-------------|
+| `just installer-usb` | Interactively provision an encrypted fleet installer USB |
+| `just test-installer` | Run fast package, rekey, and host-evaluation checks |
+| `just test-installer-e2e-provision` | Provision and cache an encrypted QEMU USB |
+| `just test-installer-e2e-install` | Install a synthetic target from a cached USB snapshot |
+| `just test-installer-e2e` | Run the complete rootless QEMU workflow |
+
+See [Installer](./installer.md) for the architecture and physical workflow.
 
 ### Secrets Management
 

@@ -14,10 +14,6 @@ update:
 age-key:
   nix-shell -p age --run "age-keygen"
 
-iso:
-  rm -rf result
-  nix build --impure .#nixosConfigurations.iso.config.system.build.isoImage && ln -sf result/iso/*.iso latest.iso
-
 # Provision an encrypted, fleet-generic installer USB interactively.
 installer-usb:
   nix run .#fleet-installer -- provision-usb
@@ -58,12 +54,6 @@ gen-imports HOST:
 update-sops:
   @ssh {{sops_host}} 'cd {{sops_repo}} && for file in secrets/*.yaml; do if sops --decrypt "$file" > /dev/null 2>&1; then echo "Updating keys for $file..."; sops updatekeys -y "$file"; else echo "Skipping $file (cannot decrypt)"; fi; done && git add secrets .sops.yaml && if ! git diff --cached --quiet; then git commit -m "Update SOPS secrets"; git push; else echo "No secret changes to commit"; fi'
   @nix flake lock --update-input sopsSecrets
-
-test-iso:
-  qemu-system-x86_64 \
-      -m 4096M \
-      --drive media=cdrom,file=latest.iso,format=raw,readonly=on \
-      --smp cores=4,sockets=1,threads=1 \
 
 # Connect to the OnePlus U-Boot USB serial gadget
 oneplus-serial DEVICE="/dev/ttyACM0":
