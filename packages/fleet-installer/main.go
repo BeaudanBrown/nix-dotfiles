@@ -849,8 +849,14 @@ func discoverHosts(r runner, repo string) ([]hostMetadata, error) {
 		if err := json.Unmarshal(output, &disks); err != nil {
 			return nil, fmt.Errorf("parse Disko metadata for %s: %w", name, err)
 		}
+		if len(spec.Users) == 0 {
+			return nil, fmt.Errorf("installable host %s has no configured users", name)
+		}
 		host := hostMetadata{Name: name, AllDisksPresent: len(disks) > 0}
 		for _, user := range spec.Users {
+			if user.Username == "" || user.UID < 1000 {
+				return nil, fmt.Errorf("installable host %s has invalid user identity %q/%d", name, user.Username, user.UID)
+			}
 			host.Users = append(host.Users, userMetadata{
 				Username: user.Username,
 				Home:     "/home/" + user.Username,
@@ -903,6 +909,9 @@ func generateIdentities(r runner, host hostMetadata) (generatedIdentities, error
 		return identity, err
 	}
 	identity.HostAge = strings.TrimSpace(string(age))
+	if !strings.HasPrefix(identity.HostAge, "age1") {
+		return identity, errors.New("ssh-to-age did not return a valid Age recipient")
+	}
 	for _, user := range host.Users {
 		path := filepath.Join(directory, user.Username+"-age-key.txt")
 		output, err := r.Run(nil, "age-keygen", "-o", path)
@@ -923,6 +932,9 @@ func generateIdentities(r runner, host hostMetadata) (generatedIdentities, error
 				}
 			}
 		}
+		if publicKey == "" {
+			return identity, fmt.Errorf("age-keygen did not return a public key for %s", user.Username)
+		}
 		identity.Users[user.Username] = generatedUserIdentity{Private: path, Public: publicKey}
 	}
 	return identity, nil
@@ -938,15 +950,34 @@ func updateHostSpec(repo, hostname string, identities generatedIdentities) error
 	if err := json.Unmarshal(content, &document); err != nil {
 		return err
 	}
-	hosts := document["hostSpecs"].(map[string]interface{})
-	host := hosts[hostname].(map[string]interface{})
+	hosts, ok := document["hostSpecs"].(map[string]interface{})
+	if !ok {
+		return errors.New("all-hosts.json has no hostSpecs object")
+	}
+	host, ok := hosts[hostname].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("all-hosts.json has no host %q", hostname)
+	}
 	host["ageHostKey"] = identities.HostAge
-	users := host["users"].([]interface{})
+	users, ok := host["users"].([]interface{})
+	if !ok || len(users) == 0 {
+		return fmt.Errorf("host %q has no users array", hostname)
+	}
 	for index, raw := range users {
-		user := raw.(map[string]interface{})
-		name := user["username"].(string)
+		user, ok := raw.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("host %q user %d is malformed", hostname, index)
+		}
+		name, ok := user["username"].(string)
+		if !ok || name == "" {
+			return fmt.Errorf("host %q user %d has no username", hostname, index)
+		}
+		generated, ok := identities.Users[name]
+		if !ok || generated.Public == "" {
+			return fmt.Errorf("no generated Age identity for %s@%s", name, hostname)
+		}
 		user["uid"] = 1000 + index
-		user["ageUserKey"] = identities.Users[name].Public
+		user["ageUserKey"] = generated.Public
 	}
 	updated, err := json.MarshalIndent(document, "", "  ")
 	if err != nil {
