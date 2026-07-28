@@ -1,6 +1,5 @@
 {
   inputs,
-  lib,
   pkgs,
   ...
 }:
@@ -155,7 +154,23 @@ in
         echo "Install a detected fleet host: install-host"
       '';
     };
-    nixvim = import ../../modules/cli/nixvim/config/nixvim.nix { inherit lib; };
+    nixvim = {
+      enable = true;
+      defaultEditor = true;
+      colorschemes.kanagawa = {
+        enable = true;
+        settings.theme = "dragon";
+      };
+      globals.mapleader = " ";
+      opts = {
+        number = true;
+        relativenumber = true;
+        signcolumn = "yes";
+        splitbelow = true;
+        splitright = true;
+        undofile = true;
+      };
+    };
   };
 
   environment = {
