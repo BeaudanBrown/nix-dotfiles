@@ -36,7 +36,7 @@ def register_active_pid(pid: int | None) -> None:
 
 
 def run(*args: str) -> str:
-    return subprocess.check_output(args, text=True).strip()
+    return subprocess.check_output(args, text=True, timeout=10 * 60).strip()
 
 
 def wait_for_ssh(key: pathlib.Path, port: str, user: str = "root") -> None:

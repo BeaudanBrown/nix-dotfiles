@@ -22,7 +22,7 @@ ACTIVE_PID = ROOT / ".pi/tmp/installer-e2e-active.pid"
 
 
 def output(*args: str) -> str:
-    return subprocess.check_output(args, text=True).strip()
+    return subprocess.check_output(args, text=True, timeout=2 * 60).strip()
 
 
 def register(pid: int | None) -> None:
