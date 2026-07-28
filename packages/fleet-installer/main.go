@@ -697,42 +697,78 @@ type userMetadata struct {
 	UID      int    `json:"uid"`
 }
 
-type evaluatedHost struct {
-	System string                   `json:"system"`
-	Disks  map[string]evaluatedDisk `json:"disks"`
-	Users  []userMetadata           `json:"users"`
-}
-
 type evaluatedDisk struct {
 	Device string `json:"device"`
 }
 
+type hostSpecDocument struct {
+	HostSpecs map[string]struct {
+		Users []struct {
+			Username string `json:"username"`
+			UID      int    `json:"uid"`
+		} `json:"users"`
+	} `json:"hostSpecs"`
+}
+
 func discoverHosts(r runner, repo string) ([]hostMetadata, error) {
-	expression := `configs: builtins.mapAttrs (_: c: { system = c.pkgs.stdenv.hostPlatform.system; disks = builtins.mapAttrs (_: d: { device = d.device; }) (c.config.disko.devices.disk or {}); users = map (u: { username = u.username; home = u.home; uid = u.uid; }) (c.config.hostSpec.users or []); }) configs`
-	output, err := r.Run(nil, "nix", "eval", "--json", repo+"#nixosConfigurations", "--apply", expression)
+	specContent, err := os.ReadFile(filepath.Join(repo, "modules", "host-spec", "all-hosts.json"))
 	if err != nil {
 		return nil, err
 	}
-	var evaluated map[string]evaluatedHost
-	if err := json.Unmarshal(output, &evaluated); err != nil {
+	var specs hostSpecDocument
+	if err := json.Unmarshal(specContent, &specs); err != nil {
+		return nil, fmt.Errorf("parse host specs: %w", err)
+	}
+
+	diskoDir := filepath.Join(repo, "modules", "system", "disko")
+	entries, err := os.ReadDir(diskoDir)
+	if err != nil {
 		return nil, err
 	}
+	excluded := map[string]bool{
+		"nas": true, "iso": true, "installer": true, "oneplus": true, "pi4": true,
+		"btrfs": true, "btrfs_2_drives": true, "btrfs_luks": true,
+	}
 	var hosts []hostMetadata
-	for name, item := range evaluated {
-		if item.System != "x86_64-linux" || name == "nas" || name == "iso" || name == "installer" || len(item.Disks) == 0 {
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".nix" {
 			continue
 		}
-		host := hostMetadata{Name: name, Users: item.Users, AllDisksPresent: true}
-		for _, disk := range item.Disks {
+		name := strings.TrimSuffix(entry.Name(), ".nix")
+		spec, known := specs.HostSpecs[name]
+		if excluded[name] || !known {
+			continue
+		}
+		modulePath := filepath.Join(diskoDir, entry.Name())
+		expression := fmt.Sprintf(
+			`let cfg = import %s {}; in builtins.mapAttrs (_: disk: { device = disk.device; }) cfg.disko.devices.disk`,
+			modulePath,
+		)
+		output, err := r.Run(nil, "nix", "eval", "--json", "--impure", "--expr", expression)
+		if err != nil {
+			return nil, fmt.Errorf("evaluate Disko metadata for %s: %w", name, err)
+		}
+		var disks map[string]evaluatedDisk
+		if err := json.Unmarshal(output, &disks); err != nil {
+			return nil, fmt.Errorf("parse Disko metadata for %s: %w", name, err)
+		}
+		host := hostMetadata{Name: name, AllDisksPresent: len(disks) > 0}
+		for _, user := range spec.Users {
+			host.Users = append(host.Users, userMetadata{
+				Username: user.Username,
+				Home:     "/home/" + user.Username,
+				UID:      user.UID,
+			})
+		}
+		for _, disk := range disks {
 			host.Disks = append(host.Disks, disk.Device)
 			if _, err := os.Stat(disk.Device); err != nil {
 				host.AllDisksPresent = false
 			}
 		}
-		luksPath := filepath.Join(repo, "modules", "system", "disko", name+".nix")
-		if content, err := os.ReadFile(luksPath); err == nil {
-			host.UsesLUKS = bytes.Contains(content, []byte("btrfs_luks.nix"))
-		}
+		content, _ := os.ReadFile(modulePath)
+		host.UsesLUKS = bytes.Contains(content, []byte("btrfs_luks.nix"))
+		sort.Strings(host.Disks)
 		hosts = append(hosts, host)
 	}
 	sort.Slice(hosts, func(i, j int) bool { return hosts[i].Name < hosts[j].Name })
