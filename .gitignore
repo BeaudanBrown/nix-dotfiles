@@ -9,3 +9,4 @@ latest.iso
 .pi/
 __pycache__/
 *.pyc
+.syncthing.*.tmp
