@@ -466,7 +466,7 @@ func usbLayout(device, passwordFile string) string {
               type = "filesystem";
               format = "ext4";
               mountpoint = "/";
-              extraArgs = [ "-L" "INSTALLER_ROOT" ];
+              extraArgs = [ "-L" "INSTALLER_ROOT" "-E" "nodiscard" ];
             };
           };
         };

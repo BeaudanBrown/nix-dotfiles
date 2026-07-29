@@ -59,7 +59,7 @@ func TestAskPasswordUsesExplicitTestPassword(t *testing.T) {
 
 func TestUSBLayoutUsesSelectedDiskAndLUKS(t *testing.T) {
 	layout := usbLayout("/dev/disk/by-id/usb-test", "/tmp/key")
-	for _, expected := range []string{"/dev/disk/by-id/usb-test", `type = "luks"`, `format = "ext4"`, "INSTALLER_LUKS"} {
+	for _, expected := range []string{"/dev/disk/by-id/usb-test", `type = "luks"`, `format = "ext4"`, "INSTALLER_LUKS", "nodiscard"} {
 		if !strings.Contains(layout, expected) {
 			t.Fatalf("layout missing %q", expected)
 		}
