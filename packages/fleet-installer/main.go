@@ -224,6 +224,10 @@ type rekeyResponse struct {
 	Commit string `json:"commit"`
 }
 
+type sopsFileStatus struct {
+	Encrypted bool `json:"encrypted"`
+}
+
 func main() {
 	log.SetFlags(0)
 	if len(os.Args) < 2 {
@@ -1277,10 +1281,27 @@ func nasRekey(r runner, input io.Reader, output io.Writer) error {
 	}
 	files, err := filepath.Glob(filepath.Join(worktree, "secrets", "*.yaml"))
 	if err != nil || len(files) == 0 {
-		return errors.New("no managed SOPS files found")
+		return errors.New("no candidate SOPS files found")
 	}
 	workRunner := commandRunner{Dir: worktree, Out: io.Discard}
+	var encryptedFiles []string
 	for _, file := range files {
+		output, err := workRunner.Run(nil, "sops", "filestatus", file)
+		if err != nil {
+			return err
+		}
+		var status sopsFileStatus
+		if err := json.Unmarshal(output, &status); err != nil {
+			return fmt.Errorf("parse SOPS status for %s: %w", file, err)
+		}
+		if status.Encrypted {
+			encryptedFiles = append(encryptedFiles, file)
+		}
+	}
+	if len(encryptedFiles) == 0 {
+		return errors.New("no encrypted SOPS files found")
+	}
+	for _, file := range encryptedFiles {
 		if _, err := workRunner.Run(nil, "sops", "updatekeys", "-y", file); err != nil {
 			return err
 		}

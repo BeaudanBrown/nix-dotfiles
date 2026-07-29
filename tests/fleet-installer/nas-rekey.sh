@@ -26,6 +26,7 @@ creation_rules:
           - *master
 EOF
 printf 'fixture: value\n' >"$tmp/sops-secrets/secrets/work.yaml"
+printf 'public: metadata\n' >"$tmp/sops-secrets/secrets/bottom.yaml"
 (
 	cd "$tmp/sops-secrets"
 	sops --encrypt --in-place secrets/work.yaml
@@ -57,3 +58,4 @@ response=$(printf '%s' "$request" |
 commit=$(jq -er '.commit' <<<"$response")
 test "$commit" = "$(git --git-dir="$tmp/remote.git" rev-parse refs/heads/main)"
 git --git-dir="$tmp/remote.git" log -1 --format=%s refs/heads/main | grep -qx 'Rekey secrets for installer-test'
+test "$(git --git-dir="$tmp/remote.git" show refs/heads/main:secrets/bottom.yaml)" = 'public: metadata'
