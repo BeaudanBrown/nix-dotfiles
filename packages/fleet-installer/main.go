@@ -503,10 +503,10 @@ func collectProvisionInputs(r runner, p prompt) (provisionInputs, error) {
 		return inputs, fmt.Errorf("required SOPS secret %s is unavailable", inputs.HeadscaleKey)
 	}
 
+	home, _ := os.UserHomeDir()
 	if configured := os.Getenv("FLEET_INSTALLER_SSH_KEY_FILE"); configured != "" {
 		inputs.SSHKey = configured
 	} else {
-		home, _ := os.UserHomeDir()
 		candidates, _ := filepath.Glob(filepath.Join(home, ".ssh", "id_*"))
 		var privateKeys []string
 		for _, candidate := range candidates {
@@ -538,6 +538,24 @@ func collectProvisionInputs(r runner, p prompt) (provisionInputs, error) {
 	}
 	if _, err := os.Stat(inputs.SSHKey + ".pub"); err != nil {
 		return inputs, fmt.Errorf("Git SSH public key %s.pub is unavailable", inputs.SSHKey)
+	}
+	if os.Getenv("FLEET_INSTALLER_TEST_SKIP_NAS_PREFLIGHT") != "1" {
+		sshConfig := filepath.Join(home, ".ssh", "config")
+		if _, err := os.Stat(sshConfig); err != nil {
+			return inputs, fmt.Errorf("SSH config %s with the nas host alias is unavailable", sshConfig)
+		}
+		if _, err := r.Run(
+			nil,
+			"ssh",
+			"-F", sshConfig,
+			"-i", inputs.SSHKey,
+			"-o", "IdentitiesOnly=yes",
+			"-o", "BatchMode=yes",
+			"nas",
+			"true",
+		); err != nil {
+			return inputs, fmt.Errorf("selected SSH identity cannot access nas: %w", err)
+		}
 	}
 	profiles, err := collectWiFiProfiles(r)
 	if err != nil {
@@ -575,7 +593,10 @@ func provisionPayload(r runner, repo, clonePath, staging string, inputs provisio
 	if err := r.Interactive("sudo", "install", "-m", "0600", publicKey, "/mnt/home/installer/.ssh/authorized_keys"); err != nil {
 		return err
 	}
-	if err := r.Interactive("sudo", "chown", "-R", "1000:100", "/mnt/home/installer"); err != nil {
+	if err := r.Interactive("sudo", "install", "-m", "0600", privateKey, "/mnt/home/installer/.ssh/id_ed25519"); err != nil {
+		return err
+	}
+	if err := r.Interactive("sudo", "install", "-m", "0644", publicKey, "/mnt/home/installer/.ssh/id_ed25519.pub"); err != nil {
 		return err
 	}
 	for _, name := range []string{"config", "known_hosts"} {
@@ -584,7 +605,13 @@ func provisionPayload(r runner, repo, clonePath, staging string, inputs provisio
 			if err := r.Interactive("sudo", "install", "-m", "0600", source, target+"/.ssh/"+name); err != nil {
 				return err
 			}
+			if err := r.Interactive("sudo", "install", "-m", "0600", source, "/mnt/home/installer/.ssh/"+name); err != nil {
+				return err
+			}
 		}
+	}
+	if err := r.Interactive("sudo", "chown", "-R", "1000:100", "/mnt/home/installer"); err != nil {
+		return err
 	}
 
 	for index, profile := range inputs.WiFiProfiles {
@@ -1065,7 +1092,15 @@ func rekeyAndPush(r runner, repo, host string) error {
 			return err
 		}
 	} else {
-		response, err = r.Run(bytes.NewReader(request), "ssh", "nas", "installer-sops-rekey")
+		response, err = r.Run(
+			bytes.NewReader(request),
+			"ssh",
+			"-F", filepath.Join(payloadDir, ".ssh", "config"),
+			"-i", filepath.Join(payloadDir, ".ssh", "id_ed25519"),
+			"-o", "IdentitiesOnly=yes",
+			"nas",
+			"installer-sops-rekey",
+		)
 		if err != nil {
 			return err
 		}
