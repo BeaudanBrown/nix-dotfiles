@@ -1,20 +1,78 @@
 {
-  "masterKey": "age1rundnwzcmw8wltfxdlrhelrkh5m8t80mej4jhfq6prr9k99uxg8qgqvjfw",
   "hostSpecs": {
-    "grill": {
-      "hostName": "grill",
+    "agent": {
+      "ageHostKey": "age1vu3gyv2apum0qszxmtermc5v6gr97f8j4kqkghvtjnzvfzx4k36q8426pd",
+      "dotfiles": "/home/beau/host/nix-dotfiles",
+      "hostName": "agent",
+      "roots": [
+        "minimal",
+        "common",
+        "network",
+        "client"
+      ],
       "users": [
         {
-          "username": "beau",
+          "ageUserKey": "age1vl99ax4yjzfd9pyzgej0gc9nd59q9eqvmrvl9up7mufn2d9m2g8sqcs2vt",
           "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1k3fhza4mhr8a5dl3n508m88lcnyy4lnqrfwaz3svdzecq33hzqsq77p7dv",
-          "uid": 1000
+          "username": "beau"
         }
       ],
-      "tailIP": "100.64.0.5",
-      "wifi": true,
-      "ageHostKey": "age16sjq2pmrasnvu447v2qry399tqc45ua8jsc5zv8cwm7vq02lkspsurtu6g",
+      "wifi": false
+    },
+    "bottom": {
+      "ageHostKey": "age1qa9kz72cuwkm0z2svvmp5e3fdp3da6ru4gwwgempw38e05fqe9zqfct3vv",
+      "hostName": "bottom",
+      "roots": [
+        "minimal",
+        "common",
+        "network",
+        "client"
+      ],
+      "tailIP": "100.64.0.13",
+      "users": [
+        {
+          "ageUserKey": "age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq",
+          "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
+          "userFullName": "Beaudan Brown",
+          "username": "beau"
+        }
+      ],
+      "wifi": false
+    },
+    "brick": {
+      "ageHostKey": "age1ntdsnyrcnwy700yny3syltatu0avep2jqn2c5z6e68vm9sntcppq6l0aan",
+      "hostName": "brick",
+      "roots": [
+        "minimal",
+        "common",
+        "network",
+        "server"
+      ],
+      "tailIP": "100.64.0.12",
+      "users": [
+        {
+          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf",
+          "email": "mccarm110@gmail.com",
+          "uid": 1000,
+          "userFullName": "Mika",
+          "username": "mikaerem"
+        },
+        {
+          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf",
+          "email": "beaudan.brown@gmail.com",
+          "uid": 1001,
+          "userFullName": "Beaudan Brown",
+          "username": "beau"
+        }
+      ],
+      "wifi": false
+    },
+    "grill": {
+      "ageHostKey": "age18fd7xft8t498na4au45ugn6swws2z208x7cectxutxfpf0jz6dhqa68vpe",
+      "hostName": "grill",
       "roots": [
         "minimal",
         "common",
@@ -23,43 +81,60 @@
         "main",
         "work",
         "gaming"
-      ]
-    },
-    "oneplus": {
-      "hostName": "oneplus",
+      ],
+      "tailIP": "100.64.0.5",
       "users": [
         {
-          "username": "beau",
+          "ageUserKey": "age1mvau0a96ucwzmgs75ydggvv5748g80ese9pzd3y0nxcvly43ed3s2q5ju9",
           "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1jwwxlvz0kqwrdg28t0p26f0mexf46nzrhl7xkamzcpuvnvzc7pxsxnm4rg",
-          "uid": 1000
+          "username": "beau"
         }
       ],
-      "tailIP": "100.64.0.1",
-      "wifi": true,
-      "ageHostKey": "age1rcx35s4lqvdj3vgefwwjmu4kq0regfyvxhtz92fh6nwak5wn8emskdds8r",
+      "wifi": true
+    },
+    "iso": {
+      "ageHostKey": null,
+      "hostName": "iso",
+      "roots": [
+        "minimal"
+      ],
+      "users": [
+        {
+          "ageUserKey": null,
+          "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
+          "userFullName": "Beaudan Brown",
+          "username": "beau"
+        }
+      ]
+    },
+    "laptop": {
+      "ageHostKey": "age1ta8989w025p3yzxdyan8827a0l05hagm6ac4g9dfnl6xwwmupacsxz3kd0",
+      "hostName": "laptop",
       "roots": [
         "minimal",
         "common",
         "network",
-        "client"
-      ]
-    },
-    "nas": {
-      "hostName": "nas",
+        "main",
+        "work"
+      ],
+      "tailIP": "100.64.0.2",
       "users": [
         {
-          "username": "beau",
+          "ageUserKey": "age1rl4hv7d8j4wnpchqlswpvw9qtweq8ek2afcvaha6cyjr5fpv2f5s5wrk6s",
           "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1xx2x7epqxfq8rusvxswtnxx8czx4z94fzlw0jq59ncgnzds9e95suzfh45",
-          "uid": 1000
+          "username": "beau"
         }
       ],
-      "tailIP": "100.64.0.4",
-      "wifi": true,
+      "wifi": true
+    },
+    "nas": {
       "ageHostKey": "age19v6f4dtenths5ykglat3lmfnfw2wy6yx33um7qyjwzmwk7ndr5lsdrc2a0",
+      "hostName": "nas",
       "roots": [
         "minimal",
         "common",
@@ -67,44 +142,63 @@
         "main",
         "server",
         "client"
-      ]
-    },
-    "laptop": {
-      "hostName": "laptop",
+      ],
+      "tailIP": "100.64.0.4",
       "users": [
         {
-          "username": "beau",
+          "ageUserKey": "age1xx2x7epqxfq8rusvxswtnxx8czx4z94fzlw0jq59ncgnzds9e95suzfh45",
           "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1rl4hv7d8j4wnpchqlswpvw9qtweq8ek2afcvaha6cyjr5fpv2f5s5wrk6s",
-          "uid": 1000
+          "username": "beau"
         }
       ],
-      "tailIP": "100.64.0.2",
-      "wifi": true,
-      "ageHostKey": "age1ta8989w025p3yzxdyan8827a0l05hagm6ac4g9dfnl6xwwmupacsxz3kd0",
+      "wifi": true
+    },
+    "oneplus": {
+      "ageHostKey": "age1rcx35s4lqvdj3vgefwwjmu4kq0regfyvxhtz92fh6nwak5wn8emskdds8r",
+      "hostName": "oneplus",
       "roots": [
         "minimal",
         "common",
         "network",
-        "main",
-        "work"
-      ]
-    },
-    "t480": {
-      "hostName": "t480",
+        "client"
+      ],
+      "tailIP": "100.64.0.1",
       "users": [
         {
-          "username": "beau",
+          "ageUserKey": "age1jwwxlvz0kqwrdg28t0p26f0mexf46nzrhl7xkamzcpuvnvzc7pxsxnm4rg",
           "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age10wvkj53rafjcgvvvtmlyx858h2h67jcph8wtp4yp38u00q46uplq2smw3f",
-          "uid": 1000
+          "username": "beau"
         }
       ],
-      "tailIP": "100.64.0.7",
-      "wifi": true,
+      "wifi": true
+    },
+    "pi4": {
+      "ageHostKey": "age193l9m3xmzpn3zqe97fqjkv4dfxqth4d72rzf98ksuc5ctgeal3yst786rk",
+      "hostName": "pi4",
+      "roots": [
+        "minimal",
+        "common",
+        "network",
+        "client"
+      ],
+      "users": [
+        {
+          "ageUserKey": "age170a0x33mdeghu5mzse59yxdlk4tw3m829fptahxn0gau29kcgd6qr72dlv",
+          "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
+          "userFullName": "Beaudan Brown",
+          "username": "beau"
+        }
+      ],
+      "wifi": true
+    },
+    "t480": {
       "ageHostKey": "age1xcfyee2ujfad8sq8u83rc23ht4akjthrhgx6tn4qef0uq9gh4pss2etw8v",
+      "hostName": "t480",
       "roots": [
         "minimal",
         "common",
@@ -113,113 +207,19 @@
         "client",
         "main",
         "work"
-      ]
-    },
-    "pi4": {
-      "hostName": "pi4",
+      ],
+      "tailIP": "100.64.0.7",
       "users": [
         {
-          "username": "beau",
+          "ageUserKey": "age10wvkj53rafjcgvvvtmlyx858h2h67jcph8wtp4yp38u00q46uplq2smw3f",
           "email": "beaudan.brown@gmail.com",
+          "uid": 1000,
           "userFullName": "Beaudan Brown",
-          "ageUserKey": "age170a0x33mdeghu5mzse59yxdlk4tw3m829fptahxn0gau29kcgd6qr72dlv",
-          "uid": 1000
+          "username": "beau"
         }
       ],
-      "wifi": true,
-      "ageHostKey": "age193l9m3xmzpn3zqe97fqjkv4dfxqth4d72rzf98ksuc5ctgeal3yst786rk",
-      "roots": [
-        "minimal",
-        "common",
-        "network",
-        "client"
-      ]
-    },
-    "brick": {
-      "hostName": "brick",
-      "users": [
-        {
-          "username": "mikaerem",
-          "email": "mccarm110@gmail.com",
-          "userFullName": "Mika",
-          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf",
-          "uid": 1000
-        },
-        {
-          "username": "beau",
-          "email": "beaudan.brown@gmail.com",
-          "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1pz7m62pecza0kkw0y6nd9zmhvx6rgrwql6f3ejm3j963z63cwadqtnt4cf",
-          "uid": 1001
-        }
-      ],
-      "tailIP": "100.64.0.12",
-      "wifi": false,
-      "ageHostKey": "age1ntdsnyrcnwy700yny3syltatu0avep2jqn2c5z6e68vm9sntcppq6l0aan",
-      "roots": [
-        "minimal",
-        "common",
-        "network",
-        "server"
-      ]
-    },
-    "bottom": {
-      "hostName": "bottom",
-      "users": [
-        {
-          "username": "beau",
-          "email": "beaudan.brown@gmail.com",
-          "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1uvmu8j80cvq08znv54z4fk2hrv9rszcthfa625neq92uhyud5djsj2ayeq",
-          "uid": 1000
-        }
-      ],
-      "tailIP": "100.64.0.13",
-      "wifi": false,
-      "ageHostKey": "age1qa9kz72cuwkm0z2svvmp5e3fdp3da6ru4gwwgempw38e05fqe9zqfct3vv",
-      "roots": [
-        "minimal",
-        "common",
-        "network",
-        "client"
-      ]
-    },
-    "agent": {
-      "hostName": "agent",
-      "dotfiles": "/home/beau/host/nix-dotfiles",
-      "users": [
-        {
-          "username": "beau",
-          "email": "beaudan.brown@gmail.com",
-          "userFullName": "Beaudan Brown",
-          "ageUserKey": "age1vl99ax4yjzfd9pyzgej0gc9nd59q9eqvmrvl9up7mufn2d9m2g8sqcs2vt",
-          "uid": 1000
-        }
-      ],
-      "wifi": false,
-      "ageHostKey": "age1vu3gyv2apum0qszxmtermc5v6gr97f8j4kqkghvtjnzvfzx4k36q8426pd",
-      "roots": [
-        "minimal",
-        "common",
-        "network",
-        "client"
-      ]
-    },
-    "iso": {
-      "hostName": "iso",
-      "users": [
-        {
-          "username": "beau",
-          "email": "beaudan.brown@gmail.com",
-          "userFullName": "Beaudan Brown",
-          "ageUserKey": null,
-          "uid": 1000
-        }
-      ],
-      "ageHostKey": null,
-      "roots": [
-        "minimal"
-      ]
+      "wifi": true
     }
-  }
+  },
+  "masterKey": "age1rundnwzcmw8wltfxdlrhelrkh5m8t80mej4jhfq6prr9k99uxg8qgqvjfw"
 }
