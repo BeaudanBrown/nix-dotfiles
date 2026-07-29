@@ -2,9 +2,23 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"strings"
 	"testing"
 )
+
+type recordingRunner struct {
+	commands []string
+}
+
+func (r *recordingRunner) Run(_ io.Reader, name string, args ...string) ([]byte, error) {
+	r.commands = append(r.commands, strings.Join(append([]string{name}, args...), " "))
+	return nil, nil
+}
+
+func (r *recordingRunner) Interactive(string, ...string) error {
+	return nil
+}
 
 func TestRemovableDisksFiltersUnsafeDevices(t *testing.T) {
 	input := `{"blockdevices":[
@@ -57,9 +71,24 @@ func TestAskPasswordUsesExplicitTestPassword(t *testing.T) {
 	}
 }
 
+func TestCleanupInstallerUSBUnmountsAndClosesDedicatedMapper(t *testing.T) {
+	runner := &recordingRunner{}
+	if err := cleanupInstallerUSB(runner); err != nil {
+		t.Fatal(err)
+	}
+	expected := []string{
+		"sudo umount -R /mnt",
+		"sudo cryptsetup status installer-root",
+		"sudo cryptsetup close installer-root",
+	}
+	if strings.Join(runner.commands, "\n") != strings.Join(expected, "\n") {
+		t.Fatalf("unexpected cleanup commands: %#v", runner.commands)
+	}
+}
+
 func TestUSBLayoutUsesSelectedDiskAndLUKS(t *testing.T) {
 	layout := usbLayout("/dev/disk/by-id/usb-test", "/tmp/key")
-	for _, expected := range []string{"/dev/disk/by-id/usb-test", `type = "luks"`, `format = "ext4"`, "INSTALLER_LUKS", "nodiscard"} {
+	for _, expected := range []string{"/dev/disk/by-id/usb-test", `type = "luks"`, `format = "ext4"`, "INSTALLER_LUKS"} {
 		if !strings.Contains(layout, expected) {
 			t.Fatalf("layout missing %q", expected)
 		}

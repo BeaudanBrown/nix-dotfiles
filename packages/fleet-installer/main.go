@@ -369,6 +369,13 @@ func provisionUSB(r runner, p prompt) error {
 		return errors.New("USB LUKS passphrases do not match")
 	}
 
+	// A previous run or unplugged USB can leave this dedicated mapper pointing
+	// at a disconnected device. Clear it before Disko and on every exit path.
+	if err := cleanupInstallerUSB(r); err != nil {
+		return fmt.Errorf("clean previous installer USB state: %w", err)
+	}
+	defer cleanupInstallerUSB(r)
+
 	staging, err := os.MkdirTemp("", "fleet-installer-provision-*")
 	if err != nil {
 		return err
@@ -411,11 +418,20 @@ func provisionUSB(r runner, p prompt) error {
 	if err := provisionPayload(r, repo, clonePath, staging, inputs); err != nil {
 		return err
 	}
-	if err := r.Interactive("sudo", "umount", "-R", "/mnt"); err != nil {
-		return err
+	if err := cleanupInstallerUSB(r); err != nil {
+		return fmt.Errorf("unmount installer USB: %w", err)
 	}
 	fmt.Fprintln(p.out, "Encrypted fleet installer USB created successfully.")
 	return nil
+}
+
+func cleanupInstallerUSB(r runner) error {
+	_, _ = r.Run(nil, "sudo", "umount", "-R", "/mnt")
+	if _, err := r.Run(nil, "sudo", "cryptsetup", "status", "installer-root"); err != nil {
+		return nil
+	}
+	_, err := r.Run(nil, "sudo", "cryptsetup", "close", "installer-root")
+	return err
 }
 
 func askPassword(_ runner, message string) (string, error) {
@@ -466,7 +482,7 @@ func usbLayout(device, passwordFile string) string {
               type = "filesystem";
               format = "ext4";
               mountpoint = "/";
-              extraArgs = [ "-L" "INSTALLER_ROOT" "-E" "nodiscard" ];
+              extraArgs = [ "-L" "INSTALLER_ROOT" ];
             };
           };
         };
