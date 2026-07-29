@@ -124,6 +124,7 @@ in
         isNormalUser = true;
         uid = 1000;
         group = "users";
+        extraGroups = [ "networkmanager" ];
         home = "/home/installer";
         shell = pkgs.zsh;
       };
