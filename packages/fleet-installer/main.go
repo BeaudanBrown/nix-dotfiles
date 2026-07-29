@@ -31,6 +31,10 @@ type runner interface {
 	Interactive(name string, args ...string) error
 }
 
+type passwordRunner interface {
+	AskPassword(message string) ([]byte, error)
+}
+
 type commandRunner struct {
 	Dir                string
 	Env                []string
@@ -66,6 +70,15 @@ func (r commandRunner) Run(stdin io.Reader, name string, args ...string) ([]byte
 		return stdout.Bytes(), fmt.Errorf("%s %s: %w\n%s", name, strings.Join(args, " "), err, stderr.String())
 	}
 	return stdout.Bytes(), nil
+}
+
+func (r commandRunner) AskPassword(message string) ([]byte, error) {
+	cmd := r.commandContext(context.Background(), "systemd-ask-password", "--timeout=0", message)
+	output, err := cmd.Output()
+	if err != nil {
+		return output, fmt.Errorf("systemd-ask-password: %w", err)
+	}
+	return output, nil
 }
 
 func (r commandRunner) Interactive(name string, args ...string) error {
@@ -420,7 +433,13 @@ func askPassword(r runner, message string) (string, error) {
 	if password := os.Getenv("FLEET_INSTALLER_TEST_LUKS_PASSWORD"); password != "" {
 		return password, nil
 	}
-	output, err := r.Run(nil, "systemd-ask-password", "--timeout=0", message)
+	var output []byte
+	var err error
+	if passwords, ok := r.(passwordRunner); ok {
+		output, err = passwords.AskPassword(message)
+	} else {
+		output, err = r.Run(nil, "systemd-ask-password", "--timeout=0", message)
+	}
 	if err != nil {
 		return "", err
 	}

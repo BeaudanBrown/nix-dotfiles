@@ -2,9 +2,28 @@ package main
 
 import (
 	"bufio"
+	"fmt"
+	"io"
 	"strings"
 	"testing"
 )
+
+type passwordTestRunner struct {
+	message string
+}
+
+func (r *passwordTestRunner) Run(io.Reader, string, ...string) ([]byte, error) {
+	return nil, fmt.Errorf("bounded Run must not be used for a password prompt")
+}
+
+func (r *passwordTestRunner) Interactive(string, ...string) error {
+	return nil
+}
+
+func (r *passwordTestRunner) AskPassword(message string) ([]byte, error) {
+	r.message = message
+	return []byte("correct horse\n"), nil
+}
 
 func TestRemovableDisksFiltersUnsafeDevices(t *testing.T) {
 	input := `{"blockdevices":[
@@ -46,6 +65,17 @@ func TestRenderWiFiProfileIsPortable(t *testing.T) {
 		if strings.Contains(profile, forbidden) {
 			t.Fatalf("profile contains hardware binding %q", forbidden)
 		}
+	}
+}
+
+func TestAskPasswordBypassesBoundedCommandRunner(t *testing.T) {
+	runner := &passwordTestRunner{}
+	password, err := askPassword(runner, "USB LUKS passphrase")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if password != "correct horse" || runner.message != "USB LUKS passphrase" {
+		t.Fatalf("unexpected password prompt result: %q / %q", password, runner.message)
 	}
 }
 
