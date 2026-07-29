@@ -71,7 +71,7 @@
       "wifi": false
     },
     "grill": {
-      "ageHostKey": "age18fd7xft8t498na4au45ugn6swws2z208x7cectxutxfpf0jz6dhqa68vpe",
+      "ageHostKey": "age14gdraea0t4kmgfzw2e6l2mzmtjv4rslekszc7mgfj2jj645y85qs2z2vfc",
       "hostName": "grill",
       "roots": [
         "minimal",
@@ -85,7 +85,7 @@
       "tailIP": "100.64.0.5",
       "users": [
         {
-          "ageUserKey": "age1mvau0a96ucwzmgs75ydggvv5748g80ese9pzd3y0nxcvly43ed3s2q5ju9",
+          "ageUserKey": "age1hzcx7x3wl8zkru6wv5fp3frvtgmf8dcayd29agk2turt5y2phcdqs5673t",
           "email": "beaudan.brown@gmail.com",
           "uid": 1000,
           "userFullName": "Beaudan Brown",
