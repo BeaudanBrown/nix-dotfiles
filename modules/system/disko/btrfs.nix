@@ -1,7 +1,12 @@
-{ deviceName, swapSize, ... }:
+{
+  deviceName,
+  diskName ? "main",
+  swapSize,
+  ...
+}:
 {
   disk = {
-    main = {
+    ${diskName} = {
       type = "disk";
       device = deviceName;
       content = {

@@ -8,12 +8,14 @@ import (
 )
 
 type recordingRunner struct {
-	commands []string
+	commands  []string
+	responses map[string]string
 }
 
 func (r *recordingRunner) Run(_ io.Reader, name string, args ...string) ([]byte, error) {
-	r.commands = append(r.commands, strings.Join(append([]string{name}, args...), " "))
-	return nil, nil
+	command := strings.Join(append([]string{name}, args...), " ")
+	r.commands = append(r.commands, command)
+	return []byte(r.responses[command]), nil
 }
 
 func (r *recordingRunner) Interactive(string, ...string) error {
@@ -80,6 +82,17 @@ func TestManagedSOPSPathExcludesLegacyEncryptedFiles(t *testing.T) {
 	managed, err = managedSOPSPath(config, "secrets/rozzy.yaml")
 	if err != nil || managed {
 		t.Fatalf("legacy file should be unmanaged: %v / %v", managed, err)
+	}
+}
+
+func TestValidateTargetMountsRejectsAnotherDisk(t *testing.T) {
+	runner := &recordingRunner{responses: map[string]string{
+		"findmnt --noheadings --output SOURCE /mnt":                         "/dev/zero[/rootfs]\n",
+		"lsblk --inverse --noheadings --paths --output PATH,TYPE /dev/zero": "/dev/zero disk\n",
+	}}
+	err := validateTargetMounts(runner, hostMetadata{Disks: []string{"/dev/null"}})
+	if err == nil || !strings.Contains(err.Error(), "non-target disk") {
+		t.Fatalf("expected non-target mount rejection, got %v", err)
 	}
 }
 

@@ -410,10 +410,10 @@ func provisionUSB(r runner, p prompt) error {
 
 	fmt.Fprintln(p.out, "Provisioning encrypted installer USB. This can take several minutes.")
 	if os.Getenv("FLEET_INSTALLER_TEST_USE_PATH_DISKO") == "1" {
-		if err := r.Interactive("sudo", "disko", "--mode", "disko", layoutPath); err != nil {
+		if err := r.Interactive("sudo", "disko", "--mode", "destroy,format,mount", "--yes-wipe-all-disks", layoutPath); err != nil {
 			return err
 		}
-	} else if err := r.Interactive("sudo", "nix", "run", repo+"#disko", "--", "--mode", "disko", layoutPath); err != nil {
+	} else if err := r.Interactive("sudo", "nix", "run", repo+"#disko", "--", "--mode", "destroy,format,mount", "--yes-wipe-all-disks", layoutPath); err != nil {
 		return err
 	}
 	if err := r.Interactive("sudo", "nixos-install", "--root", "/mnt", "--flake", repo+"#installer", "--no-root-password", "--no-channel-copy", "--option", "accept-flake-config", "true"); err != nil {
@@ -810,7 +810,10 @@ func installHost(r runner, p prompt) error {
 		defer os.Remove(passwordFile)
 	}
 
-	if err := live.Interactive("nix", "run", repo+"#disko", "--", "--mode", "disko", "--flake", repo+"#"+host.Name); err != nil {
+	if err := live.Interactive("nix", "run", repo+"#disko", "--", "--mode", "destroy,format,mount", "--yes-wipe-all-disks", "--flake", repo+"#"+host.Name); err != nil {
+		return err
+	}
+	if err := validateTargetMounts(live, host); err != nil {
 		return err
 	}
 	if err := seedTarget(live, repo, host, identities, logPath); err != nil {
@@ -833,12 +836,10 @@ func installHost(r runner, p prompt) error {
 	return live.Interactive("systemctl", "reboot")
 }
 
-func currentRootDisk(r runner) (string, error) {
-	sourceOutput, err := r.Run(nil, "findmnt", "--noheadings", "--output", "SOURCE", "/")
-	if err != nil {
-		return "", err
+func diskAncestor(r runner, source string) (string, error) {
+	if index := strings.IndexByte(source, '['); index >= 0 {
+		source = source[:index]
 	}
-	source := strings.TrimSpace(string(sourceOutput))
 	ancestry, err := r.Run(nil, "lsblk", "--inverse", "--noheadings", "--paths", "--output", "PATH,TYPE", source)
 	if err != nil {
 		return "", err
@@ -849,7 +850,41 @@ func currentRootDisk(r runner) (string, error) {
 			return filepath.EvalSymlinks(fields[0])
 		}
 	}
-	return "", fmt.Errorf("no disk ancestor found for root source %s", source)
+	return "", fmt.Errorf("no disk ancestor found for source %s", source)
+}
+
+func currentRootDisk(r runner) (string, error) {
+	sourceOutput, err := r.Run(nil, "findmnt", "--noheadings", "--output", "SOURCE", "/")
+	if err != nil {
+		return "", err
+	}
+	return diskAncestor(r, strings.TrimSpace(string(sourceOutput)))
+}
+
+func validateTargetMounts(r runner, host hostMetadata) error {
+	allowed := make(map[string]bool, len(host.Disks))
+	for _, device := range host.Disks {
+		resolved, err := filepath.EvalSymlinks(device)
+		if err != nil {
+			return fmt.Errorf("resolve target disk %s: %w", device, err)
+		}
+		allowed[resolved] = true
+	}
+	for _, mountpoint := range []string{"/mnt", "/mnt/boot"} {
+		output, err := r.Run(nil, "findmnt", "--noheadings", "--output", "SOURCE", mountpoint)
+		if err != nil {
+			return fmt.Errorf("verify target mount %s: %w", mountpoint, err)
+		}
+		source := strings.TrimSpace(string(output))
+		disk, err := diskAncestor(r, source)
+		if err != nil {
+			return fmt.Errorf("verify target mount %s source %s: %w", mountpoint, source, err)
+		}
+		if !allowed[disk] {
+			return fmt.Errorf("refusing installation: %s source %s belongs to non-target disk %s", mountpoint, source, disk)
+		}
+	}
+	return nil
 }
 
 type hostMetadata struct {
