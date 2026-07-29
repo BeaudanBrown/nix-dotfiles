@@ -18,6 +18,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"golang.org/x/term"
 )
 
 const (
@@ -29,10 +31,6 @@ const (
 type runner interface {
 	Run(stdin io.Reader, name string, args ...string) ([]byte, error)
 	Interactive(name string, args ...string) error
-}
-
-type passwordRunner interface {
-	AskPassword(message string) ([]byte, error)
 }
 
 type commandRunner struct {
@@ -70,15 +68,6 @@ func (r commandRunner) Run(stdin io.Reader, name string, args ...string) ([]byte
 		return stdout.Bytes(), fmt.Errorf("%s %s: %w\n%s", name, strings.Join(args, " "), err, stderr.String())
 	}
 	return stdout.Bytes(), nil
-}
-
-func (r commandRunner) AskPassword(message string) ([]byte, error) {
-	cmd := r.commandContext(context.Background(), "systemd-ask-password", "--timeout=0", message)
-	output, err := cmd.Output()
-	if err != nil {
-		return output, fmt.Errorf("systemd-ask-password: %w", err)
-	}
-	return output, nil
 }
 
 func (r commandRunner) Interactive(name string, args ...string) error {
@@ -429,21 +418,20 @@ func provisionUSB(r runner, p prompt) error {
 	return nil
 }
 
-func askPassword(r runner, message string) (string, error) {
+func askPassword(_ runner, message string) (string, error) {
 	if password := os.Getenv("FLEET_INSTALLER_TEST_LUKS_PASSWORD"); password != "" {
 		return password, nil
 	}
-	var output []byte
-	var err error
-	if passwords, ok := r.(passwordRunner); ok {
-		output, err = passwords.AskPassword(message)
-	} else {
-		output, err = r.Run(nil, "systemd-ask-password", "--timeout=0", message)
-	}
+	fmt.Fprint(os.Stderr, message+": ")
+	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Fprintln(os.Stderr)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("read password: %w", err)
 	}
-	return strings.TrimSpace(string(output)), nil
+	if len(password) == 0 {
+		return "", errors.New("password must not be empty")
+	}
+	return string(password), nil
 }
 
 func usbLayout(device, passwordFile string) string {
