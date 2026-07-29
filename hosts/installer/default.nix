@@ -148,10 +148,12 @@ in
   programs = {
     zsh = {
       enable = true;
-      shellInit = ''
-        eval "$(${pkgs.starship}/bin/starship init zsh)"
+      interactiveShellInit = ''
         echo "Wi-Fi fallback: nmtui"
         echo "Install a detected fleet host: install-host"
+      '';
+      promptInit = ''
+        eval "$(${pkgs.starship}/bin/starship init zsh)"
       '';
     };
     nixvim = {
