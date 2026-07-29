@@ -26,14 +26,17 @@ creation_rules:
           - *master
 EOF
 printf 'fixture: value\n' >"$tmp/sops-secrets/secrets/work.yaml"
+printf 'legacy: value\n' >"$tmp/sops-secrets/secrets/rozzy.yaml"
 printf 'public: metadata\n' >"$tmp/sops-secrets/secrets/bottom.yaml"
 (
 	cd "$tmp/sops-secrets"
 	sops --encrypt --in-place secrets/work.yaml
+	sops --encrypt --in-place secrets/rozzy.yaml
 )
 git -C "$tmp/sops-secrets" add .
 git -C "$tmp/sops-secrets" commit --quiet -m initial
 git -C "$tmp/sops-secrets" push --quiet -u origin main
+legacy_blob=$(git --git-dir="$tmp/remote.git" rev-parse refs/heads/main:secrets/rozzy.yaml)
 
 age-keygen -o "$tmp/new-age-key.txt" 2>"$tmp/new-age-output"
 new_public_key=$(awk '/Public key:/ { print $3 }' "$tmp/new-age-output")
@@ -41,7 +44,7 @@ cat >"$tmp/new-sops.yaml" <<EOF
 keys:
   - &master $new_public_key
 creation_rules:
-  - path_regex: secrets/.*\\.yaml$
+  - path_regex: secrets/work\\.yaml$
     key_groups:
       - age:
           - *master
@@ -59,3 +62,4 @@ commit=$(jq -er '.commit' <<<"$response")
 test "$commit" = "$(git --git-dir="$tmp/remote.git" rev-parse refs/heads/main)"
 git --git-dir="$tmp/remote.git" log -1 --format=%s refs/heads/main | grep -qx 'Rekey secrets for installer-test'
 test "$(git --git-dir="$tmp/remote.git" show refs/heads/main:secrets/bottom.yaml)" = 'public: metadata'
+test "$(git --git-dir="$tmp/remote.git" rev-parse refs/heads/main:secrets/rozzy.yaml)" = "$legacy_blob"

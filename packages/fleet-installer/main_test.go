@@ -71,6 +71,18 @@ func TestAskPasswordUsesExplicitTestPassword(t *testing.T) {
 	}
 }
 
+func TestManagedSOPSPathExcludesLegacyEncryptedFiles(t *testing.T) {
+	config := []byte("creation_rules:\n  - path_regex: secrets/work\\.yaml$\n")
+	managed, err := managedSOPSPath(config, "/tmp/worktree/secrets/work.yaml")
+	if err != nil || !managed {
+		t.Fatalf("active file should be managed: %v / %v", managed, err)
+	}
+	managed, err = managedSOPSPath(config, "secrets/rozzy.yaml")
+	if err != nil || managed {
+		t.Fatalf("legacy file should be unmanaged: %v / %v", managed, err)
+	}
+}
+
 func TestCleanupInstallerUSBUnmountsAndClosesDedicatedMapper(t *testing.T) {
 	runner := &recordingRunner{}
 	if err := cleanupInstallerUSB(runner); err != nil {

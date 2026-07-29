@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -1230,6 +1231,37 @@ func finalizeTarget(r runner, host hostMetadata, logPath string) error {
 	return r.Interactive("efibootmgr", "--bootnext", entry)
 }
 
+func managedSOPSPath(config []byte, path string) (bool, error) {
+	var rules []*regexp.Regexp
+	scanner := bufio.NewScanner(bytes.NewReader(config))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		value, found := strings.CutPrefix(line, "- path_regex:")
+		if !found {
+			continue
+		}
+		pattern := strings.TrimSpace(value)
+		rule, err := regexp.Compile(pattern)
+		if err != nil {
+			return false, fmt.Errorf("compile SOPS path rule %q: %w", pattern, err)
+		}
+		rules = append(rules, rule)
+	}
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+	if len(rules) == 0 {
+		return false, errors.New("generated SOPS configuration has no creation rules")
+	}
+	path = filepath.ToSlash(path)
+	for _, rule := range rules {
+		if rule.MatchString(path) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func nasRekey(r runner, input io.Reader, output io.Writer) error {
 	if os.Getenv("USER") != "beau" && os.Getenv("FLEET_INSTALLER_TEST") != "1" {
 		return errors.New("nas-rekey must run as beau")
@@ -1286,7 +1318,18 @@ func nasRekey(r runner, input io.Reader, output io.Writer) error {
 	workRunner := commandRunner{Dir: worktree, Out: io.Discard}
 	var encryptedFiles []string
 	for _, file := range files {
-		output, err := workRunner.Run(nil, "sops", "filestatus", file)
+		relative, err := filepath.Rel(worktree, file)
+		if err != nil {
+			return err
+		}
+		managed, err := managedSOPSPath(yaml, relative)
+		if err != nil {
+			return err
+		}
+		if !managed {
+			continue
+		}
+		output, err := workRunner.Run(nil, "sops", "filestatus", relative)
 		if err != nil {
 			return err
 		}
