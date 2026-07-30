@@ -34,11 +34,9 @@
     enableDefaultConfig = false;
     settings = {
       t480 = {
-        HostName = "t480.lan";
         User = "beau";
       };
       laptop = {
-        HostName = "laptop.lan";
         User = "beau";
       };
       rozzy = {
@@ -50,22 +48,18 @@
         User = "beau";
       };
       grill = {
-        HostName = "grill.lan";
         User = "beau";
       };
       nas = {
-        HostName = "nas.lan";
         User = "beau";
       };
       agent = {
-        HostName = "agent";
         User = "beau";
       };
       mcbrick = {
         User = "mikaerem";
       };
       pi4 = {
-        HostName = "pi4.lan";
         User = "beau";
       };
       pizero = {
@@ -74,7 +68,7 @@
         Port = 22;
       };
       dad = {
-        HostName = "slippers.beaudan.me";
+        HostName = "steve-pc";
         User = "steve";
         Port = 9022;
       };

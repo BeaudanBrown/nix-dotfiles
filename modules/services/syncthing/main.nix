@@ -4,7 +4,6 @@
   ...
 }:
 let
-  syncRoot = "${config.hostSpec.home}/sync";
   commonIgnorePatterns = [
     "(?d)**/.git"
     "(?d)**/.direnv"
@@ -76,7 +75,7 @@ in
       folders = addCommonIgnorePatterns {
         "documents" = {
           id = "txxit-w9cwz";
-          path = "${syncRoot}/documents";
+          path = "${config.hostSpec.home}/documents";
           devices = [
             "server"
             "grill"
@@ -86,7 +85,7 @@ in
         };
         "monash" = {
           id = "twjfr-ekoqc";
-          path = "${syncRoot}/monash";
+          path = "${config.hostSpec.home}/monash";
           devices = [
             "server"
             "grill"
@@ -96,7 +95,7 @@ in
         };
         "collab" = {
           id = "vccfp-s5yfe";
-          path = "${syncRoot}/collab";
+          path = "${config.hostSpec.home}/collab";
           devices = [
             "server"
             "grill"

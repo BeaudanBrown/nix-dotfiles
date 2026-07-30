@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 let
-  agentMount = "${config.hostSpec.home}/agent";
+  agentMount = "${config.hostSpec.home}/nas/agent";
 in
 {
   systemd.tmpfiles.rules = [
