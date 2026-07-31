@@ -35,7 +35,10 @@ in
     ];
   };
 
-  programs.nixvim = (import ./config/nixvim.nix specialArgs);
+  programs.nixvim = (import ./config/nixvim.nix specialArgs) // {
+    # Deliberately use the fleet-wide Nixpkgs that Nixvim follows in flake.nix.
+    nixpkgs.source = specialArgs.inputs.nixpkgs;
+  };
 
   hm.primary.home.file.".Rprofile" =
     let

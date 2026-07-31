@@ -163,7 +163,7 @@
 
     art-domain = {
       url = "github:apitchford/lit";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
 
     joan-flash = {
