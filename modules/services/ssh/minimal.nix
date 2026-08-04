@@ -76,6 +76,15 @@
         HostName = "m3.massive.org.au";
         User = "beaudanc";
       };
+      "Match host grill,t480 command \"\"" = {
+        # Keep the target awake for the lifetime of an interactive SSH shell.
+        # Command and subsystem invocations (for example, scp and sftp) do not
+        # match and retain their normal behavior.
+        RemoteCommand = ''
+          exec systemd-inhibit --what=idle --mode=block --who=ssh --why="Interactive SSH session" "''${SHELL:-/bin/sh}" -l
+        '';
+        RequestTTY = "yes";
+      };
       "*" = {
         ForwardAgent = false;
         ServerAliveInterval = 0;
