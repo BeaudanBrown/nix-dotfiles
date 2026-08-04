@@ -7,9 +7,25 @@
         src = pkgs.fetchFromGitHub {
           owner = "R-nvim";
           repo = "r.nvim";
+          # v1.0.0, which is also the latest upstream commit.
           rev = "c56ebe0f8445e251673981c40ac2d74659ecd6ed";
           hash = "sha256-FywUL3mV2+kfu+rO6uUFyUv80EflbdgSkYuSnW965UE=";
         };
+        # R.nvim creates a source archive for installing nvimcom into the
+        # active R environment. Files copied from the Nix store are read-only,
+        # so record writable owner permissions in that archive.
+        postPatch = ''
+          substituteInPlace lua/r/server.lua \
+            --replace-fail \
+            '{ "tar", "--no-xattrs", "-czf", nvc_fn, "nvimcom" }' \
+            '{ "tar", "--no-xattrs", "--mode=u+rwX", "-czf", nvc_fn, "nvimcom" }'
+        '';
+        # R.nvim 1.0 moved rnvimserver out of nvimcom and now expects the
+        # binary beside the plugin sources. Build it while $out is writable;
+        # runtime compilation cannot write into the Nix store.
+        postInstall = ''
+          make -C "$out/rnvimserver"
+        '';
         nvimSkipModules = [
           "r.pdf.sumatra"
           "r.roxygen"

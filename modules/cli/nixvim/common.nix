@@ -10,6 +10,7 @@ let
       pkgs.fetchFromGitHub {
         owner = "R-nvim";
         repo = "R.nvim";
+        # v1.0.0, which is also the latest upstream commit.
         rev = "c56ebe0f8445e251673981c40ac2d74659ecd6ed";
         hash = "sha256-FywUL3mV2+kfu+rO6uUFyUv80EflbdgSkYuSnW965UE=";
       }

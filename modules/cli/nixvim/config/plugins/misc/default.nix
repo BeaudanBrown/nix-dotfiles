@@ -9,6 +9,12 @@
     markdown-preview.enable = true;
     nix.enable = true;
     diffview.enable = true;
-    otter.enable = true;
+    otter = {
+      enable = true;
+      # Quarto activates Otter for embedded-language buffers itself. Global
+      # LspAttach activation recursively reactivates Otter on its own virtual
+      # buffers and on R.nvim's language server.
+      autoActivate = false;
+    };
   };
 }
