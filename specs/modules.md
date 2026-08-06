@@ -240,7 +240,7 @@ let
   sessionDir = "${config.syncedState.root}/pi/sessions";
 in
 {
-  environment.sessionVariables.PI_CODING_AGENT_SESSION_DIR = sessionDir;
+  services.pi-harness.sessionDirectory = sessionDir;
 }
 ```
 
