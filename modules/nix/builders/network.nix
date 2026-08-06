@@ -4,7 +4,7 @@ let
 
   allBuildMachines = [
     {
-      hostName = "nas";
+      hostName = "nas-builder";
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -25,7 +25,8 @@ let
   ];
 
   buildMachines =
-    allBuildMachines |> builtins.filter (builder: builder.hostName != config.hostSpec.hostName);
+    allBuildMachines
+    |> builtins.filter (builder: builder.hostName != "${config.hostSpec.hostName}-builder");
 in
 {
   nix = {
@@ -38,7 +39,8 @@ in
   };
 
   programs.ssh.extraConfig = lib.mkAfter ''
-    Host nas
+    Host nas-builder
+      HostName nas
       ConnectTimeout 5
       BatchMode yes
   '';
