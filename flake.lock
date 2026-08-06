@@ -1096,11 +1096,11 @@
         "pi-lsp-extension-src": "pi-lsp-extension-src_2"
       },
       "locked": {
-        "lastModified": 1785467147,
-        "narHash": "sha256-yWfidX+7kFMklGab8BKV6gPVLqDxBzMieEfRVWX6G9o=",
+        "lastModified": 1785987348,
+        "narHash": "sha256-WqwcR9xxEMG1qP6BnZP6Cl22VN8Kvvwp/JM3vBctdXI=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "c93e8acee793ea812cf81acb8688cf6ae49d658b",
+        "rev": "6360d8bb6468c8674efe48c5c1db87ce2b4ada47",
         "type": "github"
       },
       "original": {
@@ -1342,10 +1342,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1785298034,
-        "narHash": "sha256-l9ZLKgp/PlTPBnDq4i/N0pzhLzlbOyvCl/dR7O0YOIk=",
+        "lastModified": 1785987081,
+        "narHash": "sha256-e47CmaFgkx/m7iYoikYZz7VVcBImpTECxeQaIPPHkZs=",
         "ref": "refs/heads/main",
-        "rev": "8be2711226b2752e1b6de2861964f3c50a95f01c",
+        "rev": "6f46a5e8d02692c4a5ee382eedaa296d6a457527",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"
