@@ -67,13 +67,15 @@ PID_PATH="/tmp/$WORKSPACE_NAME"
 find_app_pid() {
 	if [[ -n $CLASS_NAME ]]; then
 		echo "Searching by classname" >&2
-		hyprctl clients -j | jq -r --arg class_name "$CLASS_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1
+		hyprctl clients -j | jq -r --arg class_name "$CLASS_NAME" \
+			'.[] | select((.class | ascii_downcase) == ($class_name | ascii_downcase)) | .pid' | tail -n1
 	elif [[ -n $TITLE ]]; then
 		echo "Searching by title" >&2
 		hyprctl clients -j | jq -r --arg title "$TITLE" '.[] | select(.initialTitle == $title) | .pid' | tail -n1
 	else
 		echo "Searching by appname" >&2
-		hyprctl clients -j | jq -r --arg class_name "$APP_NAME" '.[] | select(.class == $class_name) | .pid' | tail -n1
+		hyprctl clients -j | jq -r --arg class_name "$APP_NAME" \
+			'.[] | select((.class | ascii_downcase) == ($class_name | ascii_downcase)) | .pid' | tail -n1
 	fi
 }
 
