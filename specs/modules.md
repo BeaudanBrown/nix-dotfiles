@@ -237,10 +237,19 @@ state or data directory beneath this root:
 
 ```nix
 let
-  sessionDir = "${config.syncedState.root}/pi/sessions";
+  synchronizedSessions = "${config.syncedState.root}/pi/sessions";
+  nativeSessions = "${config.hostSpec.home}/.pi/agent/sessions";
 in
 {
-  services.pi-harness.sessionDirectory = sessionDir;
+  systemd.mounts = [
+    {
+      what = synchronizedSessions;
+      where = nativeSessions;
+      type = "none";
+      options = "bind";
+      wantedBy = [ "multi-user.target" ];
+    }
+  ];
 }
 ```
 
