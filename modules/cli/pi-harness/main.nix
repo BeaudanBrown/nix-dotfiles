@@ -23,7 +23,6 @@ in
       type = "none";
       options = "bind";
       wantedBy = [ "multi-user.target" ];
-      after = [ "systemd-tmpfiles-setup.service" ];
       before = [ "syncthing.service" ];
     }
   ];
