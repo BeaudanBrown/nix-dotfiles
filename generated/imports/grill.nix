@@ -2,6 +2,7 @@
 # Effective roots: minimal, common, network, client, main, work, gaming
 # Do not edit manually.
 [
+  ../../modules/cli/pi-harness/grill.nix
   ../../modules/cli/starship/grill.nix
   ../../modules/desktop/addons/waybar/grill.nix
   ../../modules/desktop/hyprland/grill.nix
