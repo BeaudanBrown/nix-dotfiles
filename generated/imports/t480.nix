@@ -51,7 +51,6 @@
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
-  ../../modules/cli/pi-harness/main.nix
   ../../modules/cli/ticket/main.nix
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
@@ -59,7 +58,6 @@
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
   ../../modules/services/litellm/main.nix
-  ../../modules/services/synced-state/main.nix
   ../../modules/services/syncthing/main.nix
   ../../modules/triage/main.nix
   ../../modules/apps/brave/work.nix

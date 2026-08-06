@@ -40,7 +40,9 @@
   ../../modules/services/nginx/nas.nix
   ../../modules/services/open-webui/nas.nix
   ../../modules/services/overleaf/nas.nix
+  ../../modules/services/pairdrop/nas.nix
   ../../modules/services/rag/nas.nix
+  ../../modules/services/rallly/nas.nix
   ../../modules/services/send/nas.nix
   ../../modules/services/stt/nas.nix
   ../../modules/services/syncthing/nas.nix
