@@ -229,6 +229,29 @@ just build <hostname>
 
 ## Module Patterns
 
+### Synchronized Application State
+
+Primary fleet hosts expose `config.syncedState.root`, backed by the Syncthing
+`state-sync` folder. Application modules must opt in by configuring their native
+state or data directory beneath this root:
+
+```nix
+let
+  sessionDir = "${config.syncedState.root}/pi/sessions";
+in
+{
+  environment.sessionVariables.PI_CODING_AGENT_SESSION_DIR = sessionDir;
+}
+```
+
+Only synchronize file-oriented state that is safe for whole-file replication.
+Do not place credentials, caches, sockets, lock files, databases, or state that
+will be written concurrently by multiple hosts under this root. Prefer native
+application settings; use an application-specific migration adapter when an
+application cannot configure its state location. Pi's migration, activation,
+rollback, and cross-host acceptance procedure is documented in
+[`pi-session-sync.md`](./pi-session-sync.md).
+
 ### Conditional Configuration
 
 ```nix

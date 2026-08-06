@@ -4,7 +4,7 @@
   ...
 }:
 let
-  commonIgnorePatterns = [
+  sourceTreeIgnorePatterns = [
     "(?d)**/.git"
     "(?d)**/.direnv"
     "(?d)**/.devenv"
@@ -25,19 +25,23 @@ let
     "(?d)**/*.sync-conflict-*"
     "(?d)**/.syncthing.*.tmp"
   ];
+  stateIgnorePatterns = [
+    "(?d)**/.syncthing.*.tmp"
+  ];
 
-  addCommonIgnorePatterns = lib.mapAttrs (
-    _: folder:
-    folder
-    // {
-      ignorePatterns = commonIgnorePatterns ++ (folder.ignorePatterns or [ ]);
-    }
-  );
+  addIgnorePatterns =
+    patterns:
+    lib.mapAttrs (
+      _: folder:
+      folder
+      // {
+        ignorePatterns = patterns ++ (folder.ignorePatterns or [ ]);
+      }
+    );
 in
 {
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
-    "d ${config.hostSpec.home}/.local/state/syncthing 0700 ${config.hostSpec.username} users - -"
   ];
   users.users.${config.hostSpec.username}.extraGroups = [ "syncthing" ];
   systemd.services.syncthing.environment.STNODEFAULTFOLDER = "true"; # Don't create default ~/Sync folder
@@ -72,49 +76,52 @@ in
           autoAcceptFolder = true;
         };
       };
-      folders = addCommonIgnorePatterns {
-        "documents" = {
-          id = "txxit-w9cwz";
-          path = "${config.hostSpec.home}/documents";
-          devices = [
-            "server"
-            "grill"
-            "laptop"
-            "t480"
-          ];
+      folders =
+        addIgnorePatterns sourceTreeIgnorePatterns {
+          "documents" = {
+            id = "txxit-w9cwz";
+            path = "${config.hostSpec.home}/documents";
+            devices = [
+              "server"
+              "grill"
+              "laptop"
+              "t480"
+            ];
+          };
+          "monash" = {
+            id = "twjfr-ekoqc";
+            path = "${config.hostSpec.home}/monash";
+            devices = [
+              "server"
+              "grill"
+              "laptop"
+              "t480"
+            ];
+          };
+          "collab" = {
+            id = "vccfp-s5yfe";
+            path = "${config.hostSpec.home}/collab";
+            devices = [
+              "server"
+              "grill"
+              "laptop"
+              "t480"
+              "lachy-thinkpad"
+            ];
+          };
+        }
+        // addIgnorePatterns stateIgnorePatterns {
+          "state-sync" = {
+            id = "state-sync";
+            path = config.syncedState.root;
+            devices = [
+              "server"
+              "grill"
+              "laptop"
+              "t480"
+            ];
+          };
         };
-        "monash" = {
-          id = "twjfr-ekoqc";
-          path = "${config.hostSpec.home}/monash";
-          devices = [
-            "server"
-            "grill"
-            "laptop"
-            "t480"
-          ];
-        };
-        "collab" = {
-          id = "vccfp-s5yfe";
-          path = "${config.hostSpec.home}/collab";
-          devices = [
-            "server"
-            "grill"
-            "laptop"
-            "t480"
-            "lachy-thinkpad"
-          ];
-        };
-        "state-sync" = {
-          id = "state-sync";
-          path = "${config.hostSpec.home}/.local/state/syncthing";
-          devices = [
-            "server"
-            "grill"
-            "laptop"
-            "t480"
-          ];
-        };
-      };
     };
   };
 
