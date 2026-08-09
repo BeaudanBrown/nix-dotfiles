@@ -150,8 +150,8 @@ in
       ];
       environment = {
         NEXT_PUBLIC_BASE_URL = "https://${domain}";
-        SUPPORT_EMAIL = config.hostSpec.email;
-        NOREPLY_EMAIL = config.hostSpec.email;
+        SUPPORT_EMAIL = "rallly@bepis.lol";
+        NOREPLY_EMAIL = "rallly@bepis.lol";
         INITIAL_ADMIN_EMAIL = config.hostSpec.email;
         ALLOWED_EMAILS = config.hostSpec.email;
         EMAIL_LOGIN_ENABLED = "true";

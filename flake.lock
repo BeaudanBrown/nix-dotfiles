@@ -1342,10 +1342,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1785989235,
-        "narHash": "sha256-6Vf+Ec1uRSilAnvmW6mExEdUYQgW2uoXOit5FCnJ2g0=",
+        "lastModified": 1786235896,
+        "narHash": "sha256-5+uObDN8piTkU2jeY8+x5YpDIj+xEWwOo+zZU/IB/nY=",
         "ref": "refs/heads/main",
-        "rev": "c01d003aeadcd2820e4fc1f9bb6ee7f5890fb3e3",
+        "rev": "01cb586c8ade0c3e7d1e1a00bbadf1984bc9b149",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"
