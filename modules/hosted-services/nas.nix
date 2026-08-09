@@ -14,6 +14,7 @@ let
   services = config.hostedServices;
   tailIP = config.hostSpec.tailIP;
   devTunnelPort = 20080;
+  devTunnelToolPort = 20081;
   tailServices = services |> filter (s: s.tailnet);
 
   blockedZones = [
@@ -97,7 +98,10 @@ in
   config = {
     # A stable public HTTPS slot for an operator-started SSH reverse tunnel.
     # The remote listener stays on NAS loopback; only nginx exposes the slot.
-    custom.ports.reserved = [ devTunnelPort ];
+    custom.ports.reserved = [
+      devTunnelPort
+      devTunnelToolPort
+    ];
     hostedServices = [
       {
         domain = "dev.bepis.lol";
@@ -107,6 +111,10 @@ in
         webSockets = true;
       }
     ];
+    services.nginx.virtualHosts."dev.bepis.lol".locations."/__ihp-livereload" = {
+      proxyPass = "http://127.0.0.1:${toString devTunnelToolPort}/";
+      proxyWebsockets = true;
+    };
 
     services.headscale.settings.dns = {
       nameservers.split = headscaleSplit;
