@@ -609,6 +609,7 @@ func openSatelliteCommandPopup(group, clientArg, command, splitRight string, for
 }
 
 func markPopupSession(session, role, group, parent, rootPath, owner, popupRoot string) {
+	setSessionOption(session, "detach-on-destroy", "on")
 	setSessionOption(session, "@project_role", role)
 	setSessionOption(session, "@project_group", group)
 	setSessionOption(session, "@project_parent", parent)
