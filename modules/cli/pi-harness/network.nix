@@ -28,28 +28,6 @@ let
           };
           models = [
             {
-              id = "gpt-5.5";
-              api = "openai-responses";
-              reasoning = true;
-              input = [
-                "text"
-                "image"
-              ];
-              contextWindow = 272000;
-              maxTokens = 16384;
-            }
-            {
-              id = "claude-opus-4-8";
-              api = "openai-responses";
-              reasoning = true;
-              input = [
-                "text"
-                "image"
-              ];
-              contextWindow = 272000;
-              maxTokens = 16384;
-            }
-            {
               id = "sub-gpt-5.5";
               api = "openai-responses";
               reasoning = true;
@@ -77,26 +55,6 @@ let
               reasoning = true;
               contextWindow = 128000;
               maxTokens = 16384;
-            }
-            {
-              id = "kimi-k2.7-code";
-              api = "openai-completions";
-              reasoning = true;
-              input = [
-                "text"
-                "image"
-              ];
-              contextWindow = 262144;
-              maxTokens = 16384;
-              cost = {
-                input = 0.95;
-                output = 4.00;
-                cacheRead = 0.19;
-                cacheWrite = 0.95;
-              };
-              thinkingLevelMap = {
-                off = null;
-              };
             }
           ];
         };
