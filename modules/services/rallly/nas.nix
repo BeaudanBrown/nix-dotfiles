@@ -101,7 +101,7 @@ in
 
   systemd.tmpfiles.rules = [
     "d ${dataRoot} 0750 root root - -"
-    "d ${postgresData} 0700 root root - -"
+    "d ${postgresData} 0700 70 70 - -"
     "d ${garageMetadata} 0700 root root - -"
     "d ${garageData} 0700 root root - -"
   ];
