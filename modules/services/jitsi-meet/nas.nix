@@ -54,7 +54,7 @@ in
       "org.ice4j.ice.harvest.DISABLE_AWS_HARVESTER" = "true";
       "org.ice4j.ice.harvest.DISABLE_LINK_LOCAL_ADDRESSES" = "true";
       "org.ice4j.ipv6.DISABLED" = "true";
-      "org.ice4j.ice.harvest.ALLOWED_INTERFACES" = "eno1";
+      "org.ice4j.ice.harvest.ALLOWED_INTERFACES" = "enp7s0";
       "org.ice4j.ice.harvest.BLOCKED_INTERFACES" = "^(lo|tailscale).*";
     };
   };
