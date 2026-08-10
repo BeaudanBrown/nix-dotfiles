@@ -165,6 +165,11 @@ in
 
           bind-key -n M-o run-shell "tmux_project obsidian '#{client_name}'"
 
+          bind-key -n M-\\ \
+                run-shell "tmux_project move-pane window '#{client_name}' '#{pane_id}'"
+          bind-key -n M-| \
+                run-shell "tmux_project move-pane horizontal '#{client_name}' '#{pane_id}'"
+
       '';
   };
 

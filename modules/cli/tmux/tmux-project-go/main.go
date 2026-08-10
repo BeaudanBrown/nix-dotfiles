@@ -17,6 +17,10 @@ type Session struct {
 	Name, Root, Parent, Role, Group, PopupOwner, PopupRoot string
 }
 
+type Pane struct {
+	ID, Session, Window, Path string
+}
+
 const (
 	roleRoot       = "root"
 	roleGlobalTool = "global-tool"
@@ -56,6 +60,11 @@ func main() {
 		err = openGlobalCommandPopup("obsidian", arg(2), "mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md", false, false)
 	case "toggle-last-popup":
 		err = toggleLastPopup(arg(2))
+	case "move-pane":
+		if len(os.Args) < 3 {
+			usage()
+		}
+		err = movePane(os.Args[2], arg(3), arg(4))
 	case "note-root-focus":
 		err = noteRootFocus(arg(2), arg(3))
 	case "session-closed":
@@ -73,7 +82,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "tmux_project <launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|note-root-focus|session-closed>")
+	fmt.Fprintln(os.Stderr, "tmux_project <launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
 	os.Exit(1)
 }
 
@@ -86,11 +95,17 @@ func arg(i int) string {
 
 func tmux(args ...string) (string, error) {
 	cmd := exec.Command("tmux", args...)
-	var out bytes.Buffer
+	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
-	cmd.Stderr = nil
-	err := cmd.Run()
-	return strings.TrimRight(out.String(), "\n"), err
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		message := strings.TrimSpace(stderr.String())
+		if message != "" {
+			return strings.TrimRight(out.String(), "\n"), fmt.Errorf("tmux %s: %s", args[0], message)
+		}
+		return strings.TrimRight(out.String(), "\n"), fmt.Errorf("tmux %s: %w", args[0], err)
+	}
+	return strings.TrimRight(out.String(), "\n"), nil
 }
 
 func tmuxOk(args ...string) bool { _, err := tmux(args...); return err == nil }
@@ -695,6 +710,232 @@ func toggleLastPopup(clientArg string) error {
 	}
 }
 
+func movePane(mode, clientArg, paneArg string) (err error) {
+	if mode != "window" && mode != "horizontal" {
+		return fmt.Errorf("unknown pane transfer mode %q", mode)
+	}
+	client, err := clientName(clientArg)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_, _ = tmux("display-message", "-c", client, "tmux_project: "+err.Error())
+		}
+	}()
+
+	if paneArg == "" {
+		paneArg, err = tmux("display-message", "-p", "-c", client, "#{pane_id}")
+		if err != nil {
+			return err
+		}
+	}
+	pane, err := paneInfo(paneArg)
+	if err != nil {
+		return err
+	}
+	current, err := currentSession(client)
+	if err != nil {
+		return err
+	}
+	if pane.Session != current {
+		return fmt.Errorf("pane %s is not in the invoking client's session", pane.ID)
+	}
+
+	session := sessionByName(current)
+	switch session.Role {
+	case roleRoot:
+		return movePaneToPopup(mode, client, pane, session)
+	case roleGlobalTool, roleSatellite:
+		return movePaneToRoot(mode, client, pane, session)
+	default:
+		if session.PopupOwner != "" {
+			return movePaneToRoot(mode, client, pane, session)
+		}
+		return fmt.Errorf("session %s is not a managed root or popup", current)
+	}
+}
+
+func paneInfo(target string) (Pane, error) {
+	format := strings.Join([]string{"#{pane_id}", "#{session_name}", "#{window_id}", "#{pane_current_path}"}, "\t")
+	out, err := tmux("display-message", "-p", "-t", target, format)
+	if err != nil {
+		return Pane{}, err
+	}
+	parts := strings.SplitN(out, "\t", 4)
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return Pane{}, fmt.Errorf("could not resolve pane %q", target)
+	}
+	return Pane{ID: parts[0], Session: parts[1], Window: parts[2], Path: parts[3]}, nil
+}
+
+func movePaneToPopup(mode, owner string, source Pane, root Session) error {
+	target, exists, err := transferPopup(root.Name)
+	if err != nil {
+		return err
+	}
+	rootPath := sessionRoot(root.Name)
+
+	// Popup sessions have a single active viewer. Acquire it before selecting
+	// its current window so another nested client cannot race the destination.
+	detachPopups(owner, "")
+	if exists {
+		detachSessionClients(target.Name)
+	}
+
+	replacement, err := preserveSoleRootPane(source)
+	if err != nil {
+		return err
+	}
+	rollbackReplacement := func() {
+		if replacement != "" {
+			_, _ = tmux("kill-window", "-t", replacement)
+		}
+	}
+
+	if !exists {
+		placeholder, createErr := tmux("new-session", "-d", "-P", "-F", "#{pane_id}", "-s", target.Name, "-c", rootPath)
+		if createErr != nil {
+			rollbackReplacement()
+			return createErr
+		}
+		markPopupSession(target.Name, roleGlobalTool, "scratch", "", rootPath, owner, root.Name)
+		if _, err = tmux("join-pane", "-h", "-s", source.ID, "-t", placeholder); err != nil {
+			_, _ = tmux("kill-session", "-t", "="+target.Name)
+			rollbackReplacement()
+			return err
+		}
+		_, _ = tmux("kill-pane", "-t", placeholder)
+		target.Role = roleGlobalTool
+		target.Group = "scratch"
+	} else {
+		role := target.Role
+		group := target.Group
+		parent := ""
+		if role == roleSatellite {
+			parent = root.Name
+		}
+		markPopupSession(target.Name, role, group, parent, rootPath, owner, root.Name)
+		window, pane, resolveErr := activeSessionTargets(target.Name)
+		if resolveErr != nil {
+			rollbackReplacement()
+			return resolveErr
+		}
+		if mode == "horizontal" {
+			_, err = tmux("join-pane", "-h", "-s", source.ID, "-t", pane)
+		} else {
+			_, err = tmux("break-pane", "-a", "-s", source.ID, "-t", window)
+		}
+		if err != nil {
+			rollbackReplacement()
+			return err
+		}
+	}
+
+	_, _ = tmux("select-pane", "-t", source.ID)
+	recordLastPopup(root.Name, target.Role, target.Group)
+	return showPopup(owner, target.Name, rootPath)
+}
+
+func transferPopup(root string) (Session, bool, error) {
+	kind := sessionOption(root, "@project_last_popup_kind")
+	group := sessionOption(root, "@project_last_popup_group")
+	if group != "" {
+		name := group
+		if kind == roleSatellite {
+			name = group + "-" + sanitize(root)
+		}
+		if tmuxOk("has-session", "-t", "="+name) {
+			session := sessionByName(name)
+			if session.Role == roleGlobalTool || session.Role == roleSatellite {
+				return session, true, nil
+			}
+		}
+	}
+
+	const scratch = "scratch"
+	if !tmuxOk("has-session", "-t", "="+scratch) {
+		return Session{Name: scratch, Role: roleGlobalTool, Group: scratch}, false, nil
+	}
+	session := sessionByName(scratch)
+	if session.Role == roleRoot {
+		return Session{}, false, fmt.Errorf("scratch exists but is a root session")
+	}
+	return Session{Name: scratch, Role: roleGlobalTool, Group: scratch}, true, nil
+}
+
+func preserveSoleRootPane(source Pane) (string, error) {
+	out, err := tmux("list-panes", "-s", "-t", "="+source.Session+":", "-F", "#{pane_id}")
+	if err != nil {
+		return "", err
+	}
+	if countLines(out) != 1 {
+		return "", nil
+	}
+	return tmux("new-window", "-a", "-d", "-P", "-F", "#{window_id}", "-t", source.Window, "-c", source.Path)
+}
+
+func activeSessionTargets(session string) (window, pane string, err error) {
+	out, err := tmux("display-message", "-p", "-t", "="+session+":", "#{window_id}\t#{pane_id}")
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.SplitN(out, "\t", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("popup session %s has no active pane", session)
+	}
+	return parts[0], parts[1], nil
+}
+
+func movePaneToRoot(mode, popupClient string, source Pane, popup Session) error {
+	owner := popup.PopupOwner
+	root := popup.PopupRoot
+	if root == "" && popup.Role == roleSatellite {
+		root = popup.Parent
+	}
+	if owner == "" || root == "" {
+		return fmt.Errorf("popup %s has no associated owner/root", popup.Name)
+	}
+	if !tmuxOk("has-session", "-t", "="+root) || !isRoot(sessionByName(root)) {
+		return fmt.Errorf("associated root session %s no longer exists", root)
+	}
+
+	out, err := tmux("display-message", "-p", "-c", owner, "#{session_name}\t#{window_id}\t#{pane_id}")
+	if err != nil {
+		return fmt.Errorf("popup owner client is no longer attached: %w", err)
+	}
+	parts := strings.SplitN(out, "\t", 3)
+	if len(parts) != 3 || parts[0] != root || parts[1] == "" || parts[2] == "" {
+		return fmt.Errorf("popup owner is not viewing associated root %s", root)
+	}
+
+	if mode == "horizontal" {
+		_, err = tmux("join-pane", "-h", "-s", source.ID, "-t", parts[2])
+	} else {
+		_, err = tmux("break-pane", "-a", "-s", source.ID, "-t", parts[1])
+	}
+	if err != nil {
+		return err
+	}
+	_, _ = tmux("select-pane", "-t", source.ID)
+	_, _ = tmux("detach-client", "-t", popupClient)
+	return nil
+}
+
+func detachSessionClients(session string) {
+	clients, err := tmux("list-clients", "-F", "#{client_name}\t#{session_name}")
+	if err != nil {
+		return
+	}
+	s := bufio.NewScanner(strings.NewReader(clients))
+	for s.Scan() {
+		parts := strings.SplitN(s.Text(), "\t", 2)
+		if len(parts) == 2 && parts[1] == session {
+			_, _ = tmux("detach-client", "-t", parts[0])
+		}
+	}
+}
+
 func popupContext(clientArg string) (client, current, rootSession, rootPath, owner string, err error) {
 	client, err = clientName(clientArg)
 	if err != nil {
@@ -715,7 +956,8 @@ func popupContext(clientArg string) (client, current, rootSession, rootPath, own
 }
 
 func showPopup(owner, session, rootPath string) error {
-	detachPopups(owner, session)
+	detachPopups(owner, "")
+	detachSessionClients(session)
 	cmd := "tmux new-session -A -s " + shellQuote(session) + " -c " + shellQuote(rootPath)
 	_, err := tmux("display-popup", "-t", owner, "-E", "-w", "95%", "-h", "95%", cmd)
 	return err
