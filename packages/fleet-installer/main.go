@@ -572,6 +572,9 @@ func collectProvisionInputs(r runner, p prompt) (provisionInputs, error) {
 
 func provisionPayload(r runner, repo, clonePath, staging string, inputs provisionInputs) error {
 	target := "/mnt" + payloadDir
+	if err := r.Interactive("sudo", "install", "-d", "-m", "0755", "/mnt/etc/NetworkManager"); err != nil {
+		return err
+	}
 	if err := r.Interactive("sudo", "install", "-d", "-m", "0700", target, target+"/wifi", target+"/.ssh", "/mnt/etc/NetworkManager/system-connections"); err != nil {
 		return err
 	}

@@ -18,8 +18,25 @@ func (r *recordingRunner) Run(_ io.Reader, name string, args ...string) ([]byte,
 	return []byte(r.responses[command]), nil
 }
 
-func (r *recordingRunner) Interactive(string, ...string) error {
+func (r *recordingRunner) Interactive(name string, args ...string) error {
+	command := strings.Join(append([]string{name}, args...), " ")
+	r.commands = append(r.commands, command)
 	return nil
+}
+
+func TestProvisionPayloadKeepsNetworkManagerPluginDirectoryReadable(t *testing.T) {
+	runner := &recordingRunner{}
+	inputs := provisionInputs{HeadscaleKey: "/tmp/headscale-key", SSHKey: "/tmp/id_ed25519"}
+	if err := provisionPayload(runner, "/tmp/repo", "/tmp/clone", t.TempDir(), inputs); err != nil {
+		t.Fatal(err)
+	}
+	expected := []string{
+		"sudo install -d -m 0755 /mnt/etc/NetworkManager",
+		"sudo install -d -m 0700 /mnt/var/lib/fleet-installer /mnt/var/lib/fleet-installer/wifi /mnt/var/lib/fleet-installer/.ssh /mnt/etc/NetworkManager/system-connections",
+	}
+	if len(runner.commands) < len(expected) || strings.Join(runner.commands[:len(expected)], "\n") != strings.Join(expected, "\n") {
+		t.Fatalf("unexpected directory setup commands: %#v", runner.commands)
+	}
 }
 
 func TestRemovableDisksFiltersUnsafeDevices(t *testing.T) {
