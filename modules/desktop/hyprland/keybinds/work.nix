@@ -40,20 +40,62 @@ let
     "9"
   ];
 
-  rofi_launch_dir = pkgs.writeShellApplication {
-    name = "rofi_launch_dir";
+  rofiBrowse = pkgs.writeShellApplication {
+    name = "rofi-browse";
     runtimeInputs = [
-      pkgs.fd
       pkgs.coreutils
-      pkgs.glib
+      pkgs.fd
+      pkgs.nautilus
+      pkgs.procps
+      pkgs.rofi
+      pkgs.uwsm
     ];
     text = ''
-      if [ "$#" -gt 0 ]; then
-        coproc nautilus "$1" > /dev/null  2>&1
+      pidfile="''${XDG_RUNTIME_DIR:-/tmp}/rofi-browse.pid"
+
+      # Treat Super+P as a toggle without sharing rofi's global pidfile. A
+      # lingering directory chooser must not prevent the application launcher
+      # or password prompts from opening.
+      if [[ -s "$pidfile" ]]; then
+        existing_pid="$(cat "$pidfile")"
+        if [[ "$existing_pid" =~ ^[0-9]+$ ]] \
+          && kill -0 "$existing_pid" 2>/dev/null \
+          && [[ "$(ps -p "$existing_pid" -o comm=)" == "rofi" ]]; then
+          kill "$existing_pid"
+          rm -f "$pidfile"
+          exit 0
+        fi
+        rm -f "$pidfile"
+      fi
+      trap 'rm -f "$pidfile"' EXIT
+
+      cd "$HOME"
+      if ! selection="$(${pkgs.fd}/bin/fd \
+        --type directory \
+        --max-depth 5 \
+        --strip-cwd-prefix \
+        --exclude .cache \
+        --exclude .direnv \
+        --exclude .git \
+        --exclude .venv \
+        --exclude nas \
+        --exclude node_modules \
+        --exclude result \
+        --exclude target \
+        --exclude venv \
+        | rofi \
+          -dmenu \
+          -i \
+          -matching fuzzy \
+          -no-custom \
+          -p Browse \
+          -pid "$pidfile")"; then
         exit 0
       fi
-      cd "$HOME" || exit 1
-      ${pkgs.fd}/bin/fd -t d -d 5 --no-ignore --strip-cwd-prefix
+
+      if [[ -n "$selection" ]]; then
+        uwsm app -S both -- nautilus "$HOME/$selection"
+      fi
     '';
   };
 
@@ -156,7 +198,7 @@ let
   baseBinds = [
     # Program launchers (rofi etc.)
     "SUPER, space, exec, rofi -show drun -matching fuzzy"
-    "SUPER, p, exec, rofi -show 'Browse ' -modes 'Browse :${rofi_launch_dir}/bin/rofi_launch_dir' -matching fuzzy"
+    "SUPER, p, exec, ${rofiBrowse}/bin/rofi-browse"
     "SUPER, i, exec, ${pkgs.rofi-rbw-wayland}/bin/rofi-rbw"
 
     # Screenshot region to clipboard
