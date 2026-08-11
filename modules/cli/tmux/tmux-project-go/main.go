@@ -21,6 +21,10 @@ type Pane struct {
 	ID, Session, Window, Path string
 }
 
+type ClientContext struct {
+	Name, Session, Window, Pane string
+}
+
 const (
 	roleRoot       = "root"
 	roleGlobalTool = "global-tool"
@@ -121,10 +125,33 @@ func clientName(client string) (string, error) {
 }
 
 func currentSession(client string) (string, error) {
-	if client != "" {
-		return tmux("display-message", "-p", "-c", client, "#{session_name}")
+	if client == "" {
+		return tmux("display-message", "-p", "#{session_name}")
 	}
-	return tmux("display-message", "-p", "#{session_name}")
+	context, err := clientContext(client)
+	if err != nil {
+		return "", err
+	}
+	return context.Session, nil
+}
+
+func clientContext(client string) (ClientContext, error) {
+	format := strings.Join([]string{"#{client_name}", "#{session_name}", "#{window_id}", "#{pane_id}"}, "\t")
+	out, err := tmux("list-clients", "-F", format)
+	if err != nil {
+		return ClientContext{}, err
+	}
+	s := bufio.NewScanner(strings.NewReader(out))
+	for s.Scan() {
+		parts := strings.SplitN(s.Text(), "\t", 4)
+		if len(parts) == 4 && parts[0] == client {
+			return ClientContext{Name: parts[0], Session: parts[1], Window: parts[2], Pane: parts[3]}, nil
+		}
+	}
+	if err := s.Err(); err != nil {
+		return ClientContext{}, err
+	}
+	return ClientContext{}, fmt.Errorf("client %s is no longer attached", client)
 }
 
 func sessionOption(session, key string) string {
@@ -725,10 +752,11 @@ func movePane(mode, clientArg, paneArg string) (err error) {
 	}()
 
 	if paneArg == "" {
-		paneArg, err = tmux("display-message", "-p", "-c", client, "#{pane_id}")
-		if err != nil {
-			return err
+		context, contextErr := clientContext(client)
+		if contextErr != nil {
+			return contextErr
 		}
+		paneArg = context.Pane
 	}
 	pane, err := paneInfo(paneArg)
 	if err != nil {
@@ -900,19 +928,18 @@ func movePaneToRoot(mode, popupClient string, source Pane, popup Session) error 
 		return fmt.Errorf("associated root session %s no longer exists", root)
 	}
 
-	out, err := tmux("display-message", "-p", "-c", owner, "#{session_name}\t#{window_id}\t#{pane_id}")
+	context, err := clientContext(owner)
 	if err != nil {
 		return fmt.Errorf("popup owner client is no longer attached: %w", err)
 	}
-	parts := strings.SplitN(out, "\t", 3)
-	if len(parts) != 3 || parts[0] != root || parts[1] == "" || parts[2] == "" {
+	if context.Session != root || context.Window == "" || context.Pane == "" {
 		return fmt.Errorf("popup owner is not viewing associated root %s", root)
 	}
 
 	if mode == "horizontal" {
-		_, err = tmux("join-pane", "-h", "-s", source.ID, "-t", parts[2])
+		_, err = tmux("join-pane", "-h", "-s", source.ID, "-t", context.Pane)
 	} else {
-		_, err = tmux("break-pane", "-a", "-s", source.ID, "-t", parts[1])
+		_, err = tmux("break-pane", "-a", "-s", source.ID, "-t", context.Window)
 	}
 	if err != nil {
 		return err
