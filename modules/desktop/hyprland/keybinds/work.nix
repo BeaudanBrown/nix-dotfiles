@@ -207,8 +207,11 @@ let
     # Screenshot the monitor under the mouse, then crop that frozen image to clipboard.
     "SHIFT, Print, exec, ${screenshot_monitor_region}/bin/screenshot_monitor_region"
 
-    # Push-to-dictate
-    "SUPER, z, exec, stt-dictate toggle"
+    # Legacy NAS-backed push-to-dictate fallback:
+    # "SUPER, z, exec, stt-dictate toggle"
+
+    # Local Moonshine streaming push-to-dictate
+    "SUPER, z, exec, stt-dictate-local toggle"
 
     # Push-to-assistant (STT → LLM → TTS + paste)
     "SUPERSHIFT, z, exec, stt-assist toggle"

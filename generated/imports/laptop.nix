@@ -89,6 +89,7 @@
   ../../modules/nix/work.nix
   ../../modules/scripts/fleet-installer/work.nix
   ../../modules/scripts/stt-assist/work.nix
+  ../../modules/scripts/stt-dictate-local/work.nix
   ../../modules/scripts/stt-dictate/work.nix
   ../../modules/scripts/thought-capture/work.nix
   ../../modules/security/pam/work.nix
@@ -98,6 +99,7 @@
   ../../modules/services/dunst/work.nix
   ../../modules/services/kdeconnect/work.nix
   ../../modules/services/lan-mouse/work.nix
+  ../../modules/services/moonshine-stt/work.nix
   ../../modules/services/printing/work.nix
   ../../modules/services/samba/work.nix
   ../../modules/services/udisks2/work.nix
