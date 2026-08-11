@@ -153,7 +153,7 @@ in
         SUPPORT_EMAIL = "rallly@bepis.lol";
         NOREPLY_EMAIL = "rallly@bepis.lol";
         INITIAL_ADMIN_EMAIL = config.hostSpec.email;
-        ALLOWED_EMAILS = config.hostSpec.email;
+        ALLOWED_EMAILS = "${config.hostSpec.email},art.pitchford@gmail.com";
         EMAIL_LOGIN_ENABLED = "true";
         REGISTRATION_ENABLED = "true";
         S3_ENDPOINT = "http://rallly-garage:3900";
