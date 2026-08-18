@@ -23,14 +23,28 @@ let
       # Always preserve the selection in tmux's own paste buffer.
       tmux load-buffer "$tmp"
 
-      # Route OSC52 clipboard writes through the base session. This avoids
-      # popup/nested tmux clients swallowing the clipboard update while still
-      # preserving SSH forwarding through the base tmux client.
-      egress_session="''${TMUX_COPY_EGRESS_SESSION:-default}"
+      # Route OSC52 writes to the client that owns this popup. Project roots
+      # replace (and may remove) the old `default` session, so its client is
+      # not a reliable egress target. Popup sessions record their outer owner
+      # as @project_popup_owner; ordinary sessions use one of their clients.
+      source_pane="''${TMUX_PANE:-}"
+      if [[ -n "$source_pane" ]]; then
+        source_session="$(tmux display-message -p -t "$source_pane" '#{session_name}' 2>/dev/null || true)"
+      else
+        source_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+      fi
+      popup_owner=""
+      if [[ -n "$source_session" ]]; then
+        popup_owner="$(tmux show-option -qv -t "=$source_session" @project_popup_owner 2>/dev/null || true)"
+      fi
       target="$(
         tmux list-clients -F '#{client_name}	#{session_name}	#{client_termfeatures}' 2>/dev/null \
           | while IFS=$'\t' read -r client session features; do
-              if [[ "$session" == "$egress_session" && ",$features," == *,clipboard,* ]]; then
+              if [[ ",$features," != *,clipboard,* ]]; then
+                continue
+              fi
+              if [[ -n "$popup_owner" && "$client" == "$popup_owner" ]] \
+                || [[ -z "$popup_owner" && "$session" == "$source_session" ]]; then
                 printf '%s\n' "$client"
                 break
               fi
