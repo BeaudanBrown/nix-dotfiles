@@ -1,4 +1,9 @@
 { pkgs, ... }:
+let
+  rLanguageServerR = pkgs.rWrapper.override {
+    packages = with pkgs.rPackages; [ languageserver ];
+  };
+in
 {
   plugins.lsp = {
     enable = true;
@@ -7,6 +12,8 @@
       vim.keymap.del('n', 'grn')
       vim.keymap.del('n', 'gra')
       vim.keymap.del('n', 'gri')
+
+      vim.lsp.set_log_level('WARN')
 
       -- Keep `r_language_server` attached for lintr diagnostics only. R.nvim's
       -- rnvimserver handles completion, and air handles formatting. Disabling
@@ -42,10 +49,22 @@
       };
       air = {
         enable = true;
+        cmd = [
+          "${pkgs.air-formatter}/bin/air"
+          "--log-level"
+          "warn"
+          "language-server"
+        ];
       };
       r_language_server = {
         enable = true;
         package = null;
+        cmd = [
+          "${rLanguageServerR}/bin/R"
+          "--no-echo"
+          "-e"
+          "languageserver::run()"
+        ];
       };
       rust_analyzer = {
         enable = true;
