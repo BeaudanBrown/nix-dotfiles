@@ -123,8 +123,8 @@ in
           hfRevision = "4ca720788d1e01f1bff70c033e0d0028fd02e502";
           sha256 = "40fac4050e940397dbf13087afd50f4734a11805bf9d65ef8ddd7483470e6199";
           size = 14252845984;
-          contextWindow = 21504;
-          maxTokens = 4096;
+          contextWindow = 40960;
+          maxTokens = 6144;
           reasoning = true;
           input = [ "text" ];
           llamaSettings = {

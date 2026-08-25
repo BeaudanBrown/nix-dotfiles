@@ -9,6 +9,7 @@
 let
   piHarnessPackage = inputs.pi-harness.packages.${pkgs.stdenv.hostPlatform.system}.default;
   localLlm = config.custom.localLlm;
+  hasLocalLlmSecret = lib.hasAttrByPath [ "sops" "secrets" "pi/local_llm_api" ] config;
   localLlmModels =
     localLlm.models
     |> lib.mapAttrsToList (
@@ -113,8 +114,10 @@ let
   piModelsFile = pkgs.writeText "pi-models.json" (
     builtins.toJSON {
       providers = {
-        local-llm = localLlmProvider;
         litellm = litellmProvider;
+      }
+      // lib.optionalAttrs hasLocalLlmSecret {
+        local-llm = localLlmProvider;
       };
     }
   );
@@ -132,10 +135,10 @@ let
       hideThinkingBlock = false;
       compaction = {
         enabled = true;
-        reserveTokens = 4096;
+        reserveTokens = 8192;
         keepRecentTokens = 6000;
       };
-      branchSummary.reserveTokens = 4096;
+      branchSummary.reserveTokens = 6144;
     }
   );
   piLocalAgentDir = "${config.hostSpec.home}/.pi/local-agent";
@@ -169,11 +172,13 @@ in
 
   hm.primary.home.file = {
     ".pi/agent/models.json".source = piModelsFile;
+  }
+  // lib.optionalAttrs hasLocalLlmSecret {
     ".pi/local-agent/models.json".source = piLocalModelsFile;
     ".pi/local-agent/settings.json".source = piLocalSettingsFile;
   };
 
-  environment.systemPackages = [ piLocal ];
+  environment.systemPackages = lib.optional hasLocalLlmSecret piLocal;
 
   services.pi-harness = {
     enable = true;
