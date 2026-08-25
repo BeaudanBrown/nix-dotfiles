@@ -10,3 +10,4 @@ latest.iso
 __pycache__/
 *.pyc
 .syncthing.*.tmp
+research/

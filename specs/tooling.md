@@ -18,6 +18,34 @@ The `justfile` provides shortcuts for common operations. Run `just` with no argu
 |---------------|------------------------------------|
 | `just update` | Update all flake inputs (flake.lock) |
 
+### Grill Local LLM
+
+Network hosts install a `local-llm` lifecycle command for the Tailnet-only
+llama.cpp router on Grill:
+
+| Command | Description |
+|---------|-------------|
+| `local-llm up` | Start the router and wait for its health endpoint |
+| `local-llm warm` | Start the router and load the default model with a tiny request |
+| `local-llm down` | Stop the router and release its resources |
+| `local-llm restart` | Restart the router and wait until it is healthy |
+| `local-llm status` | Show the systemd and endpoint status |
+| `local-llm health` | Query the router health endpoint |
+| `local-llm logs` | Follow the Grill service journal |
+
+The service is provisioned but not started at boot. Loaded model state sleeps
+after its configured idle interval and wakes on the next inference request.
+
+Use `pi-local` for a context-efficient local coding session. The host-owned
+launcher selects Grill's local model and delegates to pi-harness's `pi-r-local`
+adapter. The adapter disables general extension, skill, and project-context
+discovery, explicitly loads only the pi-r extension and compact pi-r skill, and
+starts with the lean read/search/edit tool surface. Pi-r remains inactive with
+only `/r` until explicitly started; constrained phase tools can then replace and
+later restore the lean surface. The dedicated Pi configuration uses a 4K
+compaction reserve and keeps 6K recent tokens; normal `pi` sessions retain the
+full harness and their existing settings.
+
 ### Building
 
 | Command              | Description                                    |

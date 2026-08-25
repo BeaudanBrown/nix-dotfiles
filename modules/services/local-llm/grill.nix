@@ -1,0 +1,78 @@
+{
+  config,
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  cfg = config.custom.localLlm;
+  system = pkgs.stdenv.hostPlatform.system;
+  llamaPackage = inputs.llama-cpp.packages.${system}.rocm.override {
+    rocmGpuTargets = "gfx1030";
+    useWebUi = false;
+  };
+  modelsPreset = lib.mapAttrs (
+    modelId: model:
+    model.llamaSettings
+    // {
+      alias = modelId;
+      ctx-size = model.contextWindow;
+      hf-file = model.hfFile;
+      hf-repo = model.hfRepo;
+    }
+  ) cfg.models;
+  systemctl = "/run/current-system/sw/bin/systemctl";
+in
+{
+  services.llama-cpp = {
+    enable = true;
+    package = llamaPackage;
+    host = config.hostSpecs.${cfg.serverHost}.tailIP;
+    port = cfg.port;
+    inherit modelsPreset;
+    extraFlags = [
+      "--api-key-file"
+      "/run/credentials/llama-cpp.service/local-llm-api-key"
+      "--models-max"
+      "1"
+      "--no-ui"
+      "--sleep-idle-seconds"
+      (toString cfg.idleSleepSeconds)
+    ];
+  };
+
+  # Provision the router without loading it at boot. Once manually started,
+  # llama.cpp unloads idle model state while leaving the lightweight router up.
+  systemd.services.llama-cpp = {
+    wantedBy = lib.mkForce [ ];
+    after = [ "tailscaled.service" ];
+    wants = [ "tailscaled.service" ];
+    serviceConfig = {
+      LoadCredential = [
+        "local-llm-api-key:${config.sops.secrets."pi/local_llm_api".path}"
+      ];
+      RestartSec = lib.mkForce "5s";
+    };
+  };
+
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ cfg.port ];
+
+  # Permit the fleet lifecycle helper to control only this service over SSH.
+  security.sudo.extraRules = [
+    {
+      users = [ config.hostSpec.username ];
+      commands =
+        map
+          (action: {
+            command = "${systemctl} ${action} llama-cpp.service";
+            options = [ "NOPASSWD" ];
+          })
+          [
+            "restart"
+            "start"
+            "stop"
+          ];
+    }
+  ];
+}

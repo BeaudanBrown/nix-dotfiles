@@ -401,6 +401,24 @@
     },
     "flake-parts_3": {
       "inputs": {
+        "nixpkgs-lib": "nixpkgs-lib_3"
+      },
+      "locked": {
+        "lastModified": 1785627969,
+        "narHash": "sha256-4dtXQk/NMePegK/nWp5NSeuZKLATItOq61lpEvmXqGw=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "427bf4bd9435fdf21321c8cc628c24efc14c0f7a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "flake-parts_4": {
+      "inputs": {
         "nixpkgs-lib": [
           "nix-ai-tools",
           "nixpkgs"
@@ -420,7 +438,7 @@
         "type": "github"
       }
     },
-    "flake-parts_4": {
+    "flake-parts_5": {
       "inputs": {
         "nixpkgs-lib": [
           "nixvim",
@@ -441,7 +459,7 @@
         "type": "github"
       }
     },
-    "flake-parts_5": {
+    "flake-parts_6": {
       "inputs": {
         "nixpkgs-lib": [
           "stylix",
@@ -751,6 +769,27 @@
         "type": "github"
       }
     },
+    "llama-cpp": {
+      "inputs": {
+        "flake-parts": "flake-parts_3",
+        "nixpkgs": [
+          "nixpkgsUnstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787096756,
+        "narHash": "sha256-U6Uv+CKPtFcSpdg9lZ9UE1w+1x9+uTi5JxfPl/gVWbY=",
+        "owner": "ggml-org",
+        "repo": "llama.cpp",
+        "rev": "6d05498314db1b57f81c271080018aa2d0b89be9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ggml-org",
+        "repo": "llama.cpp",
+        "type": "github"
+      }
+    },
     "mattpocock-skills-src": {
       "flake": false,
       "locked": {
@@ -798,7 +837,7 @@
       "inputs": {
         "blueprint": "blueprint",
         "bun2nix": "bun2nix",
-        "flake-parts": "flake-parts_3",
+        "flake-parts": "flake-parts_4",
         "nixpkgs": "nixpkgs_2",
         "systems": "systems_6",
         "treefmt-nix": "treefmt-nix"
@@ -917,6 +956,21 @@
         "type": "github"
       }
     },
+    "nixpkgs-lib_3": {
+      "locked": {
+        "lastModified": 1785031560,
+        "narHash": "sha256-OmshNvn2vupOFpYinLUu+1Dnpu4n7Q5N3ggGVNHpkUI=",
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "rev": "0e79af5e3d4dcfcd676ab5ba3f95d2e3352e078c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "type": "github"
+      }
+    },
     "nixpkgs-oneplus-kernel": {
       "locked": {
         "lastModified": 1770843696,
@@ -1015,7 +1069,7 @@
     },
     "nixvim": {
       "inputs": {
-        "flake-parts": "flake-parts_4",
+        "flake-parts": "flake-parts_5",
         "nixpkgs": [
           "nixpkgs"
         ],
@@ -1093,14 +1147,15 @@
           "nix-ai-tools"
         ],
         "nixpkgs": "nixpkgs_5",
-        "pi-lsp-extension-src": "pi-lsp-extension-src_2"
+        "pi-lsp-extension-src": "pi-lsp-extension-src_2",
+        "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1786368643,
-        "narHash": "sha256-R8MHid8eOPTO/NudAMJc+i5ZTSuil76OZXTKBWxZSfQ=",
+        "lastModified": 1787627451,
+        "narHash": "sha256-CKkMv4PsLwuXuyRa3vRjncRoEc7Labkj64aO0/wA8TU=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "fc7255ae125671cb97b35359ae2485246df86e84",
+        "rev": "52f97204a86f2fb2b6a0e653e51fb91cc5843007",
         "type": "github"
       },
       "original": {
@@ -1140,6 +1195,27 @@
         "owner": "samfoy",
         "repo": "pi-lsp-extension",
         "rev": "73251632ad116c973844cc28fb1210417295c6fe",
+        "type": "github"
+      }
+    },
+    "pi-r": {
+      "inputs": {
+        "nixpkgs": [
+          "pi-harness",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787627378,
+        "narHash": "sha256-JrbisC1Se9zEcYes6Gd1piiAxa1MV4C/PiHlU45kXhQ=",
+        "owner": "BeaudanBrown",
+        "repo": "pi-r",
+        "rev": "2d160ab01007b5f8c4ee41cec5dc9b558706ad86",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BeaudanBrown",
+        "repo": "pi-r",
         "type": "github"
       }
     },
@@ -1227,6 +1303,7 @@
         "home-manager": "home-manager",
         "invoice-ai": "invoice-ai",
         "joan-flash": "joan-flash",
+        "llama-cpp": "llama-cpp",
         "nix-ai-tools": "nix-ai-tools",
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
@@ -1342,10 +1419,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1786235896,
-        "narHash": "sha256-5+uObDN8piTkU2jeY8+x5YpDIj+xEWwOo+zZU/IB/nY=",
+        "lastModified": 1787109147,
+        "narHash": "sha256-NYeRolHK1oNEt0bm+boFOqkOwCUixV6LwdpXKDe0K+M=",
         "ref": "refs/heads/main",
-        "rev": "01cb586c8ade0c3e7d1e1a00bbadf1984bc9b149",
+        "rev": "8e3963712c364613570cfdffcc5376cef589fbd2",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"
@@ -1363,7 +1440,7 @@
         "base16-helix": "base16-helix",
         "base16-vim": "base16-vim",
         "firefox-gnome-theme": "firefox-gnome-theme",
-        "flake-parts": "flake-parts_5",
+        "flake-parts": "flake-parts_6",
         "gnome-shell": "gnome-shell",
         "nixpkgs": [
           "nixpkgs"

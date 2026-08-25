@@ -151,6 +151,11 @@
       # inputs.nixpkgs.follows = "nixpkgsUnstable";
     };
 
+    llama-cpp = {
+      url = "github:ggml-org/llama.cpp";
+      inputs.nixpkgs.follows = "nixpkgsUnstable";
+    };
+
     authentik-nix = {
       url = "github:nix-community/authentik-nix";
       inputs.nixpkgs.follows = "nixpkgs";

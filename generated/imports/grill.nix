@@ -10,6 +10,7 @@
   ../../modules/services/attic/grill.nix
   ../../modules/services/deskflow/grill.nix
   ../../modules/services/lan-mouse/grill.nix
+  ../../modules/services/local-llm/grill.nix
   ../../modules/services/ollama/grill.nix
   ../../modules/services/oneplus-vnc/grill.nix
   ../../modules/services/sunshine/grill.nix
@@ -50,6 +51,7 @@
   ../../modules/cli/codex/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/nix/builders/network.nix
+  ../../modules/services/local-llm/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/apps/ghostty/client.nix
   ../../modules/services/tailscale/client.nix
