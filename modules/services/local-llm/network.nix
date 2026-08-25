@@ -101,7 +101,7 @@ in
         "qwen3.8-27b" = {
           displayName = "Qwen3.8 27B on Grill";
           hfRepo = "unsloth/Qwen3.8-27B-GGUF";
-          hfFile = "Qwen3.8-27B-IQ4_XS.gguf";
+          hfFile = "Qwen3.8-27B-UD-IQ4_XS.gguf";
           contextWindow = 21504;
           maxTokens = 4096;
           reasoning = true;
