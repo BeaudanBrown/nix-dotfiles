@@ -33,8 +33,7 @@ llama.cpp router on Grill:
 | `local-llm health` | Query the router health endpoint |
 | `local-llm logs` | Follow the Grill service journal |
 
-The service is provisioned but not started at boot. Loaded model state sleeps
-after its configured idle interval and wakes on the next inference request.
+The service is provisioned but not started at boot. Model metadata pins an immutable Hugging Face commit and LFS SHA-256. On first start, an `ExecStartPre` helper downloads the exact GGUF into `/var/cache/llama-cpp/pinned-models`, verifies its hash, and atomically publishes it; later starts verify and reuse that file. The router receives only the verified local path, never mutable `main` metadata. Text-only profiles disable automatic `mmproj` downloads. The initial download may keep service startup active for up to one hour. Loaded model state sleeps after its configured idle interval and wakes on the next inference request.
 
 Use `pi-local` for a context-efficient local coding session. The host-owned
 launcher selects Grill's local model and delegates to pi-harness's `pi-r-local`

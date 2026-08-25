@@ -40,7 +40,8 @@ authorized_curl() {
 }
 
 wait_until_healthy() {
-	for _ in {1..120}; do
+	local deadline=$((SECONDS + LOCAL_LLM_START_TIMEOUT_SECONDS))
+	while ((SECONDS < deadline)); do
 		if authorized_curl --fail --silent --show-error "$LOCAL_LLM_HEALTH_URL" >/dev/null 2>&1; then
 			printf 'Local LLM router is ready at %s\n' "$LOCAL_LLM_BASE_URL"
 			return 0
@@ -48,7 +49,7 @@ wait_until_healthy() {
 		sleep 1
 	done
 
-	echo "Timed out waiting for $LOCAL_LLM_HEALTH_URL" >&2
+	echo "Timed out waiting for $LOCAL_LLM_HEALTH_URL after $LOCAL_LLM_START_TIMEOUT_SECONDS seconds" >&2
 	return 1
 }
 

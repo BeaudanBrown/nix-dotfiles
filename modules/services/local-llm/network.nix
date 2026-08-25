@@ -20,6 +20,14 @@ let
         type = lib.types.str;
         description = "GGUF filename within the Hugging Face repository.";
       };
+      hfRevision = lib.mkOption {
+        type = lib.types.strMatching "[0-9a-f]{40}";
+        description = "Immutable Hugging Face repository commit containing the GGUF.";
+      };
+      sha256 = lib.mkOption {
+        type = lib.types.strMatching "[0-9a-f]{64}";
+        description = "Expected Hugging Face LFS SHA-256 for the GGUF bytes.";
+      };
       contextWindow = lib.mkOption {
         type = lib.types.ints.positive;
         description = "Context window advertised to Pi and configured in llama.cpp.";
@@ -68,6 +76,7 @@ let
         lib.escapeShellArg (lib.boolToString (config.networking.hostName == cfg.serverHost))
       }
       export LOCAL_LLM_SERVER_HOST=${lib.escapeShellArg cfg.serverHost}
+      export LOCAL_LLM_START_TIMEOUT_SECONDS=${toString cfg.startupTimeoutSeconds}
       exec ${pkgs.bash}/bin/bash ${./local-llm.sh} "$@"
     '';
   };
@@ -89,6 +98,11 @@ in
       default = 900;
       description = "Seconds of inactivity before llama.cpp unloads model state.";
     };
+    startupTimeoutSeconds = lib.mkOption {
+      type = lib.types.ints.positive;
+      default = 3600;
+      description = "Maximum startup time including a first pinned-model download.";
+    };
     defaultModel = lib.mkOption {
       type = lib.types.str;
       default = "qwen3.8-27b";
@@ -102,6 +116,8 @@ in
           displayName = "Qwen3.8 27B on Grill";
           hfRepo = "unsloth/Qwen3.8-27B-GGUF";
           hfFile = "Qwen3.8-27B-UD-IQ4_XS.gguf";
+          hfRevision = "4ca720788d1e01f1bff70c033e0d0028fd02e502";
+          sha256 = "40fac4050e940397dbf13087afd50f4734a11805bf9d65ef8ddd7483470e6199";
           contextWindow = 21504;
           maxTokens = 4096;
           reasoning = true;
@@ -112,6 +128,7 @@ in
             flash-attn = "on";
             jinja = "on";
             n-gpu-layers = "all";
+            no-mmproj = true;
             parallel = 1;
             reasoning-format = "deepseek";
             reasoning-preserve = "on";
@@ -136,6 +153,12 @@ in
       {
         assertion = lib.hasAttr cfg.defaultModel cfg.models;
         message = "custom.localLlm.defaultModel must name an entry in custom.localLlm.models";
+      }
+      {
+        assertion = lib.all (model: builtins.match "[A-Za-z0-9._-]+" model.hfFile != null) (
+          lib.attrValues cfg.models
+        );
+        message = "custom.localLlm.models.*.hfFile must be one portable GGUF basename";
       }
       {
         assertion = config.hostSpecs.${cfg.serverHost}.tailIP != "";
