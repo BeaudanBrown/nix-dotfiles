@@ -28,6 +28,10 @@ let
         type = lib.types.strMatching "[0-9a-f]{64}";
         description = "Expected Hugging Face LFS SHA-256 for the GGUF bytes.";
       };
+      size = lib.mkOption {
+        type = lib.types.ints.positive;
+        description = "Expected GGUF byte size from Hugging Face LFS metadata.";
+      };
       contextWindow = lib.mkOption {
         type = lib.types.ints.positive;
         description = "Context window advertised to Pi and configured in llama.cpp.";
@@ -118,6 +122,7 @@ in
           hfFile = "Qwen3.8-27B-UD-IQ4_XS.gguf";
           hfRevision = "4ca720788d1e01f1bff70c033e0d0028fd02e502";
           sha256 = "40fac4050e940397dbf13087afd50f4734a11805bf9d65ef8ddd7483470e6199";
+          size = 14252845984;
           contextWindow = 21504;
           maxTokens = 4096;
           reasoning = true;
@@ -159,6 +164,12 @@ in
           lib.attrValues cfg.models
         );
         message = "custom.localLlm.models.*.hfFile must be one portable GGUF basename";
+      }
+      {
+        assertion = lib.all (model: builtins.match "[A-Za-z0-9._-]+/[A-Za-z0-9._-]+" model.hfRepo != null) (
+          lib.attrValues cfg.models
+        );
+        message = "custom.localLlm.models.*.hfRepo must be one portable owner/repository pair";
       }
       {
         assertion = config.hostSpecs.${cfg.serverHost}.tailIP != "";

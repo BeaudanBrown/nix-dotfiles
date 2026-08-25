@@ -2,6 +2,7 @@
 set -euo pipefail
 
 service=llama-cpp.service
+verification_service=local-llm-model-verify.service
 
 usage() {
 	cat <<'EOF'
@@ -14,7 +15,8 @@ Commands:
   restart  Restart the router and wait for it to become healthy
   status   Show the systemd service state and endpoint health
   health   Query the llama.cpp health endpoint
-  logs     Follow the llama.cpp service journal on Grill
+  logs          Follow the llama.cpp service journal on Grill
+  verify-model  Perform an explicit full SHA-256 model verification
 EOF
 }
 
@@ -30,7 +32,8 @@ run_on_server() {
 
 control_service() {
 	local action=$1
-	run_on_server sudo -n /run/current-system/sw/bin/systemctl "$action" "$service"
+	local unit=${2:-$service}
+	run_on_server sudo -n /run/current-system/sw/bin/systemctl "$action" "$unit"
 }
 
 authorized_curl() {
@@ -100,6 +103,10 @@ status)
 	;;
 health)
 	authorized_curl --fail --silent --show-error "$LOCAL_LLM_HEALTH_URL" | jq .
+	;;
+verify-model)
+	control_service start "$verification_service"
+	echo "Pinned local model full verification passed"
 	;;
 logs)
 	if [[ $LOCAL_LLM_IS_SERVER == true ]]; then

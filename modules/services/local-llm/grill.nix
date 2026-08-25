@@ -12,47 +12,51 @@ let
     rocmGpuTargets = "gfx1030";
     useWebUi = false;
   };
-  modelCacheDirectory = "/var/cache/llama-cpp/pinned-models";
+  modelOwner = "local-llm-model";
+  modelGroup = "local-llm-model";
+  modelCacheDirectory = "/var/lib/local-llm-models";
+  legacyModelCacheDirectory = "/var/cache/llama-cpp/pinned-models";
   modelPath = model: "${modelCacheDirectory}/${model.sha256}-${model.hfFile}";
-  modelSync = pkgs.writeShellApplication {
-    name = "local-llm-model-sync";
+  modelManager = pkgs.writeShellApplication {
+    name = "local-llm-model-manager";
     runtimeInputs = [
       pkgs.coreutils
       pkgs.curl
     ];
+    text = lib.concatMapStringsSep "\n" (model: ''
+      (
+        export LOCAL_LLM_MODEL_DIRECTORY=${lib.escapeShellArg modelCacheDirectory}
+        export LOCAL_LLM_MODEL_REPOSITORY=${lib.escapeShellArg model.hfRepo}
+        export LOCAL_LLM_MODEL_REVISION=${lib.escapeShellArg model.hfRevision}
+        export LOCAL_LLM_MODEL_FILENAME=${lib.escapeShellArg model.hfFile}
+        export LOCAL_LLM_MODEL_SHA256=${lib.escapeShellArg model.sha256}
+        export LOCAL_LLM_MODEL_SIZE=${toString model.size}
+        export LOCAL_LLM_MODEL_URL=${lib.escapeShellArg "https://huggingface.co/${model.hfRepo}/resolve/${model.hfRevision}/${model.hfFile}"}
+        export LOCAL_LLM_MODEL_OWNER=${lib.escapeShellArg modelOwner}
+        export LOCAL_LLM_MODEL_GROUP=${lib.escapeShellArg modelGroup}
+        ${pkgs.bash}/bin/bash ${./model-manager.sh} "$1"
+      )
+    '') (lib.attrValues cfg.models);
+  };
+  modelMigration = pkgs.writeShellApplication {
+    name = "local-llm-model-migrate";
+    runtimeInputs = [ pkgs.coreutils ];
     text = ''
-      install -d -m 0750 ${lib.escapeShellArg modelCacheDirectory}
+      install -d -o ${modelOwner} -g ${modelGroup} -m 0750 ${lib.escapeShellArg modelCacheDirectory}
       ${
         cfg.models
         |> lib.mapAttrsToList (
           _modelId: model:
           let
+            legacy = "${legacyModelCacheDirectory}/${model.sha256}-${model.hfFile}";
             target = modelPath model;
-            url = "https://huggingface.co/${model.hfRepo}/resolve/${model.hfRevision}/${model.hfFile}";
           in
           ''
-            target=${lib.escapeShellArg target}
-            partial="$target.part"
-            if [ -f "$target" ] && printf '%s  %s\n' ${lib.escapeShellArg model.sha256} "$target" | sha256sum --check --status; then
-              printf 'Pinned local model is already verified: %s\n' "$target"
-            else
-              rm -f "$target"
-              curl \
-                --continue-at - \
-                --fail \
-                --location \
-                --output "$partial" \
-                --retry 3 \
-                --retry-all-errors \
-                ${lib.escapeShellArg url}
-              if ! printf '%s  %s\n' ${lib.escapeShellArg model.sha256} "$partial" | sha256sum --check --status; then
-                rm -f "$partial"
-                echo "Pinned local model failed SHA-256 verification" >&2
-                exit 1
-              fi
-              chmod 0440 "$partial"
-              mv -f "$partial" "$target"
-              printf 'Pinned local model verified: %s\n' "$target"
+            if [ -f ${lib.escapeShellArg legacy} ] && [ ! -e ${lib.escapeShellArg target} ]; then
+              mv ${lib.escapeShellArg legacy} ${lib.escapeShellArg target}
+              chown ${modelOwner}:${modelGroup} ${lib.escapeShellArg target}
+              chmod 0440 ${lib.escapeShellArg target}
+              echo "Migrated existing pinned model without re-downloading it"
             fi
           ''
         )
@@ -89,20 +93,75 @@ in
     ];
   };
 
+  users.groups.${modelGroup} = { };
+  users.users.${modelOwner} = {
+    isSystemUser = true;
+    group = modelGroup;
+  };
+
+  systemd.services.local-llm-model-migrate = {
+    description = "Adopt the previously verified local model cache";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = lib.getExe modelMigration;
+      RemainAfterExit = true;
+    };
+  };
+
+  systemd.services.local-llm-model-prepare = {
+    description = "Prepare pinned local models";
+    requires = [ "local-llm-model-migrate.service" ];
+    wants = [ "network-online.target" ];
+    after = [
+      "local-llm-model-migrate.service"
+      "network-online.target"
+    ];
+    script = ''
+      ${lib.getExe modelManager} prepare
+    '';
+    serviceConfig = {
+      Type = "oneshot";
+      User = modelOwner;
+      Group = modelGroup;
+      StateDirectory = "local-llm-models";
+      StateDirectoryMode = "0750";
+      TimeoutStartSec = toString cfg.startupTimeoutSeconds;
+    };
+  };
+
+  systemd.services.local-llm-model-verify = {
+    description = "Fully verify pinned local models";
+    requires = [ "local-llm-model-migrate.service" ];
+    after = [ "local-llm-model-migrate.service" ];
+    script = ''
+      ${lib.getExe modelManager} verify
+    '';
+    serviceConfig = {
+      Type = "oneshot";
+      User = modelOwner;
+      Group = modelGroup;
+      StateDirectory = "local-llm-models";
+      StateDirectoryMode = "0750";
+      TimeoutStartSec = toString cfg.startupTimeoutSeconds;
+    };
+  };
+
   # Provision the router without loading it at boot. Once manually started,
   # llama.cpp unloads idle model state while leaving the lightweight router up.
   systemd.services.llama-cpp = {
     wantedBy = lib.mkForce [ ];
-    preStart = ''
-      ${lib.getExe modelSync}
-    '';
-    after = [ "tailscaled.service" ];
+    requires = [ "local-llm-model-prepare.service" ];
+    after = [
+      "local-llm-model-prepare.service"
+      "tailscaled.service"
+    ];
     wants = [ "tailscaled.service" ];
     serviceConfig = {
       LoadCredential = [
         "local-llm-api-key:${config.sops.secrets."pi/local_llm_api".path}"
       ];
       RestartSec = lib.mkForce "5s";
+      SupplementaryGroups = [ modelGroup ];
       TimeoutStartSec = toString cfg.startupTimeoutSeconds;
     };
   };
@@ -123,7 +182,13 @@ in
             "restart"
             "start"
             "stop"
-          ];
+          ]
+        ++ [
+          {
+            command = "${systemctl} start local-llm-model-verify.service";
+            options = [ "NOPASSWD" ];
+          }
+        ];
     }
   ];
 }
