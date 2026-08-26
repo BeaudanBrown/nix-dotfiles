@@ -1067,6 +1067,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_6": {
+      "locked": {
+        "lastModified": 1787498568,
+        "narHash": "sha256-9i/VTdusq/+NM/tz+J1Re+ojkMB8MBf0QshnYfzHz30=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "56c02bc00adcf003215cc4bd996d6efaf4cff188",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixvim": {
       "inputs": {
         "flake-parts": "flake-parts_5",
@@ -1151,11 +1167,11 @@
         "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1787664538,
-        "narHash": "sha256-7mPIuUfMnW2OQgawv1uLSqBosHB80tVsGshym9SXIYE=",
+        "lastModified": 1787713107,
+        "narHash": "sha256-A0HDpQyFlByTQ95liKoj9bqa//w7PiPSGFpj/+/vxB8=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "43bbb412cf813647abd715e3467b2baacfaeec96",
+        "rev": "e6b49cda8b8a475573121575981287b4a15946a0",
         "type": "github"
       },
       "original": {
@@ -1200,17 +1216,14 @@
     },
     "pi-r": {
       "inputs": {
-        "nixpkgs": [
-          "pi-harness",
-          "nixpkgs"
-        ]
+        "nixpkgs": "nixpkgs_6"
       },
       "locked": {
-        "lastModified": 1787664405,
-        "narHash": "sha256-wcZJg788iNPaSHvmbZJJ1woyfpbTcE0weIARb3vKH28=",
+        "lastModified": 1787713008,
+        "narHash": "sha256-QF6gqf+0JuvYHpLP6YT3FOz7p9kXkQFcYO6b5b+9aV4=",
         "owner": "BeaudanBrown",
         "repo": "pi-r",
-        "rev": "59f2e8f4876520f4b36599534a166e9f88335acb",
+        "rev": "d1d1cf8f856b0392ca1240bced3f4c12a09cb86d",
         "type": "github"
       },
       "original": {
