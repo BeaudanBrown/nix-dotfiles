@@ -1167,11 +1167,11 @@
         "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1787721837,
-        "narHash": "sha256-BRA9f2AdsEnGKlbKJg4QFupMOD4SJb+ir+aRVw16s00=",
+        "lastModified": 1787793378,
+        "narHash": "sha256-55Te8FWLVB4YFxiiiIk0ANUgjkRDxLXXoSH39SEvNQ0=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "73e80479cfcfebdfa4d0d38eacf1d3b4d2150e35",
+        "rev": "a6df03525e2c53b751d387031f28e1957a8bcf7a",
         "type": "github"
       },
       "original": {
@@ -1219,11 +1219,11 @@
         "nixpkgs": "nixpkgs_6"
       },
       "locked": {
-        "lastModified": 1787720906,
-        "narHash": "sha256-dlGhYbyxhZZl1LT31CgG3w5qX9LvA/CS03MmGQbV3gw=",
+        "lastModified": 1787748011,
+        "narHash": "sha256-SZsVrHGkkQpMMiWw6E2swW4ciZHDOGQ019UXDEKtDow=",
         "owner": "BeaudanBrown",
         "repo": "pi-r",
-        "rev": "bd993f12f810d45a450a2cd62817ac3e493c7484",
+        "rev": "a87007cee9622a80d9dea7d61011632436a2564c",
         "type": "github"
       },
       "original": {
