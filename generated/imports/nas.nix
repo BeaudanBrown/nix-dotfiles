@@ -25,6 +25,7 @@
   ../../modules/services/docker-registry-ui/nas.nix
   ../../modules/services/docker-registry/nas.nix
   ../../modules/services/docling/nas.nix
+  ../../modules/services/grafana/nas.nix
   ../../modules/services/headscale/nas.nix
   ../../modules/services/home-assistant/nas.nix
   ../../modules/services/immich/nas.nix
@@ -87,6 +88,7 @@
   ../../modules/cli/codex/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/nix/builders/network.nix
+  ../../modules/services/local-llm/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
