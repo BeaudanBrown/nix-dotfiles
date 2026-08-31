@@ -51,19 +51,19 @@ func main() {
 	case "scratch":
 		err = openGlobalPopup("scratch", arg(2))
 	case "scratch-new-window":
-		err = openGlobalCommandPopup("scratch", arg(2), "", false, true)
+		err = openGlobalCommandPopup("scratch", arg(2), "", "", false, true)
 	case "build":
 		err = openSatellitePopup("build", arg(2))
 	case "rebuild":
-		err = openSatelliteCommandPopup("rebuild", arg(2), "", arg(3), false, false)
+		err = openGlobalCommandPopup("rebuild", arg(2), "", arg(3), false, false)
 	case "rebuild-run":
-		err = openSatelliteCommandPopup("rebuild", arg(2), arg(3), "", true, false)
+		err = openGlobalCommandPopup("rebuild", arg(2), arg(3), arg(4), true, false)
 	case "llm":
-		err = openGlobalCommandPopup("LLM", arg(2), "LLM", false, false)
+		err = openGlobalCommandPopup("LLM", arg(2), "LLM", "", false, false)
 	case "obsidian":
-		err = openGlobalCommandPopup("obsidian", arg(2), "mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md", false, false)
+		err = openGlobalCommandPopup("obsidian", arg(2), "mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md", "", false, false)
 	case "toggle-last-popup":
-		err = toggleLastPopup(arg(2))
+		err = toggleLastPopup(arg(2), arg(3))
 	case "move-pane":
 		if len(os.Args) < 3 {
 			usage()
@@ -588,10 +588,10 @@ func switchProject(direction, clientArg string) error {
 }
 
 func openGlobalPopup(group, clientArg string) error {
-	return openGlobalCommandPopup(group, clientArg, "", false, false)
+	return openGlobalCommandPopup(group, clientArg, "", "", false, false)
 }
 
-func openGlobalCommandPopup(group, clientArg, command string, force, newWindow bool) error {
+func openGlobalCommandPopup(group, clientArg, command, splitRight string, force, newWindow bool) error {
 	client, current, rootSession, rootPath, owner, err := popupContext(clientArg)
 	if err != nil {
 		return err
@@ -601,9 +601,17 @@ func openGlobalCommandPopup(group, clientArg, command string, force, newWindow b
 		_, _ = tmux("detach-client", "-t", client)
 		return nil
 	}
+	if current == session && newWindow {
+		_, err := tmux("new-window", "-t", "="+session+":", "-c", rootPath)
+		return err
+	}
 	existed := tmuxOk("has-session", "-t", "="+session)
 	if !existed {
-		if err := createSession(session, rootPath, command, false); err != nil {
+		if splitRight != "" {
+			if err := createSplitSession(session, rootPath, splitRight); err != nil {
+				return err
+			}
+		} else if err := createSession(session, rootPath, command, false); err != nil {
 			return err
 		}
 	}
@@ -611,10 +619,15 @@ func openGlobalCommandPopup(group, clientArg, command string, force, newWindow b
 	if command != "" && (force || existed && current == session) {
 		runInSession(session, command)
 	}
-	if newWindow {
-		_, _ = tmux("new-window", "-t", "="+session+":", "-c", rootPath)
-	}
 	recordLastPopup(rootSession, roleGlobalTool, group)
+	if current == session {
+		return nil
+	}
+	if newWindow {
+		if _, err := tmux("new-window", "-t", "="+session+":", "-c", rootPath); err != nil {
+			return err
+		}
+	}
 	return showPopup(owner, session, rootPath)
 }
 
@@ -699,7 +712,7 @@ func recordLastPopup(rootSession, kind, group string) {
 	setSessionOption(rootSession, "@project_last_popup_group", group)
 }
 
-func toggleLastPopup(clientArg string) error {
+func toggleLastPopup(clientArg, rebuildSplit string) error {
 	client, err := clientName(clientArg)
 	if err != nil {
 		return err
@@ -721,17 +734,17 @@ func toggleLastPopup(clientArg string) error {
 		kind = roleGlobalTool
 		group = "scratch"
 	}
+	if group == "rebuild" {
+		return openGlobalCommandPopup("rebuild", client, "", rebuildSplit, false, false)
+	}
 	if kind == roleSatellite {
-		if group == "rebuild" {
-			return openSatelliteCommandPopup("rebuild", client, "", "", false, false)
-		}
 		return openSatellitePopup(group, client)
 	}
 	switch group {
 	case "LLM":
-		return openGlobalCommandPopup("LLM", client, "LLM", false, false)
+		return openGlobalCommandPopup("LLM", client, "LLM", "", false, false)
 	case "obsidian":
-		return openGlobalCommandPopup("obsidian", client, "mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md", false, false)
+		return openGlobalCommandPopup("obsidian", client, "mkdir -p ~/documents/vault/main && cd ~/documents/vault/main && nvim -O ~/documents/vault/main/triage.md", "", false, false)
 	default:
 		return openGlobalPopup(group, client)
 	}

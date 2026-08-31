@@ -4,7 +4,7 @@
   ...
 }:
 let
-  llm = import ./new_gpt_chat.nix { inherit pkgs; };
+  llm = import ./new_gpt_chat.nix { inherit config pkgs; };
   nr = import ../aliases/nr.nix { inherit pkgs config; };
   tmux_project = import ./tmux_project.nix { inherit pkgs; };
   tmux_copy_system = pkgs.writeShellApplication {
@@ -163,7 +163,8 @@ in
 
         # Toggle project popups
 
-          bind-key -n M-Space run-shell "tmux_project toggle-last-popup '#{client_name}'"
+          bind-key -n M-Space \
+                run-shell "tmux_project toggle-last-popup '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
 
           bind-key -n M-Enter run-shell "tmux_project scratch '#{client_name}'"
           bind-key -n M-S-Enter run-shell "tmux_project scratch-new-window '#{client_name}'"
@@ -172,7 +173,7 @@ in
                 run-shell "tmux_project rebuild '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
 
           bind-key -n M-R \
-                run-shell "tmux_project rebuild-run '#{client_name}' '${nr}/bin/nr'"
+                run-shell "tmux_project rebuild-run '#{client_name}' '${nr}/bin/nr' '${pkgs.btop}/bin/btop -u 500'"
 
           bind-key -n M-m run-shell "tmux_project llm '#{client_name}'"
 
