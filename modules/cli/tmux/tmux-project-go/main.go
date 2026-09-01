@@ -37,6 +37,8 @@ func main() {
 	}
 	var err error
 	switch os.Args[1] {
+	case "managed":
+		err = managed(os.Args[2:])
 	case "launcher":
 		err = launcher(arg(2))
 	case "launcher-popup":
@@ -86,7 +88,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "tmux_project <launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
+	fmt.Fprintln(os.Stderr, "tmux_project <managed|launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
 	os.Exit(1)
 }
 

@@ -1,8 +1,13 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
+let
+  workspaceRoot = "${config.hostSpec.home}/documents/projects";
+  managedSessionLauncher = import ../tmux/tmux_project.nix { inherit pkgs; };
+in
 {
   sops.secrets."pi/matrix-grill-env" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
@@ -13,11 +18,15 @@
     # PI_MATRIX_ACCESS_TOKEN=<token for @pi-grill:matrix.bepis.lol>
   };
 
-  services.pi-harness.remoteSession = {
+  services.pi-harness.managedSessions = {
+    enable = true;
+    user = config.hostSpec.username;
     environmentFile = config.sops.secrets."pi/matrix-grill-env".path;
     homeserver = "https://matrix.bepis.lol";
     botUserId = "@pi-grill:matrix.bepis.lol";
     operatorUserId = "@beau:matrix.bepis.lol";
-    hostName = "grill";
+    hostId = "grill";
+    workspaceRoots.projects = workspaceRoot;
+    launcherPackage = managedSessionLauncher;
   };
 }
