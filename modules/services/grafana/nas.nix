@@ -1,5 +1,17 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
+  dashboardDefinitions = import ./dashboards.nix;
+  dashboardDirectory = pkgs.symlinkJoin {
+    name = "bepis-grafana-dashboards";
+    paths = map (
+      dashboard: pkgs.writeTextDir "${dashboard.uid}.json" (builtins.toJSON dashboard)
+    ) dashboardDefinitions;
+  };
   grafanaDomain = "grafana.bepis.lol";
   grafanaPort = 3301;
   productionTailIP = "100.64.0.16";
@@ -76,6 +88,19 @@ in
             jsonData = {
               httpMethod = "GET";
               nodeGraph.enabled = true;
+              tracesToLogsV2 = {
+                datasourceUid = "bepis-production-loki";
+                spanStartTimeShift = "-30s";
+                spanEndTimeShift = "30s";
+                tags = [
+                  {
+                    key = "service.name";
+                    value = "service_name";
+                  }
+                ];
+                filterByTraceID = false;
+                filterBySpanID = false;
+              };
             };
           }
           {
@@ -100,6 +125,25 @@ in
             jsonData = {
               httpMethod = "GET";
               nodeGraph.enabled = true;
+            };
+          }
+        ];
+      };
+      dashboards.settings = {
+        apiVersion = 1;
+        providers = [
+          {
+            name = "Bepis";
+            orgId = 1;
+            folder = "Bepis";
+            folderUid = "bepis";
+            type = "file";
+            disableDeletion = false;
+            allowUiUpdates = false;
+            updateIntervalSeconds = 60;
+            options = {
+              path = dashboardDirectory;
+              foldersFromFilesStructure = false;
             };
           }
         ];

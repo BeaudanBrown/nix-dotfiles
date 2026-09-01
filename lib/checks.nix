@@ -1,9 +1,51 @@
 {
   inputs,
+  pkgs,
   system,
   ...
 }:
+let
+  dashboardDefinitions = import ../modules/services/grafana/dashboards.nix;
+  dashboardsJson = pkgs.writeText "bepis-grafana-dashboards.json" (
+    builtins.toJSON dashboardDefinitions
+  );
+in
 {
+  bepis-grafana-dashboard-contract =
+    pkgs.runCommand "bepis-grafana-dashboard-contract"
+      {
+        nativeBuildInputs = [ pkgs.jq ];
+      }
+      ''
+        jq --exit-status '
+          length == 5
+          and ([.[].uid] | unique | length == 5)
+          and all(.[];
+            .editable == false
+            and .schemaVersion >= 41
+            and (.tags | index("bepis") != null)
+            and (.tags | index("observability") != null)
+          )
+          and ([.[].uid] | sort == [
+            "bepis-diagnostic-profiles",
+            "bepis-production-logs",
+            "bepis-request-traces",
+            "bepis-roster-hot-paths",
+            "bepis-runtime-boundaries"
+          ])
+          and all(
+            [.[] | select(.uid != "bepis-production-logs") | .panels[].targets[]?][];
+            .datasource.uid == "$tempo"
+            and .queryType == "traceql"
+          )
+          and all(
+            [.[] | .panels[].targets[]? | (.query // .expr // "")][];
+            (test("email|customer|credential|https?://"; "i") | not)
+          )
+        ' ${dashboardsJson}
+        touch "$out"
+      '';
+
   pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
     src = ./.;
     default_stages = [ "pre-commit" ];
