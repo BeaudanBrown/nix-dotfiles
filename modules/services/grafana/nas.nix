@@ -5,8 +5,10 @@ let
   productionTailIP = "100.64.0.16";
   tempoPort = 3200;
   lokiPort = 3101;
+  developmentTempoTunnelPort = 20082;
   tempoEndpoint = "http://${productionTailIP}:${toString tempoPort}";
   lokiEndpoint = "http://${productionTailIP}:${toString lokiPort}";
+  developmentTempoEndpoint = "http://127.0.0.1:${toString developmentTempoTunnelPort}";
 in
 {
   hostedServices = [
@@ -41,6 +43,7 @@ in
         data_source_proxy_whitelist = [
           "${productionTailIP}:${toString tempoPort}"
           "${productionTailIP}:${toString lokiPort}"
+          "127.0.0.1:${toString developmentTempoTunnelPort}"
         ];
       };
 
@@ -85,6 +88,18 @@ in
             jsonData = {
               httpMethod = "GET";
               maxLines = 200;
+            };
+          }
+          {
+            name = "Bepis Development Tempo";
+            uid = "bepis-development-tempo";
+            type = "tempo";
+            access = "proxy";
+            url = developmentTempoEndpoint;
+            editable = false;
+            jsonData = {
+              httpMethod = "GET";
+              nodeGraph.enabled = true;
             };
           }
         ];

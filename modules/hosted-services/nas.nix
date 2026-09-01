@@ -15,6 +15,7 @@ let
   tailIP = config.hostSpec.tailIP;
   devTunnelPort = 20080;
   devTunnelToolPort = 20081;
+  devTunnelTempoPort = 20082;
   tailServices = services |> filter (s: s.tailnet);
 
   blockedZones = [
@@ -101,6 +102,7 @@ in
     custom.ports.reserved = [
       devTunnelPort
       devTunnelToolPort
+      devTunnelTempoPort
     ];
     hostedServices = [
       {
