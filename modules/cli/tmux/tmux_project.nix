@@ -8,6 +8,7 @@ pkgs.buildGoModule {
   vendorHash = null;
 
   nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeCheckInputs = [ pkgs.git ];
 
   postInstall = ''
     wrapProgram $out/bin/tmux-project \

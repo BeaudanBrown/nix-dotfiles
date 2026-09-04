@@ -1,13 +1,17 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 )
 
 const managedWindowOption = "@managed_pi_conversation_id"
@@ -22,6 +26,20 @@ type resolvedWorkspace struct {
 	workspacePlacement
 	WorkspacePath string `json:"workspacePath"`
 	Cwd           string `json:"cwd"`
+}
+
+type projectCreateRequest struct {
+	CreationKey    string
+	ResumeExisting bool
+	RootKey        string
+	Workspace      string
+}
+
+type projectCreateWireRequest struct {
+	CreationKey    string `json:"creationKey"`
+	ResumeExisting *bool  `json:"resumeExisting"`
+	RootKey        string `json:"rootKey"`
+	Workspace      string `json:"workspace"`
 }
 
 type managedWindowResult struct {
@@ -93,6 +111,23 @@ func managed(args []string) error {
 		return writeManagedResult(struct {
 			Workspaces []item `json:"workspaces"`
 		}{Workspaces: workspaces})
+	case "project-create":
+		var wire projectCreateWireRequest
+		if err := readManagedRequest(&wire); err != nil {
+			return err
+		}
+		if wire.ResumeExisting == nil {
+			return fmt.Errorf("managed project creation request is invalid")
+		}
+		request := projectCreateRequest{
+			CreationKey: wire.CreationKey, ResumeExisting: *wire.ResumeExisting,
+			RootKey: wire.RootKey, Workspace: wire.Workspace,
+		}
+		resolved, err := createManagedProject(request)
+		if err != nil {
+			return err
+		}
+		return writeManagedResult(resolved)
 	case "workspace-resolve":
 		var placement workspacePlacement
 		if err := readManagedRequest(&placement); err != nil {
@@ -322,6 +357,233 @@ func managedWindowMutation(operation string) error {
 	}{Cleared: observation != nil})
 }
 
+func createManagedProject(request projectCreateRequest) (resolvedWorkspace, error) {
+	if !safeIdentifier(request.CreationKey) || !safeProjectWorkspaceName(request.Workspace) {
+		return resolvedWorkspace{}, fmt.Errorf("managed project creation request is invalid")
+	}
+	roots, err := managedWorkspaceRoots()
+	if err != nil {
+		return resolvedWorkspace{}, err
+	}
+	root, ok := roots[request.RootKey]
+	if !ok {
+		return resolvedWorkspace{}, fmt.Errorf("managed project creation root is invalid")
+	}
+	target := filepath.Join(root, request.Workspace)
+	if _, err := os.Lstat(target); err == nil {
+		if !request.ResumeExisting {
+			return resolvedWorkspace{}, fmt.Errorf("managed project target already exists")
+		}
+		if err := verifyManagedProject(target, request.CreationKey); err != nil {
+			return resolvedWorkspace{}, err
+		}
+		return createdWorkspaceResult(request, target), nil
+	} else if !os.IsNotExist(err) {
+		return resolvedWorkspace{}, fmt.Errorf("inspect managed project target: %w", err)
+	}
+
+	digest := sha256.Sum256([]byte(request.CreationKey))
+	staging := filepath.Join(root, ".pi-managed-create-"+hex.EncodeToString(digest[:16]))
+	marker := filepath.Join(staging, ".pi-managed-project-creation")
+	if _, err := os.Lstat(staging); os.IsNotExist(err) {
+		if err := os.Mkdir(staging, 0o700); err != nil {
+			return resolvedWorkspace{}, fmt.Errorf("create managed project staging directory: %w", err)
+		}
+		if err := writeProjectCreationMarker(marker, request.CreationKey); err != nil {
+			return resolvedWorkspace{}, err
+		}
+	} else if err != nil {
+		return resolvedWorkspace{}, fmt.Errorf("inspect managed project staging directory: %w", err)
+	} else {
+		if !request.ResumeExisting {
+			return resolvedWorkspace{}, fmt.Errorf("managed project staging state already exists")
+		}
+		if err := recoverProjectCreationStaging(staging, marker, request.CreationKey); err != nil {
+			return resolvedWorkspace{}, err
+		}
+	}
+
+	if err := rejectUnsafeGitMetadata(staging); err != nil {
+		return resolvedWorkspace{}, err
+	}
+	if err := runManagedGit(staging, "init", "-b", "main"); err != nil {
+		return resolvedWorkspace{}, fmt.Errorf("initialize managed project Git repository: %w", err)
+	}
+	if err := verifyRealOwnedDirectory(filepath.Join(staging, ".git"), "managed project Git metadata"); err != nil {
+		return resolvedWorkspace{}, err
+	}
+	if err := verifyGitTopLevel(staging); err != nil {
+		return resolvedWorkspace{}, err
+	}
+	branch, err := managedGitOutput(staging, "symbolic-ref", "--short", "HEAD")
+	if err != nil || branch != "main" {
+		return resolvedWorkspace{}, fmt.Errorf("managed project must use the main branch")
+	}
+	if err := runManagedGit(staging, "config", "--local", "pi-managed.creationKey", request.CreationKey); err != nil {
+		return resolvedWorkspace{}, fmt.Errorf("record managed project creation identity: %w", err)
+	}
+	if err := os.Remove(marker); err != nil && !os.IsNotExist(err) {
+		return resolvedWorkspace{}, fmt.Errorf("remove managed project creation marker: %w", err)
+	}
+	if _, err := os.Lstat(target); err == nil || !os.IsNotExist(err) {
+		return resolvedWorkspace{}, fmt.Errorf("managed project target appeared during creation")
+	}
+	if err := os.Rename(staging, target); err != nil {
+		return resolvedWorkspace{}, fmt.Errorf("publish managed project: %w", err)
+	}
+	if err := verifyManagedProject(target, request.CreationKey); err != nil {
+		return resolvedWorkspace{}, err
+	}
+	return createdWorkspaceResult(request, target), nil
+}
+
+func createdWorkspaceResult(request projectCreateRequest, target string) resolvedWorkspace {
+	return resolvedWorkspace{
+		workspacePlacement: workspacePlacement{RootKey: request.RootKey, Workspace: request.Workspace, RelativeCwd: ""},
+		WorkspacePath:      target,
+		Cwd:                target,
+	}
+}
+
+func recoverProjectCreationStaging(staging, marker, creationKey string) error {
+	if err := verifyRealOwnedDirectory(staging, "managed project staging directory"); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(staging)
+	if err != nil {
+		return fmt.Errorf("read managed project staging directory: %w", err)
+	}
+	if len(entries) == 0 {
+		return writeProjectCreationMarker(marker, creationKey)
+	}
+	allowed := map[string]bool{".git": true, ".pi-managed-project-creation": true}
+	for _, entry := range entries {
+		if !allowed[entry.Name()] {
+			return fmt.Errorf("managed project staging directory contains foreign state")
+		}
+	}
+	if _, err := os.Lstat(marker); err == nil {
+		info, err := os.Lstat(marker)
+		if err != nil || !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 || !ownedByCurrentUser(info) || info.Mode().Perm()&0o077 != 0 || info.Size() > 129 {
+			return fmt.Errorf("managed project creation marker is unsafe")
+		}
+		content, err := os.ReadFile(marker)
+		if err != nil || string(content) != creationKey+"\n" {
+			return fmt.Errorf("managed project creation marker does not match")
+		}
+		return nil
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("inspect managed project creation marker: %w", err)
+	}
+	if len(entries) != 1 || entries[0].Name() != ".git" {
+		return fmt.Errorf("managed project staging directory is not recoverable")
+	}
+	if err := verifyManagedProject(staging, creationKey); err != nil {
+		return fmt.Errorf("managed project staging identity does not match: %w", err)
+	}
+	return nil
+}
+
+func writeProjectCreationMarker(marker, creationKey string) error {
+	file, err := os.OpenFile(marker, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return fmt.Errorf("write managed project creation marker: %w", err)
+	}
+	if _, err := file.WriteString(creationKey + "\n"); err != nil {
+		_ = file.Close()
+		return fmt.Errorf("write managed project creation marker: %w", err)
+	}
+	if err := file.Sync(); err != nil {
+		_ = file.Close()
+		return fmt.Errorf("sync managed project creation marker: %w", err)
+	}
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("close managed project creation marker: %w", err)
+	}
+	return nil
+}
+
+func verifyManagedProject(path, creationKey string) error {
+	if err := verifyRealOwnedDirectory(path, "managed project"); err != nil {
+		return err
+	}
+	if err := verifyRealOwnedDirectory(filepath.Join(path, ".git"), "managed project Git metadata"); err != nil {
+		return err
+	}
+	if err := verifyGitTopLevel(path); err != nil {
+		return err
+	}
+	branch, err := managedGitOutput(path, "symbolic-ref", "--short", "HEAD")
+	if err != nil || branch != "main" {
+		return fmt.Errorf("managed project must use the main branch")
+	}
+	storedKey, err := managedGitOutput(path, "config", "--local", "--get", "pi-managed.creationKey")
+	if err != nil || storedKey != creationKey {
+		return fmt.Errorf("managed project creation identity does not match")
+	}
+	return nil
+}
+
+func verifyGitTopLevel(path string) error {
+	topLevel, err := managedGitOutput(path, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return fmt.Errorf("resolve managed project Git top level: %w", err)
+	}
+	canonical, err := filepath.EvalSymlinks(topLevel)
+	if err != nil || canonical != path {
+		return fmt.Errorf("managed project Git repository escaped its directory")
+	}
+	return nil
+}
+
+func rejectUnsafeGitMetadata(path string) error {
+	metadata := filepath.Join(path, ".git")
+	info, err := os.Lstat(metadata)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("inspect managed project Git metadata: %w", err)
+	}
+	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 || !ownedByCurrentUser(info) {
+		return fmt.Errorf("managed project Git metadata is unsafe")
+	}
+	return nil
+}
+
+func verifyRealOwnedDirectory(path, description string) error {
+	info, err := os.Lstat(path)
+	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 || !ownedByCurrentUser(info) {
+		return fmt.Errorf("%s must be a real user-owned directory", description)
+	}
+	return nil
+}
+
+func ownedByCurrentUser(info os.FileInfo) bool {
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	return ok && stat.Uid == uint32(os.Getuid())
+}
+
+func runManagedGit(directory string, args ...string) error {
+	command := exec.Command("git", append([]string{"-C", directory}, args...)...)
+	command.Stdout = io.Discard
+	command.Stderr = io.Discard
+	return command.Run()
+}
+
+func managedGitOutput(directory string, args ...string) (string, error) {
+	command := exec.Command("git", append([]string{"-C", directory}, args...)...)
+	command.Stderr = io.Discard
+	output, err := command.Output()
+	if err != nil {
+		return "", err
+	}
+	if len(output) > 4096 {
+		return "", fmt.Errorf("git output exceeded its bound")
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
 func managedWorkspaceRoots() (map[string]string, error) {
 	raw := os.Getenv("PI_MANAGED_SESSIONS_WORKSPACE_ROOTS")
 	if raw == "" {
@@ -335,6 +597,9 @@ func managedWorkspaceRoots() (map[string]string, error) {
 	for key, path := range configured {
 		if !safeIdentifier(key) || !filepath.IsAbs(path) {
 			return nil, fmt.Errorf("managed workspace root %q is invalid", key)
+		}
+		if err := verifyRealOwnedDirectory(path, "managed workspace root"); err != nil {
+			return nil, fmt.Errorf("workspace root %s is unsafe: %w", key, err)
 		}
 		canonical, err := filepath.EvalSymlinks(path)
 		if err != nil {
@@ -457,6 +722,20 @@ func safeIdentifier(value string) bool {
 	for index, r := range value {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') ||
 			(index > 0 && (r == '.' || r == '_' || r == ':' || r == '-')) {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+func safeProjectWorkspaceName(value string) bool {
+	if value == "" || len(value) > 128 {
+		return false
+	}
+	for index, r := range value {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') ||
+			(index > 0 && (r == '.' || r == '_' || r == '-')) {
 			continue
 		}
 		return false

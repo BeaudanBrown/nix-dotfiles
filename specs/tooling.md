@@ -48,6 +48,16 @@ later restore the lean surface. The dedicated Pi configuration uses a 4K
 compaction reserve and keeps 6K recent tokens; normal `pi` sessions retain the
 full harness and their existing settings.
 
+Managed Matrix project creation uses the host-owned `tmux_project managed
+project-create` operation. It accepts only a configured root key, a safe
+immediate-child workspace name, a bounded creation key, and an explicit retry
+flag. The operation creates no scaffold, task, remote, or publication: it uses a
+deterministic private staging directory, initializes local Git on `main`, stores
+the creation key in local Git metadata, and atomically publishes the directory.
+An exact retry can recover recognized staging phases or a matching completed
+repository; symlinks, foreign state, ownership mismatches, and conflicting Git
+identity fail unchanged.
+
 ### Building
 
 | Command              | Description                                    |
