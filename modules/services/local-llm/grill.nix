@@ -146,10 +146,9 @@ in
     };
   };
 
-  # Provision the router without loading it at boot. Once manually started,
-  # llama.cpp unloads idle model state while leaving the lightweight router up.
+  # Start the lightweight router at boot. llama.cpp loads models on demand and
+  # unloads idle model state while leaving the request endpoint available.
   systemd.services.llama-cpp = {
-    wantedBy = lib.mkForce [ ];
     requires = [ "local-llm-model-prepare.service" ];
     after = [
       "local-llm-model-prepare.service"
