@@ -25,6 +25,10 @@ in
     homeserver = "https://matrix.bepis.lol";
     botUserId = "@pi-grill:matrix.bepis.lol";
     operatorUserId = "@beau:matrix.bepis.lol";
+    ignoredSenderUserIds = [
+      "@signalbot:matrix.bepis.lol"
+      "@facebookbot:matrix.bepis.lol"
+    ];
     hostId = "grill";
     workspaceRoots.projects = workspaceRoot;
     launcherPackage = managedSessionLauncher;
