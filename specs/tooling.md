@@ -58,6 +58,24 @@ An exact retry can recover recognized staging phases or a matching completed
 repository; symlinks, foreign state, ownership mismatches, and conflicting Git
 identity fail unchanged.
 
+Managed Matrix Pi windows use the same per-user tmux server as the interactive
+`tmux_project launcher-popup`: managed invocations require `TMUX_TMPDIR` to equal
+`XDG_RUNTIME_DIR`. The existing launcher lists ordinary project sessions and
+paths plus marked live managed windows. Selecting a managed entry switches the
+requesting client to that exact existing window; it never starts or resumes a
+conversation or sends keys. The host launcher validates and forwards optional
+model/thinking selections, derives the canonical workspace path itself, and
+stores only bounded conversation ID/concept display options on the window.
+Dormant conversations have no tmux candidate.
+
+For the one-time transition from deployments that used `/tmp/tmux-$UID/default`,
+`tmux_project managed legacy-window-preview` accepts `{}` and reports only valid
+marked windows. After reviewing the preview and stopping the managed relay,
+`tmux_project managed legacy-window-cleanup` accepts exactly
+`{"confirmed":true}` and kills only those marked windows. It leaves every
+unmarked pane, window, and session unchanged; project conversations are resumed
+explicitly after the rebuilt relay starts on the runtime-directory socket.
+
 ### Building
 
 | Command              | Description                                    |

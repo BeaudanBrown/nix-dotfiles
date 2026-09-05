@@ -4,10 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -275,6 +277,111 @@ func TestManagedProjectWindowResultPreservesEmptyRelativeCwd(t *testing.T) {
 	}
 	if relativeCwd, present := response["relativeCwd"]; !present || relativeCwd != "" {
 		t.Fatalf("project window response must preserve an empty relativeCwd: %s", encoded)
+	}
+}
+
+func TestLegacyCleanupRefusesWhileManagedRelayIsListening(t *testing.T) {
+	runtime, err := os.MkdirTemp("/tmp", "pi-relay-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(runtime)
+	directory := filepath.Join(runtime, "pi-managed-sessions")
+	if err := os.Mkdir(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	listener, err := net.Listen("unix", filepath.Join(directory, "relay.sock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("XDG_RUNTIME_DIR", runtime)
+	if err := requireManagedRelayStopped(); err == nil {
+		t.Fatal("legacy cleanup accepted a live managed relay")
+	}
+	if err := listener.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := requireManagedRelayStopped(); err != nil {
+		t.Fatalf("stopped managed relay was not accepted: %v", err)
+	}
+}
+
+func TestManagedRuntimeUsesInteractiveTmuxSocketRoot(t *testing.T) {
+	runtime := t.TempDir()
+	t.Setenv("XDG_RUNTIME_DIR", runtime)
+	t.Setenv("TMUX_TMPDIR", runtime)
+	if err := requireManagedTmuxRuntime(); err != nil {
+		t.Fatalf("matching runtime was rejected: %v", err)
+	}
+	t.Setenv("TMUX_TMPDIR", filepath.Join(t.TempDir(), "other"))
+	if err := requireManagedTmuxRuntime(); err == nil {
+		t.Fatal("divergent managed tmux socket root was accepted")
+	}
+}
+
+func TestManagedWorkspacePathMustMatchHostResolution(t *testing.T) {
+	resolved := filepath.Join(t.TempDir(), "workspace")
+	t.Setenv("PI_MANAGED_SESSION_WORKSPACE_PATH", resolved)
+	if err := validateManagedWorkspacePath(resolved); err != nil {
+		t.Fatalf("matching workspace path was rejected: %v", err)
+	}
+	t.Setenv("PI_MANAGED_SESSION_WORKSPACE_PATH", filepath.Join(t.TempDir(), "foreign"))
+	if err := validateManagedWorkspacePath(resolved); err == nil {
+		t.Fatal("mismatched relay workspace path was accepted")
+	}
+}
+
+func TestManagedSelectionEnvironmentIsOptionalAndValidated(t *testing.T) {
+	t.Setenv("PI_MANAGED_SESSION_MODEL", "local-llm/qwen")
+	t.Setenv("PI_MANAGED_SESSION_THINKING", "high")
+	got, err := managedSelectionEnvironment()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"-e", "PI_MANAGED_SESSION_MODEL=local-llm/qwen", "-e", "PI_MANAGED_SESSION_THINKING=high"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("selection environment = %#v, want %#v", got, want)
+	}
+	for _, invalid := range []struct{ model, thinking string }{{"bad\nmodel", ""}, {"", "extreme"}} {
+		t.Setenv("PI_MANAGED_SESSION_MODEL", invalid.model)
+		t.Setenv("PI_MANAGED_SESSION_THINKING", invalid.thinking)
+		if _, err := managedSelectionEnvironment(); err == nil {
+			t.Fatalf("invalid selection environment was accepted: %#v", invalid)
+		}
+	}
+}
+
+func TestManagedLauncherWindowParsingIsBoundedAndMarkerDriven(t *testing.T) {
+	conversationID := "conv_0123456789abcdef0123456789abcdef"
+	output := strings.Join([]string{
+		"tara-tools\t2\t@10\t%10\t1\tpi-9abcdef\t" + conversationID + "\tTara tools",
+		"tara-tools\t1\t@1\t%1\t0\tzsh\t\t",
+		"tara-tools\t3\t@11\t%11\t0\tpi-bad\tconv_bad\tforeign",
+	}, "\n")
+	got := parseManagedLauncherWindows(output)
+	want := []managedLauncherWindow{{Session: "tara-tools", Index: "2", WindowID: "@10", PaneID: "%10", PaneIndex: "1",
+		ConversationID: conversationID, Concept: "Tara tools"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("managed launcher windows = %#v, want %#v", got, want)
+	}
+}
+
+func TestManagedWindowSwitchRejectsCrossSessionTargetBeforeTmux(t *testing.T) {
+	if err := switchToManagedWindow("=foreign:2.0", "tara-tools", "client"); err == nil {
+		t.Fatal("cross-session managed launcher target was accepted")
+	}
+}
+
+func TestLegacyWindowPreviewIncludesOnlyValidManagedMarkers(t *testing.T) {
+	conversationID := "conv_fedcba9876543210fedcba9876543210"
+	got := parseLegacyManagedWindows(strings.Join([]string{
+		"tara-tools|@10|pi-live|" + conversationID,
+		"tara-tools|@1|zsh|",
+		"other|@11|foreign|conv_bad",
+	}, "\n"))
+	want := []legacyManagedWindow{{ConversationID: conversationID, SessionName: "tara-tools", WindowID: "@10", WindowName: "pi-live"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("legacy preview = %#v, want %#v", got, want)
 	}
 }
 

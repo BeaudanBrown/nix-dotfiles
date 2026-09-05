@@ -6,15 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 )
 
-const managedWindowOption = "@managed_pi_conversation_id"
+const (
+	managedWindowOption  = "@managed_pi_conversation_id"
+	managedConceptOption = "@managed_pi_concept"
+)
 
 type workspacePlacement struct {
 	RootKey     string `json:"rootKey"`
@@ -75,6 +80,12 @@ type managedWindowObservation struct {
 func managed(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("tmux_project managed requires exactly one operation")
+	}
+	if err := requireManagedTmuxRuntime(); err != nil {
+		return err
+	}
+	if args[0] != "legacy-window-preview" && args[0] != "legacy-window-cleanup" && os.Getenv("TMUX") != "" {
+		return fmt.Errorf("managed lifecycle commands must not inherit an attached tmux target")
 	}
 	switch args[0] {
 	case "workspace-list":
@@ -163,6 +174,35 @@ func managed(args []string) error {
 		return managedWindowCreate()
 	case "window-terminate", "bridge-clear":
 		return managedWindowMutation(args[0])
+	case "legacy-window-preview":
+		var request struct{}
+		if err := readManagedRequest(&request); err != nil {
+			return err
+		}
+		windows, err := legacyManagedWindows()
+		if err != nil {
+			return err
+		}
+		return writeManagedResult(struct {
+			Windows []legacyManagedWindow `json:"windows"`
+		}{Windows: windows})
+	case "legacy-window-cleanup":
+		var request struct {
+			Confirmed *bool `json:"confirmed"`
+		}
+		if err := readManagedRequest(&request); err != nil {
+			return err
+		}
+		if request.Confirmed == nil || !*request.Confirmed {
+			return fmt.Errorf("legacy managed window cleanup requires explicit confirmation")
+		}
+		cleaned, err := cleanupLegacyManagedWindows()
+		if err != nil {
+			return err
+		}
+		return writeManagedResult(struct {
+			Cleaned int `json:"cleaned"`
+		}{Cleaned: cleaned})
 	default:
 		return fmt.Errorf("unknown managed operation %q", args[0])
 	}
@@ -232,12 +272,17 @@ func managedCoordinatorEnsure() error {
 	if observation != nil {
 		return fmt.Errorf("coordinator window already exists; inspect before creating")
 	}
+	selectionEnvironment, err := managedSelectionEnvironment()
+	if err != nil {
+		return err
+	}
 	args := []string{"-d", "-P", "-F", "#{window_id}|#{pane_id}", "-n", "coordinator", "-c", cwd}
 	args = append(args, managedTmuxEnvironment(
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONVERSATION_ID",
 		"PI_MANAGED_SESSION_CONCEPT", "PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID",
 		"PI_MANAGED_SESSION_ATTACHMENT_NONCE", "PI_MANAGED_COORDINATOR_SESSION_FILE", "PI_MANAGED_COORDINATOR_CWD",
 	)...)
+	args = append(args, selectionEnvironment...)
 	command := "exec direnv exec " + shellQuote(cwd) + " pi"
 	var output string
 	if tmuxOk("has-session", "-t", "=default") {
@@ -252,7 +297,7 @@ func managedCoordinatorEnsure() error {
 	if err != nil {
 		return err
 	}
-	if _, err := tmux("set-option", "-w", "-t", observation.WindowID, managedWindowOption, request.ConversationID); err != nil {
+	if err := markManagedWindow(observation.WindowID, request.ConversationID); err != nil {
 		return err
 	}
 	return writeManagedResult(managedWindowResult{
@@ -284,6 +329,13 @@ func managedWindowCreate() error {
 	if err != nil {
 		return err
 	}
+	if err := validateManagedWorkspacePath(resolved.WorkspacePath); err != nil {
+		return err
+	}
+	selectionEnvironment, err := managedSelectionEnvironment()
+	if err != nil {
+		return err
+	}
 	session, err := ensureProjectSession(resolved.WorkspacePath)
 	if err != nil {
 		return err
@@ -300,8 +352,9 @@ func managedWindowCreate() error {
 	args = append(args, managedTmuxEnvironment(
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONVERSATION_ID",
 		"PI_MANAGED_SESSION_CONCEPT", "PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID",
-		"PI_MANAGED_SESSION_ATTACHMENT_NONCE", "PI_MANAGED_PROJECT_SESSION_FILE",
+		"PI_MANAGED_SESSION_ATTACHMENT_NONCE", "PI_MANAGED_PROJECT_SESSION_FILE", "PI_MANAGED_SESSION_WORKSPACE_PATH",
 	)...)
+	args = append(args, selectionEnvironment...)
 	args = append(args, "exec direnv exec "+shellQuote(resolved.Cwd)+" pi")
 	output, err := tmux(args...)
 	if err != nil {
@@ -311,7 +364,7 @@ func managedWindowCreate() error {
 	if err != nil {
 		return err
 	}
-	if _, err := tmux("set-option", "-w", "-t", observation.WindowID, managedWindowOption, request.ConversationID); err != nil {
+	if err := markManagedWindow(observation.WindowID, request.ConversationID); err != nil {
 		return err
 	}
 	return writeManagedResult(managedProjectWindowResult{
@@ -349,6 +402,9 @@ func managedWindowMutation(operation string) error {
 	}
 	if observation != nil {
 		if _, err := tmux("set-option", "-w", "-u", "-t", observation.WindowID, managedWindowOption); err != nil {
+			return err
+		}
+		if _, err := tmux("set-option", "-w", "-u", "-t", observation.WindowID, managedConceptOption); err != nil {
 			return err
 		}
 	}
@@ -650,6 +706,72 @@ func resolveManagedWorkspace(placement workspacePlacement) (resolvedWorkspace, e
 	return resolvedWorkspace{workspacePlacement: placement, WorkspacePath: workspacePath, Cwd: cwd}, nil
 }
 
+type legacyManagedWindow struct {
+	ConversationID string `json:"conversationId"`
+	SessionName    string `json:"sessionName"`
+	WindowID       string `json:"windowId"`
+	WindowName     string `json:"windowName"`
+}
+
+func legacyTmuxSocket() string {
+	return filepath.Join("/tmp", fmt.Sprintf("tmux-%d", os.Getuid()), "default")
+}
+
+func legacyManagedWindows() ([]legacyManagedWindow, error) {
+	socket := legacyTmuxSocket()
+	info, err := os.Lstat(socket)
+	if os.IsNotExist(err) {
+		return []legacyManagedWindow{}, nil
+	}
+	if err != nil || info.Mode()&os.ModeSocket == 0 {
+		return nil, fmt.Errorf("legacy tmux socket is not a socket")
+	}
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || stat.Uid != uint32(os.Getuid()) {
+		return nil, fmt.Errorf("legacy tmux socket is not owned by the managed user")
+	}
+	output, err := tmuxAt(socket, "list-windows", "-a", "-F", "#{session_name}|#{window_id}|#{window_name}|#{@managed_pi_conversation_id}")
+	if err != nil {
+		return nil, err
+	}
+	return parseLegacyManagedWindows(output), nil
+}
+
+func parseLegacyManagedWindows(output string) []legacyManagedWindow {
+	windows := []legacyManagedWindow{}
+	for _, line := range strings.Split(output, "\n") {
+		parts := strings.SplitN(line, "|", 4)
+		if len(parts) != 4 || !validConversationID(parts[3]) || !strings.HasPrefix(parts[1], "@") {
+			continue
+		}
+		windows = append(windows, legacyManagedWindow{ConversationID: parts[3], SessionName: parts[0], WindowID: parts[1], WindowName: parts[2]})
+	}
+	return windows
+}
+
+func cleanupLegacyManagedWindows() (int, error) {
+	if err := requireManagedRelayStopped(); err != nil {
+		return 0, err
+	}
+	windows, err := legacyManagedWindows()
+	if err != nil {
+		return 0, err
+	}
+	for _, window := range windows {
+		if _, err := tmuxAt(legacyTmuxSocket(), "kill-window", "-t", window.WindowID); err != nil {
+			return 0, err
+		}
+	}
+	remaining, err := legacyManagedWindows()
+	if err != nil {
+		return 0, err
+	}
+	if len(remaining) != 0 {
+		return 0, fmt.Errorf("legacy managed windows remain after cleanup")
+	}
+	return len(windows), nil
+}
+
 func findManagedWindow(conversationID string) (*managedWindowObservation, error) {
 	output, err := tmux("list-windows", "-a", "-F", "#{window_id}|#{pane_id}|#{@managed_pi_conversation_id}")
 	if err != nil {
@@ -678,6 +800,74 @@ func parseManagedWindowOutput(output string) (*managedWindowObservation, error) 
 		return nil, fmt.Errorf("tmux returned an invalid managed window identity")
 	}
 	return &managedWindowObservation{WindowID: parts[0], PaneID: parts[1]}, nil
+}
+
+func requireManagedRelayStopped() error {
+	runtime, err := requiredManagedEnv("XDG_RUNTIME_DIR")
+	if err != nil {
+		return err
+	}
+	connection, err := net.DialTimeout("unix", filepath.Join(runtime, "pi-managed-sessions", "relay.sock"), 250*time.Millisecond)
+	if err == nil {
+		_ = connection.Close()
+		return fmt.Errorf("managed relay must be stopped before legacy window cleanup")
+	}
+	return nil
+}
+
+func requireManagedTmuxRuntime() error {
+	runtime, err := requiredManagedEnv("XDG_RUNTIME_DIR")
+	if err != nil {
+		return err
+	}
+	if !filepath.IsAbs(runtime) || filepath.Clean(runtime) != runtime {
+		return fmt.Errorf("XDG_RUNTIME_DIR must be a canonical absolute path")
+	}
+	if os.Getenv("TMUX_TMPDIR") != runtime {
+		return fmt.Errorf("managed tmux commands require TMUX_TMPDIR to equal XDG_RUNTIME_DIR")
+	}
+	return nil
+}
+
+func validateManagedWorkspacePath(resolved string) error {
+	supplied, err := requiredManagedEnv("PI_MANAGED_SESSION_WORKSPACE_PATH")
+	if err != nil {
+		return err
+	}
+	if supplied != resolved {
+		return fmt.Errorf("managed workspace path does not match host resolution")
+	}
+	return nil
+}
+
+func managedSelectionEnvironment() ([]string, error) {
+	var values []string
+	if model := os.Getenv("PI_MANAGED_SESSION_MODEL"); model != "" {
+		if len(model) > 256 || strings.IndexFunc(model, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
+			return nil, fmt.Errorf("PI_MANAGED_SESSION_MODEL is invalid")
+		}
+		values = append(values, "-e", "PI_MANAGED_SESSION_MODEL="+model)
+	}
+	if thinking := os.Getenv("PI_MANAGED_SESSION_THINKING"); thinking != "" {
+		supported := map[string]bool{"off": true, "minimal": true, "low": true, "medium": true, "high": true, "xhigh": true, "max": true}
+		if !supported[thinking] {
+			return nil, fmt.Errorf("PI_MANAGED_SESSION_THINKING is invalid")
+		}
+		values = append(values, "-e", "PI_MANAGED_SESSION_THINKING="+thinking)
+	}
+	return values, nil
+}
+
+func markManagedWindow(windowID, conversationID string) error {
+	if _, err := tmux("set-option", "-w", "-t", windowID, managedWindowOption, conversationID); err != nil {
+		return err
+	}
+	concept := strings.TrimSpace(os.Getenv("PI_MANAGED_SESSION_CONCEPT"))
+	if concept == "" || len(concept) > 128 || strings.IndexFunc(concept, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
+		concept = "managed Pi " + conversationID[len(conversationID)-8:]
+	}
+	_, err := tmux("set-option", "-w", "-t", windowID, managedConceptOption, concept)
+	return err
 }
 
 func managedTmuxEnvironment(names ...string) []string {

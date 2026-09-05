@@ -100,7 +100,15 @@ func arg(i int) string {
 }
 
 func tmux(args ...string) (string, error) {
-	cmd := exec.Command("tmux", args...)
+	return tmuxAt("", args...)
+}
+
+func tmuxAt(socket string, args ...string) (string, error) {
+	commandArgs := args
+	if socket != "" {
+		commandArgs = append([]string{"-S", socket}, args...)
+	}
+	cmd := exec.Command("tmux", commandArgs...)
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -298,6 +306,22 @@ func switchTo(session, client string) error {
 	return err
 }
 
+func switchToManagedWindow(target, session, client string) error {
+	if !strings.HasPrefix(target, "="+session+":") {
+		return fmt.Errorf("managed window target does not match its session")
+	}
+	var err error
+	if client != "" {
+		_, err = tmux("switch-client", "-c", client, "-t", target)
+	} else {
+		_, err = tmux("switch-client", "-t", target)
+	}
+	if err == nil {
+		maybeCleanupDefault(session)
+	}
+	return err
+}
+
 func maybeCleanupDefault(activeRoot string) {
 	if activeRoot == "" || activeRoot == "default" || !tmuxOk("has-session", "-t", "=default") {
 		return
@@ -414,8 +438,53 @@ func projectPaths() []string {
 }
 
 type Candidate struct {
-	Kind, Value, Name, Path string
-	Score                   float64
+	Kind, Value, Name, Path, Session string
+	Score                            float64
+}
+
+type managedLauncherWindow struct {
+	Session, Index, WindowID, PaneID, PaneIndex, ConversationID, Concept string
+}
+
+func numericTmuxValue(value, prefix string) bool {
+	if !strings.HasPrefix(value, prefix) || len(value) == len(prefix) {
+		return false
+	}
+	for _, r := range value[len(prefix):] {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func parseManagedLauncherWindows(output string) []managedLauncherWindow {
+	var windows []managedLauncherWindow
+	s := bufio.NewScanner(strings.NewReader(output))
+	for s.Scan() {
+		parts := strings.SplitN(s.Text(), "\t", 8)
+		if len(parts) != 8 || !validConversationID(parts[6]) || parts[0] == "" || !numericTmuxValue(parts[1], "") ||
+			!numericTmuxValue(parts[2], "@") || !numericTmuxValue(parts[3], "%") || !numericTmuxValue(parts[4], "") {
+			continue
+		}
+		concept := strings.TrimSpace(parts[7])
+		if concept == "" || len(concept) > 128 || strings.IndexFunc(concept, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
+			concept = parts[5]
+		}
+		windows = append(windows, managedLauncherWindow{Session: parts[0], Index: parts[1], WindowID: parts[2], PaneID: parts[3], PaneIndex: parts[4],
+			ConversationID: parts[6], Concept: concept})
+	}
+	return windows
+}
+
+func managedLauncherWindows() []managedLauncherWindow {
+	format := strings.Join([]string{"#{session_name}", "#{window_index}", "#{window_id}", "#{pane_id}", "#{pane_index}", "#{window_name}",
+		"#{@managed_pi_conversation_id}", "#{@managed_pi_concept}"}, "\t")
+	out, err := tmux("list-windows", "-a", "-F", format)
+	if err != nil {
+		return nil
+	}
+	return parseManagedLauncherWindows(out)
 }
 
 func candidates() []Candidate {
@@ -431,13 +500,22 @@ func candidates() []Candidate {
 		if s.Name != "default" && root != "" {
 			name = filepath.Base(root)
 		}
-		cs = append(cs, Candidate{"session", s.Name, name, homeRelative(root), autojumpScore(root)})
+		cs = append(cs, Candidate{"session", s.Name, name, homeRelative(root), s.Name, autojumpScore(root)})
+	}
+	for _, window := range managedLauncherWindows() {
+		root := sessionRoot(window.Session)
+		name := window.Concept
+		if window.Session != "default" {
+			name = filepath.Base(root) + " › " + name
+		}
+		cs = append(cs, Candidate{"managed-window", "=" + window.Session + ":" + window.Index + "." + window.PaneIndex, name,
+			homeRelative(root), window.Session, autojumpScore(root)})
 	}
 	for _, path := range projectPaths() {
 		if seenRoots[path] {
 			continue
 		}
-		cs = append(cs, Candidate{"path", path, filepath.Base(path), homeRelative(path), autojumpScore(path)})
+		cs = append(cs, Candidate{"path", path, filepath.Base(path), homeRelative(path), "", autojumpScore(path)})
 	}
 	sort.SliceStable(cs, func(i, j int) bool {
 		if cs[i].Score == cs[j].Score {
@@ -463,7 +541,7 @@ func candidateDisplay(c Candidate) (name, path string) {
 func printCandidates() error {
 	for _, c := range candidates() {
 		name, path := candidateDisplay(c)
-		fmt.Printf("%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path)
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path, c.Session)
 	}
 	return nil
 }
@@ -506,9 +584,9 @@ func launcher(clientArg string) error {
 	var input strings.Builder
 	for _, c := range candidates() {
 		name, path := candidateDisplay(c)
-		fmt.Fprintf(&input, "%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path)
+		fmt.Fprintf(&input, "%s\t%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path, c.Session)
 	}
-	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--nth=1,2", "--with-nth=3,4", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Search sessions and paths.")
+	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--nth=1,2", "--with-nth=3,4", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Search sessions, live managed conversations, and paths.")
 	cmd.Env = append(os.Environ(), "FZF_DEFAULT_OPTS=")
 	cmd.Stdin = strings.NewReader(input.String())
 	out, err := cmd.Output()
@@ -522,6 +600,13 @@ func launcher(clientArg string) error {
 	if parts[0] == "session" {
 		recordVisit(sessionRoot(parts[1]))
 		return switchTo(parts[1], client)
+	}
+	if parts[0] == "managed-window" {
+		if len(parts) != 5 || parts[4] == "" {
+			return fmt.Errorf("managed launcher candidate is malformed")
+		}
+		recordVisit(sessionRoot(parts[4]))
+		return switchToManagedWindow(parts[1], parts[4], client)
 	}
 	recordVisit(parts[1])
 	session, err := ensureProjectSession(parts[1])
