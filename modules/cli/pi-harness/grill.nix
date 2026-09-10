@@ -30,7 +30,10 @@ in
       "@facebookbot:matrix.bepis.lol"
     ];
     hostId = "grill";
-    workspaceRoots.projects = workspaceRoot;
+    workspaceRoots = {
+      projects = workspaceRoot;
+      documents = "${config.hostSpec.home}/documents";
+    };
     launcherPackage = managedSessionLauncher;
   };
 }

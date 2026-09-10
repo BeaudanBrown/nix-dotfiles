@@ -72,6 +72,25 @@ in
     };
   };
 
+  # Read-only phase-one inspection; this does not enable an AI chat listener.
+  # systemd copies private runtime YAML without exposing secrets in the store.
+  services.pi-harness.bridgeChat.preflight = {
+    enable = true;
+    ownerUserId = userId;
+    bridges = {
+      signal = {
+        endpoint = "http://127.0.0.1:${toString signalPort}";
+        credentialFile = "/var/lib/mautrix-signal/config.yaml";
+        serviceUnit = "mautrix-signal.service";
+      };
+      facebook = {
+        endpoint = "http://127.0.0.1:${toString facebookPort}";
+        credentialFile = "/var/lib/mautrix-meta-facebook/config.yaml";
+        serviceUnit = "mautrix-meta-facebook.service";
+      };
+    };
+  };
+
   services.mautrix-signal = {
     enable = true;
     registerToSynapse = true;
