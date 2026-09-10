@@ -44,7 +44,7 @@
     })
   ];
 
-  nix.settings.cores = 2;
+  nix.settings.cores = 4;
 
   stylix.fonts.sizes.terminal = lib.mkForce 8;
 

@@ -54,13 +54,13 @@
   ../../modules/services/local-llm/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/apps/ghostty/client.nix
+  ../../modules/hardware/audio/client.nix
   ../../modules/services/tailscale/client.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/nixvim/config/plugins/vim-ai/main.nix
   ../../modules/cli/nixvim/files/main.nix
   ../../modules/cli/pi-harness/main.nix
   ../../modules/cli/ticket/main.nix
-  ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
   ../../modules/scripts/dev-tunnel/main.nix
   ../../modules/services/blueman/main.nix

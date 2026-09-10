@@ -2,6 +2,7 @@
 # Effective roots: minimal, common, network, client
 # Do not edit manually.
 [
+  ../../modules/services/oneplus-vnc/oneplus.nix
   ../../modules/cli/git/minimal.nix
   ../../modules/cli/htop/minimal.nix
   ../../modules/cli/misc/minimal.nix

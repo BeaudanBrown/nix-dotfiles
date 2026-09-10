@@ -73,6 +73,19 @@ let
         rev = "3e31a0c3e5a061645c09f805387b49fa9d35acbf";
         sha256 = "sha256-DeOlhchDGi0Pso3w8ZlM7q3Tdkmt3Ji+GyEmepkISTE=";
       };
+      # Optional debug experiment for modem/GNSS bring-up: prefer firmware
+      # copied from this phone's own OxygenOS modem_a partition over the
+      # prepackaged sdm845-mainline OnePlus bundle. The running prepackaged modem
+      # image was MPSS ...1.399256.2 while modem_a/verinfo reports ...1.331501.2;
+      # with DMS stuck offline, bands empty, and LOC engine off, this tests
+      # whether firmware/NV mismatch is the root cause.
+      #
+      # Keep this environment-gated so normal pure flake evaluation still works.
+      # To test locally, set ONEPLUS_STOCK_FIRMWARE_STORE to a store path created
+      # from /home/beau/src/oneplus-debug/oneplus-stock-firmware and run the
+      # rebuild/eval with --impure.
+      stockFwPath = builtins.getEnv "ONEPLUS_STOCK_FIRMWARE_STORE";
+      stockFw = if stockFwPath == "" then null else builtins.storePath stockFwPath;
     in
     pkgs.runCommand "oneplus-sdm845-firmware"
       {
@@ -84,6 +97,14 @@ let
         chmod +w -R $out
         rm -rf $out/lib/firmware/postmarketos
         cp -r $baseFw/lib/firmware/postmarketos/* $out/lib/firmware
+
+        ${lib.optionalString (stockFw != null) ''
+          # Prefer the phone-local OxygenOS modem/adsp/cdsp/slpi firmware and MCFG
+          # tree over the newer prepackaged bundle while debugging DMS offline / no
+          # bands / GNSS engine-off. Keep baseFw files not present in stockFw, e.g.
+          # ipa_fws.mbn and GPU/video/WLAN assets.
+          cp -r ${stockFw}/lib/firmware/* $out/lib/firmware/
+        ''}
 
         # OxygenOS/Lineage audio calibration/config files. These are data-only
         # additions to the firmware closure; they do not modify device
@@ -152,6 +173,15 @@ in
     "ipa"
     "qcrypto"
   ];
+
+  # The SDM845 IPA net driver probes the /soc@0/ipa@1e40000 node but is not
+  # stable on this device/kernel: explicit `modprobe ipa` has caused crashdump
+  # reboots during modem/GNSS debugging. A blacklist only blocks udev-style
+  # autoloading; make direct modprobe fail as well so ad-hoc experiments do not
+  # take the phone down.
+  boot.extraModprobeConfig = ''
+    install ipa /run/current-system/sw/bin/false
+  '';
 
   boot.initrd.kernelModules = [
     "qcom_pd_mapper"
@@ -266,7 +296,34 @@ in
     #    "dtb=/${config.hardware.deviceTree.name}"
   ];
 
-  hardware.deviceTree.name = "qcom/sdm845-oneplus-fajita.dtb";
+  hardware.deviceTree = {
+    name = "qcom/sdm845-oneplus-fajita.dtb";
+    overlays = [
+      {
+        name = "oneplus-fajita-bluetooth-address";
+        dtsText = ''
+          /dts-v1/;
+          /plugin/;
+
+          / {
+            compatible = "oneplus,fajita";
+
+            fragment@0 {
+              target-path = "/soc@0/geniqup@8c0000/serial@898000/bluetooth";
+              __overlay__ {
+                // Locally administered, host-unique address. The factory NVM
+                // provides the generic 39:90:21:74:07:00 placeholder, which
+                // leaves BlueZ with an unconfigured controller. The
+                // local-bd-address binding stores BD_ADDR least-significant
+                // byte first, so this is 02:00:23:AA:CA:93.
+                local-bd-address = [ 93 ca aa 23 00 02 ];
+              };
+            };
+          };
+        '';
+      }
+    ];
+  };
 
   boot.consoleLogLevel = 8;
 

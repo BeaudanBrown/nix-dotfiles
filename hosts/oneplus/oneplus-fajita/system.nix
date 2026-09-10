@@ -93,6 +93,377 @@ let
       fi
     '';
   };
+  oneplusGpsInit = pkgs.writeShellApplication {
+    name = "oneplus-gps-init";
+    runtimeInputs = [ pkgs.libqmi ];
+    text = ''
+      set -eu
+
+      # Qualcomm LOC starts with the GNSS engine locked on this device. Unlock
+      # it and force standalone operation so GPS can be used without cellular
+      # registration or carrier assistance.
+      for attempt in 1 2 3 4 5; do
+        echo "oneplus-gps-init attempt $attempt"
+        if qmicli -d qrtr://0 --loc-set-engine-lock=none \
+          && qmicli -d qrtr://0 --loc-set-operation-mode=standalone \
+          && qmicli -d qrtr://0 --loc-set-nmea-types='gga|rmc|gsv|gsa|vtg'; then
+          qmicli -d qrtr://0 --loc-get-engine-lock
+          qmicli -d qrtr://0 --loc-get-operation-mode
+          qmicli -d qrtr://0 --loc-get-nmea-types
+          exit 0
+        fi
+        sleep 2
+      done
+
+      echo "failed to initialize Qualcomm LOC/GNSS over QRTR" >&2
+      exit 1
+    '';
+  };
+  oneplusModemDataInit = pkgs.writeShellApplication {
+    name = "oneplus-modem-data-init";
+    runtimeInputs = [ pkgs.libqmi ];
+    text = ''
+      set -eu
+
+      # Safe QRTR-only data-port bring-up probe based on the postmarketOS
+      # SDM845/QRTR sequence. This does not load the kernel IPA driver and does
+      # not touch /dev/wwan0at*. It only opens the modem-side embedded data
+      # endpoint and asks WDA to use raw-ip/QMAP on that endpoint.
+      qmicli -d qrtr://0 --dpm-open-port='hw-data-ep-type=embedded,hw-data-ep-iface-number=1,hw-data-rx-id=2,hw-data-tx-id=10'
+      qmicli -d qrtr://0 --wda-set-data-format='link-layer-protocol=raw-ip,ul-protocol=qmap,dl-protocol=qmap,ep-type=embedded,ep-iface-number=1'
+      qmicli -d qrtr://0 --wda-get-data-format='ep-type=embedded,ep-iface-number=1'
+    '';
+  };
+  oneplusGpsPython = pkgs.python3.withPackages (pythonPackages: [ pythonPackages.pygobject3 ]);
+  oneplusGpsWatchPy = pkgs.writeText "oneplus-gps-watch.py" ''
+    import argparse
+    import gi
+
+    gi.require_version("Qmi", "1.0")
+    gi.require_version("Qrtr", "1.0")
+    from gi.repository import Gio, GLib, Qmi  # noqa: E402
+
+    parser = argparse.ArgumentParser(description="Watch OnePlus Qualcomm LOC/GNSS events over QRTR")
+    parser.add_argument("--seconds", type=int, default=60, help="seconds to watch before exiting")
+    parser.add_argument("--session-id", type=int, default=0, help="LOC session id to start/stop")
+    parser.add_argument(
+        "--no-start",
+        action="store_true",
+        help="register indications without starting a LOC session",
+    )
+    args = parser.parse_args()
+
+    loop = GLib.MainLoop()
+    state = {}
+
+    def fail(label, error):
+        print(f"error: {label}: {error!r}")
+        loop.quit()
+
+    def result_ok(output):
+        try:
+            output.get_result()
+            return True
+        except Exception as error:
+            print(f"error: QMI result failed: {error!r}")
+            return False
+
+    def on_nmea(_client, output):
+        try:
+            print(output.get_nmea_string(), end="")
+        except Exception as error:
+            print(f"error: failed to parse NMEA indication: {error!r}")
+
+    def on_position(_client, output):
+        try:
+            status = output.get_session_status()
+        except Exception:
+            status = "unknown"
+        fields = [f"status={status}"]
+        for label, getter in [
+            ("lat", output.get_latitude),
+            ("lon", output.get_longitude),
+            ("utc", output.get_utc_timestamp),
+        ]:
+            try:
+                fields.append(f"{label}={getter()}")
+            except Exception:
+                pass
+        print("position " + " ".join(fields))
+
+    def on_sv(_client, output):
+        try:
+            print(f"sv-info {output.get_list()}")
+        except Exception as error:
+            print(f"sv-info indication, but failed to parse list: {error!r}")
+
+    def value_or_error(output, getter_name):
+        try:
+            return getattr(output, getter_name)()
+        except Exception as error:
+            return f"<unavailable:{error!r}>"
+
+    def print_changed(key, value):
+        if state.get(key) != value:
+            state[key] = value
+            print(f"{key} {value}")
+
+    def enum_string(enum_getter, value):
+        try:
+            return f"{enum_getter(value)}({int(value)})"
+        except Exception:
+            return value
+
+    def on_engine_state(_client, output):
+        value = value_or_error(output, "get_engine_state")
+        if not isinstance(value, str):
+            value = enum_string(Qmi.loc_engine_state_get_string, value)
+        print_changed("engine-state", value)
+
+    def on_fix_recurrence_type(_client, output):
+        value = value_or_error(output, "get_fix_recurrence_type")
+        if not isinstance(value, str):
+            value = enum_string(Qmi.loc_fix_recurrence_type_get_string, value)
+        print_changed("fix-recurrence-type", value)
+
+    def on_inject_time_request(_client, output):
+        print(f"inject-time-request {value_or_error(output, 'get_time_server_info')}")
+
+    def on_inject_position_request(_client, output):
+        fields = []
+        for label, getter in [
+            ("lat", "get_latitude"),
+            ("lon", "get_longitude"),
+            ("utc", "get_utc_timestamp"),
+            ("hunc", "get_horizontal_uncertainty_circular"),
+        ]:
+            fields.append(f"{label}={value_or_error(output, getter)}")
+        print("inject-position-request " + " ".join(fields))
+
+    def on_inject_predicted_orbits_request(_client, output):
+        fields = []
+        for label, getter in [
+            ("update", "get_update_type"),
+            ("period", "get_update_period_seconds"),
+            ("allowed", "get_allowed_sizes"),
+            ("servers", "get_server_list"),
+            ("file", "get_file_info"),
+            ("mask", "get_server_update_mask"),
+        ]:
+            fields.append(f"{label}={value_or_error(output, getter)}")
+        print("inject-predicted-orbits-request " + " ".join(fields))
+
+    def on_start(client, result, _data):
+        try:
+            output = client.start_finish(result)
+            if not result_ok(output):
+                loop.quit()
+                return
+            print(f"started LOC session {args.session_id}; watching for {args.seconds}s")
+            GLib.timeout_add_seconds(args.seconds, lambda: (loop.quit(), False)[1])
+        except Exception as error:
+            fail("start LOC session", error)
+
+    def start(client):
+        input_message = Qmi.MessageLocStartInput.new()
+        input_message.set_session_id(args.session_id)
+        input_message.set_intermediate_report_state(Qmi.LocIntermediateReportState.ENABLE)
+        input_message.set_minimum_interval_between_position_reports(1000)
+        input_message.set_fix_recurrence_type(Qmi.LocFixRecurrenceType.PERIODIC_FIXES)
+        client.start(input_message, 10, None, on_start, None)
+
+    def on_register(client, result, _data):
+        try:
+            output = client.register_events_finish(result)
+            if not result_ok(output):
+                loop.quit()
+                return
+            print("registered LOC indications")
+            if args.no_start:
+                print(f"watching without starting a LOC session for {args.seconds}s")
+                GLib.timeout_add_seconds(args.seconds, lambda: (loop.quit(), False)[1])
+            else:
+                start(client)
+        except Exception as error:
+            fail("register LOC indications", error)
+
+    def register_events(client):
+        for signal_name, handler in [
+            ("nmea", on_nmea),
+            ("position-report", on_position),
+            ("gnss-sv-info", on_sv),
+            ("engine-state", on_engine_state),
+            ("fix-recurrence-type", on_fix_recurrence_type),
+            ("inject-time-request", on_inject_time_request),
+            ("inject-position-request", on_inject_position_request),
+            ("inject-predicted-orbits-request", on_inject_predicted_orbits_request),
+        ]:
+            try:
+                client.connect(signal_name, handler)
+            except TypeError as error:
+                print(f"warning: cannot connect LOC signal {signal_name}: {error}")
+        input_message = Qmi.MessageLocRegisterEventsInput.new()
+        input_message.set_event_registration_mask(
+            Qmi.LocEventRegistrationFlag.NMEA
+            | Qmi.LocEventRegistrationFlag.POSITION_REPORT
+            | Qmi.LocEventRegistrationFlag.GNSS_SATELLITE_INFO
+            | Qmi.LocEventRegistrationFlag.ENGINE_STATE
+            | Qmi.LocEventRegistrationFlag.FIX_SESSION_STATE
+            | Qmi.LocEventRegistrationFlag.INJECT_TIME_REQUEST
+            | Qmi.LocEventRegistrationFlag.INJECT_POSITION_REQUEST
+            | Qmi.LocEventRegistrationFlag.INJECT_PREDICTED_ORBITS_REQUEST
+        )
+        client.register_events(input_message, 10, None, on_register, None)
+
+    def on_allocate(device, result, _data):
+        try:
+            client = device.allocate_client_finish(result)
+            state["client"] = client
+            print(f"allocated LOC client cid={client.get_cid()}")
+            register_events(client)
+        except Exception as error:
+            fail("allocate LOC client", error)
+
+    def on_open(device, result, _data):
+        try:
+            device.open_finish(result)
+            print("opened qrtr://0")
+            device.allocate_client(Qmi.Service.LOC, Qmi.CID_NONE, 10, None, on_allocate, None)
+        except Exception as error:
+            fail("open qrtr://0", error)
+
+    def on_device_new(_unused, result, _data):
+        try:
+            device = Qmi.Device.new_finish(result)
+            state["device"] = device
+            # libqmi's GObject API needs the proxy flag for QRTR URIs here;
+            # without it, open() falls back to a literal device-file open.
+            device.open(Qmi.DeviceOpenFlags.PROXY, 10, None, on_open, None)
+        except Exception as error:
+            fail("create QMI device", error)
+
+    Qmi.Device.new(Gio.File.new_for_uri("qrtr://0"), None, on_device_new, None)
+    loop.run()
+  '';
+  oneplusGpsWatch = pkgs.writeShellApplication {
+    name = "oneplus-gps-watch";
+    runtimeInputs = [
+      oneplusGpsPython
+      pkgs.gobject-introspection
+      pkgs.libqmi
+      pkgs.libqrtr-glib
+    ];
+    text = ''
+      set -eu
+      export GI_TYPELIB_PATH="${pkgs.libqmi}/lib/girepository-1.0:${pkgs.libqrtr-glib}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:''${GI_TYPELIB_PATH:-}"
+      exec ${oneplusGpsPython}/bin/python3 ${oneplusGpsWatchPy} "$@"
+    '';
+  };
+  oneplusGpsXtraInjectPy = pkgs.writeText "oneplus-gps-xtra-inject.py" ''
+    import argparse
+    import math
+    import gi
+
+    gi.require_version("Qmi", "1.0")
+    gi.require_version("Qrtr", "1.0")
+    from gi.repository import Gio, GLib, Qmi  # noqa: E402
+
+    parser = argparse.ArgumentParser(description="Inject Qualcomm XTRA orbit data over QMI LOC/QRTR")
+    parser.add_argument("path", help="XTRA blob path")
+    parser.add_argument("--chunk-size", type=int, default=1024)
+    args = parser.parse_args()
+
+    data = open(args.path, "rb").read()
+    parts = math.ceil(len(data) / args.chunk_size)
+    loop = GLib.MainLoop()
+    state = {"part": 0}
+
+    def fail(label, error):
+        print(f"error: {label}: {error!r}")
+        loop.quit()
+
+    def result_ok(output):
+        try:
+            output.get_result()
+            return True
+        except Exception as error:
+            print(f"error: QMI result failed: {error!r}")
+            return False
+
+    def send_next():
+        i = state["part"]
+        if i >= parts:
+            print(f"injected {len(data)} bytes in {parts} parts")
+            loop.quit()
+            return
+        chunk = data[i * args.chunk_size:(i + 1) * args.chunk_size]
+        input_message = Qmi.MessageLocInjectXtraDataInput.new()
+        input_message.set_total_size(len(data))
+        input_message.set_total_parts(parts)
+        input_message.set_part_number(i + 1)
+        input_message.set_part_data(list(chunk))
+        state["client"].inject_xtra_data(input_message, 20, None, on_inject, None)
+
+    def on_inject(client, result, _data):
+        try:
+            output = client.inject_xtra_data_finish(result)
+            if not result_ok(output):
+                loop.quit()
+                return
+            state["part"] += 1
+            GLib.idle_add(lambda: (send_next(), False)[1])
+        except Exception as error:
+            fail("inject XTRA data", error)
+
+    def on_allocate(device, result, _data):
+        try:
+            state["client"] = device.allocate_client_finish(result)
+            send_next()
+        except Exception as error:
+            fail("allocate LOC client", error)
+
+    def on_open(device, result, _data):
+        try:
+            device.open_finish(result)
+            device.allocate_client(Qmi.Service.LOC, Qmi.CID_NONE, 10, None, on_allocate, None)
+        except Exception as error:
+            fail("open qrtr://0", error)
+
+    def on_device_new(_unused, result, _data):
+        try:
+            device = Qmi.Device.new_finish(result)
+            state["device"] = device
+            device.open(Qmi.DeviceOpenFlags.PROXY, 10, None, on_open, None)
+        except Exception as error:
+            fail("create QMI device", error)
+
+    Qmi.Device.new(Gio.File.new_for_uri("qrtr://0"), None, on_device_new, None)
+    loop.run()
+  '';
+  oneplusGpsXtraInject = pkgs.writeShellApplication {
+    name = "oneplus-gps-xtra-inject";
+    runtimeInputs = [
+      oneplusGpsPython
+      pkgs.curl
+      pkgs.gobject-introspection
+      pkgs.libqmi
+      pkgs.libqrtr-glib
+    ];
+    text = ''
+      set -eu
+
+      xtra_path=''${1:-/var/lib/oneplus-gps/xtra3grcej.bin}
+      if [ ! -s "$xtra_path" ]; then
+        install -d -m 0755 "$(dirname "$xtra_path")"
+        curl -L --fail --retry 3 -o "$xtra_path" https://path1.xtracloud.net/xtra3grcej.bin
+      fi
+
+      qmicli -d qrtr://0 --loc-inject-time || true
+      export GI_TYPELIB_PATH="${pkgs.libqmi}/lib/girepository-1.0:${pkgs.libqrtr-glib}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:''${GI_TYPELIB_PATH:-}"
+      ${oneplusGpsPython}/bin/python3 ${oneplusGpsXtraInjectPy} "$xtra_path"
+      qmicli -d qrtr://0 --loc-get-predicted-orbits-data-validity
+    '';
+  };
   oneplusPstoreStatus = pkgs.writeShellApplication {
     name = "oneplus-pstore-status";
     runtimeInputs = [
@@ -279,6 +650,7 @@ in
     ./networking/wireless.nix
     ./ui/greetd.nix
     ./ui/hyprland.nix
+    ./android/waydroid.nix
     # ./ui/phosh.nix
   ];
   boot.loader = {
@@ -315,6 +687,7 @@ in
       "root=fstab"
       "loglevel=8"
       "lsm=landlock,yama,bpf"
+      "psi=1"
 
       # Prefer the reserved-memory ramoops backend for post-crash evidence. The
       # device tree provides 4 MiB at ramoops@ac300000; keep EFI pstore from
@@ -342,6 +715,13 @@ in
   # host does not import the work-root blueman module that enables BlueZ.
   # Enable the system Bluetooth service here so userspace can see the adapter.
   hardware.bluetooth.enable = true;
+
+  services.udev.extraRules = ''
+    # The mainline rpmsg WWAN AT ports on this SDM845 phone can wedge in
+    # uninterruptible sleep when userspace opens them. Keep ModemManager on the
+    # QRTR/QMI path and do not let it probe /dev/wwan0at* as AT ports.
+    SUBSYSTEM=="wwan", KERNEL=="wwan0at*", ENV{ID_MM_PORT_IGNORE}="1"
+  '';
 
   # Allow ticket-scoped agent UI smoke tests to inject one-shot pointer/key
   # events through the ydotool flake helpers. Keep this OnePlus-local because it
@@ -387,6 +767,21 @@ in
     services = {
       systemd-time-wait-sync.wantedBy = [ "sysinit.target" ];
 
+      ModemManager = {
+        # Keep the unit available for manual experiments, but do not start it at
+        # boot: without an IPA/rmnet net port it cannot create a modem object,
+        # while direct qmicli over QRTR can access the LOC/GNSS service.
+        wantedBy = lib.mkForce [ ];
+        wants = [
+          "rmtfs.service"
+          "tqftpserv.service"
+        ];
+        after = [
+          "rmtfs.service"
+          "tqftpserv.service"
+        ];
+      };
+
       oneplus-time-restore = {
         description = "Restore OnePlus clock from userspace timestamp seed";
         wantedBy = [ "sysinit.target" ];
@@ -405,6 +800,23 @@ in
         serviceConfig = {
           Type = "oneshot";
           ExecStart = "${oneplusRestoreClock}/bin/oneplus-restore-clock";
+        };
+      };
+
+      oneplus-gps-init = {
+        description = "Initialize OnePlus Qualcomm LOC/GNSS settings";
+        wantedBy = [ "multi-user.target" ];
+        wants = [
+          "rmtfs.service"
+          "tqftpserv.service"
+        ];
+        after = [
+          "rmtfs.service"
+          "tqftpserv.service"
+        ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${oneplusGpsInit}/bin/oneplus-gps-init";
         };
       };
 
@@ -469,6 +881,15 @@ in
     # failures without rebuilding the system just to inspect the graph.
     pkgs.libcamera
     pkgs.v4l-utils
+
+    # Qualcomm modem/GNSS inspection tools. GPS currently works through the QMI
+    # LOC service over QRTR rather than a /dev/gnss character device.
+    pkgs.libqmi
+    pkgs.qrtr
+    oneplusGpsInit
+    oneplusModemDataInit
+    oneplusGpsWatch
+    oneplusGpsXtraInject
   ];
 
   environment.sessionVariables.ALSA_CONFIG_UCM2 = "${oneplusUcm}/share/alsa/ucm2";

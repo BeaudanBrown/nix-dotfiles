@@ -62,6 +62,42 @@ let
     ${pkgs.coreutils}/bin/sleep 0.2
     exec ${oneplusHyprctl}/bin/oneplus-hyprctl dispatch exec squeekboard
   '';
+  oneplusFeedbackdThemeJson = ''
+    {
+      "name" : "$device",
+      "parent-name" : "default",
+      "profiles" : [
+        {
+          "name" : "quiet",
+          "feedbacks" : [
+            {
+              "event-name" : "button-pressed",
+              "type"       : "VibraRumble",
+              "magnitude"  : 1.0,
+              "duration"   : 15
+            },
+            {
+              "event-name" : "key-pressed",
+              "type"       : "VibraRumble",
+              "magnitude"  : 1.0,
+              "duration"   : 15
+            }
+          ]
+        }
+      ]
+    }
+  '';
+  oneplusFeedbackd = pkgs.feedbackd.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace src/fbd-dev-vibra.c \
+        --replace-fail 'gain.value = 0xC000; /* [0, 0xFFFF]) */' 'gain.value = 0xFFFF; /* [0, 0xFFFF]) */' \
+        --replace-fail 'g_debug("Setting master gain to 75%%");' 'g_debug("Setting master gain to 100%%");'
+    '';
+    postInstall = (old.postInstall or "") + ''
+      install -Dm444 ${pkgs.writeText "oneplus-fajita-feedbackd-theme.json" oneplusFeedbackdThemeJson} \
+        "$out/share/feedbackd/themes/oneplus,fajita.json"
+    '';
+  });
   oneplusBrave = pkgs.writeShellScriptBin "oneplus-brave" ''
     set -eu
 
@@ -366,8 +402,15 @@ in
 {
   hardware.graphics.enable = true;
 
-  programs.feedbackd.enable = true;
+  programs.feedbackd = {
+    enable = true;
+    package = oneplusFeedbackd;
+  };
   users.users.${primaryUser}.extraGroups = [ "feedbackd" ];
+
+  services.udev.extraRules = ''
+    SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT}=="1", SUBSYSTEMS=="input", ATTRS{name}=="spmi_haptics", GROUP="feedbackd", MODE="0660", TAG+="uaccess", ENV{FEEDBACKD_TYPE}="vibra"
+  '';
 
   programs = {
     dconf.enable = true;
@@ -427,6 +470,15 @@ in
 
   hm.primary.dconf.settings."org/gnome/desktop/a11y/applications" = {
     screen-keyboard-enabled = false;
+  };
+
+  hm.primary.dconf.settings."org/sigxcpu/feedbackd" = {
+    max-haptic-strength = 1.0;
+    profile = "quiet";
+  };
+
+  hm.primary.dconf.settings."org/sigxcpu/feedbackd/application/sm-puri-squeekboard" = {
+    profile = "quiet";
   };
 
   hm.primary.xdg.desktopEntries = {
