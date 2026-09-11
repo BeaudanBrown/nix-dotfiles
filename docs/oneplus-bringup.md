@@ -2,6 +2,10 @@
 
 This is the current-state entry point for agents working on the `oneplus` host / OnePlus 6T (`fajita`). It should describe what exists now.
 
+Before replacing NixOS with Android, use [the Android round-trip preparation
+runbook](oneplus-android-roundtrip.md). The phone's local project checkouts live
+inside Android `userdata`; preserve them off-device before formatting it.
+
 Start with:
 
 - `docs/oneplus-loop-bootstrap.md` — fresh-agent seed and work-selection flow

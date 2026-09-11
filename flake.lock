@@ -705,14 +705,18 @@
     "hyprspace-local": {
       "flake": false,
       "locked": {
-        "lastModified": 1781841925,
-        "narHash": "sha256-PU9Fcga0c/KdWR5aR7s+VXBnAjbkWROsn2mO6nZlBcw=",
-        "path": "/home/beau/documents/Hyprspace",
-        "type": "path"
+        "lastModified": 1781843867,
+        "narHash": "sha256-gpWpav3TdcO/XQxC18GtmyWlMeWx9+t9Ijlonu+yFeo=",
+        "owner": "BeaudanBrown",
+        "repo": "Hyprspace",
+        "rev": "d1d98d40295b59d6a4655cd43d96ec631b109eed",
+        "type": "github"
       },
       "original": {
-        "path": "/home/beau/documents/Hyprspace",
-        "type": "path"
+        "owner": "BeaudanBrown",
+        "repo": "Hyprspace",
+        "rev": "d1d98d40295b59d6a4655cd43d96ec631b109eed",
+        "type": "github"
       }
     },
     "invoice-ai": {

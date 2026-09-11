@@ -2,6 +2,11 @@
 
 This directory contains the board-specific configuration for the OnePlus 6T (`oneplus-fajita`). The flake-discovered host remains `hosts/oneplus`.
 
+For Android restoration and returning to U-Boot/NixOS, start with
+[the round-trip preparation runbook](../../../docs/oneplus-android-roundtrip.md).
+It records published source, U-Boot generation/flashing, and remaining NixOS
+reconstruction gaps; it is not yet a validated end-to-end restore procedure.
+
 For agent-facing current state and workflow, start with:
 
 - `docs/oneplus-loop-bootstrap.md`
@@ -35,11 +40,16 @@ run setup_nixos_blkmap
 fatls blkmap 0:2 /EFI/Linux/
 ```
 
-The active image is expected to be:
+These direct-UKI fsck-recovery commands expect this file to exist:
 
 ```text
 /EFI/Linux/nixos.efi
 ```
+
+It is not necessarily the current generation. The normal `boot_nixos` command
+loads `/EFI/BOOT/BOOTAA64.EFI` (systemd-boot), which selects a generation from
+`/loader/entries/`. Check the UKI exists before using this recovery shortcut;
+do not mistake it for the normal active boot entry.
 
 To force fsck repair, paste this command block:
 

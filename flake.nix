@@ -137,8 +137,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
+    # Keep the input name for compatibility; the source is now a published pin.
     hyprspace-local = {
-      url = "path:/home/beau/documents/Hyprspace";
+      url = "github:BeaudanBrown/Hyprspace/d1d98d40295b59d6a4655cd43d96ec631b109eed";
       flake = false;
     };
 

@@ -36,6 +36,7 @@
   ../../modules/cli/codex/network.nix
   ../../modules/cli/pi-harness/network.nix
   ../../modules/nix/builders/network.nix
+  ../../modules/services/local-llm/network.nix
   ../../modules/system/networking/network.nix
   ../../modules/apps/ghostty/client.nix
   ../../modules/hardware/audio/client.nix
