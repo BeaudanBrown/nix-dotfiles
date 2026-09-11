@@ -12,6 +12,11 @@ flashing; native Windows/MSM is available as a fallback. No flashing, reboot or
 Nix build was performed while preparing this document. Instructions below are
 for later explicit execution, not proof of a completed reinstall test.
 
+[Online research, 2026-09-11](oneplus-android-roundtrip-research.md) records the
+EDL/fastboot key combinations, candidate MSM/OTA packages, Microsoft driver
+source, firmware-version distinctions and image/fastboot source findings. Read
+its evidence limits before using any community recovery package.
+
 ## Published source and remaining reconstruction gaps
 
 | Work | Canonical source / revision | Status |
@@ -28,7 +33,26 @@ legacy `nixos-sdm845` flake still names a phone-local kernel checkout: it is
 published historical work, **not** the canonical fresh-install entrypoint.
 Use this dotfiles flake for the process below.
 
-### Kernel: the important remaining gap
+### Original implementation provenance
+
+[MatthewCroughan/nixos-sdm845](https://github.com/MatthewCroughan/nixos-sdm845)
+is the actual ancestor of the local bring-up project, not merely a similar
+example. Its inspected upstream HEAD,
+[`0f53170550bb817f2c15024d7adb2cf2b842be8d`](https://github.com/MatthewCroughan/nixos-sdm845/tree/0f53170550bb817f2c15024d7adb2cf2b842be8d),
+is an ancestor of the published `native` branch (four subsequent commits).
+The current dotfiles repart module is identical to upstream's
+`oneplus-fajita/repart.nix` except for one trailing newline. The userdata
+loopback mapping and U-Boot source revision/boot-image packaging also derive
+from that implementation. Current dotfiles adds custom boot-menu/A/B handling
+and the later system configuration.
+
+Its [README](https://github.com/MatthewCroughan/nixos-sdm845/blob/0f53170550bb817f2c15024d7adb2cf2b842be8d/README.md)
+records Android developer setup, OEM unlock, DTBO erasure and U-Boot flashing.
+It ends with unfinished placeholders and does not document writing the NixOS
+userdata image. Thus the architecture and original implementation are known;
+finishing the operator instructions is not inventing a new installation scheme.
+
+### Kernel: intentional cached build, verified and needing retention protection
 
 The active [SDM845 module](../hosts/oneplus/oneplus-fajita/hardware/sdm845.nix)
 uses `fetchClosure` to wrap cached kernel/module binaries. Updating the kernel
@@ -43,13 +67,73 @@ The running kernel's complete Kconfig has now been preserved as source:
 - Kernel release: `7.0.0-next-20260414-sdm845`.
 - SHA-256: `06d0f0ebb28eb850477ee9e29b2a094656588f58249b0f9943c1598a80f18dc2`.
 
-Before calling source-only reconstruction complete, add/validate a selectable
-source-build recipe using the correct source, config, patches and toolchain,
-without silently replacing the stable runtime kernel. This requires explicit
-approval before any kernel build. Until then, the normal NixOS build still
-depends on the configured Attic cache; preserving source has not removed that
-dependency. The source revision plus Kconfig is not a claim of bit-identical
-reproduction of the old cached build.
+The user intentionally wants to reuse the built kernel to avoid recompilation.
+A source rebuild is **not** a prerequisite for returning to NixOS when the pinned
+closure is available and retained. The source revision plus Kconfig is useful
+for future changes, not a claim of bit-identical reproduction of the old build.
+
+#### Live verification on 2026-09-11
+
+All three objects in the complete pinned kernel closure were downloaded from
+`https://attic.bepis.lol/fleet` as streams, decompressed and SHA-256 checked
+against their NAR metadata. No archive was saved, no Nix import/build was run,
+and no cache retention setting was changed.
+
+| Store object | Uncompressed NAR bytes | SHA-256 |
+| --- | ---: | --- |
+| `ngrdfwid2bqici5lnxl8gg5aqlmaard8-linux-7.0.0` | 29994952 | `4551696b9f812745df6136df21154265ea0fb52ffa425f029ed145afa3257d3a` |
+| `5ii18dvifg1vpgwbmpb0bgqhp72yp8m5-linux-7.0.0-modules` | 352 | `b876a49a1210e4e43aef5795b4399284ef0ad4a2eab7347dd04b14f1a57e5e09` |
+| `nhlzbyf508yp47x9yra8ir0cinmr0722-linux-7.0.0-modules` | 108133984 | `cb00beaa74467c9b2c2ae849d99183e52314f03bcd0e1c228cb310a16ca1dac1` |
+
+The 352-byte object is a wrapper referencing the actual module payload; that
+payload was checked too. Both leaf objects report no additional store references.
+This is a point-in-time integrity check, not a future availability guarantee.
+
+**Temporary retention refresh:** Attic's
+[NAR download handler](https://github.com/zhaofengli/attic/blob/main/server/src/api/binary_cache.rs)
+updates the requested object's `last_accessed_at` before serving its NAR. The
+full downloads above therefore also refresh all three objects under this
+implementation. With the unchanged 90-day policy, the 2026-09-11 check moves
+time-based expiry eligibility to approximately **2026-12-10**. Refresh every
+closure member, not just the small modules wrapper. Merely reading `.narinfo`
+or invoking Nix with an already-local output is not a reliable refresh.
+This date assumes the server clock/policy remain correct and no explicit
+deletion or storage loss occurs; server database timestamps were not separately
+inspected. Non-expiring retention remains the stronger long-term solution.
+
+#### Retention: not permanently protected yet
+
+The live cache-config API (`/_api/v1/cache-config/fleet`) returned
+`retention_period: {"Period": 7776000}`, an explicit **90-day** policy.
+[NAS configuration](../modules/services/attic/nas.nix) also defines daily GC and
+a 90-day default. Changing only that default would not remove this explicit
+per-cache override. A store path in Git or a GC root on a client machine does
+not pin its object in the remote Attic cache.
+
+[Attic's retention API](https://github.com/zhaofengli/attic/blob/main/attic/src/api/v1/cache_config.rs)
+defines `Period(0)` as disabling time-based GC; the
+[collector](https://github.com/zhaofengli/attic/blob/main/server/src/gc.rs) excludes
+such caches from time-based object deletion. Recommended follow-up, **not yet
+applied**:
+
+1. Create a dedicated cache such as `oneplus-pinned` using an authorized admin.
+2. Set its retention to zero, e.g. with the configured `nas` client alias:
+   `attic cache configure nas:oneplus-pinned --retention-period '0s'`.
+3. Publish the complete kernel closure into it and verify all three NARs there.
+4. Point both `fetchClosure.fromStore` URLs at the protected cache, preserving
+   the exact store paths, and verify unauthenticated access/trust as required by
+   the existing build flow. Do not embed administrative credentials in Git.
+5. Leave ordinary `fleet` builds on their bounded 90-day policy. Alternatively,
+   set `fleet` itself to zero, accepting unbounded time-based retention for all
+   of its objects rather than only the kernel.
+
+This prevents time-based expiration, not explicit deletion or storage loss.
+The service currently keeps SQLite metadata and chunk storage under
+`/var/cache/atticd` and describes them as rebuildable performance data. Treat a
+non-expiring kernel cache as durable infrastructure instead: protect its
+metadata/chunks from blanket cache purges and account for service/disk recovery.
+A source-build fallback can be added later if wanted, with explicit build
+approval; it is not required merely to avoid unnecessary recompilation.
 
 ## U-Boot is already maintained in this repository
 
@@ -92,6 +176,16 @@ wants to keep. Confirm the device is the intended fajita, the bootloader is
 unlocked, the generated image is valid, and a compatible NixOS userdata image
 and stock recovery route are ready. Unlocking itself wipes Android data; do
 not issue unlock commands to an already-unlocked phone or relock custom images.
+
+From stock Android, the upstream README's preparation is: enable Developer
+Options by tapping Build Number seven times; enable USB debugging and OEM
+unlocking; connect to the external computer and authorize its ADB prompt.
+Use `adb devices`, then `adb -d reboot bootloader`. If the bootloader is locked,
+the upstream non-T-Mobile procedure uses `fastboot oem unlock`, followed by
+on-screen confirmation using volume/power; this immediately wipes user data.
+Skip unlocking if already unlocked. After its reboot, return to factory
+fastboot before proceeding. These are inherited device instructions, not steps
+executed in this preparation pass.
 
 Use the **factory ABL bootloader**, not U-Boot's own fastboot mode or recovery
 fastbootd. TeamWin and LineageOS document factory-fastboot access for fajita;
@@ -140,13 +234,28 @@ nix build .#nixosConfigurations.oneplus.config.system.build.image \
   --out-link result-oneplus-image
 ```
 
-The output is configured to be compressed. **Remaining installation work:**
-verify its produced filename/format, decompression, image size versus userdata,
-and factory-fastboot raw/sparse transfer support. Then document and test the
-exact userdata write command. Do not guess it or flash the image onto an entire
-UFS disk: it belongs inside Android `userdata`, preserving the outer layout.
-This is a missing piece of the fresh-install procedure, not a reason to require
-an old userdata backup instead.
+The pinned Nixpkgs source establishes Zstandard-compressed raw output, expected
+at `result-oneplus-image/image.raw.zst` with the configured name and default
+version. After confirming the actual output, decompress to an external-host file:
+
+```sh
+zstd --decompress --stdout result-oneplus-image/image.raw.zst \
+  > oneplus-userdata.raw
+```
+
+AOSP fastboot can import ordinary raw images and split them into Android sparse
+transfers; a separate conversion utility is not inherently required. The
+source-supported candidate write is `fastboot flash userdata oneplus-userdata.raw`.
+**It has not been tested on this phone.** Still check image contents/geometry,
+expanded size versus userdata, factory-fastboot download limits and successful
+sparse transfer before calling the procedure validated. The
+[research note](oneplus-android-roundtrip-research.md) cites the pinned image
+source and explains automatic splitting and explicit `-S` limits.
+
+Do not flash the compressed file, format userdata afterward, or write this image
+to an entire UFS disk: it belongs inside Android `userdata`, preserving the outer
+layout. This remaining validation work is not a reason to require an old userdata
+backup instead.
 
 The configured boot flow is ABL → U-Boot → nested ESP → systemd-boot → Linux.
 The inspected system selected generation 133 with separate kernel/initrd/DTB
@@ -160,19 +269,33 @@ are repair instructions, not the fresh installation procedure.
 
 ## Return to stock Android
 
-Target: full international OxygenOS; 11.1.2.2 / Android 11 is the candidate,
-not yet a verified download/restore kit. Backups and private data handling are
-user-owned. The old TWRP backup contains valuable boot/firmware and EFS/persist
+Target: coherent full international OxygenOS. **11.1.2.2 / Android 11 is a
+candidate stock diagnostic baseline, not an established requirement for this
+NixOS setup.** Matthew's upstream asks for OxygenOS 9.x or newer; postmarketOS
+GPS guidance and LineageOS's Android 11 firmware requirement must not be treated
+as proof of a kernel-wide 11.1.2.2 dependency. A concrete OxygenOS 10.3.8 MSM kit
+listing and a historical official-hosted 11.1.2.2 full OTA URL are now recorded in
+the [research note](oneplus-android-roundtrip-research.md), but actual archive
+availability, integrity and any upgrade chain remain unverified. Backups and
+private data handling are user-owned. The old TWRP backup contains valuable boot/firmware and EFS/persist
 insurance, but the supplied listing has no system/vendor images. Its recovery
 log identifies TWRP and slot B, not the backed-up OxygenOS version. Identifying
 that old ROM is **not** a prerequisite for installing complete compatible stock.
 
-- **Linux candidate:** factory fastboot → temporary compatible recovery → full
-  OxygenOS installation with explicit slot/data-format handling. Avoid permanent
-  TWRP/Magisk installation before the untouched-stock reference capture.
+- **Linux candidate:** use an audited complete stock fastboot-ROM bundle. A
+  historical successful Linux report and a community 11.1.2.2 bundle listing
+  have been located, but neither establishes a vetted current flash sequence.
+  Do not copy generic `persist` writes from community instructions. Temporary
+  compatible recovery plus full OxygenOS installation remains an alternative
+  research lead, not a proven OOS11 pairing. Avoid permanent TWRP/Magisk before
+  the untouched-stock reference capture.
 - **Windows fallback:** matching international MSMDownloadTool/EDL package.
-  Native Windows avoids VM USB passthrough failure modes. Package provenance,
-  compatibility and destructive scope still need verification.
+  Native Windows avoids VM USB passthrough failure modes. To enter EDL, the
+  fajita wiki documents powering off with USB disconnected, holding **both
+  volume buttons**, then connecting USB. The screen can remain black; confirm
+  Qualcomm QDLoader 9008 enumeration on the host. Package provenance,
+  compatibility and destructive scope still need verification. Treat MSM as a
+  full wipe/relock operation; do not manually relock remaining custom images.
 - Do not substitute LineageOS's firmware-only flash list for an Android install.
   Its fastbootd instructions are not factory-fastboot instructions.
 - Restoring Android requires compatible stock boot/DTBO and the complete Android
@@ -244,7 +367,8 @@ the old non-kernel-only investigation restriction is not silently lifted.
 - [x] Publish Hyprspace fork and pin its source remotely.
 - [x] Publish local changes in the older bring-up repository.
 - [x] Preserve the running kernel configuration as source.
-- [ ] Establish a source-build kernel path independent of cached binaries.
+- [x] Verify the complete cached kernel closure by downloading and hashing it.
+- [ ] Protect that closure from time-based Attic GC and verify its final cache URL.
 - [ ] Validate U-Boot generation from a fresh external checkout.
 - [ ] Validate the fresh NixOS image and exact userdata installation procedure.
 - [ ] Select a verified stock restore package/method and capture stock evidence.
