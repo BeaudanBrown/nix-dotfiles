@@ -1142,11 +1142,11 @@
         "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1788990870,
-        "narHash": "sha256-gY9QRHMKFMxY96IkdN9GEA1hheGJreoo2NJblyCGwy0=",
+        "lastModified": 1789194355,
+        "narHash": "sha256-mv9RL0dZmP06jTjPqj3t4roUxo456AI6HaLxkzLbBS8=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "a08b40f99f318ff1a8426a9243a0011aeff17e4b",
+        "rev": "3e0d19d0b461aace2ea64da1abe14ddfbb4463e1",
         "type": "github"
       },
       "original": {
@@ -1407,10 +1407,10 @@
     "sopsSecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1788177699,
-        "narHash": "sha256-GOYGemoYHTNMrSnXghEvfife24syHAnkYZvE9+nQwVs=",
+        "lastModified": 1789039431,
+        "narHash": "sha256-hZ5+Bw1NZT3SEiA4auFAIQ2+90LK+eIrjqKFAq5Smjw=",
         "ref": "refs/heads/main",
-        "rev": "3f3f48962d0fddd3beaf7d6063ea69a6da57109e",
+        "rev": "c931a60f41b687a42c2ea597489847410b9917c6",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/BeaudanBrown/sops-secrets.git"

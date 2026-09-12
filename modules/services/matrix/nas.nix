@@ -91,6 +91,22 @@ in
     };
   };
 
+  # Owner approved the dedicated account session; initial testing is Note to Self only.
+  # Uses the existing NAS Pi login; only the Matrix token is a new secret.
+  services.pi-harness.bridgeChat.assistant = {
+    enable = true;
+    homeserver = "https://${domain}";
+    ownerUserId = userId;
+    matrixTokenFile = config.sops.secrets."pi-chat/matrix-token".path;
+    modelUser = config.hostSpec.username;
+    piAgentDirectory = "${config.hostSpec.home}/.pi/agent";
+    roomIds = [ "!XljGtOqHxkwHiILSto:matrix.bepis.lol" ];
+    allJoinedRooms = false;
+    # Add only independently verified owner puppet MXIDs if remote echoes need them.
+    remoteOwnerUserIds = [ ];
+    model = "gpt-5.6-terra";
+  };
+
   services.mautrix-signal = {
     enable = true;
     registerToSynapse = true;
@@ -262,6 +278,14 @@ in
       host all all 127.0.0.1/32 trust
       host all all ::1/128 trust
     '';
+  };
+
+  sops.secrets."pi-chat/matrix-token" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+    restartUnits = [ "pi-chat-transport.service" ];
   };
 
   sops.secrets."matrix/synapse-extra-config" = {
