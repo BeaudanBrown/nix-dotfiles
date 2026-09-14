@@ -27,18 +27,19 @@ let
       # replace (and may remove) the old `default` session, so its client is
       # not a reliable egress target. Popup sessions record their outer owner
       # as @project_popup_owner; ordinary sessions use one of their clients.
+      # Use stable session IDs: show-option does not accept =name targets.
       source_pane="''${TMUX_PANE:-}"
       if [[ -n "$source_pane" ]]; then
-        source_session="$(tmux display-message -p -t "$source_pane" '#{session_name}' 2>/dev/null || true)"
+        source_session="$(tmux display-message -p -t "$source_pane" '#{session_id}' 2>/dev/null || true)"
       else
-        source_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+        source_session="$(tmux display-message -p '#{session_id}' 2>/dev/null || true)"
       fi
       popup_owner=""
       if [[ -n "$source_session" ]]; then
-        popup_owner="$(tmux show-option -qv -t "=$source_session" @project_popup_owner 2>/dev/null || true)"
+        popup_owner="$(tmux show-option -qv -t "$source_session" @project_popup_owner 2>/dev/null || true)"
       fi
       target="$(
-        tmux list-clients -F '#{client_name}	#{session_name}	#{client_termfeatures}' 2>/dev/null \
+        tmux list-clients -F '#{client_name}	#{session_id}	#{client_termfeatures}' 2>/dev/null \
           | while IFS=$'\t' read -r client session features; do
               if [[ ",$features," != *,clipboard,* ]]; then
                 continue
@@ -123,6 +124,8 @@ in
           set -ga update-environment ' WAYLAND_DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR DISPLAY'
           set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
           set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
+          # Popup clients run inside tmux and must request extended key reporting.
+          set -as terminal-features ',tmux*:extkeys'
           set-environment -g ESCDELAY 1
           set-environment -g KEYTIMEOUT 1
           set -g extended-keys on
