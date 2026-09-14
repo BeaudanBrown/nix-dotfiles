@@ -13,7 +13,7 @@ in
       vim.keymap.del('n', 'gra')
       vim.keymap.del('n', 'gri')
 
-      vim.lsp.set_log_level('WARN')
+      vim.lsp.log.set_level('WARN')
 
       -- Keep `r_language_server` attached for lintr diagnostics only. R.nvim's
       -- rnvimserver handles completion, and air handles formatting. Disabling
