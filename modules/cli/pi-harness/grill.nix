@@ -26,6 +26,7 @@ in
     botUserId = "@pi-grill:matrix.bepis.lol";
     operatorUserId = "@beau:matrix.bepis.lol";
     ignoredSenderUserIds = [
+      "@whatsappbot:matrix.bepis.lol"
       "@signalbot:matrix.bepis.lol"
       "@facebookbot:matrix.bepis.lol"
     ];

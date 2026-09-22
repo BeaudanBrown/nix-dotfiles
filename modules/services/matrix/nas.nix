@@ -8,6 +8,7 @@ let
   domain = "matrix.bepis.lol";
   userId = "@${config.hostSpec.username}:${domain}";
   synapsePortKey = "matrix-synapse";
+  whatsappPort = 29318;
   signalPort = 29328;
   facebookPort = 29321;
 in
@@ -15,6 +16,7 @@ in
   custom.ports.requests = [ { key = synapsePortKey; } ];
 
   custom.ports.reserved = [
+    whatsappPort
     signalPort
     facebookPort
   ];
@@ -79,6 +81,11 @@ in
     enable = true;
     ownerUserId = userId;
     bridges = {
+      whatsapp = {
+        endpoint = "http://127.0.0.1:${toString whatsappPort}";
+        credentialFile = "/var/lib/mautrix-whatsapp/config.yaml";
+        serviceUnit = "mautrix-whatsapp.service";
+      };
       signal = {
         endpoint = "http://127.0.0.1:${toString signalPort}";
         credentialFile = "/var/lib/mautrix-signal/config.yaml";
@@ -106,6 +113,44 @@ in
     # Add only independently verified owner puppet MXIDs if remote echoes need them.
     remoteOwnerUserIds = [ ];
     model = "gpt-5.6-terra";
+  };
+
+  services.mautrix-whatsapp = {
+    enable = true;
+    registerToSynapse = true;
+    environmentFile = config.sops.secrets."matrix/mautrix-whatsapp-env".path;
+    settings = {
+      homeserver = {
+        address = "http://127.0.0.1:${toString config.custom.ports.assigned.${synapsePortKey}}";
+        domain = domain;
+      };
+      appservice = {
+        hostname = "127.0.0.1";
+        port = whatsappPort;
+      };
+      database = {
+        type = "postgres";
+        uri = "postgresql:///mautrix-whatsapp?host=/run/postgresql";
+      };
+      network.history_sync.request_full_sync = false;
+      bridge = {
+        permissions.${userId} = "admin";
+        # Personal puppeting only: do not let Matrix users relay through this
+        # WhatsApp account. The module's wildcard relay permission is inert.
+        relay.enabled = false;
+      };
+      encryption = {
+        # Keep bridge rooms unencrypted until MSC4350 lands in mautrix/Synapse.
+        # https://github.com/mautrix/go/pull/512
+        # https://github.com/matrix-org/matrix-spec-proposals/pull/4350
+        allow = false;
+        default = false;
+        require = false;
+        appservice = false;
+        msc4190 = false;
+      };
+      provisioning.shared_secret = "$MAUTRIX_WHATSAPP_PROVISIONING_SHARED_SECRET";
+    };
   };
 
   services.mautrix-signal = {
@@ -260,6 +305,16 @@ in
       requires = [ "matrix-synapse-db-init.service" ];
       after = [ "matrix-synapse-db-init.service" ];
     };
+    mautrix-whatsapp = {
+      requires = [
+        "postgresql-setup.service"
+        "matrix-synapse.service"
+      ];
+      after = [
+        "postgresql-setup.service"
+        "matrix-synapse.service"
+      ];
+    };
     mautrix-signal = {
       requires = [
         "postgresql-setup.service"
@@ -285,11 +340,16 @@ in
   services.postgresql = {
     enable = true;
     ensureDatabases = [
+      "mautrix-whatsapp"
       "mautrix-signal"
       "mautrix-meta-facebook"
     ];
     ensureUsers = [
       { name = "matrix-synapse"; }
+      {
+        name = "mautrix-whatsapp";
+        ensureDBOwnership = true;
+      }
       {
         name = "mautrix-signal";
         ensureDBOwnership = true;
@@ -321,6 +381,17 @@ in
     mode = "0400";
     # Populate with YAML, for example:
     # registration_shared_secret: "<random-secret-for-register_new_matrix_user>"
+  };
+
+  sops.secrets."matrix/mautrix-whatsapp-env" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    owner = "mautrix-whatsapp";
+    group = "mautrix-whatsapp";
+    mode = "0400";
+    restartUnits = [ "mautrix-whatsapp.service" ];
+    # Populate as an env file containing:
+    # MAUTRIX_WHATSAPP_PROVISIONING_SHARED_SECRET=<random-stable-secret>
+    # Appservice tokens and the linked-device session are generated separately.
   };
 
   sops.secrets."matrix/mautrix-signal-env" = {
