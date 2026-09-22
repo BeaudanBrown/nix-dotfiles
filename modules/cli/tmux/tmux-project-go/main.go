@@ -413,7 +413,9 @@ func projectPaths() []string {
 		if st, err := os.Stat(root); err != nil || !st.IsDir() {
 			continue
 		}
-		cmd := exec.Command("fd", "-H", "-t", "d", "^\\.git$", root, "--max-depth", "6", "--absolute-path", "--exclude", "node_modules", "--exclude", ".direnv", "--exclude", "result", "--exclude", ".venv", "--exclude", "venv")
+		// Main checkouts contain a .git directory, while linked worktrees contain
+		// a .git file. Ask fd for both so each checkout is independently selectable.
+		cmd := exec.Command("fd", "-H", "-t", "d", "-t", "f", "^\\.git$", root, "--max-depth", "6", "--absolute-path", "--exclude", "node_modules", "--exclude", ".direnv", "--exclude", "result", "--exclude", ".venv", "--exclude", "venv")
 		out, err := cmd.Output()
 		if err != nil {
 			continue

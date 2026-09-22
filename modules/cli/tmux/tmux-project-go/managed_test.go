@@ -331,6 +331,24 @@ func TestManagedWorkspacePathMustMatchHostResolution(t *testing.T) {
 	}
 }
 
+func TestManagedPiLaunchCommandPinsPiBeforeDirenvChangesPath(t *testing.T) {
+	bin := t.TempDir()
+	managedPi := filepath.Join(bin, "pi")
+	if err := os.WriteFile(managedPi, []byte("#!/bin/sh\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+	cwd := "/workspace/with 'quote"
+	got, err := managedPiLaunchCommand(cwd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "exec direnv exec " + shellQuote(cwd) + " " + shellQuote(managedPi)
+	if got != want {
+		t.Fatalf("managed Pi launch command = %q, want %q", got, want)
+	}
+}
+
 func TestManagedSelectionEnvironmentIsOptionalAndValidated(t *testing.T) {
 	t.Setenv("PI_MANAGED_SESSION_MODEL", "local-llm/qwen")
 	t.Setenv("PI_MANAGED_SESSION_THINKING", "high")

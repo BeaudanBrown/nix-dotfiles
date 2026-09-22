@@ -276,6 +276,10 @@ func managedCoordinatorEnsure() error {
 	if err != nil {
 		return err
 	}
+	command, err := managedPiLaunchCommand(cwd)
+	if err != nil {
+		return err
+	}
 	args := []string{"-d", "-P", "-F", "#{window_id}|#{pane_id}", "-n", "coordinator", "-c", cwd}
 	args = append(args, managedTmuxEnvironment(
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONVERSATION_ID",
@@ -283,7 +287,6 @@ func managedCoordinatorEnsure() error {
 		"PI_MANAGED_SESSION_ATTACHMENT_NONCE", "PI_MANAGED_COORDINATOR_SESSION_FILE", "PI_MANAGED_COORDINATOR_CWD",
 	)...)
 	args = append(args, selectionEnvironment...)
-	command := "exec direnv exec " + shellQuote(cwd) + " pi"
 	var output string
 	if tmuxOk("has-session", "-t", "=default") {
 		output, err = tmux(append([]string{"new-window"}, append(args, "-t", "=default:", command)...)...)
@@ -336,6 +339,10 @@ func managedWindowCreate() error {
 	if err != nil {
 		return err
 	}
+	command, err := managedPiLaunchCommand(resolved.Cwd)
+	if err != nil {
+		return err
+	}
 	session, err := ensureProjectSession(resolved.WorkspacePath)
 	if err != nil {
 		return err
@@ -355,7 +362,7 @@ func managedWindowCreate() error {
 		"PI_MANAGED_SESSION_ATTACHMENT_NONCE", "PI_MANAGED_PROJECT_SESSION_FILE", "PI_MANAGED_SESSION_WORKSPACE_PATH",
 	)...)
 	args = append(args, selectionEnvironment...)
-	args = append(args, "exec direnv exec "+shellQuote(resolved.Cwd)+" pi")
+	args = append(args, command)
 	output, err := tmux(args...)
 	if err != nil {
 		return err
@@ -868,6 +875,20 @@ func markManagedWindow(windowID, conversationID string) error {
 	}
 	_, err := tmux("set-option", "-w", "-t", windowID, managedConceptOption, concept)
 	return err
+}
+
+func managedPiLaunchCommand(cwd string) (string, error) {
+	pi, err := exec.LookPath("pi")
+	if err != nil {
+		return "", fmt.Errorf("resolve managed Pi dispatcher: %w", err)
+	}
+	if !filepath.IsAbs(pi) {
+		pi, err = filepath.Abs(pi)
+		if err != nil {
+			return "", fmt.Errorf("resolve managed Pi dispatcher path: %w", err)
+		}
+	}
+	return "exec direnv exec " + shellQuote(cwd) + " " + shellQuote(pi), nil
 }
 
 func managedTmuxEnvironment(names ...string) []string {

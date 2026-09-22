@@ -94,101 +94,106 @@ in
         plugin = yank;
         extraConfig = ''
           set -g @yank_action 'copy-pipe'
-          set -g @override_copy_command 'tmux-copy-system'
+          set -g @override_copy_command '${tmux_copy_system}/bin/tmux-copy-system'
         '';
       }
     ];
-    extraConfig = # bash
-      ''
-          set -g @tmux_window_name_icon_style "'name_and_icon'"
+    # Hooks must not resolve the relay's managed-only tmux_project wrapper.
+    extraConfig =
+      builtins.replaceStrings
+        [ "tmux_project " "tmux-copy-system" ]
+        [ "${tmux_project}/bin/tmux_project " "${tmux_copy_system}/bin/tmux-copy-system" ]
+        # bash
+        ''
+            set -g @tmux_window_name_icon_style "'name_and_icon'"
 
-          set-option -g prefix C-Space
-          bind-key C-Space send-prefix
-          unbind C-r
-          bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux.conf reloaded"
-          bind b set-option -g status
-          bind-key -n M-n select-window -n
-          bind-key -n M-p select-window -p
-          bind-key -n M-S-Space run-shell "tmux_project launcher-popup '#{client_name}'"
-          bind-key -n M-N run-shell "tmux_project switch next '#{client_name}'"
-          bind-key -n M-P run-shell "tmux_project switch prev '#{client_name}'"
-          bind-key -n M-S-n run-shell "tmux_project switch next '#{client_name}'"
-          bind-key -n M-S-p run-shell "tmux_project switch prev '#{client_name}'"
-          bind-key -n M-S-N run-shell "tmux_project switch next '#{client_name}'"
-          bind-key -n M-S-P run-shell "tmux_project switch prev '#{client_name}'"
-          bind-key -n M-b run-shell "tmux_project build '#{client_name}'"
-          bind C-u copy-mode -u
+            set-option -g prefix C-Space
+            bind-key C-Space send-prefix
+            unbind C-r
+            bind r source-file -F '#{?XDG_CONFIG_HOME,#{XDG_CONFIG_HOME},#{HOME}/.config}/tmux/tmux.conf' \; display-message "tmux.conf reloaded"
+            bind b set-option -g status
+            bind-key -n M-n select-window -n
+            bind-key -n M-p select-window -p
+            bind-key -n M-S-Space run-shell "tmux_project launcher-popup '#{client_name}'"
+            bind-key -n M-N run-shell "tmux_project switch next '#{client_name}'"
+            bind-key -n M-P run-shell "tmux_project switch prev '#{client_name}'"
+            bind-key -n M-S-n run-shell "tmux_project switch next '#{client_name}'"
+            bind-key -n M-S-p run-shell "tmux_project switch prev '#{client_name}'"
+            bind-key -n M-S-N run-shell "tmux_project switch next '#{client_name}'"
+            bind-key -n M-S-P run-shell "tmux_project switch prev '#{client_name}'"
+            bind-key -n M-b run-shell "tmux_project build '#{client_name}'"
+            bind C-u copy-mode -u
 
-          set -g set-clipboard on
-          set -g copy-command 'tmux-copy-system'
-          set -ga update-environment ' WAYLAND_DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR DISPLAY'
-          set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
-          set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
-          # Popup clients run inside tmux and must request extended key reporting.
-          set -as terminal-features ',tmux*:extkeys'
-          set-environment -g ESCDELAY 1
-          set-environment -g KEYTIMEOUT 1
-          set -g extended-keys on
-          set -g extended-keys-format csi-u
-          set -g allow-passthrough on
-          set -g detach-on-destroy previous
-          set-hook -g client-session-changed 'run-shell "tmux_project note-root-focus \"#{client_name}\" \"#{session_name}\""'
-          set-hook -g session-closed 'run-shell "tmux_project session-closed \"#{hook_session_name}\""'
-          run-shell "tmux_project note-root-focus '#{client_name}' '#{session_name}'"
+            set -g set-clipboard on
+            set -g copy-command 'tmux-copy-system'
+            set -ga update-environment ' WAYLAND_DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR DISPLAY'
+            set -as terminal-features ',xterm*:clipboard:ccolour:cstyle:focus:title:extkeys'
+            set -as terminal-features ',xterm-ghostty:clipboard:extkeys'
+            # Popup clients run inside tmux and must request extended key reporting.
+            set -as terminal-features ',tmux*:extkeys'
+            set-environment -g ESCDELAY 1
+            set-environment -g KEYTIMEOUT 1
+            set -g extended-keys on
+            set -g extended-keys-format csi-u
+            set -g allow-passthrough on
+            set -g detach-on-destroy previous
+            set-hook -g client-session-changed 'run-shell "tmux_project note-root-focus \"#{client_name}\" \"#{session_name}\""'
+            set-hook -g session-closed 'run-shell "tmux_project session-closed \"#{hook_session_name}\""'
+            run-shell "tmux_project note-root-focus '#{client_name}' '#{session_name}'"
 
-          bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
-          bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane
-          bind -r V split-window -fh -c '#{pane_current_path}' # horizontal for whole screen
-          bind -r S split-window -fv -c '#{pane_current_path}' # vertical for whole screen
-          set-option -g status-position top # put the status bar at the top
+            bind -r v split-window -h -p 50 -c '#{pane_current_path}' # horizontally split active pane
+            bind -r s split-window -v -p 50 -c '#{pane_current_path}' # vertically split active pane
+            bind -r V split-window -fh -c '#{pane_current_path}' # horizontal for whole screen
+            bind -r S split-window -fv -c '#{pane_current_path}' # vertical for whole screen
+            set-option -g status-position top # put the status bar at the top
 
-          set -g base-index 1
-          set -g pane-base-index 1
-          set-window-option -g pane-base-index 1
-          set-option -g renumber-windows on
-          set -g mouse on
-          bind-key C-Space resize-pane -Z # C-space to zoom pane
+            set -g base-index 1
+            set -g pane-base-index 1
+            set-window-option -g pane-base-index 1
+            set-option -g renumber-windows on
+            set -g mouse on
+            bind-key C-Space resize-pane -Z # C-space to zoom pane
 
-          is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
-              | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
-          bind-key -n 'M-h' if-shell "$is_vim" { send-keys M-h } { if-shell -F '#{pane_at_left}'   {} { select-pane -L } }
-          bind-key -n 'M-j' if-shell "$is_vim" { send-keys M-j } { if-shell -F '#{pane_at_bottom}' {} { select-pane -D } }
-          bind-key -n 'M-k' if-shell "$is_vim" { send-keys M-k } { if-shell -F '#{pane_at_top}'    {} { select-pane -U } }
-          bind-key -n 'M-l' if-shell "$is_vim" { send-keys M-l } { if-shell -F '#{pane_at_right}'  {} { select-pane -R } }
+            is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+                | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
+            bind-key -n 'M-h' if-shell "$is_vim" { send-keys M-h } { if-shell -F '#{pane_at_left}'   {} { select-pane -L } }
+            bind-key -n 'M-j' if-shell "$is_vim" { send-keys M-j } { if-shell -F '#{pane_at_bottom}' {} { select-pane -D } }
+            bind-key -n 'M-k' if-shell "$is_vim" { send-keys M-k } { if-shell -F '#{pane_at_top}'    {} { select-pane -U } }
+            bind-key -n 'M-l' if-shell "$is_vim" { send-keys M-l } { if-shell -F '#{pane_at_right}'  {} { select-pane -R } }
 
-          bind-key -T copy-mode-vi 'M-h' if-shell -F '#{pane_at_left}'   {} { select-pane -L }
-          bind-key -T copy-mode-vi 'M-j' if-shell -F '#{pane_at_bottom}' {} { select-pane -D }
-          bind-key -T copy-mode-vi 'M-k' if-shell -F '#{pane_at_top}'    {} { select-pane -U }
-          bind-key -T copy-mode-vi 'M-l' if-shell -F '#{pane_at_right}'  {} { select-pane -R }
-          bind-key -T copy-mode-vi Enter send-keys -X copy-pipe 'tmux-copy-system'
-          bind-key -T copy-mode-vi C-j send-keys -X copy-pipe 'tmux-copy-system'
-
-
-        # Toggle project popups
-
-          bind-key -n M-Space \
-                run-shell "tmux_project toggle-last-popup '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
-
-          bind-key -n M-Enter run-shell "tmux_project scratch '#{client_name}'"
-          bind-key -n M-S-Enter run-shell "tmux_project scratch-new-window '#{client_name}'"
-
-          bind-key -n M-r \
-                run-shell "tmux_project rebuild '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
-
-          bind-key -n M-R \
-                run-shell "tmux_project rebuild-run '#{client_name}' '${nr}/bin/nr' '${pkgs.btop}/bin/btop -u 500'"
-
-          bind-key -n M-m run-shell "tmux_project llm '#{client_name}'"
+            bind-key -T copy-mode-vi 'M-h' if-shell -F '#{pane_at_left}'   {} { select-pane -L }
+            bind-key -T copy-mode-vi 'M-j' if-shell -F '#{pane_at_bottom}' {} { select-pane -D }
+            bind-key -T copy-mode-vi 'M-k' if-shell -F '#{pane_at_top}'    {} { select-pane -U }
+            bind-key -T copy-mode-vi 'M-l' if-shell -F '#{pane_at_right}'  {} { select-pane -R }
+            bind-key -T copy-mode-vi Enter send-keys -X copy-pipe 'tmux-copy-system'
+            bind-key -T copy-mode-vi C-j send-keys -X copy-pipe 'tmux-copy-system'
 
 
-          bind-key -n M-o run-shell "tmux_project obsidian '#{client_name}'"
+          # Toggle project popups
 
-          bind-key -n M-\\ \
-                run-shell "tmux_project move-pane window '#{client_name}' '#{pane_id}'"
-          bind-key -n M-| \
-                run-shell "tmux_project move-pane horizontal '#{client_name}' '#{pane_id}'"
+            bind-key -n M-Space \
+                  run-shell "tmux_project toggle-last-popup '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
 
-      '';
+            bind-key -n M-Enter run-shell "tmux_project scratch '#{client_name}'"
+            bind-key -n M-S-Enter run-shell "tmux_project scratch-new-window '#{client_name}'"
+
+            bind-key -n M-r \
+                  run-shell "tmux_project rebuild '#{client_name}' '${pkgs.btop}/bin/btop -u 500'"
+
+            bind-key -n M-R \
+                  run-shell "tmux_project rebuild-run '#{client_name}' '${nr}/bin/nr' '${pkgs.btop}/bin/btop -u 500'"
+
+            bind-key -n M-m run-shell "tmux_project llm '#{client_name}'"
+
+
+            bind-key -n M-o run-shell "tmux_project obsidian '#{client_name}'"
+
+            bind-key -n M-\\ \
+                  run-shell "tmux_project move-pane window '#{client_name}' '#{pane_id}'"
+            bind-key -n M-| \
+                  run-shell "tmux_project move-pane horizontal '#{client_name}' '#{pane_id}'"
+
+        '';
   };
 
   # TODO?

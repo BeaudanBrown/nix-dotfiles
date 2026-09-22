@@ -68,6 +68,72 @@ model/thinking selections, derives the canonical workspace path itself, and
 stores only bounded conversation ID/concept display options on the window.
 Dormant conversations have no tmux candidate.
 
+#### Shared tmux privilege contract (Grill)
+
+Managed and interactive windows share the same Unix user and tmux server; they
+are trusted with that user's authority. Grill overrides the upstream relay's
+`NoNewPrivileges` to `false` in `modules/cli/pi-harness/grill.nix`. Otherwise a
+relay-first boot permanently sets `NoNewPrivs=1` on the shared server and all
+its shells, breaking `sudo` (including `shutup`). An operator-first server
+already lets relay-requested windows execute without that restriction, so
+keeping it on the relay is not reliable isolation. Separate untrusted agents
+would require a separate identity and tmux server, not this shared socket.
+Other Pi chat services retain their own hardening. Sudo authentication and
+sudoers permissions are unchanged; this does not grant passwordless access.
+
+Evaluation-only regression check (no build or activation):
+
+```sh
+bash modules/cli/pi-harness/check-shared-session-privileges.sh
+```
+
+For an existing affected deployment:
+
+1. Save work in **all** tmux/managed Pi windows. Do not kill the shared server
+   while work is running. Restarting the relay alone cannot repair it.
+2. Detach from tmux or open a fresh SSH shell without attaching to tmux. Check
+   `grep '^NoNewPrivs:' /proc/$$/status` reports `0` and `sudo -v` works.
+3. From that clean shell, activate with
+   `sudo nixos-rebuild switch --flake /home/beau/documents/nix-dotfiles#grill`.
+4. Once all work is saved and a reboot is acceptable, run `sudo reboot` from
+   that clean shell. This terminates existing sessions and ensures a fresh
+   relay-first server. NoNewPrivs cannot be cleared on a running process.
+5. After reboot, attach to tmux and run
+   `bash modules/cli/pi-harness/check-shared-session-privileges.sh --live`
+   from this repository. It checks the active relay setting and the relay,
+   shared server, and invoking shell's kernel flags without changing them.
+   Verify `sudo -v`, then coordinator and managed-project attachment. Do not
+   use `shutup` as a test unless an actual shutdown is intended.
+
+The live check requires activation and fresh processes; an evaluation pass
+alone does not mean the currently running server is fixed.
+
+The host `tmux_project` package owns the runtime for relay-created tmux servers.
+Its private `libexec/tmux` entrypoint supplies plugin interpreters/utilities from
+`modules/cli/tmux/tmux-runtime.nix`, puts the full host launcher ahead of the
+bridge's managed-only wrapper, and explicitly selects
+`${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf`. Config hooks and clipboard
+commands use absolute host-package paths. Do not solve boot failures by adding
+host-specific tmux plugins or dependencies to the generic Pi relay.
+
+After activation, run this isolated boot-environment regression check:
+
+```sh
+bash modules/cli/tmux/check-boot-runtime.sh
+```
+
+It starts disposable servers with restricted and interactive environments,
+checks core options, plugin bindings, command resolution, hooks and reload, then
+cleans up only its own sockets. It does not exercise Matrix attachment. A live
+server retains its original environment: rebuilding alone does not replace it.
+Save work and reboot for the final relay-first acceptance test. Before closing
+any terminal, check `tmux show-options -gv prefix` (`C-Space`),
+`tmux show-options -gv status-position` (`top`), reload with prefix-r, test project
+shortcuts and copy/paste, and attach both coordinator and managed project Pi
+windows. Inspect `journalctl --user -u pi-managed-session-relay.service -b` for
+attachment timeouts. Those timeouts may have a separate cause; fixing plugin
+startup is not proof that the bridge attachment lifecycle is fixed.
+
 For the one-time transition from deployments that used `/tmp/tmux-$UID/default`,
 `tmux_project managed legacy-window-preview` accepts `{}` and reports only valid
 marked windows. After reviewing the preview and stopping the managed relay,

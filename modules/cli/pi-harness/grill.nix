@@ -18,6 +18,14 @@ in
     # PI_MATRIX_ACCESS_TOKEN=<token for @pi-grill:matrix.bepis.lol>
   };
 
+  # Managed windows share the operator's tmux server and Unix-user authority.
+  # If the boot relay starts that server with NNP, every subsequent interactive
+  # shell inherits it and sudo breaks. If the operator starts it first, NNP on
+  # the relay does not constrain tmux-created processes anyway. This is not an
+  # isolation seam; isolated agents would need a separate user/server instead.
+  # Override the pinned upstream default only for this shared-session relay.
+  systemd.user.services.pi-managed-session-relay.serviceConfig.NoNewPrivileges = lib.mkForce false;
+
   services.pi-harness.managedSessions = {
     enable = true;
     user = config.hostSpec.username;

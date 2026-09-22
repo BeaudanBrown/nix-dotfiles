@@ -124,7 +124,7 @@ in
           sha256 = "40fac4050e940397dbf13087afd50f4734a11805bf9d65ef8ddd7483470e6199";
           size = 14252845984;
           contextWindow = 40960;
-          maxTokens = 6144;
+          maxTokens = 16384;
           reasoning = true;
           input = [ "text" ];
           llamaSettings = {
