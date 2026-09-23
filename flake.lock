@@ -1142,11 +1142,11 @@
         "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1790075980,
-        "narHash": "sha256-hBodKacbTvGeYo48JACrqwtAtzbXn35Kw2FbjmY1DPE=",
+        "lastModified": 1790125577,
+        "narHash": "sha256-2K7mgi2UofbBe3En9KvOQu7CdiIx7Fkv8JlCTTjL4Xg=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "db07fc1dca76078f928b4e6b82dd3b88a18795ef",
+        "rev": "ae957fa707a1d815e4412c619e8d2f5287ab82c6",
         "type": "github"
       },
       "original": {
