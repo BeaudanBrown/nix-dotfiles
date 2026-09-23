@@ -63,11 +63,21 @@ in
 {
   nixpkgs.overlays = [
     (final: prev: {
-      tmux = prev.tmux.overrideAttrs (old: {
-        patches = (old.patches or [ ]) ++ [
-          ./patches/tmux-active-query-escape-delay-50ms.patch
-        ];
-      });
+      tmux =
+        let
+          rawTmux = prev.tmux.overrideAttrs (old: {
+            patches = (old.patches or [ ]) ++ [
+              ./patches/tmux-active-query-escape-delay-50ms.patch
+            ];
+          });
+        in
+        if config.hostSpec.hostName == "grill" then
+          import ./shared-package.nix {
+            pkgs = final;
+            inherit rawTmux;
+          }
+        else
+          rawTmux;
     })
   ];
 

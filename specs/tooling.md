@@ -351,6 +351,48 @@ just deploy-test <hostname>
 just deploy <hostname>
 ```
 
+## Restart-safe Grill updates
+
+`nr` builds a candidate as the invoking user and performs activation through a
+root systemd transient unit, not the tmux pane. Its journal unit is printed before
+activation; terminal loss does not cancel it. Activation serializes on
+`/run/nixos-detached-activation.lock`, updates the system profile, then switches.
+The candidate GC root remains under `~/.local/state/nixos-deploy/`.
+Direct `nixos-rebuild` and remote deployment commands retain their own semantics;
+use `nr` for terminal-independent local updates.
+
+Grill's default tmux client now ensures `tmux-shared.service`. The foreground
+server owns the existing runtime socket independently of the Pi relay. Custom
+`-S`/`-L` sockets remain unmanaged for disposable tests. The server is not
+restarted or configuration-reloaded by rebuilds. Its initial system generation
+is rooted at `~/.local/state/tmux-shared/runtime`, retaining plugins and hooks.
+New Pi processes use the installed launcher; old processes need an explicit idle
+refresh to load updated code.
+
+The harness's `pi-managed-session-rollout.service` checks the server PID and
+cgroup before submitting a single relay restart. Legacy ownership blocks rollout
+without killing sessions. For the first migration, finish work and explicitly
+close the old tmux server in an approved maintenance window, then run:
+
+```sh
+systemctl --user start tmux-shared.service
+systemctl --user restart pi-managed-session-rollout.service
+pi-managed-session-status
+```
+
+Do not bypass a failed guard by restarting the relay directly. The independent
+server cannot adopt an existing relay-owned PID merely by changing unit files.
+
+Disposable lifecycle verification (never operates on the live socket or relay):
+
+```sh
+bash modules/cli/tmux/check-update-lifecycle.sh ../projects/pi-harness/scripts/relay-rollout.sh
+```
+
+A deliberate tmux restart still terminates its sessions. Keep sessions running
+on their pinned runtime unless an incompatible/security update requires explicit
+maintenance. A failed Matrix connection is not permission to restart Pi.
+
 ## Troubleshooting
 
 ### Flake Check Fails
