@@ -251,6 +251,25 @@ in
   };
 
   systemd.services = {
+    # Synapse requires appservice registrations while parsing its config, but
+    # the upstream bridge unit normally generates this file in preStart after
+    # Synapse. Bootstrap it first to avoid a first-deployment dependency cycle.
+    mautrix-whatsapp-registration = {
+      description = "Generate the mautrix-whatsapp appservice registration";
+      before = [ "matrix-synapse.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "mautrix-whatsapp";
+        Group = "mautrix-whatsapp";
+        EnvironmentFile = config.sops.secrets."matrix/mautrix-whatsapp-env".path;
+        StateDirectory = "mautrix-whatsapp";
+        WorkingDirectory = "/var/lib/mautrix-whatsapp";
+        RemainAfterExit = true;
+        UMask = 27;
+      };
+      script = config.systemd.services.mautrix-whatsapp.preStart;
+      restartTriggers = config.systemd.services.mautrix-whatsapp.restartTriggers;
+    };
     matrix-synapse-db-init = {
       description = "Create Synapse PostgreSQL database with C collation";
       requires = [ "postgresql-setup.service" ];
@@ -303,7 +322,11 @@ in
     };
     matrix-synapse = {
       requires = [ "matrix-synapse-db-init.service" ];
-      after = [ "matrix-synapse-db-init.service" ];
+      wants = [ "mautrix-whatsapp-registration.service" ];
+      after = [
+        "matrix-synapse-db-init.service"
+        "mautrix-whatsapp-registration.service"
+      ];
     };
     mautrix-whatsapp = {
       requires = [
