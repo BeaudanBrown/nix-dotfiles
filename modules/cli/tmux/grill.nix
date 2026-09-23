@@ -27,7 +27,9 @@ let
         echo 'Refusing to replace an existing tmux server; migration requires explicit maintenance' >&2
         exit 1
       fi
-      mkdir -p -m 700 "$(dirname "$socket")" "$HOME/.local/state/tmux-shared"
+      umask 077
+      mkdir -p "$(dirname "$socket")" "$HOME/.local/state/tmux-shared"
+      chmod 700 "$(dirname "$socket")" "$HOME/.local/state/tmux-shared"
       # Retain the running generation, including its Home Manager plugins and
       # hook executables, until the next deliberate server start.
       nix-store --add-root "$HOME/.local/state/tmux-shared/runtime" --indirect --realise "$(readlink -f /run/current-system)" >/dev/null
