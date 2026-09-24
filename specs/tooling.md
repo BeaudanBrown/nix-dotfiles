@@ -369,8 +369,12 @@ explicitly restarted; rebuilding alone will not alter running panes. Custom
 `-S`/`-L` sockets remain unmanaged for disposable tests. The server is not
 restarted or configuration-reloaded by rebuilds. Its initial system generation
 is rooted at `~/.local/state/tmux-shared/runtime`, retaining plugins and hooks.
-New Pi processes use the installed launcher; old processes need an explicit idle
-refresh to load updated code.
+New Pi processes use the installed launcher. With the harness runtime-update
+support deployed, the relay compares managed project adapters' launcher identities
+and automatically refreshes changed instances only after the adapter confirms it
+is idle and settled. Busy or unknown instances defer; dormant conversations are
+not started for an update. Ordinary unmanaged Pi instances and the coordinator
+are not automatically refreshed. `!status` reports pending project updates.
 
 The harness's `pi-managed-session-rollout.service` checks the server PID and
 cgroup before submitting a single relay restart. Legacy ownership blocks rollout
