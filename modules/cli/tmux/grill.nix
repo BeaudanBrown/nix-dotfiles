@@ -34,6 +34,7 @@ let
       # hook executables, until the next deliberate server start.
       nix-store --add-root "$HOME/.local/state/tmux-shared/runtime" --indirect --realise "$(readlink -f /run/current-system)" >/dev/null
       unset TMUX TMUX_PANE
+      ${builtins.readFile ./shared-path.sh}
       export TMUX_TMPDIR="$XDG_RUNTIME_DIR"
       exec ${rawTmux}/bin/tmux -D -S "$socket" -f "$HOME/.config/tmux/tmux.conf"
     '';

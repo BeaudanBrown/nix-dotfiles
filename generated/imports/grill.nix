@@ -4,6 +4,7 @@
 [
   ../../modules/cli/pi-harness/grill.nix
   ../../modules/cli/starship/grill.nix
+  ../../modules/cli/tmux/grill.nix
   ../../modules/desktop/addons/waybar/grill.nix
   ../../modules/desktop/hyprland/grill.nix
   ../../modules/desktop/hyprland/keybinds/grill.nix
@@ -38,7 +39,6 @@
   ../../modules/cli/nixvim/common.nix
   ../../modules/cli/starship/common.nix
   ../../modules/cli/tmux/common.nix
-  ../../modules/cli/tmux/grill.nix
   ../../modules/cli/yazi/common.nix
   ../../modules/nix/common.nix
   ../../modules/security/polkit/common.nix

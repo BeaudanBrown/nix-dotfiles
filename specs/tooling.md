@@ -361,7 +361,11 @@ Terminal-independent activation is not a guarantee of this wrapper; shared tmux
 survives relay replacement because its process ownership is independent.
 
 Grill's default tmux client now ensures `tmux-shared.service`. The foreground
-server owns the existing runtime socket independently of the Pi relay. Custom
+server owns the existing runtime socket independently of the Pi relay. Its
+startup PATH combines current host/user profiles with pinned boot tools: panes
+can find ordinary system commands and tmux popup hooks can resolve
+`tmux_project`. A server started before this fix retains its old PATH until
+explicitly restarted; rebuilding alone will not alter running panes. Custom
 `-S`/`-L` sockets remain unmanaged for disposable tests. The server is not
 restarted or configuration-reloaded by rebuilds. Its initial system generation
 is rooted at `~/.local/state/tmux-shared/runtime`, retaining plugins and hooks.
@@ -386,6 +390,7 @@ Disposable lifecycle verification (never operates on the live socket or relay):
 
 ```sh
 bash modules/cli/tmux/check-update-lifecycle.sh ../projects/pi-harness/scripts/relay-rollout.sh
+bash modules/cli/tmux/check-shared-path.sh
 ```
 
 A deliberate tmux restart still terminates its sessions. Keep sessions running
