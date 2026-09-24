@@ -386,6 +386,10 @@ pi-managed-session-status
 Do not bypass a failed guard by restarting the relay directly. The independent
 server cannot adopt an existing relay-owned PID merely by changing unit files.
 
+New managed project sessions start directly with Pi as their first window;
+existing project sessions keep all their windows and receive a new Pi window.
+The coordinator's `default` session follows its separate existing policy.
+
 Disposable lifecycle verification (never operates on the live socket or relay):
 
 ```sh
