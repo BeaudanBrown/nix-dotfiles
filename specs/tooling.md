@@ -353,13 +353,12 @@ just deploy <hostname>
 
 ## Restart-safe Grill updates
 
-`nr` builds a candidate as the invoking user and performs activation through a
-root systemd transient unit, not the tmux pane. Its journal unit is printed before
-activation; terminal loss does not cancel it. Activation serializes on
-`/run/nixos-detached-activation.lock`, updates the system profile, then switches.
-The candidate GC root remains under `~/.local/state/nixos-deploy/`.
-Direct `nixos-rebuild` and remote deployment commands retain their own semantics;
-use `nr` for terminal-independent local updates.
+`nr` generates host imports and runs `nh os switch` with the dotfiles flake,
+restoring the original build/activation interface. It does not use a custom
+transient activation service, activation lock, or candidate GC root. Direct
+`nixos-rebuild` and remote deployment commands retain their own semantics.
+Terminal-independent activation is not a guarantee of this wrapper; shared tmux
+survives relay replacement because its process ownership is independent.
 
 Grill's default tmux client now ensures `tmux-shared.service`. The foreground
 server owns the existing runtime socket independently of the Pi relay. Custom
