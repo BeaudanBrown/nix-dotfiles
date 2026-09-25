@@ -353,21 +353,28 @@ just deploy <hostname>
 
 ## Restart-safe Grill updates
 
-`nr` builds a candidate as the invoking user and performs activation through a
-root systemd transient unit, not the tmux pane. Its journal unit is printed before
-activation; terminal loss does not cancel it. Activation serializes on
-`/run/nixos-detached-activation.lock`, updates the system profile, then switches.
-The candidate GC root remains under `~/.local/state/nixos-deploy/`.
-Direct `nixos-rebuild` and remote deployment commands retain their own semantics;
-use `nr` for terminal-independent local updates.
+`nr` generates host imports and runs `nh os switch` with the dotfiles flake,
+restoring the original build/activation interface. It does not use a custom
+transient activation service, activation lock, or candidate GC root. Direct
+`nixos-rebuild` and remote deployment commands retain their own semantics.
+Terminal-independent activation is not a guarantee of this wrapper; shared tmux
+survives relay replacement because its process ownership is independent.
 
 Grill's default tmux client now ensures `tmux-shared.service`. The foreground
-server owns the existing runtime socket independently of the Pi relay. Custom
+server owns the existing runtime socket independently of the Pi relay. Its
+startup PATH combines current host/user profiles with pinned boot tools: panes
+can find ordinary system commands and tmux popup hooks can resolve
+`tmux_project`. A server started before this fix retains its old PATH until
+explicitly restarted; rebuilding alone will not alter running panes. Custom
 `-S`/`-L` sockets remain unmanaged for disposable tests. The server is not
 restarted or configuration-reloaded by rebuilds. Its initial system generation
 is rooted at `~/.local/state/tmux-shared/runtime`, retaining plugins and hooks.
-New Pi processes use the installed launcher; old processes need an explicit idle
-refresh to load updated code.
+New Pi processes use the installed launcher. With the harness runtime-update
+support deployed, the relay compares managed project adapters' launcher identities
+and automatically refreshes changed instances only after the adapter confirms it
+is idle and settled. Busy or unknown instances defer; dormant conversations are
+not started for an update. Ordinary unmanaged Pi instances and the coordinator
+are not automatically refreshed. `!status` reports pending project updates.
 
 The harness's `pi-managed-session-rollout.service` checks the server PID and
 cgroup before submitting a single relay restart. Legacy ownership blocks rollout
@@ -383,10 +390,15 @@ pi-managed-session-status
 Do not bypass a failed guard by restarting the relay directly. The independent
 server cannot adopt an existing relay-owned PID merely by changing unit files.
 
+New managed project sessions start directly with Pi as their first window;
+existing project sessions keep all their windows and receive a new Pi window.
+The coordinator's `default` session follows its separate existing policy.
+
 Disposable lifecycle verification (never operates on the live socket or relay):
 
 ```sh
 bash modules/cli/tmux/check-update-lifecycle.sh ../projects/pi-harness/scripts/relay-rollout.sh
+bash modules/cli/tmux/check-shared-path.sh
 ```
 
 A deliberate tmux restart still terminates its sessions. Keep sessions running
