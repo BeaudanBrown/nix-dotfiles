@@ -6,6 +6,7 @@
   ../../modules/cli/starship/nas.nix
   ../../modules/cli/tmux/nas.nix
   ../../modules/hosted-services/art-domain/nas.nix
+  ../../modules/hosted-services/dump/nas.nix
   ../../modules/hosted-services/idrac/nas.nix
   ../../modules/hosted-services/joan/nas.nix
   ../../modules/hosted-services/lights/nas.nix

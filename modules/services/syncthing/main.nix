@@ -81,6 +81,8 @@ in
           "documents" = {
             id = "txxit-w9cwz";
             path = "${config.hostSpec.home}/documents";
+            # This path is an NFS mount on GRILL and is no longer Syncthing-owned.
+            ignorePatterns = [ "/projects/dump" ];
             devices = [
               "server"
               "grill"

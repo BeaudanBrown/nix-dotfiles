@@ -1,5 +1,16 @@
 # dump.bepis.lol publishing
 
+## Chat capability rollout handoff
+
+- Harness revision: `99fd69601b51886c241d67d5b0d11a7fdb420dbf`, pinned in `flake.lock`. It must be pushed/made available at the configured GitHub source before a fresh NAS fetch. Local verification has the exact committed source cached; that alone does not establish remote availability.
+- First make this dotfiles revision and its pinned harness source available on the deployment machine; then rebuild **NAS** using the normal host deployment procedure. No GRILL rebuild is required for NAS chat capabilities. GRILL remains an independent ordinary editor; rebuilding it later does not add chat-only tools to CLI sessions.
+- The source is already on NAS and mounted on GRILL. Do **not** repeat the historical starter-transfer/rename instructions below or overwrite the existing project.
+- NAS activation provides `pi-chat-workspace`, `pi-chat-model` and `pi-chat-transport`; the existing publisher remains separate. Workspace access is granted only to the configured Note to Self room. Downloads/file sending are enabled for every currently enabled assistant chat; the existing room allowlist is not widened.
+- After activation, check those units and the model/transport operational logs. Test a read-only project question first, then a public PDF attachment from Matrix and Signal Note to Self. Verify the actual owner/Signal account and received bytes; Matrix acknowledgement is not downstream delivery proof.
+- A real website edit/publication test requires a clearly requested disposable change. Confirm the published receipt and changed public URL; failure must leave the prior release serving. Do not repeat an uncertain publication or file send blindly—inspect status or issue a new explicit request as appropriate.
+- Completed evidence: all 12 canonical harness checks; production packages; actual isolated download/decoder/workspace probes; 15 publisher tests; real Hugo publishing into disposable queue/release directories; full NAS and GRILL dry evaluation. No production source/queue/release, live chat delivery or host activation was changed during verification.
+
+
 ## Implemented design
 
 The Hugo source project is `~/documents/projects/dump` on GRILL. NAS backs that exact directory through a GRILL-only NFS export of `/var/lib/dump-site/project`, stored on the existing `pool1/var` ZFS dataset mounted at `/var/lib`. The site is public and static. Roots map to URL paths, initially `/josh/`, not new domains. The publisher itself has no model, public upload handler or Matrix credentials. The module now also prepares a separate opt-in harness workspace executor and Note to Self binding for NAS chat editing; that executor does not receive model or Matrix credentials.
@@ -42,7 +53,7 @@ The current module prepares the existing Note to Self room for chat-only workspa
 
 A requested site edit may proceed through publication without asking again. On timeout/interruption, inspect status before repeating publication. Host policy defines argv and mounts; writable project instructions only explain how to use the tools. These tools load only in the dedicated chat assistant, not ordinary Pi CLI sessions.
 
-The consuming pi-harness input must be updated to a revision containing these options before host evaluation/activation. Do not rebuild from an intermediate checkout: attachment/download implementation and the final harness rollout gate remain outstanding. No host rebuild/restart or real submission was performed by this increment. The focused Python publisher suite now has 15 passing tests, including local queue separation, canonical sandbox entrypoint checks and pending/completed status. Full NAS service and bridge acceptance remain deployment checks.
+The NAS declaration also enables chat-only `download_file`/`send_file` in every enabled assistant chat. Downloads use a credential-free public-HTTPS sandbox and private 24-hour staging; a workspace destination is optional and available only in project-bound rooms. Sending is through the owner's Matrix account to the originating room and does not publish the file. The chat cannot read host paths or choose another destination. The consuming pi-harness input is pinned to `99fd69601b51886c241d67d5b0d11a7fdb420dbf` (source NAR `sha256-a3XX5yzRVnXgopTB1sWmoghbS4Ef8MiALvRiKhvMp/M=`). Cumulative Standards/Spec review and all final local gates passed; the only implementation finding was stale binary-protocol documentation, now corrected. The harness revision must be available from the configured GitHub source before a fresh NAS fetch can rebuild it. No host rebuild/restart or real submission was performed by this increment. The focused Python publisher suite now has 15 passing tests, including local queue separation, canonical sandbox entrypoint checks and pending/completed status. Full NAS service and bridge acceptance remain deployment checks.
 
 ## Matrix
 

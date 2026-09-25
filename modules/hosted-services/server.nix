@@ -90,7 +90,7 @@ in
     hostedServices = mkOption {
       type = types.listOf (
         types.submodule (
-          { ... }:
+          { config, ... }:
           {
             options = {
               domain = mkOption {
@@ -130,6 +130,16 @@ in
                 type = types.bool;
                 default = false;
                 description = "If true, proxy websockets with nginx.";
+              };
+              manageNginxListeners = mkOption {
+                type = types.bool;
+                default = config.doNginx;
+                defaultText = lib.literalExpression "config.doNginx";
+                description = ''
+                  Move this domain's nginx HTTPS listeners behind the TCP
+                  frontend when TLS passthrough is active. Set true with
+                  doNginx = false when another module owns the virtual host.
+                '';
               };
               doNginx = mkOption {
                 type = types.bool;

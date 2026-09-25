@@ -61,6 +61,7 @@ in
     };
   };
   services.pi-harness.bridgeChat.assistant = {
+    files.enable = true;
     workspaceRoomIds = [ "!XljGtOqHxkwHiILSto:matrix.bepis.lol" ];
     projectCommands = {
       check = "Validate dump content and render a temporary Hugo site; does not publish.";
