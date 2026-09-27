@@ -257,6 +257,43 @@ func TestCreateManagedProjectRejectsMismatchedCompletedRepository(t *testing.T) 
 	}
 }
 
+func TestManagedProjectWindowStartsInNewSessionButPreservesExistingWindows(t *testing.T) {
+	const id = "conv_0123456789abcdef0123456789abcdef"
+	for _, tc := range []struct {
+		newSession bool
+		wantPrefix []string
+	}{
+		{true, []string{"new-session", "-d", "-P", "-F", "#{window_id}|#{pane_id}", "-s", "project"}},
+		{false, []string{"new-window", "-d", "-P", "-F", "#{window_id}|#{pane_id}", "-t", "=project:"}},
+	} {
+		got := managedProjectWindowArgs("project", id, "/workspace/project", tc.newSession)
+		if !reflect.DeepEqual(got[:len(tc.wantPrefix)], tc.wantPrefix) || !reflect.DeepEqual(got[len(tc.wantPrefix):], []string{"-n", "pi-89abcdef", "-c", "/workspace/project"}) {
+			t.Fatalf("newSession=%v: unexpected tmux arguments: %#v", tc.newSession, got)
+		}
+	}
+}
+
+func TestManagedProjectWindowDoesNotCreatePlaceholderOrReplaceExistingWindow(t *testing.T) {
+	if _, err := exec.LookPath("tmux"); err != nil { t.Skip("tmux unavailable") }
+	socket := filepath.Join(t.TempDir(), "tmux.sock")
+	const id = "conv_0123456789abcdef0123456789abcdef"
+	run := func(args ...string) string {
+		t.Helper()
+		out, err := exec.Command("tmux", append([]string{"-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
+		if err != nil { t.Fatalf("tmux %v: %v: %s", args, err, out) }
+		return strings.TrimSpace(string(out))
+	}
+	defer func() { _ = exec.Command("tmux", "-S", socket, "kill-server").Run() }()
+	first := run(append(managedProjectWindowArgs("project", id, t.TempDir(), true), "sleep 120")...)
+	if got := run("list-windows", "-t", "=project", "-F", "#{window_id}"); got != strings.Split(first, "|")[0] {
+		t.Fatalf("new project session has a placeholder window: %q; Pi: %q", got, first)
+	}
+	second := run(append(managedProjectWindowArgs("project", id, t.TempDir(), false), "sleep 120")...)
+	if got := run("list-windows", "-t", "=project", "-F", "#{window_id}"); got != strings.Split(first, "|")[0]+"\n"+strings.Split(second, "|")[0] {
+		t.Fatalf("existing project window changed: %q", got)
+	}
+}
+
 func TestManagedProjectWindowResultPreservesEmptyRelativeCwd(t *testing.T) {
 	encoded, err := json.Marshal(managedProjectWindowResult{
 		ConversationID: "conv_0123456789abcdef0123456789abcdef",

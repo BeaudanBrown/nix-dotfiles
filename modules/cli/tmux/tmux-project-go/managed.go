@@ -343,10 +343,7 @@ func managedWindowCreate() error {
 	if err != nil {
 		return err
 	}
-	session, err := ensureProjectSession(resolved.WorkspacePath)
-	if err != nil {
-		return err
-	}
+	session := sessionForPath(resolved.WorkspacePath)
 	observation, err := findManagedWindow(request.ConversationID)
 	if err != nil {
 		return err
@@ -354,8 +351,10 @@ func managedWindowCreate() error {
 	if observation != nil {
 		return fmt.Errorf("managed project window already exists; inspect before creating")
 	}
-	args := []string{"new-window", "-d", "-P", "-F", "#{window_id}|#{pane_id}", "-t", "=" + session + ":",
-		"-n", "pi-" + request.ConversationID[len(request.ConversationID)-8:], "-c", resolved.Cwd}
+	// A new project session can start with Pi as its first window. Never
+	// replace the first window of an existing (possibly interactive) session.
+	newSession := !tmuxOk("has-session", "-t", "="+session)
+	args := managedProjectWindowArgs(session, request.ConversationID, resolved.Cwd, newSession)
 	args = append(args, managedTmuxEnvironment(
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONVERSATION_ID",
 		"PI_MANAGED_SESSION_CONCEPT", "PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID",
@@ -367,6 +366,7 @@ func managedWindowCreate() error {
 	if err != nil {
 		return err
 	}
+	markRoot(session, resolved.WorkspacePath)
 	observation, err = parseManagedWindowOutput(output)
 	if err != nil {
 		return err
@@ -379,6 +379,14 @@ func managedWindowCreate() error {
 		Role: "conversation", RootKey: resolved.RootKey, Workspace: resolved.Workspace,
 		RelativeCwd: resolved.RelativeCwd,
 	})
+}
+
+func managedProjectWindowArgs(session, conversationID, cwd string, newSession bool) []string {
+	args := []string{"new-window", "-d", "-P", "-F", "#{window_id}|#{pane_id}", "-t", "=" + session + ":"}
+	if newSession {
+		args = []string{"new-session", "-d", "-P", "-F", "#{window_id}|#{pane_id}", "-s", session}
+	}
+	return append(args, "-n", "pi-"+conversationID[len(conversationID)-8:], "-c", cwd)
 }
 
 func managedWindowMutation(operation string) error {
