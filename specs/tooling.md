@@ -142,6 +142,17 @@ marked windows. After reviewing the preview and stopping the managed relay,
 unmarked pane, window, and session unchanged; project conversations are resumed
 explicitly after the rebuilt relay starts on the runtime-directory socket.
 
+### dump.bepis.lol content publishing
+
+GRILL exposes the NAS-backed Hugo project at `~/documents/projects/dump`.
+`dump-publish check` validates/renders a temporary site; `dump-publish submit`
+submits a completed snapshot and waits for NAS's publication receipt. These
+commands publish website content, not NixOS configurations. The existing GRILL
+Matrix managed-project bridge can operate this project without an agent on NAS.
+See [dump-publishing.md](./dump-publishing.md) for the required first-deployment
+transfer order, permissions, limitations and acceptance checks. Do not activate
+the GRILL mount over the initial local starter project.
+
 ### Building
 
 | Command              | Description                                    |

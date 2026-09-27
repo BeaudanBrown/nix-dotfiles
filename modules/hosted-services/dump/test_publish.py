@@ -1,6 +1,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import stat
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -136,13 +137,29 @@ class PublishingTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'host-owned'):
                     pub.sandbox_paths(Path('/workspace'))
 
+    def test_setgid_source_is_copied_without_privileged_metadata(self):
+        (self.project / 'content').chmod(0o2700)
+        original = pub.shutil.copystat
+
+        def reject_setgid(source, target, **kwargs):
+            if Path(source).stat().st_mode & stat.S_ISGID:
+                raise PermissionError('RestrictSUIDSGID')
+            return original(source, target, **kwargs)
+
+        with patch.object(pub.shutil, 'copystat', reject_setgid):
+            name = self.submit()
+        snapshot = self.project / '.publishing/requests' / name / 'source/content'
+        self.assertEqual(stat.S_IMODE(snapshot.stat().st_mode), 0o755)
+
     def test_source_changes_during_copy_rejected(self):
-        original = pub.shutil.copytree
-        def changing(source, target, **kwargs):
-            result = original(source, target, **kwargs)
+        original = pub.copy_publishable_tree
+
+        def changing(source, target):
+            result = original(source, target)
             (source / '_index.md').write_text('{"title":"Changed"}')
             return result
-        with patch.object(pub.shutil, 'copytree', changing):
+
+        with patch.object(pub, 'copy_publishable_tree', changing):
             with self.assertRaisesRegex(ValueError, 'changed while snapshotting'): self.submit()
 
 

@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -105,6 +106,33 @@ def validate(root):
         raise ValueError('Missing home page')
 
 
+def copy_publishable_tree(source, target):
+    """Copy content only; snapshot permissions are normalized by copy_source."""
+    target.mkdir()
+    for root, directories, files in os.walk(source, followlinks=False):
+        root = Path(root)
+        relative = root.relative_to(source)
+        destination = target / relative
+        for name in directories:
+            path = root / name
+            if path.is_symlink() or not path.is_dir():
+                raise ValueError(f'Not a regular directory: {path.relative_to(source)}')
+            (destination / name).mkdir()
+        for name in files:
+            path = root / name
+            if path.is_symlink():
+                raise ValueError(f'Not a regular file: {path.relative_to(source)}')
+            descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW)
+            try:
+                if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                    raise ValueError(f'Not a regular file: {path.relative_to(source)}')
+                with os.fdopen(descriptor, 'rb', closefd=False) as incoming:
+                    with (destination / name).open('xb') as outgoing:
+                        shutil.copyfileobj(incoming, outgoing)
+            finally:
+                os.close(descriptor)
+
+
 def copy_source(source, target):
     target.mkdir(parents=True, exist_ok=True)
     for name in SOURCE_DIRS:
@@ -113,7 +141,7 @@ def copy_source(source, target):
             if path.is_symlink():
                 raise ValueError(f'Symlink source: {name}')
             before = inventory(path)
-            shutil.copytree(path, target / name, symlinks=True)
+            copy_publishable_tree(path, target / name)
             if before != inventory(path) or before != inventory(target / name):
                 raise ValueError(f'Source changed while snapshotting: {name}; retry')
     # Detect cross-directory edits made after an earlier directory was copied.
