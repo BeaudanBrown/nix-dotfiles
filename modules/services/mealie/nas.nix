@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 let
   domain = "meals.bepis.lol";
   portKey = "mealie";
@@ -17,6 +17,7 @@ in
 
   services.mealie = {
     enable = true;
+    package = pkgs.unstable.mealie;
     listenAddress = "127.0.0.1";
     port = config.custom.ports.assigned.${portKey};
     # See https://docs.mealie.io/documentation/getting-started/installation/backend-config/

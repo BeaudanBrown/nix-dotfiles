@@ -153,6 +153,14 @@ See [dump-publishing.md](./dump-publishing.md) for the required first-deployment
 transfer order, permissions, limitations and acceptance checks. Do not activate
 the GRILL mount over the initial local starter project.
 
+### Mealie recipe agent (GRILL)
+
+The dedicated `~/documents/projects/mealie-agent` project supplies project-local Pi
+recipe tools for a separate managed Matrix conversation. Mealie remains on NAS using
+`pkgs.unstable.mealie`. See [mealie-agent.md](./mealie-agent.md) for the manual NAS/GRILL
+activation order, non-admin account permissions, SOPS token provisioning and live tests.
+The agent implementation does not create a room, provision secrets or deploy hosts.
+
 ### Building
 
 | Command              | Description                                    |
