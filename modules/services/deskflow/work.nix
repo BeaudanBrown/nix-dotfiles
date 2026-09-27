@@ -93,6 +93,7 @@ in
       description = "Deskflow client";
       wantedBy = [ "graphical-session.target" ];
       after = [ "graphical-session.target" ];
+      partOf = [ "graphical-session.target" ];
 
       serviceConfig = {
         ExecStart = ''
@@ -109,6 +110,7 @@ in
       description = "Deskflow server";
       wantedBy = [ "graphical-session.target" ];
       after = [ "graphical-session.target" ];
+      partOf = [ "graphical-session.target" ];
 
       serviceConfig = {
         ExecStart = ''

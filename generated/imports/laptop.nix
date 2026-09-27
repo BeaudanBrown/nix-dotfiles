@@ -93,6 +93,7 @@
   ../../modules/scripts/stt-dictate/work.nix
   ../../modules/scripts/thought-capture/work.nix
   ../../modules/security/pam/work.nix
+  ../../modules/security/polkit-agent/work.nix
   ../../modules/services/agent-nfs/work.nix
   ../../modules/services/blueman/work.nix
   ../../modules/services/deskflow/work.nix
@@ -100,6 +101,7 @@
   ../../modules/services/kdeconnect/work.nix
   ../../modules/services/lan-mouse/work.nix
   ../../modules/services/moonshine-stt/work.nix
+  ../../modules/services/network-manager-applet/work.nix
   ../../modules/services/printing/work.nix
   ../../modules/services/samba/work.nix
   ../../modules/services/udisks2/work.nix

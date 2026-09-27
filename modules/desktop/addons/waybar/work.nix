@@ -38,6 +38,7 @@ in
 {
   hm.primary.programs.waybar = {
     enable = true;
+    systemd.enable = true;
     style = ''
       .mainBar * {
         font-family: "JetBrainsMono Nerd Font Mono";
@@ -45,7 +46,7 @@ in
       }
 
       .modules-right * {
-        margin: 3;
+        margin: 3px;
       }
     '';
     settings = {

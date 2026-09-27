@@ -143,11 +143,6 @@
         # windowrulev2 = import ./home/windowrulev2.nix;
         # workspace = import ./home/workspaceRules.nix;
       };
-      extraConfig = ''
-        exec-once = ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator &
-        exec-once = ${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1 &
-        exec-once = waybar &
-      '';
     };
   };
 }

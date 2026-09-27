@@ -229,6 +229,43 @@ just build <hostname>
 
 ## Module Patterns
 
+### Graphical Session Services
+
+UWSM owns the graphical-session lifecycle on Hyprland hosts. Prefer an upstream
+NixOS or Home Manager module for long-running session programs and attach custom
+user services to `graphical-session.target`. Do not launch persistent processes
+from Hyprland with `exec-once = ... &`; unmanaged processes are not restarted
+and do not get a dedicated user journal.
+
+A custom NixOS user service should normally use:
+
+```nix
+systemd.user.services.example = {
+  wantedBy = [ "graphical-session.target" ];
+  after = [ "graphical-session.target" ];
+  partOf = [ "graphical-session.target" ];
+  serviceConfig = {
+    ExecStart = "${pkgs.example}/bin/example";
+    Restart = "on-failure";
+    RestartSec = 2;
+  };
+};
+```
+
+Use the equivalent Home Manager `Unit`, `Service`, and `Install` sections when
+the application is user-owned. Keep compositor startup entries only for genuine
+one-shot actions whose exit is expected, such as the initial autologin lock.
+XDG autostart is acceptable when it is the application's canonical mechanism,
+but each process must have exactly one startup owner.
+
+Inspect the resulting session with:
+
+```sh
+systemctl --user list-dependencies graphical-session.target
+systemctl --user status example.service
+journalctl --user -u example.service
+```
+
 ### Synchronized Application State
 
 Primary fleet hosts expose `config.syncedState.root`, backed by the Syncthing
