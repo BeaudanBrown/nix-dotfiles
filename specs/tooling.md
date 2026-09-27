@@ -183,6 +183,11 @@ Some hosts have convenience wrappers:
 
 See [Installer](./installer.md) for the architecture and physical workflow.
 
+### Tailscale HTTPS proxy (NAS / t480)
+
+See [tailscale-proxy.md](./tailscale-proxy.md) for the always-on client,
+NAS TCP/443 ingress, secret provisioning, and deferred deployment acceptance.
+
 ### Secrets Management
 
 | Command              | Description                                          |

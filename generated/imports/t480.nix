@@ -7,6 +7,7 @@
   ../../modules/desktop/hyprland/t480.nix
   ../../modules/services/deskflow/t480.nix
   ../../modules/services/lan-mouse/t480.nix
+  ../../modules/services/tailscale-proxy/t480.nix
   ../../modules/services/windows-vm/t480.nix
   ../../modules/system/boot/t480.nix
   ../../modules/system/disko/t480.nix

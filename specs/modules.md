@@ -266,6 +266,45 @@ systemctl --user status example.service
 journalctl --user -u example.service
 ```
 
+### Hosted Services and Optional TLS Passthrough
+
+`modules/hosted-services/server.nix` owns `hostedServices` and imports the
+shared Nginx ingress helper in `modules/services/nginx/tls-ingress.nix`.
+Ordinary entries keep their existing HTTP reverse proxy, DNS and ACME behavior.
+
+A backend that terminates its own TLS can opt into TCP/443 routing:
+
+```nix
+hostedServices = [
+  {
+    domain = "proxy.example.com";
+    upstreamPort = toString config.custom.ports.assigned."example/tls";
+    tlsPassthrough = true;
+  }
+];
+```
+
+`tlsPassthrough` defaults to false. Setting it to true defaults `doNginx` to
+false and enables shared SNI routing while any passthrough entry exists.
+Passthrough entries are public; do not combine them with `tailnet = true`,
+`doNginx = true`, or `manageNginxListeners = true`. Upstreams receive raw TLS,
+not PROXY headers. Hostname aliases are included in SNI routing.
+
+`manageNginxListeners` defaults to `doNginx`. For an application such as Jitsi
+whose module already owns its Nginx virtual host, set `doNginx = false` and
+`manageNginxListeners = true`. This changes only that domain's listeners and
+client-IP restoration while the TCP frontend is enabled; the application keeps
+ownership of its locations and certificates. DNS-only records should leave it
+false. Externally owned virtual hosts must use HTTPS and the entry's domain as
+their Nginx virtual-host key.
+
+Public and tailnet-only HTTPS backends are separate; the frontend's original
+destination address gates private sites. Removing the last passthrough entry
+removes all shared-ingress port requests and listener overrides, restoring
+native Nginx listeners. No application-specific ingress logic belongs in a
+proxy service module. See [tailscale-proxy.md](./tailscale-proxy.md) for the NAS
+consumer, deployment caveats, and secret provisioning.
+
 ### Synchronized Application State
 
 Primary fleet hosts expose `config.syncedState.root`, backed by the Syncthing

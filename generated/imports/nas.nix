@@ -48,6 +48,7 @@
   ../../modules/services/send/nas.nix
   ../../modules/services/stt/nas.nix
   ../../modules/services/syncthing/nas.nix
+  ../../modules/services/tailscale-proxy/nas.nix
   ../../modules/services/tailscale/nas.nix
   ../../modules/services/vaultwarden/nas.nix
   ../../modules/services/voice-assistant/nas.nix

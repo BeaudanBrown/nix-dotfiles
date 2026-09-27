@@ -23,6 +23,8 @@ in
       upstreamHost = config.services.jitsi-meet.hostName;
       upstreamPort = toString port;
       doNginx = false;
+      # Jitsi owns the vhost content; shared ingress may manage its listeners.
+      manageNginxListeners = true;
     }
   ];
 

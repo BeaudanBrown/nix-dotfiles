@@ -86,6 +86,8 @@ let
   '';
 in
 {
+  imports = [ ../services/nginx/tls-ingress.nix ];
+
   options = {
     hostedServices = mkOption {
       type = types.listOf (
@@ -131,6 +133,17 @@ in
                 default = false;
                 description = "If true, proxy websockets with nginx.";
               };
+              doNginx = mkOption {
+                type = types.bool;
+                default = !config.tlsPassthrough;
+                defaultText = lib.literalExpression "!config.tlsPassthrough";
+                description = "Generate an nginx HTTP reverse-proxy virtual host.";
+              };
+              tlsPassthrough = lib.custom.mkBoolOpt false ''
+                Route public TCP/443 TLS connections to the upstream without
+                terminating TLS. The upstream must serve TLS itself.
+                Enables the shared nginx TCP frontend while any entry opts in.
+              '';
               manageNginxListeners = mkOption {
                 type = types.bool;
                 default = config.doNginx;
@@ -140,11 +153,6 @@ in
                   frontend when TLS passthrough is active. Set true with
                   doNginx = false when another module owns the virtual host.
                 '';
-              };
-              doNginx = mkOption {
-                type = types.bool;
-                default = true;
-                description = "If false, don't do nginx conf.";
               };
               doACME = mkOption {
                 type = types.bool;
