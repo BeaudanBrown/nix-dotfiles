@@ -33,6 +33,7 @@
     RestrictAddressFamilies = [
       "AF_INET"
       "AF_INET6"
+      "AF_NETLINK" # sing-box inspects host network state during startup.
       "AF_UNIX"
     ];
   };
