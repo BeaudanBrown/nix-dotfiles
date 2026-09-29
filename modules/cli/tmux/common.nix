@@ -71,7 +71,12 @@ in
             ];
           });
         in
-        if config.hostSpec.hostName == "grill" then
+        if
+          builtins.elem config.hostSpec.hostName [
+            "grill"
+            "nas"
+          ]
+        then
           import ./shared-package.nix {
             pkgs = final;
             inherit rawTmux;

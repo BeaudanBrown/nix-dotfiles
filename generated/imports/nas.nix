@@ -3,6 +3,7 @@
 # Do not edit manually.
 [
   ../../modules/cli/aliases/nas.nix
+  ../../modules/cli/pi-harness/nas.nix
   ../../modules/cli/starship/nas.nix
   ../../modules/cli/tmux/nas.nix
   ../../modules/hosted-services/art-domain/nas.nix

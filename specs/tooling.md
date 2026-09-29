@@ -68,11 +68,13 @@ model/thinking selections, derives the canonical workspace path itself, and
 stores only bounded conversation ID/concept display options on the window.
 Dormant conversations have no tmux candidate.
 
-#### Shared tmux privilege contract (Grill)
+#### Shared tmux privilege contract (GRILL and NAS)
 
 Managed and interactive windows share the same Unix user and tmux server; they
-are trusted with that user's authority. Grill overrides the upstream relay's
-`NoNewPrivileges` to `false` in `modules/cli/pi-harness/grill.nix`. Otherwise a
+are trusted with that user's authority. GRILL and NAS override the upstream relay's
+`NoNewPrivileges` to `false` in their respective `modules/cli/pi-harness/<host>.nix`.
+Both import `modules/cli/tmux/shared-server.nix` for independent server ownership.
+Otherwise a
 relay-first boot permanently sets `NoNewPrivs=1` on the shared server and all
 its shells, breaking `sudo` (including `shutup`). An operator-first server
 already lets relay-requested windows execute without that restriction, so
@@ -375,7 +377,7 @@ just deploy-test <hostname>
 just deploy <hostname>
 ```
 
-## Restart-safe Grill updates
+## Restart-safe managed-session updates (GRILL and NAS)
 
 `nr` generates host imports and runs `nh os switch` with the dotfiles flake,
 restoring the original build/activation interface. It does not use a custom
@@ -384,7 +386,7 @@ transient activation service, activation lock, or candidate GC root. Direct
 Terminal-independent activation is not a guarantee of this wrapper; shared tmux
 survives relay replacement because its process ownership is independent.
 
-Grill's default tmux client now ensures `tmux-shared.service`. The foreground
+GRILL and NAS default tmux clients ensure `tmux-shared.service`. The foreground
 server owns the existing runtime socket independently of the Pi relay. Its
 startup PATH combines current host/user profiles with pinned boot tools: panes
 can find ordinary system commands and tmux popup hooks can resolve
