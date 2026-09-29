@@ -13,6 +13,8 @@ let
 
   services = config.hostedServices;
   tailIP = config.hostSpec.tailIP;
+  magicDnsDomain = config.services.headscale.settings.dns.base_domain;
+  magicDnsResolver = "100.100.100.100";
   devTunnelPort = 20080;
   devTunnelToolPort = 20081;
   devTunnelTempoPort = 20082;
@@ -70,10 +72,23 @@ let
     }
   '';
 
+  # NAS deliberately rejects the tailnet's complete DNS configuration so its
+  # own lookups bypass blocked zones. Forward only MagicDNS to Tailscale.
+  nasMagicDnsConfig = ''
+    ${magicDnsDomain}:53 {
+      bind 127.0.0.55
+      forward . ${magicDnsResolver}
+      cache 30
+      log
+      errors
+    }
+  '';
+
   corednsConfig =
     [
       blocklistConfig
       nasLocalResolverConfig
+      nasMagicDnsConfig
     ]
     ++ (
       tailServices
@@ -129,7 +144,8 @@ in
 
     services.resolved.settings.Resolve = {
       DNS = [ "127.0.0.55" ];
-      Domains = hostedRouteDomains;
+      # A non-route-only domain also supplies the short-name search suffix.
+      Domains = hostedRouteDomains ++ [ magicDnsDomain ];
     };
 
     systemd.services.coredns = {
