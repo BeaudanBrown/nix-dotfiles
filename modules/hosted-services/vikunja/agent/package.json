@@ -1,0 +1,12 @@
+{
+  "name": "vikunja-agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Shared on-demand Vikunja tools for NAS and GRILL Pi projects",
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.84.4",
+    "@earendil-works/pi-ai": ">=0.84.4",
+    "typebox": "^1"
+  }
+}

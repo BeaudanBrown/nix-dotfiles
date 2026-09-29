@@ -163,6 +163,20 @@ recipe tools for a separate managed Matrix conversation. Mealie remains on NAS u
 activation order, non-admin account permissions, SOPS token provisioning and live tests.
 The agent implementation does not create a room, provision secrets or deploy hosts.
 
+### Vikunja task agents (NAS and GRILL)
+
+`todo.bepis.lol` is tailnet-only. NAS has a dedicated managed task workspace/room;
+GRILL uses the same on-demand tools with restricted credentials by default and an
+explicit full-access profile. No scheduled agents or confirmation gates are added.
+
+| Command | Purpose |
+| --- | --- |
+| `vikunja-agent-init <workspace> --project-id <id>` | Opt an existing Pi project into the host's default account and project binding |
+| `vikunja-agent-init <workspace> --profile full` | Explicitly select the separate full-access GRILL account |
+
+See [vikunja-agent.md](./vikunja-agent.md) for SOPS values, account/bootstrap order,
+NAS tmux maintenance, room creation, API limitations and offline/live verification.
+
 ### Building
 
 | Command              | Description                                    |

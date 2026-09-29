@@ -9,6 +9,7 @@
   ../../modules/desktop/hyprland/grill.nix
   ../../modules/desktop/hyprland/keybinds/grill.nix
   ../../modules/hosted-services/dump/grill.nix
+  ../../modules/hosted-services/vikunja/grill.nix
   ../../modules/services/attic/grill.nix
   ../../modules/services/deskflow/grill.nix
   ../../modules/services/lan-mouse/grill.nix
