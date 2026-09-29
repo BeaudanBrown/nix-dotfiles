@@ -10,9 +10,11 @@ in the implementation guide supersede broad assumptions here.
 - Vikunja hosted on NAS; primary conversational agent also on NAS.
 - Dedicated persistent NAS Matrix room as the initial primary interface.
 - HTTPS at `todo.bepis.lol`, accessible only through the tailnet.
-- NAS agent can access Life and Software projects. GRILL agents default to explicitly
-  shared software projects; an operator-selected full-access GRILL agent is also supported.
-  Use separate credentials/identities, not a model-controlled permission toggle.
+- Updated decision: use the single Vikunja account `beau`. NAS and GRILL each consume
+  `vikunja/api-token`; both GRILL profiles share the GRILL credential. Project-level
+  restrictions should be tool policy, not separate accounts. That enforcement remains
+  unimplemented: current project bindings only supply defaults, and both GRILL
+  profiles have identical authority.
 - Low-level tools operate on user instruction, including deletion and bulk changes,
   without additional confirmation prompts, preview/confirm protocols or slash-command
   gates. This does not authorize unsolicited changes or automatic permission escalation.
@@ -68,8 +70,9 @@ against the selected release; the public demo can run development code.
   create a project for every task or assume the two hierarchies are equivalent.
 - Blocking relations are not proven enforcement or agent claim/lease semantics.
 - Tokens have action scopes; do not assume a token can be restricted to project
-  IDs independently of its owning account. Use separate identities and explicit
-  sharing where a real permission boundary is required. Test nested permissions.
+  IDs independently of its owning account. The chosen single-account setup therefore
+  permits server-side access to all of beau's accessible projects; any future tool
+  restriction will not prevent direct API access by the trusted host user.
 - API v2 has conditional reads and generated PATCH operations, but inspected 2.6.0
   handlers do not establish atomic conditional writes. Projects have no ETag;
   AutoPatch does GET then PUT. The client uses best-effort stale-read detection,
@@ -104,7 +107,7 @@ No blanket nixpkgs update is proposed.
    than extending the existing restricted NAS chat assistant. Provide restricted and
    operator-selected full-access GRILL configurations. Keep credentials out of tool
    arguments and model-visible results. Normal managed sessions retain host-user
-   authority: project bindings and separate tokens are not OS sandbox isolation.
+   authority: project bindings and API tokens are not OS sandbox isolation.
 3. **Initial useful workflows:** capture into Inbox, project/sub-project organization,
    search/read, create/edit/complete, due dates, labels, comments and task relations.
    Explicit project bindings for coding workspaces; no guessed project destinations.
@@ -125,8 +128,9 @@ No blanket nixpkgs update is proposed.
 
 - Dedicated managed sessions are now declared for NAS but have not been activated;
   verify launcher/relay provisioning and credential ownership during deployment.
-- Verify account sharing, nested-project permissions and token scopes against the
-  selected Vikunja release, including explicit full-access GRILL selection.
+- Verify token scopes against the selected Vikunja release. Both GRILL profiles
+  currently share the same credential/authority; tool-level project restrictions
+  need a separate implementation before they can be claimed as enforced.
 - Software/Life/Inbox is the suggested initial structure, not a mandatory taxonomy.
 - SQLite remains the proposed starting database. Identify backup destination and
   retention before deployment; define attachment limits if attachment tools are added.

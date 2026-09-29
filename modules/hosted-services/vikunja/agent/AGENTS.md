@@ -26,13 +26,15 @@ issues or substitute this tracker for an engineering workflow without instructio
 
 Credentials are runtime files read internally by the client. Never read, print,
 copy, log or send tokens to a model or Matrix. Do not change profile, account,
-project sharing or credential scopes to bypass a permission failure. Full GRILL
-access must be explicitly selected by the operator. These sessions have host-user
+project sharing or credential scopes to bypass a permission failure. NAS and both
+GRILL profiles use tokens owned by beau; GRILL profiles share one token. A project
+binding currently supplies defaults, not enforced restrictions. Stay within the
+user's requested project scope. These sessions have host-user
 authority, not OS isolation. Other trusted programs under that user can access the
 same secrets; do not represent profile selection as a sandbox.
 
 Use project nesting for areas of work and parent tasks for decomposable outcomes.
 Software/Life/Inbox is a suggested organization, not a required taxonomy. Newly
-created root projects belong to the creating account and may need manual sharing.
+created projects belong to beau because the agents use beau's API tokens.
 No application account administration, sharing, attachment upload/download, saved
 filter CRUD or CalDAV tools are included in this first version; use the web UI.

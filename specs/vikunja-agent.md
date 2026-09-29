@@ -76,10 +76,9 @@ already reference module-specific SOPS files and use mode `0400`.
 | Private file | YAML/SOPS key | Exact value |
 | --- | --- | --- |
 | `secrets/nas.yaml` | `vikunja/service-env` | Multiline env-file string containing `VIKUNJA_SERVICE_SECRET=<stable random 64-character hex value>` |
-| `secrets/nas.yaml` | `vikunja/api-token` | Raw NAS task-account API token, no `Bearer` prefix |
+| `secrets/nas.yaml` | `vikunja/api-token` | Raw API token owned by `beau`, no `Bearer` prefix |
 | `secrets/nas.yaml` | `pi/matrix-nas-env` | Env-file string containing only `PI_MATRIX_ACCESS_TOKEN=<token for @pi-nas:matrix.bepis.lol>` |
-| `secrets/grill.yaml` | `vikunja/api-token` | Raw token for the restricted GRILL task account |
-| `secrets/grill.yaml` | `vikunja/full-api-token` | Raw token for a separate full-access GRILL task account |
+| `secrets/grill.yaml` | `vikunja/api-token` | Raw API token owned by `beau`, used by both default and full GRILL profiles |
 
 Example structure (values are placeholders, not usable credentials):
 
@@ -98,8 +97,9 @@ Preserve other keys under existing `vikunja`/`pi` mappings. For first deployment
 API tokens cannot be issued until Vikunja is running: populate API-token entries
 with literal `UNPROVISIONED` temporarily, then replace them after account setup.
 Tools make no startup requests and will fail authentication if used prematurely.
-If full GRILL access is not provisioned yet, its token can remain `UNPROVISIONED`;
-never reuse the restricted credential and call it full access.
+Only `vikunja/api-token` is required for application API access on each host.
+The former `vikunja/full-api-token` entry is no longer consumed and can be removed.
+Both GRILL profile JSON files point to the same token file.
 
 Edit yourself:
 
@@ -135,7 +135,8 @@ when ready. Neither action has been performed here.
 4. Check tailnet DNS/TLS and `vikunja.service`. Verify the HTTPS application is
    unreachable off-tailnet, including its public NAS address with this SNI. The
    DNS name/certificate is not a secret; tailnet ingress is the access boundary.
-5. With public registration disabled, bootstrap accounts through the packaged CLI.
+5. With public registration disabled, bootstrap your single `beau` account through
+   the packaged CLI only if it does not already exist.
    Use a transient unit with the same DynamicUser/StateDirectory so systemd exposes
    the private state directory to the CLI (plain `sudo -u vikunja` cannot traverse
    `/var/lib/private`):
@@ -147,26 +148,26 @@ when ready. Neither action has been performed here.
    ```
 
    The CLI prompts for the password; do not put it on the command line. It reads
-   `/etc/vikunja/config.yaml` and uses the same SQLite path. Repeat for distinct
-   `todo-nas`, `todo-grill`, and `todo-grill-full` accounts with valid email addresses
-   you control. Do not grant instance administration. CLI user creation does not
+   `/etc/vikunja/config.yaml` and uses the same SQLite path. No additional Vikunja
+   agent accounts or instance administration are needed. CLI user creation does not
    need the service signing secret; don't print/source the service env file.
-6. Create the desired Life, Software and Inbox projects in the UI. Share each
-   applicable root with `todo-nas` and `todo-grill-full` at **Admin project** level
-   if they must reparent/delete projects. Share only explicitly selected software
-   projects with `todo-grill` (Read/Write, or project Admin if deletion/reparenting
-   is desired). Verify nested inheritance and that Life is inaccessible to the
-   restricted account. Full means access to deliberately shared projects, **not**
-   an instance-wide administrator bypass. Newly created root projects may need
-   manual sharing back to you and the other accounts.
-7. Log in as each task account and create expiring API tokens. Grant the API actions
-   needed for projects, tasks (including listing, labels and relations), labels and
-   task comments: read/list/create/update/delete. PATCH may require both read and
-   update because it internally reads then writes. Consult the instance's v2 API
-   docs and token-scope UI; do not enable unrelated administration, sharing, webhook
-   or credential-management actions. Record expiries and replace the corresponding
-   SOPS values. Activate the updated secrets yourself. The tools reread token files
-   on every call, so token rotation needs no Pi restart.
+6. Create Life, Software and Inbox in the UI, or ask the NAS agent to create them
+   after its token is provisioned. All are owned by `beau`; no sharing back is needed.
+7. Log in as `beau` and create expiring NAS and GRILL API tokens. Both need exactly:
+
+   | Permission group | Actions |
+   | --- | --- |
+   | `projects` | `read_all`, `read_one`, `create`, `update`, `delete` |
+   | `tasks` | `read_all`, `read_one`, `create`, `update`, `delete` |
+   | `labels` | `read_all`, `read_one`, `create`, `update`, `delete` |
+   | `tasks_comments` | `read_all`, `read_one`, `create`, `update`, `delete` |
+   | `tasks_labels` | `create`, `delete` |
+   | `tasks_relations` | `create`, `delete` |
+
+   Leave all other scopes unchecked, including bulk-specific scopes; bulk work uses
+   individual calls. Use the one GRILL token for both profiles. Record expiries and
+   populate `vikunja/api-token` in each host's SOPS file. Activate the updated secrets
+   yourself. The tools reread token files on every call, so rotation needs no Pi restart.
 8. NAS uses the primary user's existing Pi model login/configuration, as its current
    assistant does. If needed, perform `pi /login` interactively yourself. Use a
    normal hosted model, not the local profile that restricts project tools.
@@ -178,15 +179,17 @@ when ready. Neither action has been performed here.
 
 ## GRILL opt-in and full access
 
-The default `~/documents/projects/todo-agent` workspace on GRILL uses its restricted
-account. Other existing coding workspaces opt in with:
+Both GRILL profiles use the same `beau` token. Other existing coding workspaces
+opt in with:
 
 ```sh
 vikunja-agent-init ~/documents/projects/my-project --project-id 123
 ```
 
 Replace `123` with an actual accessible project ID. This binds default list/create
-operations, not an ACL: server account sharing is the actual application boundary.
+operations, not an ACL. **Tool-level project enforcement is not implemented yet**:
+explicit IDs can still target other projects accessible to `beau`. The requested
+future restriction is a tool policy, not separate accounts or server token scopes.
 The initializer writes only its marked `.pi/extensions/vikunja.ts` and refuses an
 unowned entrypoint or symlinked project configuration. It never overwrites AGENTS.md.
 Reload/restart the project session to load the new entrypoint.
@@ -199,9 +202,9 @@ vikunja-agent-init ~/documents/projects/todo-full --profile full
 
 Then start a managed conversation for `todo-full`. Copy/adapt the task instructions
 from `todo-agent/AGENTS.md` if desired. Full and default profile selection is fixed
-in the operator-written entrypoint, not exposed as a model tool argument. Both
-credentials are readable by the same trusted Unix user: this is **not an OS sandbox**.
-Do not let an agent change profiles to bypass a permission failure.
+in the operator-written entrypoint, not exposed as a model tool argument. Currently
+both profiles have identical authority and share one credential, readable by the
+trusted Unix user: this is **not an OS sandbox**. Do not bypass permission failures.
 
 ## Backup and restore
 
@@ -248,7 +251,7 @@ After deployment, verify in the NAS room: list projects, create a disposable nes
 project and task, edit dates/text, comment, label, add a subtask/blocker, complete,
 and directly delete disposable data without further confirmation. Verify a stale
 edit fails and that unrelated HTML formatting survives a non-text edit. Exercise
-restricted and full GRILL profiles, restart/resume/reload, token rotation, pagination,
+default and full GRILL profiles, restart/resume/reload, token rotation, pagination,
 and the tailnet-only boundary. All live checks, API scope compatibility, NixOS
 activation and backup/restore remain outstanding until you run them.
 

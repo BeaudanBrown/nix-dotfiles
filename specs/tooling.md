@@ -166,13 +166,14 @@ The agent implementation does not create a room, provision secrets or deploy hos
 ### Vikunja task agents (NAS and GRILL)
 
 `todo.bepis.lol` is tailnet-only. NAS has a dedicated managed task workspace/room;
-GRILL uses the same on-demand tools with restricted credentials by default and an
-explicit full-access profile. No scheduled agents or confirmation gates are added.
+NAS and GRILL use API tokens owned by `beau`; both GRILL profiles share its host's
+`vikunja/api-token`. Project bindings currently supply defaults, not enforced access
+restrictions. No scheduled agents or confirmation gates are added.
 
 | Command | Purpose |
 | --- | --- |
 | `vikunja-agent-init <workspace> --project-id <id>` | Opt an existing Pi project into the host's default account and project binding |
-| `vikunja-agent-init <workspace> --profile full` | Explicitly select the separate full-access GRILL account |
+| `vikunja-agent-init <workspace> --profile full` | Select the GRILL full profile (currently the same credential and authority) |
 
 See [vikunja-agent.md](./vikunja-agent.md) for SOPS values, account/bootstrap order,
 NAS tmux maintenance, room creation, API limitations and offline/live verification.

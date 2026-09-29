@@ -59,6 +59,6 @@ in
     owner = config.hostSpec.username;
     inherit (config.users.users.${config.hostSpec.username}) group;
     mode = "0400";
-    # Raw API token for the NAS task account, shared into Life and Software.
+    # Raw API token belonging to beau; no separate Vikunja agent account needed.
   };
 }
