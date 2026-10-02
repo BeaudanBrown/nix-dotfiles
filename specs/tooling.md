@@ -68,6 +68,43 @@ model/thinking selections, derives the canonical workspace path itself, and
 stores only bounded conversation ID/concept display options on the window.
 Dormant conversations have no tmux candidate.
 
+#### Exact managed-window ownership (staged harness integration)
+
+The additive operations `window-create-exact`, `window-inspect-exact`, and
+`window-terminate-exact` retain ownership in this launcher. Legacy operations and
+existing running windows are not automatically upgraded or adopted.
+
+An exact create takes the normal conversation/placement request plus a fresh
+`launch_<32 hex>` identity. Its `ownership` result binds the conversation, server
+PID/start time/private random server token, launch ID, session/window/pane IDs,
+and original pane PID. A birth token in the command supplied to tmux at creation
+prevents later marker installation from adopting a replacement window. The
+server-side marker guard also checks that the original pane is still the only
+pane in the window. Reserved `@managed_pi_server_id`, `@managed_pi_launch_id`,
+`@managed_pi_pane_id`, and `@managed_pi_pane_pid` options are private runtime
+ownership, not user configuration; do not restore them into another server.
+
+Exact inspect returns `{conversationId, exists, ownership?}`. Malformed,
+legacy, respawned, multi-pane, or ambiguous observations fail closed; connection
+failure is not an absence claim. Exact terminate accepts the complete frozen
+ownership object. It checks the server, launch, session, window, original pane
+and process, conversation marker and single-pane condition within one tmux
+server-side `if-shell -F` command queue before killing. There is no separate
+Go-side check followed by an unconditional kill, no shell callback in the guard,
+and no fallback to conversation name or reusable numeric IDs. A rejected guard
+returns `terminated: false`; transport uncertainty is an error, not success.
+This is window ownership, not proof that Pi is currently attached or idle.
+
+Acceptance/crash evidence: Go tests use disposable private tmux sockets to cover
+server restart with reused numeric IDs, changed markers/process/session,
+respawned panes, added unrelated panes, foreign birth tokens, legacy refusal,
+last-window acknowledgement, and preservation of unrelated windows. The entire
+launcher suite passes with `go test -count=1 ./...` from
+`modules/cli/tmux/tmux-project-go`. No Nix build, host evaluation, activation or
+live-session migration is implied. Harness integration belongs to epic #103
+retirement/launch work; rollout must install the compatible launcher before
+using these new operations.
+
 #### Shared tmux privilege contract (GRILL and NAS)
 
 Managed and interactive windows share the same Unix user and tmux server; they

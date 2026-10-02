@@ -1,0 +1,169 @@
+package main
+
+import (
+	"fmt"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func exactTestServer(t *testing.T) exactTmux {
+	t.Helper()
+	if _, err := exec.LookPath("tmux"); err != nil {
+		t.Skip("tmux unavailable")
+	}
+	socket := filepath.Join(t.TempDir(), "tmux.sock")
+	run := func(args ...string) (string, error) {
+		output, err := exec.Command("tmux", append([]string{"-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
+		if err != nil {
+			return "", fmt.Errorf("tmux: %w: %s", err, output)
+		}
+		return strings.TrimSpace(string(output)), nil
+	}
+	if _, err := run("new-session", "-d", "-s", "exact", "-n", "keep", "sleep 120"); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = run("kill-server") })
+	return run
+}
+func exactTestWindow(t *testing.T, run exactTmux, suffix string) exactWindowProof {
+	t.Helper()
+	conversationID := "conv_" + strings.Repeat(suffix, 32)
+	launchID := "launch_" + strings.Repeat(suffix, 32)
+	command, err := exactLaunchCommand("exec sleep 120", launchID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, err := run("new-window", "-d", "-P", "-F", "#{window_id}|#{pane_id}|#{pane_pid}", "-t", "exact:", command)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fields := strings.Split(output, "|")
+	if len(fields) != 3 {
+		t.Fatalf("bad creation: %q", output)
+	}
+	proof, err := markExactWindow(run, fields[0], fields[1], fields[2], conversationID, launchID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return proof
+}
+
+func TestExactWindowProofAndGuardedTermination(t *testing.T) {
+	run := exactTestServer(t)
+	proof := exactTestWindow(t, run, "a")
+	observed, err := inspectExactWindow(run, proof.ConversationID)
+	if err != nil || observed == nil || *observed != proof {
+		t.Fatalf("observation: %#v %v", observed, err)
+	}
+	for _, change := range []func(*exactWindowProof){
+		func(p *exactWindowProof) { p.ServerID = "1:1:" + strings.Repeat("0", 32) },
+		func(p *exactWindowProof) { p.LaunchID = "launch_" + strings.Repeat("b", 32) },
+		func(p *exactWindowProof) { p.ConversationID = "conv_" + strings.Repeat("b", 32) },
+		func(p *exactWindowProof) { p.PanePID = "1" },
+		func(p *exactWindowProof) { p.SessionName = "other" },
+	} {
+		stale := proof
+		change(&stale)
+		stopped, err := terminateExactWindow(run, stale)
+		if err != nil || stopped {
+			t.Fatalf("stale proof stopped window: %v %v", stopped, err)
+		}
+	}
+	stopped, err := terminateExactWindow(run, proof)
+	if err != nil || !stopped {
+		t.Fatalf("exact stop: %v %v", stopped, err)
+	}
+	if _, err := run("has-session", "-t", "exact"); err != nil {
+		t.Fatal("unrelated window was removed", err)
+	}
+	observed, err = inspectExactWindow(run, proof.ConversationID)
+	if err != nil || observed != nil {
+		t.Fatalf("retired window remains: %#v %v", observed, err)
+	}
+}
+
+func TestExactTerminationOfLastWindowReturnsAcknowledgement(t *testing.T) {
+	run := exactTestServer(t)
+	proof := exactTestWindow(t, run, "a")
+	if _, err := run("kill-window", "-t", "exact:keep"); err != nil {
+		t.Fatal(err)
+	}
+	stopped, err := terminateExactWindow(run, proof)
+	if err != nil || !stopped {
+		t.Fatalf("last-window termination: %v %v", stopped, err)
+	}
+}
+
+func TestExactWindowRefusesRespawnAndAddedPanes(t *testing.T) {
+	for _, mode := range []string{"respawn", "split"} {
+		t.Run(mode, func(t *testing.T) {
+			run := exactTestServer(t)
+			proof := exactTestWindow(t, run, "a")
+			var err error
+			if mode == "respawn" {
+				_, err = run("respawn-pane", "-k", "-t", proof.PaneID, "sleep 120")
+			} else {
+				_, err = run("split-window", "-d", "-t", proof.PaneID, "sleep 120")
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			stopped, err := terminateExactWindow(run, proof)
+			if err != nil || stopped {
+				t.Fatalf("changed resource stopped: %v %v", stopped, err)
+			}
+			if _, err := inspectExactWindow(run, proof.ConversationID); err == nil {
+				t.Fatal("changed ownership produced a proof")
+			}
+		})
+	}
+}
+
+func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
+	run := exactTestServer(t)
+	old := exactTestWindow(t, run, "a")
+	if _, err := run("kill-server"); err != nil {
+		t.Fatal(err)
+	}
+	// The old server may still be finishing socket unlink; use a separate explicit
+	// new-server connection only after shutdown has been observed by wait-for exit.
+	for attempt := 0; attempt < 100; attempt++ {
+		if _, err := run("list-sessions"); err != nil {
+			break
+		}
+	}
+	if _, err := run("new-session", "-d", "-s", "exact", "-n", "keep", "sleep 120"); err != nil {
+		t.Fatal(err)
+	}
+	current := exactTestWindow(t, run, "a")
+	if old.WindowID != current.WindowID || old.PaneID != current.PaneID {
+		t.Fatalf("fixture did not reuse IDs: %#v %#v", old, current)
+	}
+	if old.ServerID == current.ServerID {
+		t.Fatal("server identity reused")
+	}
+	stopped, err := terminateExactWindow(run, old)
+	if err != nil || stopped {
+		t.Fatalf("old server proof stopped replacement: %v %v", stopped, err)
+	}
+	if _, err := run("set-option", "-w", "-u", "-t", current.WindowID, exactLaunchOption); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := inspectExactWindow(run, current.ConversationID); err == nil {
+		t.Fatal("legacy marker adopted as exact ownership")
+	}
+}
+
+func TestExactMarkerDoesNotAdoptWrongBirthToken(t *testing.T) {
+	run := exactTestServer(t)
+	output, err := run("new-window", "-d", "-P", "-F", "#{window_id}|#{pane_id}|#{pane_pid}", "-t", "exact:", "sleep 120")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fields := strings.Split(output, "|")
+	if _, err := markExactWindow(run, fields[0], fields[1], fields[2], "conv_"+strings.Repeat("a", 32), "launch_"+strings.Repeat("a", 32)); err == nil {
+		t.Fatal("foreign birth was adopted")
+	}
+}

@@ -56,14 +56,15 @@ type managedWindowResult struct {
 }
 
 type managedProjectWindowResult struct {
-	ConversationID string `json:"conversationId"`
-	SessionName    string `json:"sessionName"`
-	WindowID       string `json:"windowId"`
-	PaneID         string `json:"paneId"`
-	Role           string `json:"role"`
-	RootKey        string `json:"rootKey"`
-	Workspace      string `json:"workspace"`
-	RelativeCwd    string `json:"relativeCwd"`
+	Ownership      *exactWindowProof `json:"ownership,omitempty"`
+	ConversationID string            `json:"conversationId"`
+	SessionName    string            `json:"sessionName"`
+	WindowID       string            `json:"windowId"`
+	PaneID         string            `json:"paneId"`
+	Role           string            `json:"role"`
+	RootKey        string            `json:"rootKey"`
+	Workspace      string            `json:"workspace"`
+	RelativeCwd    string            `json:"relativeCwd"`
 }
 
 type managedWindowIdentity struct {
@@ -172,6 +173,12 @@ func managed(args []string) error {
 		return managedCoordinatorEnsure()
 	case "window-create":
 		return managedWindowCreate()
+	case "window-create-exact":
+		return managedWindowCreateMode(true)
+	case "window-inspect-exact":
+		return managedExactInspect()
+	case "window-terminate-exact":
+		return managedExactTerminate()
 	case "window-terminate", "bridge-clear":
 		return managedWindowMutation(args[0])
 	case "legacy-window-preview":
@@ -309,16 +316,22 @@ func managedCoordinatorEnsure() error {
 	})
 }
 
-func managedWindowCreate() error {
+func managedWindowCreate() error { return managedWindowCreateMode(false) }
+
+func managedWindowCreateMode(exact bool) error {
 	var request struct {
 		ConversationID string             `json:"conversationId"`
 		Placement      workspacePlacement `json:"placement"`
+		LaunchID       string             `json:"launchId,omitempty"`
 	}
 	if err := readManagedRequest(&request); err != nil {
 		return err
 	}
 	if !validConversationID(request.ConversationID) || request.ConversationID != os.Getenv("PI_MANAGED_SESSION_CONVERSATION_ID") {
 		return fmt.Errorf("invalid project conversation identity")
+	}
+	if exact && !exactLaunchPattern.MatchString(request.LaunchID) || !exact && request.LaunchID != "" {
+		return fmt.Errorf("invalid managed launch identity")
 	}
 	for _, name := range []string{
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONCEPT",
@@ -355,6 +368,13 @@ func managedWindowCreate() error {
 	// replace the first window of an existing (possibly interactive) session.
 	newSession := !tmuxOk("has-session", "-t", "="+session)
 	args := managedProjectWindowArgs(session, request.ConversationID, resolved.Cwd, newSession)
+	if exact {
+		command, err = exactLaunchCommand(command, request.LaunchID)
+		if err != nil {
+			return err
+		}
+		args[4] = "#{window_id}|#{pane_id}|#{pane_pid}"
+	}
 	args = append(args, managedTmuxEnvironment(
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONVERSATION_ID",
 		"PI_MANAGED_SESSION_CONCEPT", "PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID",
@@ -367,14 +387,31 @@ func managedWindowCreate() error {
 		return err
 	}
 	markRoot(session, resolved.WorkspacePath)
+	var proof *exactWindowProof
+	panePID := ""
+	if exact {
+		fields := strings.Split(output, "|")
+		if len(fields) != 3 {
+			return fmt.Errorf("invalid exact window creation response")
+		}
+		output = strings.Join(fields[:2], "|")
+		panePID = fields[2]
+	}
 	observation, err = parseManagedWindowOutput(output)
 	if err != nil {
 		return err
 	}
-	if err := markManagedWindow(observation.WindowID, request.ConversationID); err != nil {
+	if exact {
+		value, markErr := markExactWindow(tmux, observation.WindowID, observation.PaneID, panePID, request.ConversationID, request.LaunchID)
+		if markErr != nil {
+			return markErr
+		}
+		proof = &value
+	} else if err := markManagedWindow(observation.WindowID, request.ConversationID); err != nil {
 		return err
 	}
 	return writeManagedResult(managedProjectWindowResult{
+		Ownership:      proof,
 		ConversationID: request.ConversationID, SessionName: session, WindowID: observation.WindowID, PaneID: observation.PaneID,
 		Role: "conversation", RootKey: resolved.RootKey, Workspace: resolved.Workspace,
 		RelativeCwd: resolved.RelativeCwd,
