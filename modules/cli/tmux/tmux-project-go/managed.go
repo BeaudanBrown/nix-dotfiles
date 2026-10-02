@@ -177,6 +177,8 @@ func managed(args []string) error {
 		return managedWindowCreateMode(true)
 	case "window-inspect-exact":
 		return managedExactInspect()
+	case "window-check-exact":
+		return managedExactCheck()
 	case "window-terminate-exact":
 		return managedExactTerminate()
 	case "window-terminate", "bridge-clear":

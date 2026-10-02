@@ -55,6 +55,10 @@ func exactTestWindow(t *testing.T, run exactTmux, suffix string) exactWindowProo
 func TestExactWindowProofAndGuardedTermination(t *testing.T) {
 	run := exactTestServer(t)
 	proof := exactTestWindow(t, run, "a")
+	state, err := checkExactWindow(run, proof)
+	if err != nil || state != "match" {
+		t.Fatalf("current ownership: %s %v", state, err)
+	}
 	observed, err := inspectExactWindow(run, proof.ConversationID)
 	if err != nil || observed == nil || *observed != proof {
 		t.Fatalf("observation: %#v %v", observed, err)
@@ -80,6 +84,10 @@ func TestExactWindowProofAndGuardedTermination(t *testing.T) {
 	if _, err := run("has-session", "-t", "exact"); err != nil {
 		t.Fatal("unrelated window was removed", err)
 	}
+	state, err = checkExactWindow(run, proof)
+	if err != nil || state != "gone" {
+		t.Fatalf("removed ownership: %s %v", state, err)
+	}
 	observed, err = inspectExactWindow(run, proof.ConversationID)
 	if err != nil || observed != nil {
 		t.Fatalf("retired window remains: %#v %v", observed, err)
@@ -99,18 +107,26 @@ func TestExactTerminationOfLastWindowReturnsAcknowledgement(t *testing.T) {
 }
 
 func TestExactWindowRefusesRespawnAndAddedPanes(t *testing.T) {
-	for _, mode := range []string{"respawn", "split"} {
+	for _, mode := range []string{"respawn", "split", "linked"} {
 		t.Run(mode, func(t *testing.T) {
 			run := exactTestServer(t)
 			proof := exactTestWindow(t, run, "a")
 			var err error
 			if mode == "respawn" {
 				_, err = run("respawn-pane", "-k", "-t", proof.PaneID, "sleep 120")
+			} else if mode == "linked" {
+				if _, err = run("new-session", "-d", "-s", "other", "sleep 120"); err == nil {
+					_, err = run("link-window", "-s", proof.WindowID, "-t", "other:")
+				}
 			} else {
 				_, err = run("split-window", "-d", "-t", proof.PaneID, "sleep 120")
 			}
 			if err != nil {
 				t.Fatal(err)
+			}
+			state, err := checkExactWindow(run, proof)
+			if err != nil || state != "changed" {
+				t.Fatalf("changed ownership: %s %v", state, err)
 			}
 			stopped, err := terminateExactWindow(run, proof)
 			if err != nil || stopped {
@@ -146,6 +162,10 @@ func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
 	if old.ServerID == current.ServerID {
 		t.Fatal("server identity reused")
 	}
+	state, err := checkExactWindow(run, old)
+	if err != nil || state != "gone" {
+		t.Fatalf("replaced server ownership: %s %v", state, err)
+	}
 	stopped, err := terminateExactWindow(run, old)
 	if err != nil || stopped {
 		t.Fatalf("old server proof stopped replacement: %v %v", stopped, err)
@@ -155,6 +175,19 @@ func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
 	}
 	if _, err := inspectExactWindow(run, current.ConversationID); err == nil {
 		t.Fatal("legacy marker adopted as exact ownership")
+	}
+}
+
+func TestExactCheckDoesNotTreatAnUnreachableLiveServerAsGone(t *testing.T) {
+	proof := exactWindowProof{ConversationID: "conv_" + strings.Repeat("a", 32), ServerID: fmt.Sprintf("%d:1:%s", os.Getpid(), strings.Repeat("a", 32)), LaunchID: "launch_" + strings.Repeat("a", 32), SessionName: "exact", WindowID: "@1", PaneID: "%1", PanePID: "1"}
+	unreachable := func(...string) (string, error) { return "", fmt.Errorf("unreachable") }
+	if state, err := checkExactWindow(unreachable, proof); err == nil || state != "" {
+		t.Fatalf("unreachable live server became absence: %s %v", state, err)
+	}
+	proof.ServerID = "4294967295:1:" + strings.Repeat("a", 32)
+	called := false
+	if _, err := checkExactWindow(func(...string) (string, error) { called = true; return "", nil }, proof); err == nil || called {
+		t.Fatal("oversized PID reached observation")
 	}
 }
 

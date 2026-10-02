@@ -70,8 +70,8 @@ Dormant conversations have no tmux candidate.
 
 #### Exact managed-window ownership (staged harness integration)
 
-The additive operations `window-create-exact`, `window-inspect-exact`, and
-`window-terminate-exact` retain ownership in this launcher. Legacy operations and
+The additive operations `window-create-exact`, `window-inspect-exact`,
+`window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
 existing running windows are not automatically upgraded or adopted.
 
 An exact create takes the normal conversation/placement request plus a fresh
@@ -85,15 +85,25 @@ pane in the window. Reserved `@managed_pi_server_id`, `@managed_pi_launch_id`,
 ownership, not user configuration; do not restore them into another server.
 
 Exact inspect returns `{conversationId, exists, ownership?}`. Malformed,
-legacy, respawned, multi-pane, or ambiguous observations fail closed; connection
+legacy, respawned, multi-pane, linked, or ambiguous observations fail closed; connection
 failure is not an absence claim. Exact terminate accepts the complete frozen
 ownership object. It checks the server, launch, session, window, original pane
 and process, conversation marker and single-pane condition within one tmux
 server-side `if-shell -F` command queue before killing. There is no separate
 Go-side check followed by an unconditional kill, no shell callback in the guard,
-and no fallback to conversation name or reusable numeric IDs. A rejected guard
+and no fallback to conversation name or reusable numeric IDs. This relies on
+[tmux 3.6a's synchronous format branch](https://github.com/tmux/tmux/blob/3.6a/cmd-if-shell.c)
+and [queue draining until wait/empty](https://github.com/tmux/tmux/blob/3.6a/cmd-queue.c);
+never change this to an asynchronous shell predicate. A rejected guard
 returns `terminated: false`; transport uncertainty is an error, not success.
-This is window ownership, not proof that Pi is currently attached or idle.
+The read-only exact check distinguishes `match`, `gone`, and `changed`. A missing
+original window on the same server or a different server lifetime is `gone`;
+changed markers/processes/panes/session links are not absence. If the server
+cannot be contacted, the result remains unknown unless read-only process
+existence observation proves the original server PID no longer exists. PIDs are
+bounded to positive signed 32-bit values before that observation. This sends no
+process signal. This is window ownership, not proof that Pi is currently attached
+or idle.
 
 Acceptance/crash evidence: Go tests use disposable private tmux sockets to cover
 server restart with reused numeric IDs, changed markers/process/session,
