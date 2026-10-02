@@ -73,7 +73,7 @@ func TestExactWindowProofAndGuardedTermination(t *testing.T) {
 		stale := proof
 		change(&stale)
 		stopped, err := terminateExactWindow(run, stale)
-		if err != nil || stopped {
+		if stopped {
 			t.Fatalf("stale proof stopped window: %v %v", stopped, err)
 		}
 	}
@@ -129,7 +129,7 @@ func TestExactWindowRefusesRespawnAndAddedPanes(t *testing.T) {
 				t.Fatalf("changed ownership: %s %v", state, err)
 			}
 			stopped, err := terminateExactWindow(run, proof)
-			if err != nil || stopped {
+			if stopped {
 				t.Fatalf("changed resource stopped: %v %v", stopped, err)
 			}
 			if _, err := inspectExactWindow(run, proof.ConversationID); err == nil {
@@ -167,7 +167,7 @@ func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
 		t.Fatalf("replaced server ownership: %s %v", state, err)
 	}
 	stopped, err := terminateExactWindow(run, old)
-	if err != nil || stopped {
+	if stopped {
 		t.Fatalf("old server proof stopped replacement: %v %v", stopped, err)
 	}
 	if _, err := run("set-option", "-w", "-u", "-t", current.WindowID, exactLaunchOption); err != nil {
@@ -178,27 +178,8 @@ func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
 	}
 }
 
-// Test-only prototype: proves the format guard's useful boundaries, NOT full
-// process-lifetime authority. Production must not use this under PID reuse.
 func terminateExactWindow(run exactTmux, p exactWindowProof) (bool, error) {
-	if !validExactProof(p) {
-		return false, fmt.Errorf("invalid exact window proof")
-	}
-	server := strings.Split(p.ServerID, ":")
-	condition := formatAnd(formatEqual("pid", server[0]), formatEqual("start_time", server[1]), formatEqual(exactServerOption, server[2]),
-		formatEqual("session_name", p.SessionName), formatEqual("window_id", p.WindowID), formatEqual("pane_id", p.PaneID), formatEqual("pane_pid", p.PanePID),
-		formatEqual(managedWindowOption, p.ConversationID), formatEqual(exactLaunchOption, p.LaunchID), formatEqual(exactPaneOption, p.PaneID), formatEqual(exactPIDOption, p.PanePID), formatEqual("window_panes", "1"), formatEqual("window_linked", "0"))
-	output, err := run("if-shell", "-F", "-t", p.PaneID, condition, "kill-window -t "+p.WindowID+" ; display-message -p terminated", "display-message -p ownership-mismatch")
-	if err != nil {
-		return false, err
-	}
-	if output == "terminated" {
-		return true, nil
-	}
-	if output == "ownership-mismatch" {
-		return false, nil
-	}
-	return false, fmt.Errorf("exact window termination outcome is unknown")
+	return stopExactProcess(run, p)
 }
 
 func TestExactCheckDoesNotTreatAnUnreachableLiveServerAsGone(t *testing.T) {
@@ -288,7 +269,10 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 	if _, err := request.Seek(0, 0); err != nil {
 		t.Fatal(err)
 	}
-	if err := json.NewEncoder(request).Encode(result.Ownership); err != nil {
+	legacy := *result.Ownership
+	legacy.ProcessBootID = ""
+	legacy.ProcessStartTicks = ""
+	if err := json.NewEncoder(request).Encode(legacy); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := request.Seek(0, 0); err != nil {
@@ -300,9 +284,35 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 	if state, err := checkExactWindow(tmux, *result.Ownership); err != nil || state != "match" {
 		t.Fatalf("refused stop changed the live window: %s %v", state, err)
 	}
-	stopped, err := terminateExactWindow(tmux, *result.Ownership)
-	if err != nil || !stopped {
-		t.Fatalf("exact created window stop: %v %v", stopped, err)
+	if err := request.Truncate(0); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := request.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.NewEncoder(request).Encode(result.Ownership); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := request.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := response.Truncate(0); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := response.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := managed([]string{"window-terminate-exact"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := response.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	var stopped struct {
+		Terminated bool `json:"terminated"`
+	}
+	if err := json.NewDecoder(response).Decode(&stopped); err != nil || !stopped.Terminated {
+		t.Fatalf("exact stop response: %#v %v", stopped, err)
 	}
 }
 

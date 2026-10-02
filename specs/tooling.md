@@ -70,13 +70,11 @@ Dormant conversations have no tmux candidate.
 
 #### Exact managed-window ownership (staged harness integration)
 
-**Forced-stop gate:** `window-terminate-exact` currently fails closed. A tmux
-format-only guard cannot distinguish a respawned process after numeric PID reuse
-within the same server lifetime. Its mutation prototype exists only in tests.
-Production needs an approved kernel-lifetime-bound stop primitive (proposed:
-Linux pidfd plus recorded process birth identity); no PID-kill fallback is
-permitted. Create and read-only operations remain available. This is not a
-complete/deployable retirement force-stop implementation.
+Forced stopping uses Linux pidfds on amd64/arm64, never a numeric-PID signal or
+window-container kill. Unsupported kernels, denied syscalls, missing process
+birth proof and other platforms fail closed. Kernel support is checked before
+exact creation. There is no extra daemon or dependency; the existing launcher
+continues to own this protocol.
 
 The additive operations `window-create-exact`, `window-inspect-exact`,
 `window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
@@ -85,28 +83,29 @@ existing running windows are not automatically upgraded or adopted.
 An exact create takes the normal conversation/placement request plus a fresh
 `launch_<32 hex>` identity. Its `ownership` result binds the conversation, server
 PID/start time/private random server token, launch ID, session/window/pane IDs,
-and original pane PID. A birth token in the command supplied to tmux at creation
+original pane PID, `processBootId` and `processStartTicks` (Linux boot UUID and
+kernel process start ticks). The creation process is pinned while its birth is
+captured and verified again after marker installation. A birth token in the command supplied to tmux at creation
 prevents later marker installation from adopting a replacement window. The
 server-side marker guard also checks that the original pane is still the only
 pane in the window. Reserved `@managed_pi_server_id`, `@managed_pi_launch_id`,
-`@managed_pi_pane_id`, and `@managed_pi_pane_pid` options are private runtime
+`@managed_pi_pane_id`, `@managed_pi_pane_pid`, `@managed_pi_process_boot`, and
+`@managed_pi_process_start` options are private runtime
 ownership, not user configuration; do not restore them into another server.
 
 Exact inspect returns `{conversationId, exists, ownership?}`. Malformed,
 legacy, changed-PID respawned, multi-pane, linked, or ambiguous observations fail
-closed; connection failure is not an absence claim. These observations still
-lack kernel process-lifetime proof and are not sufficient forced-stop authority.
-The test-only termination prototype checks the frozen server, launch, session,
-window, original pane and numeric PID, conversation marker and single-pane condition within one tmux
-server-side `if-shell -F` command queue before killing. There is no separate
-Go-side check followed by an unconditional kill, no shell callback in the guard,
-and no fallback to conversation name or reusable numeric IDs. This relies on
-[tmux 3.6a's synchronous format branch](https://github.com/tmux/tmux/blob/3.6a/cmd-if-shell.c)
-and [queue draining until wait/empty](https://github.com/tmux/tmux/blob/3.6a/cmd-queue.c);
-never change this to an asynchronous shell predicate. A rejected guard
-returns `terminated: false`; transport uncertainty is an error, not success.
-This ordering does not repair the missing process-birth identity, hence the
-production refusal above.
+closed; connection failure is not an absence claim. Older proofs without birth
+fields remain readable but never authorize forced stopping. Birth fields must
+be present together and are not silently added to old records.
+
+Termination opens a pidfd first, verifies the recorded birth identity and live
+handle, checks the frozen terminal ownership, then revalidates the pinned
+process. TERM and, after a bounded two-second grace, KILL are sent through that
+same handle. A replacement or additional pane after the ownership observation
+cannot redirect the signal or be destroyed by a container kill. No process
+handle survives the launcher invocation. The former format-only mutation
+prototype has been removed, including from tests.
 The read-only exact check distinguishes `match`, `gone`, and `changed`. A missing
 original window on the same server or a different server lifetime can be `gone`;
 changed markers/processes/panes/session links are not absence. If the server
@@ -114,16 +113,20 @@ cannot be contacted, the result remains unknown unless read-only process
 existence observation proves the original server PID no longer exists. PIDs are
 bounded to positive signed 32-bit values before that observation. This sends no
 process signal. `gone` additionally requires positive absence of the original
-pane process PID. Window closure alone cannot hide a surviving/orphaned process;
-PID reuse or uncertain exit stays unknown and never authorizes a PID kill.
-Callers must check after a termination acknowledgement, which only acknowledges
-tmux window removal. This is window ownership, not proof that Pi is currently
+process, or a different verified birth identity for its reused PID. Window
+closure alone cannot hide a surviving/orphaned process; uncertainty remains an
+error and never authorizes a PID kill. Callers must check after a termination
+acknowledgement, which acknowledges signalling, not completed cleanup. Retained
+dead panes or windows containing replacement work are never forcibly removed;
+window cleanup stays pending until their disappearance can be established. This is window ownership, not proof that Pi is currently
 attached or idle.
 
 Acceptance/crash evidence: Go tests use disposable private tmux sockets to cover
 server restart with reused numeric IDs, changed markers/process/session,
 respawned panes, added unrelated panes, foreign birth tokens, legacy refusal,
-last-window acknowledgement, and preservation of unrelated windows. The entire
+last-window acknowledgement, dead-handle rejection, birth mismatch, TERM-to-KILL
+escalation, replacement during observation, and panes added after observation.
+The real dispatch test creates and stops a dummy process using the public API. The entire
 launcher suite passes with `go test -count=1 ./...` from
 `modules/cli/tmux/tmux-project-go`. No Nix build, host evaluation, activation or
 live-session migration is implied. Harness integration belongs to epic #103

@@ -335,6 +335,21 @@ func managedWindowCreateMode(exact bool) error {
 	if exact && !exactLaunchPattern.MatchString(request.LaunchID) || !exact && request.LaunchID != "" {
 		return fmt.Errorf("invalid managed launch identity")
 	}
+	if exact {
+		pid := fmt.Sprint(os.Getpid())
+		handle, err := openProcessHandle(pid)
+		if err != nil {
+			return err
+		}
+		defer handle.close()
+		boot, ticks, err := processBirth(pid)
+		if err != nil {
+			return err
+		}
+		if err := handle.verify(pid, boot, ticks); err != nil {
+			return err
+		}
+	}
 	for _, name := range []string{
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONCEPT",
 		"PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID", "PI_MANAGED_SESSION_ATTACHMENT_NONCE", "PI_MANAGED_PROJECT_SESSION_FILE",

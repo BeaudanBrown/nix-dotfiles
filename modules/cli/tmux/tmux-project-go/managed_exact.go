@@ -15,7 +15,7 @@ const exactServerOption = "@managed_pi_server_id"
 const exactLaunchOption = "@managed_pi_launch_id"
 const exactPaneOption = "@managed_pi_pane_id"
 const exactPIDOption = "@managed_pi_pane_pid"
-const exactProofFormat = "#{pid}|#{start_time}|#{@managed_pi_server_id}|#{session_name}|#{window_id}|#{pane_id}|#{pane_pid}|#{@managed_pi_conversation_id}|#{@managed_pi_launch_id}|#{@managed_pi_pane_id}|#{@managed_pi_pane_pid}|#{window_panes}|#{window_linked}"
+const exactProofFormat = "#{pid}|#{start_time}|#{@managed_pi_server_id}|#{session_name}|#{window_id}|#{pane_id}|#{pane_pid}|#{@managed_pi_conversation_id}|#{@managed_pi_launch_id}|#{@managed_pi_pane_id}|#{@managed_pi_pane_pid}|#{window_panes}|#{window_linked}|#{@managed_pi_process_boot}|#{@managed_pi_process_start}|#{pane_dead}"
 
 var exactLaunchPattern = regexp.MustCompile(`^launch_[a-f0-9]{32}$`)
 var exactServerPattern = regexp.MustCompile(`^[1-9][0-9]{0,19}:[0-9]{1,20}:[a-f0-9]{32}$`)
@@ -24,15 +24,18 @@ var exactWindowPattern = regexp.MustCompile(`^@[0-9]{1,20}$`)
 var exactPanePattern = regexp.MustCompile(`^%[0-9]{1,20}$`)
 var exactPIDPattern = regexp.MustCompile(`^[1-9][0-9]{0,19}$`)
 var exactStartPattern = regexp.MustCompile(`^[0-9]{1,20}$`)
+var exactBootPattern = regexp.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`)
 
 type exactWindowProof struct {
-	ConversationID string `json:"conversationId"`
-	ServerID       string `json:"serverId"`
-	LaunchID       string `json:"launchId"`
-	SessionName    string `json:"sessionName"`
-	WindowID       string `json:"windowId"`
-	PaneID         string `json:"paneId"`
-	PanePID        string `json:"panePid"`
+	ConversationID    string `json:"conversationId"`
+	ServerID          string `json:"serverId"`
+	LaunchID          string `json:"launchId"`
+	SessionName       string `json:"sessionName"`
+	WindowID          string `json:"windowId"`
+	PaneID            string `json:"paneId"`
+	PanePID           string `json:"panePid"`
+	ProcessBootID     string `json:"processBootId,omitempty"`
+	ProcessStartTicks string `json:"processStartTicks,omitempty"`
 }
 
 type exactTmux func(...string) (string, error)
@@ -43,17 +46,17 @@ func exactPID(value string) bool {
 }
 
 func validExactProof(p exactWindowProof) bool {
-	return validConversationID(p.ConversationID) && exactServerPattern.MatchString(p.ServerID) && exactLaunchPattern.MatchString(p.LaunchID) &&
+	return ((p.ProcessBootID == "" && p.ProcessStartTicks == "") || (exactBootPattern.MatchString(p.ProcessBootID) && exactStartPattern.MatchString(p.ProcessStartTicks))) && validConversationID(p.ConversationID) && exactServerPattern.MatchString(p.ServerID) && exactLaunchPattern.MatchString(p.LaunchID) &&
 		exactSessionPattern.MatchString(p.SessionName) && exactWindowPattern.MatchString(p.WindowID) && exactPanePattern.MatchString(p.PaneID) && exactPIDPattern.MatchString(p.PanePID) && exactPID(p.PanePID) && exactPID(strings.Split(p.ServerID, ":")[0])
 }
 
 func parseExactProof(line string) (exactWindowProof, error) {
 	fields := strings.Split(line, "|")
-	if len(fields) != 13 {
+	if len(fields) != 16 {
 		return exactWindowProof{}, fmt.Errorf("invalid exact window observation")
 	}
-	p := exactWindowProof{ServerID: strings.Join(fields[:3], ":"), SessionName: fields[3], WindowID: fields[4], PaneID: fields[5], PanePID: fields[6], ConversationID: fields[7], LaunchID: fields[8]}
-	if !validExactProof(p) || fields[9] != p.PaneID || fields[10] != p.PanePID || fields[11] != "1" || fields[12] != "0" {
+	p := exactWindowProof{ServerID: strings.Join(fields[:3], ":"), SessionName: fields[3], WindowID: fields[4], PaneID: fields[5], PanePID: fields[6], ConversationID: fields[7], LaunchID: fields[8], ProcessBootID: fields[13], ProcessStartTicks: fields[14]}
+	if !validExactProof(p) || fields[9] != p.PaneID || fields[10] != p.PanePID || fields[11] != "1" || fields[12] != "0" || fields[15] != "0" {
 		return exactWindowProof{}, fmt.Errorf("exact managed ownership is unavailable")
 	}
 	return p, nil
@@ -76,7 +79,7 @@ func inspectExactWindow(run exactTmux, conversationID string) (*exactWindowProof
 			continue
 		}
 		fields := strings.Split(line, "|")
-		if len(fields) != 13 {
+		if len(fields) != 16 {
 			return nil, fmt.Errorf("managed window inventory is ambiguous")
 		}
 		if fields[7] != conversationID {
@@ -88,6 +91,17 @@ func inspectExactWindow(run exactTmux, conversationID string) (*exactWindowProof
 		proof, err := parseExactProof(line)
 		if err != nil {
 			return nil, err
+		}
+		if proof.ProcessBootID != "" {
+			handle, err := openProcessHandle(proof.PanePID)
+			if err != nil {
+				return nil, err
+			}
+			err = handle.verify(proof.PanePID, proof.ProcessBootID, proof.ProcessStartTicks)
+			handle.close()
+			if err != nil {
+				return nil, err
+			}
 		}
 		found = &proof
 	}
@@ -116,6 +130,18 @@ func markExactWindow(run exactTmux, windowID, paneID, panePID, conversationID, l
 	if !exactWindowPattern.MatchString(windowID) || !exactPanePattern.MatchString(paneID) || !exactPIDPattern.MatchString(panePID) || !validConversationID(conversationID) || !exactLaunchPattern.MatchString(launchID) {
 		return exactWindowProof{}, fmt.Errorf("invalid exact window creation identity")
 	}
+	handle, err := openProcessHandle(panePID)
+	if err != nil {
+		return exactWindowProof{}, err
+	}
+	defer handle.close()
+	boot, ticks, err := processBirth(panePID)
+	if err != nil {
+		return exactWindowProof{}, err
+	}
+	if err := handle.verify(panePID, boot, ticks); err != nil {
+		return exactWindowProof{}, err
+	}
 	token := make([]byte, 16)
 	if _, err := rand.Read(token); err != nil {
 		return exactWindowProof{}, err
@@ -128,9 +154,14 @@ func markExactWindow(run exactTmux, windowID, paneID, panePID, conversationID, l
 		"set-option -w -t " + windowID + " " + exactLaunchOption + " " + launchID + " ; " +
 		"set-option -w -t " + windowID + " " + exactPaneOption + " " + paneID + " ; " +
 		"set-option -w -t " + windowID + " " + exactPIDOption + " " + panePID + " ; " +
+		"set-option -w -t " + windowID + " @managed_pi_process_boot " + boot + " ; " +
+		"set-option -w -t " + windowID + " @managed_pi_process_start " + ticks + " ; " +
 		"display-message -p -t " + paneID + " " + shellQuote(exactProofFormat)
 	output, err := run("if-shell", "-F", "-t", paneID, condition, commands, "display-message -p ownership-mismatch")
 	if err != nil {
+		return exactWindowProof{}, err
+	}
+	if err := handle.verify(panePID, boot, ticks); err != nil {
 		return exactWindowProof{}, err
 	}
 	return parseExactProof(output)
@@ -153,6 +184,12 @@ func checkExactWindow(run exactTmux, p exactWindowProof) (string, error) {
 	gone := func() (string, error) {
 		if exactProcessGone(p.PanePID) {
 			return "gone", nil
+		}
+		if p.ProcessBootID != "" {
+			boot, ticks, err := processBirth(p.PanePID)
+			if err == nil && (boot != p.ProcessBootID || ticks != p.ProcessStartTicks) {
+				return "gone", nil
+			}
 		}
 		return "", fmt.Errorf("original pane process exit cannot be verified")
 	}
@@ -183,7 +220,7 @@ func checkExactWindow(run exactTmux, p exactWindowProof) (string, error) {
 			continue
 		}
 		fields := strings.Split(line, "|")
-		if len(fields) != 13 {
+		if len(fields) != 16 {
 			return "", fmt.Errorf("managed window inventory is ambiguous")
 		}
 		if fields[4] != p.WindowID {
@@ -192,6 +229,16 @@ func checkExactWindow(run exactTmux, p exactWindowProof) (string, error) {
 		current, err := parseExactProof(line)
 		if err != nil || current != p {
 			return "changed", nil
+		}
+		if p.ProcessBootID != "" {
+			handle, err := openProcessHandle(p.PanePID)
+			if err != nil {
+				return "", err
+			}
+			defer handle.close()
+			if err := handle.verify(p.PanePID, p.ProcessBootID, p.ProcessStartTicks); err != nil {
+				return "changed", nil
+			}
 		}
 		return "match", nil
 	}
@@ -228,6 +275,38 @@ func managedExactInspect() error {
 		Ownership      *exactWindowProof `json:"ownership,omitempty"`
 	}{request.ConversationID, proof != nil, proof})
 }
+
+// Pin the process before observing ownership and keep that exact descriptor
+// through signalling. A pane/window replacement after the observation cannot
+// redirect the signal. Never kill the tmux container: it may now hold other work.
+func stopExactProcess(run exactTmux, proof exactWindowProof) (bool, error) {
+	if !validExactProof(proof) || proof.ProcessBootID == "" {
+		return false, fmt.Errorf("exact forced stop requires stable kernel process identity")
+	}
+	handle, err := openProcessHandle(proof.PanePID)
+	if err != nil {
+		return false, err
+	}
+	defer handle.close()
+	if err := handle.verify(proof.PanePID, proof.ProcessBootID, proof.ProcessStartTicks); err != nil {
+		return false, err
+	}
+	state, err := checkExactWindow(run, proof)
+	if err != nil {
+		return false, err
+	}
+	if state != "match" {
+		return false, nil
+	}
+	if err := handle.verify(proof.PanePID, proof.ProcessBootID, proof.ProcessStartTicks); err != nil {
+		return false, err
+	}
+	if err := handle.stop(); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func managedExactTerminate() error {
 	var proof exactWindowProof
 	if err := readManagedRequest(&proof); err != nil {
@@ -236,8 +315,11 @@ func managedExactTerminate() error {
 	if !validExactProof(proof) {
 		return fmt.Errorf("invalid exact window proof")
 	}
-	// tmux preserves pane/window markers across respawn; a numeric PID can
-	// eventually be reused within that server lifetime. Do not expose the
-	// prototype format-only guard as production forced-stop authority.
-	return fmt.Errorf("exact forced stop requires stable kernel process identity")
+	terminated, err := stopExactProcess(tmux, proof)
+	if err != nil {
+		return err
+	}
+	return writeManagedResult(struct {
+		Terminated bool `json:"terminated"`
+	}{terminated})
 }
