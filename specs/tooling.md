@@ -76,13 +76,22 @@ birth proof and other platforms fail closed. Kernel support is checked before
 exact creation. There is no extra daemon or dependency; the existing launcher
 continues to own this protocol.
 
-The additive operations `window-create-exact`, `window-inspect-exact`,
+The read-only `root-resolve` returns canonical project session placement without
+creating a shell window. Exact project creation can therefore use the existing
+first-window placement behavior. `root-ensure` remains an explicit ensure action.
+
+The additive operations `coordinator-ensure-exact`, `window-create-exact`, `window-inspect-exact`,
 `window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
 existing running windows are not automatically upgraded or adopted. Legacy
 `window-terminate` and `legacy-window-cleanup` now refuse mutation; neither can
 bypass exact process identity through a window-container kill.
 
-An exact create takes the normal conversation/placement request plus a fresh
+Coordinator exact ensure accepts conversation and launch identities only, uses
+fixed host environment and the original persisted coordinator session, and
+returns the same birth-bound ownership in the protected `default` session. It
+never adopts an existing or retained dead pane and never switches a client.
+
+An exact project create takes the normal conversation/placement request plus a fresh
 `launch_<32 hex>` identity. Its `ownership` result binds the conversation, server
 PID/start time/private random server token, launch ID, session/window/pane IDs,
 original pane PID, `processBootId` and `processStartTicks` (Linux boot UUID and

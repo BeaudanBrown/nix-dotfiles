@@ -203,6 +203,11 @@ func TestExactCheckDoesNotTreatAnUnreachableLiveServerAsGone(t *testing.T) {
 }
 
 func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
+	t.Run("project", func(t *testing.T) { testManagedExactCreateDispatch(t, false) })
+	t.Run("coordinator", func(t *testing.T) { testManagedExactCreateDispatch(t, true) })
+}
+
+func testManagedExactCreateDispatch(t *testing.T, coordinator bool) {
 	if _, err := exec.LookPath("tmux"); err != nil {
 		t.Skip("tmux unavailable")
 	}
@@ -241,7 +246,17 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer response.Close()
-	if err := json.NewEncoder(request).Encode(map[string]any{"conversationId": conversationID, "launchId": launchID, "placement": workspacePlacement{RootKey: "projects", Workspace: "workspace", RelativeCwd: ""}}); err != nil {
+	operation := "window-create-exact"
+	payload := map[string]any{"conversationId": conversationID, "launchId": launchID}
+	if coordinator {
+		operation = "coordinator-ensure-exact"
+		t.Setenv("PI_MANAGED_SESSION_LAUNCH_ROLE", "coordinator")
+		t.Setenv("PI_MANAGED_COORDINATOR_CWD", workspace)
+		t.Setenv("PI_MANAGED_COORDINATOR_SESSION_FILE", filepath.Join(root, "coordinator.jsonl"))
+	} else {
+		payload["placement"] = workspacePlacement{RootKey: "projects", Workspace: "workspace", RelativeCwd: ""}
+	}
+	if err := json.NewEncoder(request).Encode(payload); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := request.Seek(0, 0); err != nil {
@@ -250,7 +265,7 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 	stdin, stdout := os.Stdin, os.Stdout
 	os.Stdin, os.Stdout = request, response
 	defer func() { os.Stdin, os.Stdout = stdin, stdout }()
-	if err := managed([]string{"window-create-exact"}); err != nil {
+	if err := managed([]string{operation}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := response.Seek(0, 0); err != nil {
@@ -262,6 +277,13 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 	}
 	if result.Ownership == nil || result.Ownership.LaunchID != launchID || result.Ownership.ConversationID != conversationID || result.Ownership.WindowID != result.WindowID || result.Ownership.PaneID != result.PaneID {
 		t.Fatalf("invalid ownership: %#v", result)
+	}
+	windows, err := tmux("list-windows", "-t", "="+result.SessionName, "-F", "#{window_id}")
+	if err != nil || windows != result.WindowID {
+		t.Fatalf("launch added a shell placeholder: %q %v", windows, err)
+	}
+	if coordinator && (result.SessionName != "default" || result.Role != "coordinator") {
+		t.Fatalf("coordinator escaped protected placement: %#v", result)
 	}
 	if err := request.Truncate(0); err != nil {
 		t.Fatal(err)

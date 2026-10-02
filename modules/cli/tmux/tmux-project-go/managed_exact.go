@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -39,6 +40,20 @@ type exactWindowProof struct {
 }
 
 type exactTmux func(...string) (string, error)
+
+func requireExactProcessSupport() error {
+	pid := fmt.Sprint(os.Getpid())
+	handle, err := openProcessHandle(pid)
+	if err != nil {
+		return err
+	}
+	defer handle.close()
+	boot, ticks, err := processBirth(pid)
+	if err != nil {
+		return err
+	}
+	return handle.verify(pid, boot, ticks)
+}
 
 func exactPID(value string) bool {
 	pid, err := strconv.ParseUint(value, 10, 31)

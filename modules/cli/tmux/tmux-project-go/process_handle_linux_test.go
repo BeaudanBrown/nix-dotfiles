@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"time"
 )
 
 func TestPinnedStopEscalatesOnlyOnTheSameDescriptor(t *testing.T) {
@@ -143,6 +144,16 @@ func TestStopRefusesBirthMismatchAndRespawnDuringObservation(t *testing.T) {
 		if len(args) > 0 && args[0] == "display-message" {
 			if _, err := run("respawn-pane", "-k", "-t", proof.PaneID, "exec sleep 120"); err != nil {
 				return "", err
+			}
+			// Inject an exited original, not merely a requested respawn: tmux may
+			// acknowledge before reaping it. Signalling the still-live pinned original
+			// is safe, but does not exercise this refusal branch.
+			deadline := time.Now().Add(time.Second)
+			for !exactProcessGone(proof.PanePID) {
+				if time.Now().After(deadline) {
+					return "", fmt.Errorf("original did not exit during injected respawn")
+				}
+				time.Sleep(time.Millisecond)
 			}
 		}
 		return output, nil

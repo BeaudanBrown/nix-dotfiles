@@ -48,11 +48,12 @@ type projectCreateWireRequest struct {
 }
 
 type managedWindowResult struct {
-	ConversationID string `json:"conversationId"`
-	SessionName    string `json:"sessionName"`
-	WindowID       string `json:"windowId"`
-	PaneID         string `json:"paneId"`
-	Role           string `json:"role"`
+	Ownership      *exactWindowProof `json:"ownership,omitempty"`
+	ConversationID string            `json:"conversationId"`
+	SessionName    string            `json:"sessionName"`
+	WindowID       string            `json:"windowId"`
+	PaneID         string            `json:"paneId"`
+	Role           string            `json:"role"`
 }
 
 type managedProjectWindowResult struct {
@@ -150,7 +151,7 @@ func managed(args []string) error {
 			return err
 		}
 		return writeManagedResult(resolved)
-	case "root-ensure":
+	case "root-ensure", "root-resolve":
 		var placement workspacePlacement
 		if err := readManagedRequest(&placement); err != nil {
 			return err
@@ -159,9 +160,12 @@ func managed(args []string) error {
 		if err != nil {
 			return err
 		}
-		session, err := ensureProjectSession(resolved.WorkspacePath)
-		if err != nil {
-			return err
+		session := sessionForPath(resolved.WorkspacePath)
+		if args[0] == "root-ensure" {
+			session, err = ensureProjectSession(resolved.WorkspacePath)
+			if err != nil {
+				return err
+			}
 		}
 		return writeManagedResult(struct {
 			SessionName   string `json:"sessionName"`
@@ -171,6 +175,8 @@ func managed(args []string) error {
 		return managedWindowInspect()
 	case "coordinator-ensure":
 		return managedCoordinatorEnsure()
+	case "coordinator-ensure-exact":
+		return managedCoordinatorEnsureMode(true)
 	case "window-create":
 		return managedWindowCreate()
 	case "window-create-exact":
@@ -251,15 +257,26 @@ func managedWindowInspect() error {
 		WindowID: observation.WindowID, PaneID: observation.PaneID})
 }
 
-func managedCoordinatorEnsure() error {
+func managedCoordinatorEnsure() error { return managedCoordinatorEnsureMode(false) }
+
+func managedCoordinatorEnsureMode(exact bool) error {
 	var request struct {
 		ConversationID string `json:"conversationId"`
+		LaunchID       string `json:"launchId,omitempty"`
 	}
 	if err := readManagedRequest(&request); err != nil {
 		return err
 	}
 	if !validConversationID(request.ConversationID) || request.ConversationID != os.Getenv("PI_MANAGED_SESSION_CONVERSATION_ID") {
 		return fmt.Errorf("invalid coordinator conversation identity")
+	}
+	if exact && !exactLaunchPattern.MatchString(request.LaunchID) || !exact && request.LaunchID != "" {
+		return fmt.Errorf("invalid managed launch identity")
+	}
+	if exact {
+		if err := requireExactProcessSupport(); err != nil {
+			return err
+		}
 	}
 	cwd, err := requiredManagedEnv("PI_MANAGED_COORDINATOR_CWD")
 	if err != nil {
@@ -289,7 +306,15 @@ func managedCoordinatorEnsure() error {
 	if err != nil {
 		return err
 	}
-	args := []string{"-d", "-P", "-F", "#{window_id}|#{pane_id}", "-n", "coordinator", "-c", cwd}
+	format := "#{window_id}|#{pane_id}"
+	if exact {
+		command, err = exactLaunchCommand(command, request.LaunchID)
+		if err != nil {
+			return err
+		}
+		format += "|#{pane_pid}"
+	}
+	args := []string{"-d", "-P", "-F", format, "-n", "coordinator", "-c", cwd}
 	args = append(args, managedTmuxEnvironment(
 		"PI_MANAGED_SESSION_LAUNCH_ROLE", "PI_MANAGED_SESSIONS_SOCKET", "PI_MANAGED_SESSION_CONVERSATION_ID",
 		"PI_MANAGED_SESSION_CONCEPT", "PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID",
@@ -305,14 +330,31 @@ func managedCoordinatorEnsure() error {
 	if err != nil {
 		return err
 	}
+	var proof *exactWindowProof
+	panePID := ""
+	if exact {
+		fields := strings.Split(output, "|")
+		if len(fields) != 3 {
+			return fmt.Errorf("invalid exact coordinator creation response")
+		}
+		output = strings.Join(fields[:2], "|")
+		panePID = fields[2]
+	}
 	observation, err = parseManagedWindowOutput(output)
 	if err != nil {
 		return err
 	}
-	if err := markManagedWindow(observation.WindowID, request.ConversationID); err != nil {
+	if exact {
+		value, markErr := markExactWindow(tmux, observation.WindowID, observation.PaneID, panePID, request.ConversationID, request.LaunchID)
+		if markErr != nil {
+			return markErr
+		}
+		proof = &value
+	} else if err := markManagedWindow(observation.WindowID, request.ConversationID); err != nil {
 		return err
 	}
 	return writeManagedResult(managedWindowResult{
+		Ownership:      proof,
 		ConversationID: request.ConversationID, SessionName: "default", WindowID: observation.WindowID,
 		PaneID: observation.PaneID, Role: "coordinator",
 	})
@@ -336,17 +378,7 @@ func managedWindowCreateMode(exact bool) error {
 		return fmt.Errorf("invalid managed launch identity")
 	}
 	if exact {
-		pid := fmt.Sprint(os.Getpid())
-		handle, err := openProcessHandle(pid)
-		if err != nil {
-			return err
-		}
-		defer handle.close()
-		boot, ticks, err := processBirth(pid)
-		if err != nil {
-			return err
-		}
-		if err := handle.verify(pid, boot, ticks); err != nil {
+		if err := requireExactProcessSupport(); err != nil {
 			return err
 		}
 	}
