@@ -78,7 +78,9 @@ continues to own this protocol.
 
 The additive operations `window-create-exact`, `window-inspect-exact`,
 `window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
-existing running windows are not automatically upgraded or adopted.
+existing running windows are not automatically upgraded or adopted. Legacy
+`window-terminate` and `legacy-window-cleanup` now refuse mutation; neither can
+bypass exact process identity through a window-container kill.
 
 An exact create takes the normal conversation/placement request plus a fresh
 `launch_<32 hex>` identity. Its `ownership` result binds the conversation, server
@@ -203,11 +205,11 @@ startup is not proof that the bridge attachment lifecycle is fixed.
 
 For the one-time transition from deployments that used `/tmp/tmux-$UID/default`,
 `tmux_project managed legacy-window-preview` accepts `{}` and reports only valid
-marked windows. After reviewing the preview and stopping the managed relay,
-`tmux_project managed legacy-window-cleanup` accepts exactly
-`{"confirmed":true}` and kills only those marked windows. It leaves every
-unmarked pane, window, and session unchanged; project conversations are resumed
-explicitly after the rebuilt relay starts on the runtime-directory socket.
+marked windows. `tmux_project managed legacy-window-cleanup` still parses exactly
+`{"confirmed":true}` but refuses mutation even with the relay stopped: a marker
+cannot prove which current processes belong to the original window. Preserve
+these windows pending ownership-safe inspection; this command no longer performs
+migration cleanup. No automatic restart or adoption is implied.
 
 ### dump.bepis.lol content publishing
 

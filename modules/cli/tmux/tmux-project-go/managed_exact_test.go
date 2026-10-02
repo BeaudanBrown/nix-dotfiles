@@ -316,6 +316,50 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 	}
 }
 
+func TestLegacyMutationsRefuseOriginalRespawnedAndMultipaneWindows(t *testing.T) {
+	run := exactTestServer(t)
+	proof := exactTestWindow(t, run, "a")
+	runtime := t.TempDir()
+	t.Setenv("XDG_RUNTIME_DIR", runtime)
+	t.Setenv("TMUX_TMPDIR", runtime)
+	t.Setenv("TMUX", "")
+	originalStdin := os.Stdin
+	t.Cleanup(func() { os.Stdin = originalStdin })
+	for _, mode := range []string{"original", "respawned", "multipane"} {
+		if mode == "respawned" {
+			if _, err := run("respawn-pane", "-k", "-t", proof.PaneID, "exec sleep 120"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if mode == "multipane" {
+			if _, err := run("split-window", "-d", "-t", proof.PaneID, "exec sleep 120"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for operation, body := range map[string]any{"window-terminate": managedWindowIdentity{ConversationID: proof.ConversationID, WindowID: proof.WindowID, PaneID: proof.PaneID}, "legacy-window-cleanup": map[string]bool{"confirmed": true}} {
+			request, err := os.CreateTemp(t.TempDir(), "request")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := json.NewEncoder(request).Encode(body); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := request.Seek(0, 0); err != nil {
+				t.Fatal(err)
+			}
+			os.Stdin = request
+			err = managed([]string{operation})
+			request.Close()
+			if err == nil || !strings.Contains(err.Error(), "kernel-bound exact ownership") {
+				t.Fatalf("%s %s: %v", mode, operation, err)
+			}
+			if output, err := run("display-message", "-p", "-t", proof.PaneID, "#{pane_dead}"); err != nil || output != "0" {
+				t.Fatalf("%s changed live pane: %s %v", operation, output, err)
+			}
+		}
+	}
+}
+
 func TestExactMarkerDoesNotAdoptWrongBirthToken(t *testing.T) {
 	run := exactTestServer(t)
 	output, err := run("new-window", "-d", "-P", "-F", "#{window_id}|#{pane_id}|#{pane_pid}", "-t", "exact:", "sleep 120")

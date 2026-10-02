@@ -451,23 +451,15 @@ func managedWindowMutation(operation string) error {
 	if !validConversationID(request.ConversationID) {
 		return fmt.Errorf("invalid managed conversation identity")
 	}
+	if operation == "window-terminate" {
+		return fmt.Errorf("legacy termination requires kernel-bound exact ownership")
+	}
 	observation, err := findManagedWindow(request.ConversationID)
 	if err != nil {
 		return err
 	}
 	if observation != nil && request.WindowID != "" && (observation.WindowID != request.WindowID || observation.PaneID != request.PaneID) {
 		return fmt.Errorf("managed window identity mismatch")
-	}
-	if operation == "window-terminate" {
-		if observation == nil {
-			return fmt.Errorf("managed window was not found")
-		}
-		if _, err := tmux("kill-window", "-t", observation.WindowID); err != nil {
-			return err
-		}
-		return writeManagedResult(struct {
-			Terminated bool `json:"terminated"`
-		}{Terminated: true})
 	}
 	if observation != nil {
 		if _, err := tmux("set-option", "-w", "-u", "-t", observation.WindowID, managedWindowOption); err != nil {
@@ -822,23 +814,7 @@ func cleanupLegacyManagedWindows() (int, error) {
 	if err := requireManagedRelayStopped(); err != nil {
 		return 0, err
 	}
-	windows, err := legacyManagedWindows()
-	if err != nil {
-		return 0, err
-	}
-	for _, window := range windows {
-		if _, err := tmuxAt(legacyTmuxSocket(), "kill-window", "-t", window.WindowID); err != nil {
-			return 0, err
-		}
-	}
-	remaining, err := legacyManagedWindows()
-	if err != nil {
-		return 0, err
-	}
-	if len(remaining) != 0 {
-		return 0, fmt.Errorf("legacy managed windows remain after cleanup")
-	}
-	return len(windows), nil
+	return 0, fmt.Errorf("legacy cleanup requires kernel-bound exact ownership; inspect preserved windows manually")
 }
 
 func findManagedWindow(conversationID string) (*managedWindowObservation, error) {
