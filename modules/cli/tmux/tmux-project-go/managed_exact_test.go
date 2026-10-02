@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -153,6 +155,73 @@ func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
 	}
 	if _, err := inspectExactWindow(run, current.ConversationID); err == nil {
 		t.Fatal("legacy marker adopted as exact ownership")
+	}
+}
+
+func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
+	if _, err := exec.LookPath("tmux"); err != nil {
+		t.Skip("tmux unavailable")
+	}
+	root := t.TempDir()
+	runtime := filepath.Join(root, "run")
+	bin := filepath.Join(root, "bin")
+	workspace := filepath.Join(root, "projects", "workspace")
+	for _, directory := range []string{runtime, bin, workspace} {
+		if err := os.MkdirAll(directory, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for name, body := range map[string]string{"pi": "#!/usr/bin/env sh\nexec sleep 120\n", "direnv": "#!/usr/bin/env sh\nshift 2\nexec \"$@\"\n"} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(body), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	conversationID := "conv_" + strings.Repeat("c", 32)
+	launchID := "launch_" + strings.Repeat("d", 32)
+	for name, value := range map[string]string{"TMUX": "", "HOME": root, "XDG_CONFIG_HOME": root, "XDG_RUNTIME_DIR": runtime, "TMUX_TMPDIR": runtime,
+		"PATH": bin + string(os.PathListSeparator) + os.Getenv("PATH"), "PI_MANAGED_SESSIONS_WORKSPACE_ROOTS": `{"projects":"` + filepath.Join(root, "projects") + `"}`,
+		"PI_MANAGED_SESSION_CONVERSATION_ID": conversationID, "PI_MANAGED_SESSION_WORKSPACE_PATH": workspace, "PI_MANAGED_SESSION_LAUNCH_ROLE": "project",
+		"PI_MANAGED_SESSIONS_SOCKET": filepath.Join(runtime, "relay.sock"), "PI_MANAGED_SESSION_CONCEPT": "Fixture", "PI_MANAGED_SESSION_BINDING_BOUNDARY_ENTRY_ID": "boundary",
+		"PI_MANAGED_SESSION_ATTACHMENT_NONCE": strings.Repeat("e", 32), "PI_MANAGED_PROJECT_SESSION_FILE": filepath.Join(root, "session.jsonl"),
+		"PI_MANAGED_SESSION_MODEL": "", "PI_MANAGED_SESSION_THINKING": ""} {
+		t.Setenv(name, value)
+	}
+	t.Cleanup(func() { _, _ = tmux("kill-server") })
+	request, err := os.CreateTemp(root, "request")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer request.Close()
+	response, err := os.CreateTemp(root, "response")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Close()
+	if err := json.NewEncoder(request).Encode(map[string]any{"conversationId": conversationID, "launchId": launchID, "placement": workspacePlacement{RootKey: "projects", Workspace: "workspace", RelativeCwd: ""}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := request.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	stdin, stdout := os.Stdin, os.Stdout
+	os.Stdin, os.Stdout = request, response
+	defer func() { os.Stdin, os.Stdout = stdin, stdout }()
+	if err := managed([]string{"window-create-exact"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := response.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	var result managedProjectWindowResult
+	if err := json.NewDecoder(response).Decode(&result); err != nil {
+		t.Fatal(err)
+	}
+	if result.Ownership == nil || result.Ownership.LaunchID != launchID || result.Ownership.ConversationID != conversationID || result.Ownership.WindowID != result.WindowID || result.Ownership.PaneID != result.PaneID {
+		t.Fatalf("invalid ownership: %#v", result)
+	}
+	stopped, err := terminateExactWindow(tmux, *result.Ownership)
+	if err != nil || !stopped {
+		t.Fatalf("exact created window stop: %v %v", stopped, err)
 	}
 }
 
