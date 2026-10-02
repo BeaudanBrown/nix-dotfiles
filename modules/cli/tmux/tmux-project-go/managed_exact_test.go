@@ -178,11 +178,41 @@ func TestExactWindowRestartIDReuseAndLegacyRefusal(t *testing.T) {
 	}
 }
 
+// Test-only prototype: proves the format guard's useful boundaries, NOT full
+// process-lifetime authority. Production must not use this under PID reuse.
+func terminateExactWindow(run exactTmux, p exactWindowProof) (bool, error) {
+	if !validExactProof(p) {
+		return false, fmt.Errorf("invalid exact window proof")
+	}
+	server := strings.Split(p.ServerID, ":")
+	condition := formatAnd(formatEqual("pid", server[0]), formatEqual("start_time", server[1]), formatEqual(exactServerOption, server[2]),
+		formatEqual("session_name", p.SessionName), formatEqual("window_id", p.WindowID), formatEqual("pane_id", p.PaneID), formatEqual("pane_pid", p.PanePID),
+		formatEqual(managedWindowOption, p.ConversationID), formatEqual(exactLaunchOption, p.LaunchID), formatEqual(exactPaneOption, p.PaneID), formatEqual(exactPIDOption, p.PanePID), formatEqual("window_panes", "1"), formatEqual("window_linked", "0"))
+	output, err := run("if-shell", "-F", "-t", p.PaneID, condition, "kill-window -t "+p.WindowID+" ; display-message -p terminated", "display-message -p ownership-mismatch")
+	if err != nil {
+		return false, err
+	}
+	if output == "terminated" {
+		return true, nil
+	}
+	if output == "ownership-mismatch" {
+		return false, nil
+	}
+	return false, fmt.Errorf("exact window termination outcome is unknown")
+}
+
 func TestExactCheckDoesNotTreatAnUnreachableLiveServerAsGone(t *testing.T) {
 	proof := exactWindowProof{ConversationID: "conv_" + strings.Repeat("a", 32), ServerID: fmt.Sprintf("%d:1:%s", os.Getpid(), strings.Repeat("a", 32)), LaunchID: "launch_" + strings.Repeat("a", 32), SessionName: "exact", WindowID: "@1", PaneID: "%1", PanePID: "1"}
 	unreachable := func(...string) (string, error) { return "", fmt.Errorf("unreachable") }
 	if state, err := checkExactWindow(unreachable, proof); err == nil || state != "" {
 		t.Fatalf("unreachable live server became absence: %s %v", state, err)
+	}
+	proof.PanePID = fmt.Sprint(os.Getpid())
+	for _, header := range []string{"1|2|" + strings.Repeat("a", 32), fmt.Sprintf("%d|1|%s", os.Getpid(), strings.Repeat("a", 32))} {
+		state, err := checkExactWindow(func(...string) (string, error) { return header, nil }, proof)
+		if err == nil || state != "" {
+			t.Fatalf("window absence hid a surviving original process: %s %v", state, err)
+		}
 	}
 	proof.ServerID = "4294967295:1:" + strings.Repeat("a", 32)
 	called := false
@@ -251,6 +281,24 @@ func TestManagedExactCreateDispatchReturnsOriginalOwnership(t *testing.T) {
 	}
 	if result.Ownership == nil || result.Ownership.LaunchID != launchID || result.Ownership.ConversationID != conversationID || result.Ownership.WindowID != result.WindowID || result.Ownership.PaneID != result.PaneID {
 		t.Fatalf("invalid ownership: %#v", result)
+	}
+	if err := request.Truncate(0); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := request.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.NewEncoder(request).Encode(result.Ownership); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := request.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := managed([]string{"window-terminate-exact"}); err == nil || !strings.Contains(err.Error(), "kernel process identity") {
+		t.Fatalf("unverified production force stop was not refused: %v", err)
+	}
+	if state, err := checkExactWindow(tmux, *result.Ownership); err != nil || state != "match" {
+		t.Fatalf("refused stop changed the live window: %s %v", state, err)
 	}
 	stopped, err := terminateExactWindow(tmux, *result.Ownership)
 	if err != nil || !stopped {

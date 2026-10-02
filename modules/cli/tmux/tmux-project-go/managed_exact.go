@@ -136,41 +136,30 @@ func markExactWindow(run exactTmux, windowID, paneID, panePID, conversationID, l
 	return parseExactProof(output)
 }
 
-// A single -F condition and immediate command branch run in the same tmux server
-// queue. Never split this into a Go-side check followed by a separate kill call.
-func terminateExactWindow(run exactTmux, p exactWindowProof) (bool, error) {
-	if !validExactProof(p) {
-		return false, fmt.Errorf("invalid exact window proof")
-	}
-	server := strings.Split(p.ServerID, ":")
-	condition := formatAnd(formatEqual("pid", server[0]), formatEqual("start_time", server[1]), formatEqual(exactServerOption, server[2]),
-		formatEqual("session_name", p.SessionName), formatEqual("window_id", p.WindowID), formatEqual("pane_id", p.PaneID), formatEqual("pane_pid", p.PanePID),
-		formatEqual(managedWindowOption, p.ConversationID), formatEqual(exactLaunchOption, p.LaunchID), formatEqual(exactPaneOption, p.PaneID), formatEqual(exactPIDOption, p.PanePID), formatEqual("window_panes", "1"), formatEqual("window_linked", "0"))
-	output, err := run("if-shell", "-F", "-t", p.PaneID, condition, "kill-window -t "+p.WindowID+" ; display-message -p terminated", "display-message -p ownership-mismatch")
-	if err != nil {
-		return false, err
-	}
-	if output == "terminated" {
-		return true, nil
-	}
-	if output == "ownership-mismatch" {
-		return false, nil
-	}
-	return false, fmt.Errorf("exact window termination outcome is unknown")
-}
-
 // Read-only exact-resource observation. A changed marker is not absence, and a
 // failed connection is only resolved as gone when the original server PID no
 // longer exists. Signal zero observes existence; it sends no process signal.
+func exactProcessGone(value string) bool {
+	if !exactPID(value) {
+		return false
+	}
+	pid, _ := strconv.Atoi(value)
+	return errors.Is(syscall.Kill(pid, 0), syscall.ESRCH)
+}
 func checkExactWindow(run exactTmux, p exactWindowProof) (string, error) {
 	if !validExactProof(p) {
 		return "", fmt.Errorf("invalid exact window proof")
 	}
+	gone := func() (string, error) {
+		if exactProcessGone(p.PanePID) {
+			return "gone", nil
+		}
+		return "", fmt.Errorf("original pane process exit cannot be verified")
+	}
 	output, err := run("display-message", "-p", "#{pid}|#{start_time}|#{@managed_pi_server_id}", ";", "list-panes", "-a", "-F", exactProofFormat)
 	if err != nil {
-		pid, _ := strconv.Atoi(strings.Split(p.ServerID, ":")[0])
-		if errors.Is(syscall.Kill(pid, 0), syscall.ESRCH) {
-			return "gone", nil
+		if exactProcessGone(strings.Split(p.ServerID, ":")[0]) {
+			return gone()
 		}
 		return "", fmt.Errorf("original tmux server cannot be observed")
 	}
@@ -184,7 +173,7 @@ func checkExactWindow(run exactTmux, p exactWindowProof) (string, error) {
 		return "", fmt.Errorf("invalid server observation")
 	}
 	if server[0] != expected[0] || server[1] != expected[1] {
-		return "gone", nil
+		return gone()
 	}
 	if server[2] != expected[2] {
 		return "changed", nil
@@ -206,7 +195,7 @@ func checkExactWindow(run exactTmux, p exactWindowProof) (string, error) {
 		}
 		return "match", nil
 	}
-	return "gone", nil
+	return gone()
 }
 func managedExactCheck() error {
 	var proof exactWindowProof
@@ -244,11 +233,11 @@ func managedExactTerminate() error {
 	if err := readManagedRequest(&proof); err != nil {
 		return err
 	}
-	terminated, err := terminateExactWindow(tmux, proof)
-	if err != nil {
-		return err
+	if !validExactProof(proof) {
+		return fmt.Errorf("invalid exact window proof")
 	}
-	return writeManagedResult(struct {
-		Terminated bool `json:"terminated"`
-	}{terminated})
+	// tmux preserves pane/window markers across respawn; a numeric PID can
+	// eventually be reused within that server lifetime. Do not expose the
+	// prototype format-only guard as production forced-stop authority.
+	return fmt.Errorf("exact forced stop requires stable kernel process identity")
 }

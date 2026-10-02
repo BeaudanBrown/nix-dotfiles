@@ -70,6 +70,14 @@ Dormant conversations have no tmux candidate.
 
 #### Exact managed-window ownership (staged harness integration)
 
+**Forced-stop gate:** `window-terminate-exact` currently fails closed. A tmux
+format-only guard cannot distinguish a respawned process after numeric PID reuse
+within the same server lifetime. Its mutation prototype exists only in tests.
+Production needs an approved kernel-lifetime-bound stop primitive (proposed:
+Linux pidfd plus recorded process birth identity); no PID-kill fallback is
+permitted. Create and read-only operations remain available. This is not a
+complete/deployable retirement force-stop implementation.
+
 The additive operations `window-create-exact`, `window-inspect-exact`,
 `window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
 existing running windows are not automatically upgraded or adopted.
@@ -85,10 +93,11 @@ pane in the window. Reserved `@managed_pi_server_id`, `@managed_pi_launch_id`,
 ownership, not user configuration; do not restore them into another server.
 
 Exact inspect returns `{conversationId, exists, ownership?}`. Malformed,
-legacy, respawned, multi-pane, linked, or ambiguous observations fail closed; connection
-failure is not an absence claim. Exact terminate accepts the complete frozen
-ownership object. It checks the server, launch, session, window, original pane
-and process, conversation marker and single-pane condition within one tmux
+legacy, changed-PID respawned, multi-pane, linked, or ambiguous observations fail
+closed; connection failure is not an absence claim. These observations still
+lack kernel process-lifetime proof and are not sufficient forced-stop authority.
+The test-only termination prototype checks the frozen server, launch, session,
+window, original pane and numeric PID, conversation marker and single-pane condition within one tmux
 server-side `if-shell -F` command queue before killing. There is no separate
 Go-side check followed by an unconditional kill, no shell callback in the guard,
 and no fallback to conversation name or reusable numeric IDs. This relies on
@@ -96,14 +105,20 @@ and no fallback to conversation name or reusable numeric IDs. This relies on
 and [queue draining until wait/empty](https://github.com/tmux/tmux/blob/3.6a/cmd-queue.c);
 never change this to an asynchronous shell predicate. A rejected guard
 returns `terminated: false`; transport uncertainty is an error, not success.
+This ordering does not repair the missing process-birth identity, hence the
+production refusal above.
 The read-only exact check distinguishes `match`, `gone`, and `changed`. A missing
-original window on the same server or a different server lifetime is `gone`;
+original window on the same server or a different server lifetime can be `gone`;
 changed markers/processes/panes/session links are not absence. If the server
 cannot be contacted, the result remains unknown unless read-only process
 existence observation proves the original server PID no longer exists. PIDs are
 bounded to positive signed 32-bit values before that observation. This sends no
-process signal. This is window ownership, not proof that Pi is currently attached
-or idle.
+process signal. `gone` additionally requires positive absence of the original
+pane process PID. Window closure alone cannot hide a surviving/orphaned process;
+PID reuse or uncertain exit stays unknown and never authorizes a PID kill.
+Callers must check after a termination acknowledgement, which only acknowledges
+tmux window removal. This is window ownership, not proof that Pi is currently
+attached or idle.
 
 Acceptance/crash evidence: Go tests use disposable private tmux sockets to cover
 server restart with reused numeric IDs, changed markers/process/session,
