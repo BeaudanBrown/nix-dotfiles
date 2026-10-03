@@ -38,6 +38,30 @@ in
       public_baseurl = "https://${domain}/";
       report_stats = false;
       enable_registration = false;
+      # Allow concurrent agent updates and room provisioning without removing
+      # throttling. Keep authentication and other rate limits at their defaults.
+      rc_message = {
+        per_second = 5;
+        burst_count = 100;
+      };
+      rc_joins.local = {
+        per_second = 1;
+        burst_count = 30;
+      };
+      rc_invites = {
+        per_room = {
+          per_second = 1;
+          burst_count = 30;
+        };
+        per_issuer = {
+          per_second = 2;
+          burst_count = 50;
+        };
+        per_user = {
+          per_second = 1;
+          burst_count = 30;
+        };
+      };
       experimental_features = {
         msc3202_transaction_extensions = true;
         msc2409_to_device_messages_enabled = true;
@@ -251,6 +275,19 @@ in
   };
 
   systemd.services = {
+    # The transport validates its Matrix identity on startup. Wait for the local
+    # homeserver's readiness notification and its HTTPS proxy after a rebuild.
+    pi-chat-transport = {
+      after = [
+        "matrix-synapse.service"
+        "nginx.service"
+      ];
+      wants = [
+        "matrix-synapse.service"
+        "nginx.service"
+      ];
+    };
+
     # Synapse requires appservice registrations while parsing its config, but
     # the upstream bridge unit normally generates this file in preStart after
     # Synapse. Bootstrap it first to avoid a first-deployment dependency cycle.
