@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 let
   domain = "img.bepis.lol";
   portKey = "immich";
@@ -15,11 +15,9 @@ in
     }
   ];
 
-  nixpkgs.config.permittedInsecurePackages = [
-    "immich-2.7.5"
-  ];
   services.immich = {
     enable = true;
+    package = pkgs.unstable.immich;
     port = config.custom.ports.assigned.${portKey};
     settings = {
       server.externalDomain = "https://${domain}";
