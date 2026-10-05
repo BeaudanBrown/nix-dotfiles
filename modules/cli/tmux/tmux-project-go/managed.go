@@ -183,6 +183,8 @@ func managed(args []string) error {
 		return managedWindowCreateMode(true)
 	case "window-inspect-exact":
 		return managedExactInspect()
+	case "window-observe-exact":
+		return managedExactObserve()
 	case "window-check-exact":
 		return managedExactCheck()
 	case "window-terminate-exact":

@@ -110,6 +110,17 @@ closed; connection failure is not an absence claim. Older proofs without birth
 fields remain readable but never authorize forced stopping. Birth fields must
 be present together and are not silently added to old records.
 
+The additive read-only `window-observe-exact` accepts `{proofs:[...]}` with 1–64
+unique conversation proofs. It returns `{observations:[{conversationId,launchId,state}]}`
+in request order, where state is `running`, `stopped`, or `unknown`. One tmux
+inventory is shared across the batch, with original process/birth checks per proof.
+An exactly matching retained dead pane is stopped; changed ownership remains
+unknown unless the original process is independently proven gone. Legacy proofs
+without birth identity remain unknown. Malformed/partial responses are not usable.
+This is last-known presentation evidence only: it never authorizes termination,
+adoption, replacement or window cleanup. Existing exact-check/terminate behavior
+is unchanged. It creates no daemon and does not send terminating signals.
+
 Termination opens a pidfd first, verifies the recorded birth identity and live
 handle, checks the frozen terminal ownership, then revalidates the pinned
 process. TERM and, after a bounded two-second grace, KILL are sent through that
