@@ -187,6 +187,8 @@ func managed(args []string) error {
 		return managedExactObserve()
 	case "window-check-exact":
 		return managedExactCheck()
+	case "window-focus-exact":
+		return managedExactFocus()
 	case "window-terminate-exact":
 		return managedExactTerminate()
 	case "window-terminate", "bridge-clear":

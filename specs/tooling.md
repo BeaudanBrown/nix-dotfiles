@@ -155,6 +155,44 @@ live-session migration is implied. Harness integration belongs to epic #103
 retirement/launch work; rollout must install the compatible launcher before
 using these new operations.
 
+#### Exact requesting-client focus (#116/#118 integration)
+
+`tmux_project managed window-focus-exact` accepts the public open result's
+`conversationId`, `launchId`, `sessionName`, `windowId`, `paneId`, plus an explicit
+`clientName` and decimal-string `clientPid`, as a strict JSON object on stdin.
+Capture both client fields before admitting a launch. Like other managed primitives it
+requires `TMUX` to be unset and `TMUX_TMPDIR` to equal `XDG_RUNTIME_DIR`; the caller
+must capture its requesting client before clearing inherited tmux targeting.
+It refuses an absent/ambiguous client, missing kernel ownership or changed
+launch/window/pane. A final tmux-server-side guard covers replacement and client
+disconnection between observation and switching. The guard checks the captured
+PID with the client-loop format; `switch-client -c` itself requires the client
+name, not a numeric PID. It returns `{ "focused": true }` only after switching.
+No implicit client, launch, readiness wait, replacement, session/window cleanup or
+mutation replay is supplied. A disconnected caller does not grant retry authority.
+
+| Acceptance/crash boundary | Evidence |
+| --- | --- |
+| Stable window/pane after index renumbering | Disposable-server/control-client test |
+| Switch only the explicitly requested client | Two disposable clients in different sessions |
+| Target changes after inspection | Inject changed launch marker immediately before server-side guard; no switch |
+| Missing/detached client, changed PID or stale launch/window | Refusal without fallback to another client, including disconnect after observation |
+| Managed selection preserves ordinary sessions | No automatic default-session cleanup on managed-window selection; stable-ID candidate targets |
+
+Direct Go verification with tmux **3.6a** passed **43 top-level tests, zero skips**,
+including eight focus/dispatch/no-cleanup cases and the existing kernel ownership
+suite. Tests use disposable sockets and real control-mode clients. LSP could not
+establish an active build for this cross-repository folder; direct Go compilation
+and tests provide that evidence. Native tmux shared-session semantics remain:
+clients deliberately attached to the same session share its selected window;
+this does not introduce per-client session groups or a session manager.
+
+This is a targeting primitive and legacy live-row safety improvement, not the
+completed inventory-backed conversation picker or automatic Pi wrapper. Ordinary
+navigation discovery, cancellation/performance and full frontend integration
+remain owned by the epic handoffs. No Nix evaluation/build, activation, shared
+server restart or live Matrix acceptance is implied.
+
 #### Shared tmux privilege contract (GRILL and NAS)
 
 Managed and interactive windows share the same Unix user and tmux server; they

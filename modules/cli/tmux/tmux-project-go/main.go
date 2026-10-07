@@ -316,9 +316,7 @@ func switchToManagedWindow(target, session, client string) error {
 	} else {
 		_, err = tmux("switch-client", "-t", target)
 	}
-	if err == nil {
-		maybeCleanupDefault(session)
-	}
+	// Selecting managed work never authorizes cleanup of the caller's session.
 	return err
 }
 
@@ -510,7 +508,7 @@ func candidates() []Candidate {
 		if window.Session != "default" {
 			name = filepath.Base(root) + " › " + name
 		}
-		cs = append(cs, Candidate{"managed-window", "=" + window.Session + ":" + window.Index + "." + window.PaneIndex, name,
+		cs = append(cs, Candidate{"managed-window", "=" + window.Session + ":" + window.WindowID + "." + window.PaneID, name,
 			homeRelative(root), window.Session, autojumpScore(root)})
 	}
 	for _, path := range projectPaths() {
