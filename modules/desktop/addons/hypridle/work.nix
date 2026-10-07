@@ -1,4 +1,4 @@
-{ ... }:
+{ config, lib, ... }:
 {
   hm.primary.services.hypridle = {
     enable = true;
@@ -13,6 +13,8 @@
           timeout = 900;
           on-timeout = "hyprlock";
         }
+      ]
+      ++ lib.optionals (config.hostSpec.hostName != "grill") [
         {
           timeout = 1800;
           on-timeout = "systemctl suspend";

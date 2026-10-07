@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   domain = "hs.bepis.lol";
   portKey = "headscale";
@@ -20,6 +25,7 @@ in
 
   services.headscale = {
     enable = true;
+    package = pkgs.unstable.headscale;
     port = config.custom.ports.assigned.${portKey};
     settings = {
       server_url = "https://${domain}";
