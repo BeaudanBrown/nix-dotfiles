@@ -187,6 +187,12 @@ func managed(args []string) error {
 		return managedExactObserve()
 	case "window-check-exact":
 		return managedExactCheck()
+	case "ui-capabilities":
+		var request struct{}
+		if err := readManagedRequest(&request); err != nil {
+			return err
+		}
+		return managedUICapabilities()
 	case "client-capture":
 		return managedClientCapture()
 	case "window-focus-exact":

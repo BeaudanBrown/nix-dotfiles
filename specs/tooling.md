@@ -196,8 +196,14 @@ server restart or live Matrix acceptance is implied.
 #### Requester capture and outside-tmux attachment (#116)
 
 The operator authorized source changes and disposable Go/tmux tests in the
-managed-live-workspaces worktree, retaining all no-build/evaluation/deployment/
-push restrictions. Two additional UI-only operations support default launch:
+managed-live-workspaces worktree, retaining all no-Nix-build/evaluation/deployment/
+push restrictions. UI-only operations support default launch:
+
+- `managed ui-capabilities` accepts only `{}` and reports version 1 with
+  `clientCapture`, `exactFocus`, and `exactAttach`. It requires Linux and tmux
+  3.6+ by read-only `tmux -V`; it neither contacts nor creates a server. Default
+  launch negotiates this before host admission rather than discovering an
+  unsupported focus/attach interface after creating resources.
 
 - `managed client-capture` accepts `{paneId, sourceServerPid, clientName?}`. Capture
   the original server PID and pane from the invocation before clearing `TMUX`.
