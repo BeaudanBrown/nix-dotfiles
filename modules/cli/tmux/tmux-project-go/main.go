@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -488,42 +487,11 @@ func managedLauncherWindows() []managedLauncherWindow {
 }
 
 func candidates() []Candidate {
-	seenRoots := map[string]bool{}
-	var cs []Candidate
-	for _, s := range rootSessions() {
-		root := s.Root
-		if root == "" {
-			root = sessionRoot(s.Name)
-		}
-		seenRoots[root] = true
-		name := s.Name
-		if s.Name != "default" && root != "" {
-			name = filepath.Base(root)
-		}
-		cs = append(cs, Candidate{"session", s.Name, name, homeRelative(root), s.Name, autojumpScore(root)})
+	var result []Candidate
+	for _, row := range discoverPickerRows() {
+		result = append(result, row.Candidate)
 	}
-	for _, window := range managedLauncherWindows() {
-		root := sessionRoot(window.Session)
-		name := window.Concept
-		if window.Session != "default" {
-			name = filepath.Base(root) + " › " + name
-		}
-		cs = append(cs, Candidate{"managed-window", "=" + window.Session + ":" + window.WindowID + "." + window.PaneID, name,
-			homeRelative(root), window.Session, autojumpScore(root)})
-	}
-	for _, path := range projectPaths() {
-		if seenRoots[path] {
-			continue
-		}
-		cs = append(cs, Candidate{"path", path, filepath.Base(path), homeRelative(path), "", autojumpScore(path)})
-	}
-	sort.SliceStable(cs, func(i, j int) bool {
-		if cs[i].Score == cs[j].Score {
-			return cs[i].Name < cs[j].Name
-		}
-		return cs[i].Score > cs[j].Score
-	})
-	return cs
+	return result
 }
 
 func color(code, text string) string {
@@ -576,45 +544,7 @@ func recordVisit(path string) {
 	_ = exec.Command("autojump", "--add", path).Run()
 }
 
-func launcher(clientArg string) error {
-	client, err := clientName(clientArg)
-	if err != nil {
-		return err
-	}
-	var input strings.Builder
-	for _, c := range candidates() {
-		name, path := candidateDisplay(c)
-		fmt.Fprintf(&input, "%s\t%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path, c.Session)
-	}
-	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--nth=1,2", "--with-nth=3,4", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Search sessions, live managed conversations, and paths.")
-	cmd.Env = append(os.Environ(), "FZF_DEFAULT_OPTS=")
-	cmd.Stdin = strings.NewReader(input.String())
-	out, err := cmd.Output()
-	if err != nil {
-		return nil
-	}
-	parts := strings.Split(strings.TrimSpace(string(out)), "\t")
-	if len(parts) < 2 {
-		return nil
-	}
-	if parts[0] == "session" {
-		recordVisit(sessionRoot(parts[1]))
-		return switchTo(parts[1], client)
-	}
-	if parts[0] == "managed-window" {
-		if len(parts) != 5 || parts[4] == "" {
-			return fmt.Errorf("managed launcher candidate is malformed")
-		}
-		recordVisit(sessionRoot(parts[4]))
-		return switchToManagedWindow(parts[1], parts[4], client)
-	}
-	recordVisit(parts[1])
-	session, err := ensureProjectSession(parts[1])
-	if err != nil {
-		return err
-	}
-	return switchTo(session, client)
-}
+func launcher(clientArg string) error { return runPicker(clientArg) }
 
 func launcherPopup(clientArg string) error {
 	_, _, _, _, owner, err := popupContext(clientArg)

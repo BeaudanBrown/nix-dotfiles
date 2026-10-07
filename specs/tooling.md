@@ -61,12 +61,45 @@ identity fail unchanged.
 Managed Matrix Pi windows use the same per-user tmux server as the interactive
 `tmux_project launcher-popup`: managed invocations require `TMUX_TMPDIR` to equal
 `XDG_RUNTIME_DIR`. The existing launcher lists ordinary project sessions and
-paths plus marked live managed windows. Selecting a managed entry switches the
-requesting client to that exact existing window; it never starts or resumes a
-conversation or sends keys. The host launcher validates and forwards optional
+paths plus public-inventory managed conversations. Enter on a managed entry calls
+generation-fenced window-first open and switches only the captured requesting
+client to the returned exact window/pane; it never sends keys. The host launcher validates and forwards optional
 model/thinking selections, derives the canonical workspace path itself, and
 stores only bounded conversation ID/concept display options on the window.
-Dormant conversations have no tmux candidate.
+Dormant and starting conversations and the coordinator are selectable without
+waiting for Pi attachment. Failed startup remains stopped until explicit Enter
+retries through the host owner. No stop/refresh/delete bindings are provided.
+
+#### Inventory-backed picker (#118, staged source)
+
+The picker uses only bounded `pi-managed-session ... --json` inventory/open
+responses, never private registry files. It rejects partial inventories, repeated
+cursors/identities, oversized output and unsupported states. Open is issued once
+with the selected generation fence; unknown outcomes are not replayed or cancelled.
+Exact focus rechecks the captured client name/PID and the target's birth-bound
+window ownership. The existing host lifecycle owns launch joining, retained error
+windows and first-window placement.
+
+**Operator-approved outage policy:** managed selection fails closed without the
+relay. A tmux marker is not proof that a conversation has not been retired. Ordinary
+sessions/raw paths remain available. Ordinary rows target an explicitly unmarked
+window, never a mixed session's last managed window. Raw Enter validates the Git
+checkout and, if necessary, opens an ordinary shell in a managed-only session.
+
+Rows use immutable conversation IDs. The shared live-v1 checkout digest matches
+canonical local paths, not titles, project equality or relative cwd; multiple
+same-checkout conversations remain separate while redundant raw paths disappear.
+An existing ordinary session remains selectable. Sorting mixes autojump scores
+and name/key ties; there is no conversation recency database.
+
+Source-only verification: **58 top-level Go tests passed, zero skips**, including
+bounded/malformed inventory, checkout digest compatibility, same-checkout dedup,
+outage refusal, exact requester/window selection after renumbering, mixed-session
+ordinary selection, and accepted work surviving a lost open response. An integrated
+fixture runs the picker through a fake public CLI and selection executable into
+real disposable tmux focus. It does not claim real-fzf latency or live relay/Matrix
+acceptance; progressive UI and timing evidence belong to #119. External Nix
+validation/build and activation were deliberately not run.
 
 #### Exact managed-window ownership (staged harness integration)
 
