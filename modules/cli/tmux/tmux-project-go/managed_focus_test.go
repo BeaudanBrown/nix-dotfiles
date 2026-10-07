@@ -79,6 +79,34 @@ func focusClientRows(t *testing.T, run exactTmux) map[string]string {
 	return rows
 }
 
+func TestExactFocusRechecksClientNameAndPIDAsAPair(t *testing.T) {
+	run := exactTestServer(t)
+	proof := exactTestWindow(t, run, "a")
+	if _, err := run("new-session", "-d", "-s", "other", "sleep 120"); err != nil {
+		t.Fatal(err)
+	}
+	_, firstPID := focusTestClient(t, run, "exact")
+	second, _ := focusTestClient(t, run, "other")
+	before := focusClientRows(t, run)
+	observed := func(args ...string) (string, error) {
+		if args[0] == "list-clients" {
+			return second + "|" + firstPID, nil
+		}
+		return run(args...)
+	}
+	if err := focusExactWindow(observed, focusRequest(proof, second, firstPID)); err == nil {
+		t.Fatal("PID presence substituted for the captured client pair")
+	}
+	if after := focusClientRows(t, run); !reflect.DeepEqual(before, after) {
+		t.Fatalf("wrong client switched: %v -> %v", before, after)
+	}
+	for _, name := range []string{"#{client_name}", "client,name", "client}name"} {
+		if validManagedClientName(name) {
+			t.Fatalf("format syntax accepted: %q", name)
+		}
+	}
+}
+
 func TestExactFocusSelectsStableTargetForOnlyRequestingClient(t *testing.T) {
 	run := exactTestServer(t)
 	proof := exactTestWindow(t, run, "a")

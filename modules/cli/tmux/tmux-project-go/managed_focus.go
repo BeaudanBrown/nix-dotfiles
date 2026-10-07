@@ -20,8 +20,7 @@ type managedFocusRequest struct {
 func focusExactWindow(run exactTmux, request managedFocusRequest) error {
 	if !validConversationID(request.ConversationID) || !exactLaunchPattern.MatchString(request.LaunchID) ||
 		!exactSessionPattern.MatchString(request.SessionName) || !exactWindowPattern.MatchString(request.WindowID) ||
-		!exactPanePattern.MatchString(request.PaneID) || !exactPID(request.ClientPID) || request.ClientName == "" || len(request.ClientName) > 256 ||
-		strings.IndexFunc(request.ClientName, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
+		!exactPanePattern.MatchString(request.PaneID) || !exactPID(request.ClientPID) || !validManagedClientName(request.ClientName) {
 		return fmt.Errorf("exact managed focus requires a valid target and explicit requesting client")
 	}
 	clients, err := run("list-clients", "-F", "#{client_name}|#{client_pid}")
@@ -44,8 +43,8 @@ func focusExactWindow(run exactTmux, request managedFocusRequest) error {
 	if err != nil {
 		return err
 	}
-	condition := formatAnd(target.Condition, "#{m:*1*,#{L:"+formatAnd(formatEqual("client_pid", request.ClientPID), "#{!=:#{client_session},}")+"}}")
-	// Guard the captured PID as well as the target. -c itself accepts a name,
+	condition := formatAnd(target.Condition, "#{m:*1*,#{L:"+formatAnd(formatEqual("client_pid", request.ClientPID), formatEqual("client_name", request.ClientName), "#{!=:#{client_session},}")+"}}")
+	// Guard the captured name/PID pair as well as the target. -c itself accepts a name,
 	// not a PID; a terminal name may be reused after client disconnection.
 	command := "switch-client -c " + shellQuote(request.ClientName) + " -t " + shellQuote(target.Target)
 	output, err := run("if-shell", "-F", "-t", target.Pane, condition, command, "display-message -p managed-focus-stale")

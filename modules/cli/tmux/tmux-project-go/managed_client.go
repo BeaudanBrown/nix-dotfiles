@@ -19,10 +19,15 @@ type managedClientIdentity struct {
 	ClientPID  string `json:"clientPid"`
 }
 
+func validManagedClientName(name string) bool {
+	return name != "" && len(name) <= 256 && !strings.ContainsAny(name, "#{},") &&
+		strings.IndexFunc(name, func(r rune) bool { return r < 0x20 || r == 0x7f }) < 0
+}
+
 func captureManagedClient(run exactTmux, request managedClientRequest) (managedClientIdentity, error) {
 	var result managedClientIdentity
 	if !exactPanePattern.MatchString(request.PaneID) || !exactPID(request.SourceServerPID) ||
-		len(request.ClientName) > 256 || strings.IndexFunc(request.ClientName, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
+		(request.ClientName != "" && !validManagedClientName(request.ClientName)) {
 		return result, fmt.Errorf("requesting client requires the original server PID and pane identity")
 	}
 	rows, err := run("list-clients", "-F", "#{client_name}\t#{client_pid}\t#{pane_id}\t#{pid}")
@@ -38,8 +43,7 @@ func captureManagedClient(run exactTmux, request managedClientRequest) (managedC
 			continue
 		}
 		parts := strings.Split(row, "\t")
-		if len(parts) != 4 || parts[0] == "" || len(parts[0]) > 256 ||
-			strings.IndexFunc(parts[0], func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 ||
+		if len(parts) != 4 || !validManagedClientName(parts[0]) ||
 			!exactPID(parts[1]) || !exactPanePattern.MatchString(parts[2]) || !exactPID(parts[3]) {
 			return result, fmt.Errorf("requesting client inventory is malformed")
 		}
