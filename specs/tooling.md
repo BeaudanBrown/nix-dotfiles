@@ -193,6 +193,51 @@ navigation discovery, cancellation/performance and full frontend integration
 remain owned by the epic handoffs. No Nix evaluation/build, activation, shared
 server restart or live Matrix acceptance is implied.
 
+#### Requester capture and outside-tmux attachment (#116)
+
+The operator authorized source changes and disposable Go/tmux tests in the
+managed-live-workspaces worktree, retaining all no-build/evaluation/deployment/
+push restrictions. Two additional UI-only operations support default launch:
+
+- `managed client-capture` accepts `{paneId, sourceServerPid, clientName?}`. Capture
+  the original server PID and pane from the invocation before clearing `TMUX`.
+  It rejects client inventories over 64 KiB, requires exactly one matching
+  original server/pane/client, and returns `{clientName, clientPid}` for subsequent
+  exact focus. Multiple viewers of the same pane require an explicit client name;
+  it never chooses the most recent client. A foreign server with reused pane IDs,
+  detached client, malformed or oversized inventory is refused. No server is
+  started, marked or modified by capture.
+- `managed window-attach-exact` accepts the five exact target fields used by focus
+  (no client fields). This is a Linux terminal UI operation, not a JSON success
+  receipt. After exact ownership inspection it rechecks the same target guard in
+  the server queue before attaching a new client to that exact window/pane. It
+  occupies the caller's terminal until detach; it never creates a window, replaces
+  a process or cleans up a session. A stale guard returns an actual error, rather
+  than treating `display-message`'s zero status as success. Caller stdout must be
+  a terminal. The real terminal device is passed to tmux, not the `/dev/tty` alias;
+  the UI goes directly to that terminal while command output is bounded to 64 KiB.
+
+These retain unset `TMUX` and matching `TMUX_TMPDIR`/`XDG_RUNTIME_DIR` requirements.
+Capture happens before host admission; loss of the caller after admission never
+cancels or replays the host operation. Attach/focus failure leaves the existing
+owned process intact for explicit recovery. Native shared-session selection
+semantics remain unchanged.
+
+Acceptance evidence: **48 top-level Go tests passed, zero skips** with tmux 3.6a.
+New cases cover ambiguous shared-pane clients, explicit client selection, foreign
+server identity, detached requester, malformed/oversized capture, bounded attach
+output and nonterminal refusal without changing a redirected file. Linux PTY
+subprocess tests exercise the actual strict dispatcher, terminal attach and
+explicit detach, plus marker replacement between inspection and queued attach
+with nonzero refusal and no surviving client. Existing exact-focus/process tests
+pass after sharing the target-guard implementation. Initial PTY tests exposed
+and corrected tmux's rejection of the `/dev/tty` alias. LSP has no active build
+for this external folder; direct Go compilation/tests are the evidence.
+
+Full default-launch and picker integration still belongs to the harness/epic;
+these primitives alone do not complete #116 or #118. No Nix evaluation/build,
+activation, shared tmux restart or live Matrix traffic was performed.
+
 #### Shared tmux privilege contract (GRILL and NAS)
 
 Managed and interactive windows share the same Unix user and tmux server; they
