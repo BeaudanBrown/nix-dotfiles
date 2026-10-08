@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestPickerEnterThroughPublicCLIAndDisposableTmux(t *testing.T) {
+func TestPickerPublicCLIAndDisposableTmuxRoundtrip(t *testing.T) {
 	run := exactTestServer(t)
 	proof := exactTestWindow(t, run, "a")
 	if _, err := run("new-session", "-d", "-s", "other", "sleep 120"); err != nil {
@@ -42,15 +42,23 @@ func TestPickerEnterThroughPublicCLIAndDisposableTmux(t *testing.T) {
 	status := envelope(map[string]any{"hostId": "fixture", "capabilities": []string{"window-first-open-v1"}})
 	list := envelope(map[string]any{"items": []pickerConversation{row}, "nextCursor": nil})
 	opened := envelope(map[string]any{"conversationId": row.ConversationID, "launchId": proof.LaunchID, "launchState": "window_created", "window": map[string]any{"conversationId": row.ConversationID, "sessionName": proof.SessionName, "windowId": proof.WindowID, "paneId": proof.PaneID}})
-	host := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' \"$*\" >> %s\ncase \"$1 $2\" in\n'host status') printf '%%s\\n' %s;;\n'conversation list') printf '%%s\\n' %s;;\n'conversation open') printf '%%s\\n' %s;;\n*) exit 3;;\nesac\n", shellQuote(log), status, list, opened)
+	host := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' \"$*\" >> %s\ncase \"$1 $2\" in\n'host status') printf '%%s\\n' %s;;\n'conversation list') printf '%%s\\n' %s;;\n'conversation open') printf '%%s\\n' %s; exit 8;;\n*) exit 3;;\nesac\n", shellQuote(log), status, list, opened)
 	if err := os.WriteFile(filepath.Join(bin, "pi-managed-session"), []byte(host), 0700); err != nil {
 		t.Fatal(err)
 	}
-	fzf := "#!/bin/sh\nfor arg in \"$@\"; do case \"$arg\" in --bind*) exit 91;; esac; done\nwhile IFS= read -r row; do case \"$row\" in conversation:*) printf '%s\\n' \"$row\"; exit 0;; esac; done\nexit 130\n"
-	if err := os.WriteFile(filepath.Join(bin, "fzf"), []byte(fzf), 0700); err != nil {
+	inventory, err := loadPickerInventory(context.Background(), callPickerHostCLI)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := runPicker(client); err != nil {
+	rows := buildPickerRows(context.Background(), nil, nil, nil, inventory, nil)
+	if len(rows) != 1 || rows[0].Conversation == nil {
+		t.Fatalf("unexpected rows: %+v", rows)
+	}
+	pid, err := capturePickerClient(client, tmux)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := openPickerConversation(context.Background(), callPickerHostCLI, *rows[0].Conversation, client, pid, tmux); err != nil {
 		t.Fatal(err)
 	}
 	if focusClientRows(t, run)[client] != "exact|"+proof.WindowID+"|"+proof.PaneID {

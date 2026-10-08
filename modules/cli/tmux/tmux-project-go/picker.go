@@ -82,26 +82,38 @@ func pickerCanonical(path string) string {
 	}
 	return filepath.Clean(resolved)
 }
-func buildPickerRows(sessions []Session, windows []pickerWindow, paths []string, inventory pickerInventory, scores map[string]float64) []pickerRow {
+func buildPickerRows(ctx context.Context, sessions []Session, windows []pickerWindow, paths []string, inventory pickerInventory, scores map[string]float64) []pickerRow {
 	// Match checkout digests against locally discovered canonical paths. Relative
 	// cwd and display names never identify a checkout; no Git subprocess is needed.
+	if ctx.Err() != nil {
+		return nil
+	}
 	roots := map[string]bool{}
 	rawRoots := map[string]bool{}
 	ordinaryRoots := map[string]bool{}
 	managedRoots := map[string]bool{}
 	for _, path := range paths {
+		if ctx.Err() != nil {
+			return nil
+		}
 		if root := pickerCanonical(path); root != "" {
 			roots[root] = true
 			rawRoots[root] = true
 		}
 	}
 	for _, s := range sessions {
+		if ctx.Err() != nil {
+			return nil
+		}
 		if root := pickerCanonical(s.Root); root != "" {
 			roots[root] = true
 		}
 	}
 	var rows []pickerRow
 	for _, s := range sessions {
+		if ctx.Err() != nil {
+			return nil
+		}
 		if !isRoot(s) || !pickerText(s.Name, 128) {
 			continue
 		}
@@ -116,16 +128,29 @@ func buildPickerRows(sessions []Session, windows []pickerWindow, paths []string,
 			break
 		}
 	}
+	projects, checkouts := map[string]bool{}, map[string]bool{}
 	for _, item := range inventory.Rows {
-		row := item
-		root := ""
-		for candidate := range roots {
-			if item.CheckoutID != "" && pickerCheckout(inventory.HostID, item.ProjectKey, candidate) == item.CheckoutID {
-				root = candidate
-				managedRoots[root] = true
-				break
+		if item.CheckoutID != "" {
+			projects[item.ProjectKey] = true
+			checkouts[item.CheckoutID] = true
+		}
+	}
+	matched := map[string]string{}
+	for candidate := range roots {
+		for project := range projects {
+			if ctx.Err() != nil {
+				return nil
+			}
+			id := pickerCheckout(inventory.HostID, project, candidate)
+			if checkouts[id] {
+				matched[id] = candidate
+				managedRoots[candidate] = true
 			}
 		}
+	}
+	for _, item := range inventory.Rows {
+		row := item
+		root := matched[item.CheckoutID]
 		state := "unknown"
 		switch {
 		case item.LaunchState == "failed":
@@ -251,45 +276,6 @@ func discoverPickerRows() []pickerRow {
 	defer cancel()
 	inventory, _ := loadPickerInventory(ctx, callPickerHost)
 	sessions, _ := allSessions()
-	return buildPickerRows(sessions, pickerWindows(tmux), projectPaths(), inventory, pickerScores())
+	return buildPickerRows(context.Background(), sessions, pickerWindows(tmux), projectPaths(), inventory, pickerScores())
 }
-func runPicker(clientArg string) error {
-	client, err := clientName(clientArg)
-	if err != nil {
-		return err
-	}
-	pid, err := capturePickerClient(client, tmux)
-	if err != nil {
-		return err
-	}
-	rows := discoverPickerRows()
-	byKey := map[string]pickerRow{}
-	var input strings.Builder
-	for _, row := range rows {
-		byKey[row.Key] = row
-		name, path := candidateDisplay(row.Candidate)
-		fmt.Fprintf(&input, "%s\t%s\t%s\n", row.Key, name, path)
-	}
-	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--with-nth=2,3", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Enter opens. Managed selection requires the relay.")
-	cmd.Env = append(os.Environ(), "FZF_DEFAULT_OPTS=", "FZF_DEFAULT_OPTS_FILE=")
-	cmd.Stdin = strings.NewReader(input.String())
-	cmd.Stderr = os.Stderr
-	out, err := cmd.Output()
-	if err != nil {
-		return nil
-	}
-	key := strings.SplitN(strings.TrimSuffix(string(out), "\n"), "\t", 2)[0]
-	row, ok := byKey[key]
-	if !ok {
-		return fmt.Errorf("selection is no longer available")
-	}
-	if row.Conversation != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
-		defer cancel()
-		return openPickerConversation(ctx, callPickerHost, *row.Conversation, client, pid, tmux)
-	}
-	if row.Ordinary != nil {
-		return focusPickerOrdinary(*row.Ordinary, client, pid, tmux)
-	}
-	return selectPickerPath(row.Candidate.Value, client, pid)
-}
+func runPicker(clientArg string) error { return runProgressivePicker(clientArg) }

@@ -87,7 +87,7 @@ func TestPickerDigestAndCheckoutIdentityDedup(t *testing.T) {
 	coordinator.LaunchState = "attached"
 	sessions := []Session{{Name: "ordinary", Root: first, Role: roleRoot}}
 	windows := []pickerWindow{{Session: "ordinary", Window: "@1", Pane: "%1"}, {Session: "ordinary", Window: "@2", Pane: "%2", Marker: a.ConversationID}}
-	rows := buildPickerRows(sessions, windows, []string{first, first, second}, pickerInventory{HostID: "host", Rows: []pickerConversation{a, b, coordinator}}, map[string]float64{first: 10, second: 20})
+	rows := buildPickerRows(context.Background(), sessions, windows, []string{first, first, second}, pickerInventory{HostID: "host", Rows: []pickerConversation{a, b, coordinator}}, map[string]float64{first: 10, second: 20})
 	if len(rows) != 5 {
 		t.Fatalf("rows: %+v", rows)
 	}
@@ -109,7 +109,7 @@ func TestPickerDigestAndCheckoutIdentityDedup(t *testing.T) {
 	}
 	// Relay outage removes managed rows, not ordinary navigation. A marked last
 	// window cannot masquerade as an ordinary candidate.
-	offline := buildPickerRows(sessions, windows, []string{first, second}, pickerInventory{}, nil)
+	offline := buildPickerRows(context.Background(), sessions, windows, []string{first, second}, pickerInventory{}, nil)
 	for _, row := range offline {
 		if row.Conversation != nil || row.Ordinary != nil && row.Ordinary.Marker != "" {
 			t.Fatal("offline managed selection")
@@ -118,7 +118,7 @@ func TestPickerDigestAndCheckoutIdentityDedup(t *testing.T) {
 	if len(offline) != 2 {
 		t.Fatalf("ordinary navigation lost: %+v", offline)
 	}
-	onlyManaged := buildPickerRows(sessions, windows[1:], []string{first}, pickerInventory{}, nil)
+	onlyManaged := buildPickerRows(context.Background(), sessions, windows[1:], []string{first}, pickerInventory{}, nil)
 	if len(onlyManaged) != 1 || onlyManaged[0].Candidate.Kind != "path" {
 		t.Fatal("managed-only session exposed as ordinary")
 	}
@@ -196,7 +196,7 @@ func TestPickerCLIResponseAndDeadlineBounds(t *testing.T) {
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		var data any
-		err := callPickerHost(ctx, []string{"host", "status"}, &data)
+		err := callPickerHostCLI(ctx, []string{"host", "status"}, &data)
 		cancel()
 		if err == nil {
 			t.Fatal("bad response accepted")

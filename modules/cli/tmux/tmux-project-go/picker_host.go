@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // Public host CLI only. Neither registry paths nor adapter credentials belong here.
@@ -48,7 +49,7 @@ func pickerID(value, prefix string) bool {
 	return strings.HasPrefix(value, prefix+"_") && pickerStableID.MatchString(value)
 }
 func pickerText(value string, limit int) bool {
-	return value != "" && len(value) <= limit && strings.IndexFunc(value, func(r rune) bool { return r < 32 || r == 127 || r == 0xfffd }) < 0
+	return value != "" && len(value) <= limit && strings.IndexFunc(value, func(r rune) bool { return r < 32 || (r >= 127 && r <= 159) || r == 0xfffd || unicode.Is(unicode.Cf, r) }) < 0
 }
 func (row pickerConversation) valid() bool {
 	return validConversationID(row.ConversationID) && (row.Kind == "project" || row.Kind == "coordinator") && pickerText(row.Title, 512) &&
@@ -76,23 +77,31 @@ func (b *pickerBoundedOutput) Write(p []byte) (int, error) {
 	}
 	return b.Buffer.Write(p)
 }
-func callPickerHost(ctx context.Context, args []string, target any) error {
+func callPickerHostCLI(ctx context.Context, args []string, target any) error {
 	cmd := exec.CommandContext(ctx, "pi-managed-session", append(args, "--json")...)
 	out := &pickerBoundedOutput{limit: 65536}
 	stderr := &pickerBoundedOutput{limit: 4096}
 	cmd.Stdout, cmd.Stderr = out, stderr
 	cmd.WaitDelay = 100 * time.Millisecond
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("managed host unavailable or action refused; inspect host before retrying")
+		// Public CLI exit 8 is a successful pending mutation, including the
+		// window-created result that makes window-first focus useful.
+		pending, ok := err.(*exec.ExitError)
+		if !ok || pending.ExitCode() != 8 || len(args) < 2 || args[0] != "conversation" || args[1] != "open" {
+			return fmt.Errorf("managed host unavailable or action refused; inspect host before retrying")
+		}
 	}
+	return decodePickerResponse(out.Bytes(), target, "")
+}
+func decodePickerResponse(data []byte, target any, expectedID string) error {
 	var response struct {
 		Version   string          `json:"version"`
 		RequestID string          `json:"requestId"`
 		OK        bool            `json:"ok"`
 		Data      json.RawMessage `json:"data"`
 	}
-	dec := json.NewDecoder(bytes.NewReader(out.Bytes()))
-	if dec.Decode(&response) != nil || response.Version != "1.0.0" || !response.OK || !pickerText(response.RequestID, 128) {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	if dec.Decode(&response) != nil || response.Version != "1.0.0" || !response.OK || !pickerText(response.RequestID, 128) || (expectedID != "" && response.RequestID != expectedID) {
 		return fmt.Errorf("invalid managed host response")
 	}
 	var extra any

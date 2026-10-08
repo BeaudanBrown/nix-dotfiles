@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Session struct {
@@ -38,6 +40,8 @@ func main() {
 	switch os.Args[1] {
 	case "managed":
 		err = managed(os.Args[2:])
+	case "picker-lines", "picker-refresh", "picker-restore":
+		err = pickerUIHelper(os.Args[1], arg(2), arg(3))
 	case "launcher":
 		err = launcher(arg(2))
 	case "launcher-popup":
@@ -402,37 +406,9 @@ func homeRelative(path string) string {
 }
 
 func projectPaths() []string {
-	h, _ := os.UserHomeDir()
-	roots := []string{filepath.Join(h, "documents"), filepath.Join(h, "monash")}
-	seen := map[string]bool{}
-	var paths []string
-	for _, root := range roots {
-		if st, err := os.Stat(root); err != nil || !st.IsDir() {
-			continue
-		}
-		// Main checkouts contain a .git directory, while linked worktrees contain
-		// a .git file. Ask fd for both so each checkout is independently selectable.
-		cmd := exec.Command("fd", "-H", "-t", "d", "-t", "f", "^\\.git$", root, "--max-depth", "6", "--absolute-path", "--exclude", "node_modules", "--exclude", ".direnv", "--exclude", "result", "--exclude", ".venv", "--exclude", "venv")
-		out, err := cmd.Output()
-		if err != nil {
-			continue
-		}
-		s := bufio.NewScanner(bytes.NewReader(out))
-		for s.Scan() {
-			gitDir := strings.TrimRight(s.Text(), string(os.PathSeparator))
-			dir := filepath.Dir(gitDir)
-			git := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel")
-			top, err := git.Output()
-			if err != nil {
-				continue
-			}
-			path := strings.TrimSpace(string(top))
-			if path != "" && !seen[path] {
-				seen[path] = true
-				paths = append(paths, path)
-			}
-		}
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	paths, _ := scanPickerPaths(ctx, pickerRoots())
 	return paths
 }
 
@@ -512,29 +488,6 @@ func printCandidates() error {
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path, c.Session)
 	}
 	return nil
-}
-
-func autojumpScore(path string) float64 {
-	h, _ := os.UserHomeDir()
-	db := os.Getenv("AUTOJUMP_DATA_DIR")
-	if db == "" {
-		db = filepath.Join(h, ".local/share/autojump")
-	}
-	f, err := os.Open(filepath.Join(db, "autojump.txt"))
-	if err != nil {
-		return 0
-	}
-	defer f.Close()
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		parts := strings.SplitN(s.Text(), "\t", 2)
-		if len(parts) == 2 && parts[1] == path {
-			var score float64
-			fmt.Sscanf(parts[0], "%f", &score)
-			return score
-		}
-	}
-	return 0
 }
 
 func recordVisit(path string) {

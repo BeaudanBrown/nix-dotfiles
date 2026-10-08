@@ -72,8 +72,14 @@ retries through the host owner. No stop/refresh/delete bindings are provided.
 
 #### Inventory-backed picker (#118, staged source)
 
-The picker uses only bounded `pi-managed-session ... --json` inventory/open
-responses, never private registry files. It rejects partial inventories, repeated
+The picker uses only the documented bounded `host-control-v1` inventory/open
+protocol, never private registry files. Its native Unix client uses
+`PI_MANAGED_SESSIONS_RUNTIME_DIR`, or `$XDG_RUNTIME_DIR/pi-managed-sessions`,
+with the same UID/private-directory/socket checks as `pi-managed-session`.
+Custom runtime placement must be exported to the picker as well as the CLI.
+Absent runtime environment permits the public CLI fallback; an attempted socket
+request is never retried through another transport. CLI pending exit 8 is a valid
+window-created acknowledgement, not permission to replay admission. It rejects partial inventories, repeated
 cursors/identities, oversized output and unsupported states. Open is issued once
 with the selected generation fence; unknown outcomes are not replayed or cancelled.
 Exact focus rechecks the captured client name/PID and the target's birth-bound
@@ -100,6 +106,49 @@ fixture runs the picker through a fake public CLI and selection executable into
 real disposable tmux focus. It does not claim real-fzf latency or live relay/Matrix
 acceptance; progressive UI and timing evidence belong to #119. External Nix
 validation/build and activation were deliberately not run.
+
+#### Progressive picker (#119, staged source)
+
+Start fzf before local/host/path discovery. One combined tmux inventory supplies
+sessions, windows and the captured requester; autojump is read once. Independent
+roots scan concurrently with fd, without Git per repository. Raw Enter remains the
+Git-validation boundary. Host reads and scans are independently bounded.
+
+`$XDG_CACHE_HOME/tmux-project/paths.json` (default `~/.cache`) is disposable path-only
+cache data: bounded/schema-checked, basic directory-existence checks, refreshed on
+every invocation, private atomic publication with separate concurrent temporaries.
+Failed/cancelled scans do not publish partial results. No transcripts, credentials,
+conversation recency or lifecycle authority are cached.
+
+Raw rows wait at most a configured **50ms** for managed inventory (headroom inside
+the 100ms budget); ordinary live rows/UI never wait for it. Late full reload removes
+redundant raw rows. Since fzf's index tracking does not preserve identity across
+reordering, a private per-invocation Unix listener and short-lived helper commands
+capture the opaque key in fzf's event queue, then restore it on the **result** event.
+The query is untouched. A removed selection disables Enter until navigation/query
+change, rather than accepting an unrelated replacement. These temporary files are
+UI snapshots/receipts only, removed at exit; they are not another session manager.
+
+Escape cancels/drains discovery, not accepted host work. Open runs under its own
+bounded context after selection; no stop/delete/cancel/replay is sent. A missing
+relay hides managed rows and leaves ordinary navigation usable.
+
+Pre-review source checks: **63 top-level tests, zero skips, with `go test -race`**.
+Real fzf **0.70.0** / tmux **3.6a** tests exercise an actual keybinding through
+`launcher-popup`, a controlling PTY, the public protocol on a private fixture
+socket, two late same-checkout conversations, identity/query retention, removed
+selection refusal, cache additions/removals and early exit during delayed discovery.
+No running relay, Matrix or model is contacted. Deployment must supply a compatible
+fzf Unix-listen/result/transform API; external Nix validation remains unauthorized.
+
+Seven cold/warm/error trials distinguish keypress→UI, first selectable row,
+managed rows and full discovery. Latest pre-review medians were **36–41ms UI,
+66–73ms first rows, 66–69ms managed rows**, with full discovery **79–114ms** (cold path-cache
+versus warm; OS cache not evicted). Some UI tails exceeded the 50ms target; targets
+are not guarantees. A real packaged-CLI baseline took roughly 0.5s for managed
+rows due to repeated Node/schema startup; the native client of the same public
+protocol removes that overhead without reading private state. Final review and
+verification evidence belongs to the harness #119 handoff; no activation is implied.
 
 #### Exact managed-window ownership (staged harness integration)
 
