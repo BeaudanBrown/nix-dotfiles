@@ -77,9 +77,11 @@ protocol, never private registry files. Its native Unix client uses
 `PI_MANAGED_SESSIONS_RUNTIME_DIR`, or `$XDG_RUNTIME_DIR/pi-managed-sessions`,
 with the same UID/private-directory/socket checks as `pi-managed-session`.
 Custom runtime placement must be exported to the picker as well as the CLI.
-Absent runtime environment permits the public CLI fallback; an attempted socket
-request is never retried through another transport. CLI pending exit 8 is a valid
-window-created acknowledgement, not permission to replay admission. It rejects partial inventories, repeated
+Missing runtime environment fails closed; there is no CLI fallback or transport
+retry. This avoids both an unsupported endpoint-discovery claim and an uncorrelated
+second request. Response decoding mirrors the three exact public operation schemas,
+including required fields, tagged unions, capability enums, Unicode-code-point length bounds,
+case-sensitive keys, and request-ID matching. It rejects partial inventories, repeated
 cursors/identities, oversized output and unsupported states. Open is issued once
 with the selected generation fence; unknown outcomes are not replayed or cancelled.
 Exact focus rechecks the captured client name/PID and the target's birth-bound
@@ -130,10 +132,20 @@ change, rather than accepting an unrelated replacement. These temporary files ar
 UI snapshots/receipts only, removed at exit; they are not another session manager.
 
 Escape cancels/drains discovery, not accepted host work. Open runs under its own
-bounded context after selection; no stop/delete/cancel/replay is sent. A missing
-relay hides managed rows and leaves ordinary navigation usable.
+bounded context after selection; no stop/delete/cancel/replay is sent. An unavailable
+local host-control authority hides managed rows and leaves ordinary navigation
+usable. Public `relayState: disconnected` describes **Matrix transport**, not loss
+of local retirement/open authority; a reachable local host can still serve safe
+inventory and generation-fenced opens while Matrix is disconnected.
 
-Pre-review source checks: **63 top-level tests, zero skips, with `go test -race`**.
+Final source checks: **65 top-level tests, zero skips, with `go test -race`**.
+Paired Standards/Spec review was followed by strict-schema and transport remediation.
+All46 emitted `public-schema-fixture` records also agree with the harness's real
+TypeBox parser, checked by `tests/fixtures/managed-picker-schema-check.cjs` in the
+harness repository. The checker takes the harness TypeScript-build path and verbose
+Go-test log. This caught code-point/UTF-16 length differences rather than trusting
+another handwritten fixture. Missing runtime configuration refuses managed reads
+without executing a CLI; strict native framing/identity remains the only transport.
 Real fzf **0.70.0** / tmux **3.6a** tests exercise an actual keybinding through
 `launcher-popup`, a controlling PTY, the public protocol on a private fixture
 socket, two late same-checkout conversations, identity/query retention, removed
@@ -142,13 +154,16 @@ No running relay, Matrix or model is contacted. Deployment must supply a compati
 fzf Unix-listen/result/transform API; external Nix validation remains unauthorized.
 
 Seven cold/warm/error trials distinguish keypress→UI, first selectable row,
-managed rows and full discovery. Latest pre-review medians were **36–41ms UI,
-66–73ms first rows, 66–69ms managed rows**, with full discovery **79–114ms** (cold path-cache
+managed rows and full discovery. Final medians were **34–36ms UI,
+65–67ms first/managed rows**, with full discovery **75–108ms** (cold path-cache
 versus warm; OS cache not evicted). Some UI tails exceeded the 50ms target; targets
 are not guarantees. A real packaged-CLI baseline took roughly 0.5s for managed
 rows due to repeated Node/schema startup; the native client of the same public
 protocol removes that overhead without reading private state. Final review and
-verification evidence belongs to the harness #119 handoff; no activation is implied.
+verification evidence is in harness `docs/managed-picker-evidence.md`; no activation
+is implied. Review's request to gate on Matrix `relayState: ready` was rejected with
+`HostReadModel.matrixReady()` source evidence and a dedicated regression: local
+retirement authority availability is distinct from Matrix transport connectivity.
 
 #### Exact managed-window ownership (staged harness integration)
 

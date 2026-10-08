@@ -7,7 +7,7 @@ for p in (home/'documents',home/'monash',cache,tmp,bins):p.mkdir(parents=True,ex
 repos=[]
 for i in range(80):
  p=home/'documents'/('same-%03d'%i);p.mkdir();(p/'.git').mkdir();repos.append(p)
-env=dict(os.environ,HOME=str(home),XDG_CACHE_HOME=str(cache),TMPDIR=str(tmp),TERM='xterm-256color',PATH=str(bins)+':'+str(pathlib.Path(fzf).parent)+':'+os.environ['PATH'],FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE='')
+env=dict(os.environ,HOME=str(home),XDG_CACHE_HOME=str(cache),XDG_RUNTIME_DIR=str(r/'unused-private-xdg'),TMPDIR=str(tmp),TERM='xterm-256color',PATH=str(bins)+':'+str(pathlib.Path(fzf).parent)+':'+os.environ['PATH'],FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE='')
 env.pop('TMUX',None);env.pop('TMUX_PANE',None)
 (bins/'tmux_project').symlink_to(binary)
 project='project_'+'b'*32
@@ -17,11 +17,9 @@ rows=[dict(conversationId='conv_'+c*32,kind='project',title='same managed '+c,ac
 for row in rows:row.update(setupState='ready',capabilities=['host-control-v1'])
 mode=r/'mode.json';mode.write_text('{}')
 host=bins/'pi-managed-session'
-host.write_text('#!'+sys.executable+'\nimport sys,json,time,os\nfrom pathlib import Path\nm=json.loads(Path('+repr(str(mode))+').read_text())\nif m.get("error"):sys.exit(3)\nif sys.argv[1:3]==["host","status"]:\n time.sleep(m.get("delay",0));data={"hostId":"fixture","capabilities":["window-first-open-v1"]}\nelif sys.argv[1:3]==["conversation","list"]:data={"items":'+repr(rows)+',"nextCursor":None}\nelse:sys.exit(91)\nprint(json.dumps({"version":"1.0.0","requestId":"fixture","ok":True,"data":data}))\n');host.chmod(0o700)
+host.write_text('#!/bin/sh\n: > '+str(r/'forbidden-cli')+'\nexit 99\n');host.chmod(0o700)
 # Public socket fixture only: never inherit a live host endpoint.
 def start_control():
- if os.environ.get('PI_TEST_HOST_CLI'):
-  host.unlink();host.symlink_to(os.environ['PI_TEST_HOST_CLI'])
  runtime=r/'runtime';runtime.mkdir(mode=0o700);env['PI_MANAGED_SESSIONS_RUNTIME_DIR']=str(runtime)
  control=socket.socket(socket.AF_UNIX);control.bind(str(runtime/'control.sock'));os.chmod(runtime/'control.sock',0o600);control.listen();control.settimeout(.1)
  def serve():
@@ -128,6 +126,7 @@ def one(kind,identity=False):
   assert 'path:'+str(home/'documents'/'same-new') in keys,'addition not refreshed'
   assert 'path:'+str(repos[79]) not in keys,'removed path retained'
  assert not (r/'forbidden-git').exists(),'Git subprocess during discovery'
+ assert not (r/'forbidden-cli').exists(),'unexpected CLI fallback'
  os.write(master,b'\x1b');wait(lambda:not ui.exists());time.sleep(.02)
  return dict(ui_ms=round(ui_ms,2),first_ms=round(first_ms,2),full_ms=round(full_ms,2),**observed)
 

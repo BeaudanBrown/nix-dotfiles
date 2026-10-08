@@ -29,7 +29,7 @@ func callPickerHost(ctx context.Context, args []string, target any) error {
 		}
 	}
 	if directory == "" {
-		return callPickerHostCLI(ctx, args, target)
+		return fmt.Errorf("managed runtime environment is unavailable")
 	}
 	if !filepath.IsAbs(directory) {
 		return fmt.Errorf("managed host endpoint unavailable")
@@ -86,7 +86,7 @@ func callPickerHost(ctx context.Context, args []string, target any) error {
 	if len(response) == 0 || len(response) > 65536 || bytes.IndexByte(response, '\n') != len(response)-1 || !utf8.Valid(response) {
 		return fmt.Errorf("invalid host response frame")
 	}
-	return decodePickerResponse(response, target, id)
+	return decodePickerResponse(response, target, id, action["operation"].(string))
 }
 func pickerHostAction(args []string) (map[string]any, error) {
 	if len(args) == 2 && args[0] == "host" && args[1] == "status" {

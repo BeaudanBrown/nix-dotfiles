@@ -13,7 +13,7 @@ import (
 )
 
 func TestPickerPublicSocketFrameIdentityAndPermissions(t *testing.T) {
-	for _, mode := range []string{"valid", "pending-open", "wrong-request", "oversized", "extra-frame", "invalid-utf8", "unsafe-socket", "lost-response"} {
+	for _, mode := range []string{"valid", "pending-open", "wrong-request", "oversized", "extra-frame", "invalid-utf8", "unsafe-socket", "unsafe-directory", "symlink-directory", "symlink-socket", "timeout", "lost-response"} {
 		t.Run(mode, func(t *testing.T) {
 			root, err := os.MkdirTemp("/tmp", "picker-host-")
 			if err != nil {
@@ -32,6 +32,26 @@ func TestPickerPublicSocketFrameIdentityAndPermissions(t *testing.T) {
 			t.Setenv("PI_MANAGED_SESSIONS_RUNTIME_DIR", root)
 			if mode == "unsafe-socket" {
 				if err := os.Chmod(path, 0660); err != nil {
+					t.Fatal(err)
+				}
+			}
+			switch mode {
+			case "unsafe-directory":
+				if err := os.Chmod(root, 0755); err != nil {
+					t.Fatal(err)
+				}
+			case "symlink-directory":
+				link := filepath.Join(root, "link")
+				if err := os.Symlink(root, link); err != nil {
+					t.Fatal(err)
+				}
+				t.Setenv("PI_MANAGED_SESSIONS_RUNTIME_DIR", link)
+			case "symlink-socket":
+				actual := filepath.Join(root, "actual.sock")
+				if err := os.Rename(path, actual); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(actual, path); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -64,6 +84,9 @@ func TestPickerPublicSocketFrameIdentityAndPermissions(t *testing.T) {
 				if mode == "pending-open" && (request.Action["operation"] != "conversation.open" || request.Action["expectedGenerationId"] != "generation_"+strings.Repeat("a", 32)) {
 					t.Error("lost open fence")
 				}
+				if mode == "timeout" {
+					time.Sleep(50 * time.Millisecond)
+				}
 				if mode == "lost-response" {
 					return
 				}
@@ -71,9 +94,9 @@ func TestPickerPublicSocketFrameIdentityAndPermissions(t *testing.T) {
 				if mode == "wrong-request" {
 					id = "other"
 				}
-				data := map[string]any{"hostId": "fixture"}
+				data := pickerFixtureStatus()
 				if mode == "pending-open" {
-					data = map[string]any{"launchState": "window_created"}
+					data = pickerFixtureOpen()
 				}
 				response, _ := json.Marshal(map[string]any{"version": "1.0.0", "requestId": id, "ok": true, "data": data})
 				response = append(response, '\n')
@@ -91,7 +114,11 @@ func TestPickerPublicSocketFrameIdentityAndPermissions(t *testing.T) {
 			if mode == "pending-open" {
 				args = []string{"conversation", "open", "conv_" + strings.Repeat("a", 32), "--expected-generation-id", "generation_" + strings.Repeat("a", 32)}
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			deadline := time.Second
+			if mode == "timeout" {
+				deadline = 10 * time.Millisecond
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), deadline)
 			defer cancel()
 			var data map[string]any
 			err = callPickerHost(ctx, args, &data)

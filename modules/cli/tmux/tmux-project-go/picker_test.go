@@ -9,11 +9,10 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
 
 func pickerFixtureRow(letter string) pickerConversation {
-	return pickerConversation{ConversationID: "conv_" + strings.Repeat(letter, 32), Kind: "project", Title: "Same title", ActiveGenerationID: "generation_" + strings.Repeat("a", 32), RuntimeState: "stopped", LaunchState: "none", ProjectKey: "project_" + strings.Repeat("b", 32)}
+	return pickerConversation{ConversationID: "conv_" + strings.Repeat(letter, 32), Kind: "project", Title: "Same title", ActiveGenerationID: "generation_" + strings.Repeat("a", 32), RuntimeState: "stopped", LaunchState: "none", SetupState: "ready", Capabilities: []string{"window-first-open-v1"}, CheckoutID: "checkout_" + strings.Repeat("b", 32), ProjectKey: "project_" + strings.Repeat("b", 32)}
 }
 func pickerFixtureDecode(t *testing.T, data, target any) {
 	t.Helper()
@@ -32,7 +31,7 @@ func TestPickerPublicInventoryBoundaries(t *testing.T) {
 			row := pickerFixtureRow("a")
 			call := func(ctx context.Context, args []string, dest any) error {
 				if args[0] == "host" {
-					pickerFixtureDecode(t, map[string]any{"hostId": "host", "capabilities": []string{"window-first-open-v1"}}, dest)
+					pickerFixtureDecode(t, pickerFixtureStatus(), dest)
 					return nil
 				}
 				calls++
@@ -83,6 +82,7 @@ func TestPickerDigestAndCheckoutIdentityDedup(t *testing.T) {
 	coordinator := pickerFixtureRow("c")
 	coordinator.Kind = "coordinator"
 	coordinator.ProjectKey = ""
+	coordinator.CheckoutID = ""
 	coordinator.RuntimeState = "running"
 	coordinator.LaunchState = "attached"
 	sessions := []Session{{Name: "ordinary", Root: first, Role: roleRoot}}
@@ -186,20 +186,23 @@ func TestPickerOrdinaryFocusNeverSelectsManagedLastWindow(t *testing.T) {
 		t.Fatal("replaced requester accepted")
 	}
 }
-func TestPickerCLIResponseAndDeadlineBounds(t *testing.T) {
+func pickerFixtureStatus() map[string]any {
+	return map[string]any{"hostId": "host", "relayState": "ready", "accountState": "ready", "capabilities": []string{"window-first-open-v1"}}
+}
+func TestPickerMissingRuntimeNeverFallsBack(t *testing.T) {
 	bin := t.TempDir()
+	marker := filepath.Join(bin, "called")
 	t.Setenv("PATH", bin)
-	script := filepath.Join(bin, "pi-managed-session")
-	for _, body := range []string{`printf '%s' '{"version":"1.0.0","requestId":"test","ok":false}'`, `printf '%s' '{"version":"1.0.0","requestId":"test","ok":true,"data":{}}{}'`, `while :; do printf 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; done`} {
-		if err := os.WriteFile(script, []byte("#!/bin/sh\n"+body+"\n"), 0700); err != nil {
-			t.Fatal(err)
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		var data any
-		err := callPickerHostCLI(ctx, []string{"host", "status"}, &data)
-		cancel()
-		if err == nil {
-			t.Fatal("bad response accepted")
-		}
+	t.Setenv("PI_MANAGED_SESSIONS_RUNTIME_DIR", "")
+	t.Setenv("XDG_RUNTIME_DIR", "")
+	if err := os.WriteFile(filepath.Join(bin, "pi-managed-session"), []byte("#!/bin/sh\n: > "+shellQuote(marker)+"\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	var data any
+	if callPickerHost(context.Background(), []string{"host", "status"}, &data) == nil {
+		t.Fatal("missing endpoint accepted")
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatal("CLI fallback attempted")
 	}
 }

@@ -5,45 +5,45 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os/exec"
 	"regexp"
 	"strings"
-	"time"
 	"unicode"
 )
 
-// Public host CLI only. Neither registry paths nor adapter credentials belong here.
+// Public host protocol only. Neither registry paths nor adapter credentials belong here.
 type pickerHostCall func(context.Context, []string, any) error
 
 type pickerConversation struct {
-	ConversationID      string `json:"conversationId"`
-	Kind                string `json:"kind"`
-	Title               string `json:"title"`
-	CheckoutID          string `json:"checkoutId"`
-	ProjectKey          string `json:"projectKey"`
-	ActiveGenerationID  string `json:"activeGenerationId"`
-	RuntimeState        string `json:"runtimeState"`
-	LaunchState         string `json:"launchState"`
-	CheckoutDisplayName string `json:"checkoutDisplayName"`
+	ConversationID         string              `json:"conversationId"`
+	Kind                   string              `json:"kind"`
+	Title                  string              `json:"title"`
+	CheckoutID             string              `json:"checkoutId,omitempty"`
+	ProjectKey             string              `json:"projectKey,omitempty"`
+	ActiveGenerationID     string              `json:"activeGenerationId"`
+	RuntimeState           string              `json:"runtimeState"`
+	LaunchState            string              `json:"launchState"`
+	CheckoutDisplayName    string              `json:"checkoutDisplayName,omitempty"`
+	ProjectDisplayName     string              `json:"projectDisplayName,omitempty"`
+	SetupState             string              `json:"setupState"`
+	Capabilities           []string            `json:"capabilities"`
+	SessionKey             string              `json:"sessionKey,omitempty"`
+	ErrorCode              string              `json:"errorCode,omitempty"`
+	Window                 *pickerWindowResult `json:"window,omitempty"`
+	Placement              *pickerPlacement    `json:"placement,omitempty"`
+	ReconciliationRequired *bool               `json:"reconciliationRequired,omitempty"`
 }
 type pickerInventory struct {
 	HostID string
 	Rows   []pickerConversation
 }
 type pickerOpen struct {
-	ConversationID string `json:"conversationId"`
-	LaunchID       string `json:"launchId"`
-	LaunchState    string `json:"launchState"`
-	Window         struct {
-		ConversationID string `json:"conversationId"`
-		SessionName    string `json:"sessionName"`
-		WindowID       string `json:"windowId"`
-		PaneID         string `json:"paneId"`
-	} `json:"window"`
+	ConversationID string             `json:"conversationId"`
+	LaunchID       string             `json:"launchId"`
+	LaunchState    string             `json:"launchState"`
+	Window         pickerWindowResult `json:"window"`
 }
 
-var pickerStableID = regexp.MustCompile(`^(generation|checkout|project)_[a-f0-9]{32}$`)
+var pickerStableID = regexp.MustCompile(`^(generation|checkout|project|launch|session)_[a-f0-9]{32}$`)
 
 func pickerID(value, prefix string) bool {
 	return strings.HasPrefix(value, prefix+"_") && pickerStableID.MatchString(value)
@@ -52,10 +52,22 @@ func pickerText(value string, limit int) bool {
 	return value != "" && len(value) <= limit && strings.IndexFunc(value, func(r rune) bool { return r < 32 || (r >= 127 && r <= 159) || r == 0xfffd || unicode.Is(unicode.Cf, r) }) < 0
 }
 func (row pickerConversation) valid() bool {
-	return validConversationID(row.ConversationID) && (row.Kind == "project" || row.Kind == "coordinator") && pickerText(row.Title, 512) &&
-		pickerID(row.ActiveGenerationID, "generation") && containsString([]string{"running", "stopped", "unknown"}, row.RuntimeState) &&
-		containsString([]string{"none", "prepared", "window_created", "attached", "failed"}, row.LaunchState) &&
-		(row.CheckoutID == "" || (pickerID(row.CheckoutID, "checkout") && pickerID(row.ProjectKey, "project")))
+	if !validConversationID(row.ConversationID) || !pickerUnits(row.Title, 128) || !pickerID(row.ActiveGenerationID, "generation") || !containsString([]string{"running", "stopped", "unknown"}, row.RuntimeState) || !containsString([]string{"none", "prepared", "window_created", "attached", "failed"}, row.LaunchState) || !containsString([]string{"pending", "ready", "disconnected", "notification_setup_uncertain"}, row.SetupState) || !pickerValidCaps(row.Capabilities) {
+		return false
+	}
+	if row.SessionKey != "" && !pickerID(row.SessionKey, "session") || row.ErrorCode != "" && !containsString(pickerErrorCodes, row.ErrorCode) || row.Window != nil && (!row.Window.valid() || row.Window.ConversationID != row.ConversationID) {
+		return false
+	}
+	if row.Kind == "coordinator" {
+		return row.CheckoutID == "" && row.ProjectKey == "" && row.CheckoutDisplayName == "" && row.ProjectDisplayName == "" && row.Placement == nil && row.ReconciliationRequired == nil
+	}
+	if row.Kind != "project" || row.CheckoutDisplayName != "" && !pickerUnits(row.CheckoutDisplayName, 128) || row.ProjectDisplayName != "" && !pickerUnits(row.ProjectDisplayName, 128) || row.Placement != nil && !row.Placement.valid() {
+		return false
+	}
+	if row.CheckoutID != "" {
+		return pickerID(row.CheckoutID, "checkout") && pickerID(row.ProjectKey, "project") && row.ReconciliationRequired == nil
+	}
+	return row.ReconciliationRequired != nil && *row.ReconciliationRequired && (row.ProjectKey == "" || pickerID(row.ProjectKey, "project"))
 }
 func containsString(values []string, value string) bool {
 	for _, item := range values {
@@ -77,49 +89,15 @@ func (b *pickerBoundedOutput) Write(p []byte) (int, error) {
 	}
 	return b.Buffer.Write(p)
 }
-func callPickerHostCLI(ctx context.Context, args []string, target any) error {
-	cmd := exec.CommandContext(ctx, "pi-managed-session", append(args, "--json")...)
-	out := &pickerBoundedOutput{limit: 65536}
-	stderr := &pickerBoundedOutput{limit: 4096}
-	cmd.Stdout, cmd.Stderr = out, stderr
-	cmd.WaitDelay = 100 * time.Millisecond
-	if err := cmd.Run(); err != nil {
-		// Public CLI exit 8 is a successful pending mutation, including the
-		// window-created result that makes window-first focus useful.
-		pending, ok := err.(*exec.ExitError)
-		if !ok || pending.ExitCode() != 8 || len(args) < 2 || args[0] != "conversation" || args[1] != "open" {
-			return fmt.Errorf("managed host unavailable or action refused; inspect host before retrying")
-		}
-	}
-	return decodePickerResponse(out.Bytes(), target, "")
-}
-func decodePickerResponse(data []byte, target any, expectedID string) error {
-	var response struct {
-		Version   string          `json:"version"`
-		RequestID string          `json:"requestId"`
-		OK        bool            `json:"ok"`
-		Data      json.RawMessage `json:"data"`
-	}
-	dec := json.NewDecoder(bytes.NewReader(data))
-	if dec.Decode(&response) != nil || response.Version != "1.0.0" || !response.OK || !pickerText(response.RequestID, 128) || (expectedID != "" && response.RequestID != expectedID) {
-		return fmt.Errorf("invalid managed host response")
-	}
-	var extra any
-	if dec.Decode(&extra) != io.EOF {
-		return fmt.Errorf("trailing managed host response")
-	}
-	return json.Unmarshal(response.Data, target)
-}
 func loadPickerInventory(ctx context.Context, call pickerHostCall) (pickerInventory, error) {
 	var result pickerInventory
-	var status struct {
-		HostID       string   `json:"hostId"`
-		Capabilities []string `json:"capabilities"`
-	}
+	var status pickerHostStatus
 	if err := call(ctx, []string{"host", "status"}, &status); err != nil {
 		return result, err
 	}
-	if !pickerText(status.HostID, 128) || !containsString(status.Capabilities, "window-first-open-v1") {
+	// relayState describes Matrix connectivity, not availability of this local
+	// authority. A disconnected Matrix bridge still owns retirement/open checks.
+	if !status.valid() || !containsString(status.Capabilities, "window-first-open-v1") {
 		return result, fmt.Errorf("managed host upgrade required")
 	}
 	result.HostID = status.HostID
@@ -127,10 +105,7 @@ func loadPickerInventory(ctx context.Context, call pickerHostCall) (pickerInvent
 	cursors := map[string]bool{}
 	ids := map[string]bool{}
 	for page := 0; page < 128; page++ {
-		var data struct {
-			Items      []pickerConversation `json:"items"`
-			NextCursor json.RawMessage      `json:"nextCursor"`
-		}
+		var data pickerInventoryPage
 		args := []string{"conversation", "list", "--limit", "100"}
 		if cursor != "" {
 			args = append(args, "--cursor", cursor)
