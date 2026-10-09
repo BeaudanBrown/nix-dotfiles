@@ -165,6 +165,11 @@ is implied. Review's request to gate on Matrix `relayState: ready` was rejected 
 `HostReadModel.matrixReady()` source evidence and a dedicated regression: local
 retirement authority availability is distinct from Matrix transport connectivity.
 
+The #120 GRILL/NAS configuration, exact public device mappings, unresolved package
+publication/lock boundary, permitted source checks and staged rollout/rollback are
+in [managed-live-workspaces.md](./managed-live-workspaces.md). This is source-only
+staging, not a resolved deployment or permission to activate it.
+
 #### Exact managed-window ownership (staged harness integration)
 
 Forced stopping uses Linux pidfds on amd64/arm64, never a numeric-PID signal or

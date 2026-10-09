@@ -33,6 +33,13 @@ in
     homeserver = "https://matrix.bepis.lol";
     botUserId = "@pi-grill:matrix.bepis.lol";
     operatorUserId = "@beau:matrix.bepis.lol";
+    # Operator supplied from the existing dedicated NAS owner's whoami result.
+    # Recipient device only: no owner credential belongs on this host.
+    accountDeviceId = "PXZRSYBGDY";
+    retainRuntime = true;
+    # Keep the harness's central policy: model mutations require approval;
+    # reads are free. No runtime policy/notification editor.
+    actionPolicyOverrides = { };
     ignoredSenderUserIds = [
       "@whatsappbot:matrix.bepis.lol"
       "@signalbot:matrix.bepis.lol"

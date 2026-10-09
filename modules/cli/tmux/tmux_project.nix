@@ -1,5 +1,9 @@
 { pkgs }:
 
+# Exact focus needs tmux 3.6; progressive reload is tested against fzf's 0.70 API.
+# Fail at package evaluation rather than silently shipping an incompatible UI.
+assert pkgs.lib.versionAtLeast pkgs.tmux.version "3.6";
+assert pkgs.lib.versionAtLeast pkgs.fzf.version "0.70";
 pkgs.buildGoModule {
   pname = "tmux_project";
   version = "0.1.0";
@@ -8,7 +12,16 @@ pkgs.buildGoModule {
   vendorHash = null;
 
   nativeBuildInputs = [ pkgs.makeWrapper ];
-  nativeCheckInputs = [ pkgs.git ];
+  # Tests use explicit disposable sockets. Avoid the shared-server wrapper even
+  # during future, separately authorized package checks.
+  nativeCheckInputs = [
+    pkgs.git
+    (pkgs.tmux.rawTmux or pkgs.tmux)
+    pkgs.fzf
+    pkgs.fd
+    pkgs.python3
+  ];
+  PI_TEST_FZF = "${pkgs.fzf}/bin/fzf";
 
   postInstall = ''
     # Both the launcher and plugin subprocesses use this entrypoint. Pin the

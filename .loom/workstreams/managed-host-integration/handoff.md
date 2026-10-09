@@ -5,7 +5,8 @@
 Operator approved source-only configuration/package/keybinding work and local
 commits in this worktree. No external Nix evaluation/build, push, activation,
 service/shared-tmux restart, live Matrix traffic, or secret access. Harness #120
-is claimed. This is preflight, not implementation or deployment evidence.
+is claimed. Source implementation and affected tests now pass; review/final gate
+are pending. No deployment evidence is claimed.
 
 Source bases: dotfiles a128141; harness ec7dda8. Existing sources retain GRILL/NAS
 host IDs, dedicated relay-bot MXIDs, operator MXID, ignored bridge senders, named
@@ -37,15 +38,26 @@ No persistent runtime operation is authorized here. Future activation must:
    restart, migration or destructive rollback. Migration needs a fresh preview
    and confirmation, not merely service activation.
 
-## Missing non-secret configuration
+## Implemented source and remaining boundary
 
-The inspected public source contains no device IDs for:
-- the existing dedicated NAS owner login (@beau:matrix.bepis.lol, pi-chat token);
-- the @pi-grill:matrix.bepis.lol bot login;
-- the @pi-nas:matrix.bepis.lol bot login.
+Operator supplied existing-token whoami results: owner PXZRSYBGDY, GRILL
+PI_GRILL_RELAY, NAS LKVMVRCIUY. Both relays now address the owner device; NAS trusts
+only the two exact bot/device pairs, retaining the existing owner token reference.
+Experiments are explicitly off in normal launches; pi-local -> pi-r-local and the
+upstream pi-local-only remain distinct. Runtime retention and central defaults are
+explicit. Package checks have real UI dependencies and version floors. Roots,
+keybindings, shared server/guard, assistant/file grants and credentials are preserved.
 
-Upstream managedSessions.accountDeviceId is the owner recipient; NAS
-bridgeChat.assistant.managedAccountHosts requires exact hostId/botUserId/deviceId
-triples. Need operator-supplied IDs, or explicit approval to stage account wiring
-with effects disabled until verified IDs are supplied. Do not read credentials,
-query live accounts, infer IDs from display names, or use wildcard trust.
+Durable runbook: specs/managed-live-workspaces.md. flake.nix requests harness
+ec7dda83ab344283aab9c35e177cc6ba02f7cfe9, but it is local/unpublished and the old lock
+remains. This is intentionally unresolved staging, not a buildable configuration.
+Do not mark package integration/deployment verified or silently close this boundary.
+Publication and real lock resolution require separate permission; no fake hash.
+
+Evidence: seven source assertions and six Nix syntax parses (not evaluation) pass;
+65 direct Go race tests pass; harness packaged566 managed/87 bridge pass with zero
+skips. An initial ad-hoc Node run skipped12 SDK-dependent cases; the subsequent
+packaged suite supplied the real environment and supersedes those skips. Logs in
+harness .pi/tmp/workers/2026-10-09T06-22-27-971Z-managed-host-config-source-focused-621bb96a642a/,
+2026-10-09T06-22-52-635Z-managed-host-config-affected-dd4e8ae94728/, and
+2026-10-09T06-25-23-079Z-managed-host-config-packaged-affected-8c595ab5a669/.

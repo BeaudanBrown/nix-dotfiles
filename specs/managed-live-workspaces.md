@@ -1,0 +1,131 @@
+# Managed live workspaces — staged GRILL/NAS configuration
+
+This is the source-only #120 handoff for pi-harness epic #103. It is **not an
+activation instruction or evidence of deployment**. No external Nix evaluation,
+build, lock resolution, push, service/shared-tmux restart, live Matrix traffic,
+secret access, migration or real-client test was authorized or performed.
+
+## Package boundary (must be resolved before deployment)
+
+`flake.nix` requests the tested harness commit
+`ec7dda83ab344283aab9c35e177cc6ba02f7cfe9`; the local picker includes #118/#119
+through `a128141`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
+both the ordinary picker/keybinding and the managed exact-window launcher.
+
+**The requested harness commit is local/unpublished and flake.lock still records
+1604a971d5990e520399186de7dd90a7071dca65. This worktree is not presently a resolved,
+buildable deployment configuration.** Its new options must not be evaluated
+against the old input. No narHash, remote availability or successful evaluation
+is fabricated. After separate publication/lock-update authorization, publish the
+reviewed harness revision, resolve that exact input and its transitive graph,
+then review the lock diff. If cumulative review changes the harness, explicitly
+select that reviewed replacement revision instead. Do not silently use latest.
+
+Minimum picker prerequisites: tmux3.6 and the tested fzf0.70 Unix-listen/result/
+transform API. The derivation asserts these floors and supplies git, raw tmux,
+fzf, fd and Python to its checks. It selects raw tmux for tests, never the fleet
+shared-server bootstrap wrapper. Runtime PATH dependencies and the existing
+requesting-client keybinding are retained. Direct Go tests are not proof that
+this Nix package has been built.
+
+## Public identities (operator supplied from existing-token whoami)
+
+| Role | Host | Exact MXID | Exact device ID |
+| --- | --- | --- | --- |
+| Dedicated owner login on NAS | recipient for both hosts | @beau:matrix.bepis.lol | PXZRSYBGDY |
+| GRILL relay bot | grill | @pi-grill:matrix.bepis.lol | PI_GRILL_RELAY |
+| NAS relay bot | nas | @pi-nas:matrix.bepis.lol | LKVMVRCIUY |
+
+These are identifiers, not credentials. Both relays set `accountDeviceId` to the
+owner recipient. NAS `bridgeChat.assistant.managedAccountHosts` contains only the
+two exact host/bot/device triples; no wildcard trust or display-name inference.
+If any login/token is replaced, verify its device mapping again. Existing account
+journals bind their owner/recipient identity; changing scope needs explicit
+recovery, not editing a live journal or deleting it to bypass a fence.
+
+The NAS account worker reuses the existing `matrixTokenFile` SOPS reference
+`pi-chat/matrix-token`. It runs inside the existing deterministic transport,
+separate from the model worker. No token is copied to a relay, Pi settings, model
+context, Nix store, log or this document. Existing host secrets remain bot-only
+`pi/matrix-grill-env` and `pi/matrix-nas-env`. Do not inspect secrets to implement
+this handoff. Account automation joins proven rooms, initializes rules only for
+new rooms, preserves manual notification changes, and performs authorized exact
+leave/forget. Its enablement can have account effects at **future activation**;
+setting source configuration is not consent to execute them now.
+
+## Preserved configuration and policy
+
+- GRILL roots: `projects = ~/documents/projects`, `documents = ~/documents`.
+  NAS root: `projects = ~/documents/projects`. Host IDs and roots are unchanged;
+  these are trusted Git roots, not instructions to enroll existing sessions.
+- Exact operator and ignored WhatsApp/Signal/Facebook service MXIDs remain
+  unchanged. No unverified owner puppet is granted access.
+- `actionPolicyOverrides = { };` preserves the harness's central defaults:
+  reads/previews free, every model mutation separately approved, protocol human
+  confirmation and coordinator protection retained. No runtime policy or
+  notification-setting command is added.
+- Normal `pi` and upstream `pi-local-only` explicitly default Pi-R/AgentGraph
+  off. Automatic management applies only to eligible interactive launches.
+  `pi-local-only` retains engineering resources but strips managed authority.
+  `pi-local` still selects the local model through the separate `pi-r-local`
+  experimental launcher; its name/resources/evaluation contract are not reused
+  for local-only mode. Deliberate experiment packages remain available.
+- Runtime retention is explicitly on. Independent `tmux-shared` ownership,
+  cgroup/update guard, narrow relay NNP override, scratch/LLM behavior and pinned
+  busy runtimes are unchanged. Never restart shared tmux as an update shortcut.
+- NAS assistant's existing Note-to-Self allowlist/model, `allJoinedRooms=false`,
+  empty remote-owner grants and existing file-service configuration remain
+  unchanged. Managed account automation does not widen assistant room/tool grants.
+- Host-local registry, account journals, retirement ledger and managed session
+  histories are not moved into synchronized ordinary-history storage.
+
+## Staged rollout — separate authorization required
+
+1. Finish cumulative source review (#121). Obtain publication, lock resolution,
+   external evaluation/build and deployment permission separately; the present
+   approval includes none of those operations. Resolve the package boundary above.
+2. Evaluate both GRILL and NAS configurations with the selected input, inspect
+   generated policies/units/package paths and version floors, then build targeted
+   packages/hosts only as authorized. Confirm model worker isolation and existing
+   assistant/file service settings; compare identities without logging tokens.
+3. Back up manifests, registry, native managed histories, hierarchy/retirement/
+   account state, pending journals and receipts together. Preserve newer
+   tombstones and the account preservation baseline. Never restore an active
+   manifest without its retirement authority.
+4. Stage NAS deterministic account consumer before host account requests. Preserve
+   its shared Matrix sync cursor and durable receipts. Existing-room setup must
+   preserve notification policy, not reset it. Verify the dedicated owner identity
+   and bot-device mappings at this separate live acceptance boundary.
+5. Use the existing guarded relay-first rollout on each host. A failed cgroup
+   guard leaves the old relay running; do not kill/adopt a foreign server or fake
+   ownership. Compatible adapters reconnect while keeping process/runtime IDs.
+6. New explicit launches use the new entrypoint. Existing ordinary or busy Pi
+   processes are not adopted/restarted. Older loaded adapters keep their runtime;
+   refresh only after supported idle consent, never force a busy refresh. Unknown
+   capability/version or uncertain identity fails closed.
+7. Existing-room hierarchy migration is a distinct operation: read-only
+   `pi-managed-session space reconcile preview --json`, inspect exact scope,
+   then separately confirm apply with its preview ID. After interruption obtain a
+   fresh preview; retained legacy IDs/receipts are not destructive authority.
+   Complete admitted legacy #68 scope before separately consenting to checkout
+   grouping. No room recreation, inherited-history backfill or implicit reparenting.
+8. Separately authorize desktop/Element X/Matrix acceptance: ordinary and managed
+   launch/picker behavior, coordinator wake, account joins/rules/manual changes,
+   disconnect/reconnect, and exact cleanup. Isolated PTY tests are not this evidence.
+
+Before persistent state changes, withdrawing an unactivated source/package
+selection is harmless. After mutation, old strict readers may not accept new
+fields; executable rollback is **not** a supported state downgrade. Keep the
+compatible relay/runtime and recover from the full backup boundary under a
+specific recovery plan. V2 cutover remains separate (#63). Do not delete uncertain
+journals, newer tombstones or failed panes to make older code start.
+
+## Permitted source verification
+
+`python3 modules/cli/pi-harness/check-managed-integration.py --harness-source <harness-checkout>`
+checks exact public mappings, preserved seams and central policy without importing
+Nix or accessing secrets. `nix-instantiate --parse` is syntax parsing only, not
+module evaluation; no `nix eval`, `flake check`, lock fetch or build is included.
+Direct Go/disposable-tmux tests exercise the owning picker with existing tool
+binaries. Generated Nix configuration and real service behavior remain unverified
+until separately authorized evaluation and acceptance.

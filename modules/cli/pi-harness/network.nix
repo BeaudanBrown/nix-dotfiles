@@ -183,6 +183,10 @@ in
   services.pi-harness = {
     enable = true;
     package = piHarnessPackage;
+    # Normal pi and pi-local-only are engineering launchers, not experiments.
+    # Keep the separate pi-local -> pi-r-local opt-in above unchanged.
+    experiments.piR.enable = false;
+    experiments.agentgraph.enable = false;
     agentgraph.environmentFile = config.sops.secrets."agentgraph/env".path;
   }
   // lib.optionalAttrs (lib.hasAttrByPath [ "services" "pi-harness" "lsp" "enable" ] options) {
