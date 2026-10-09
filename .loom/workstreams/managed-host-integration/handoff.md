@@ -5,8 +5,8 @@
 Operator approved source-only configuration/package/keybinding work and local
 commits in this worktree. No external Nix evaluation/build, push, activation,
 service/shared-tmux restart, live Matrix traffic, or secret access. Harness #120
-is claimed. Source implementation and affected tests now pass; review/final gate
-are pending. No deployment evidence is claimed.
+is claimed. Source implementation a210735, affected tests, paired review and final
+harness gate pass. No deployment evidence is claimed; package/lock boundary remains.
 
 Source bases: dotfiles a128141; harness ec7dda8. Existing sources retain GRILL/NAS
 host IDs, dedicated relay-bot MXIDs, operator MXID, ignored bridge senders, named
@@ -61,3 +61,17 @@ packaged suite supplied the real environment and supersedes those skips. Logs in
 harness .pi/tmp/workers/2026-10-09T06-22-27-971Z-managed-host-config-source-focused-621bb96a642a/,
 2026-10-09T06-22-52-635Z-managed-host-config-affected-dd4e8ae94728/, and
 2026-10-09T06-25-23-079Z-managed-host-config-packaged-affected-8c595ab5a669/.
+
+Review: harness .pi/tmp/reviews/2026-10-09T06-31-16-951Z-worktree-2029b59f4515-52b2a67f4dad/.
+Standards found no violations and classified unresolved publication/lock as high /
+justified deferral; Spec had no findings. A preceding tool failure produced no
+report and was retried unchanged. No source remediation was requested.
+Final source7 / parse6 and HARNESS canonical12 / production packages passed:
+.pi/tmp/workers/2026-10-09T06-32-35-909Z-managed-host-config-final-canonical-a2467039c9d9/.
+Managed566, bridge87, package13+17, zero skips. Only evidence prose changed after.
+Harness durable evidence: docs/managed-host-integration-evidence.md.
+
+Next boundary: separate permission to publish/select the reviewed harness and
+resolve the actual external lock graph. Keep #120 open until that integration
+boundary is resolved; #121 cumulative/client acceptance remains unclaimed. No
+push, external evaluation/build or live changes have occurred.
