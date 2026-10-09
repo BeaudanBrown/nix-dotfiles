@@ -23,6 +23,7 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL472wjBWlBbL8yLBSwPXorccKJ4JZcfmtEO7iqVTfo1 beau@t480" # agent/t480 key
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOBYWJcI/KdO1Nile/OUEaFuwVannPk7PJMG5P+i9inb beau@nixos" # rozzy
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINWJxY8ri0vZBbk6GXwWGV1PuHjxeN3G938fq+ZfEWyH lachy@nixos" # lachy vm
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAChSRs7L21FStx6qnCeLdKOnXkAdGtsj/8zN/pPWIaE u0_a227@localhost" # oneplus taermux
   ];
 
   systemd.tmpfiles.rules = [
