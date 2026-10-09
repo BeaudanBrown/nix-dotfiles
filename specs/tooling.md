@@ -163,6 +163,14 @@ recipe tools for a separate managed Matrix conversation. Mealie remains on NAS u
 activation order, non-admin account permissions, SOPS token provisioning and live tests.
 The agent implementation does not create a room, provision secrets or deploy hosts.
 
+### Tailnet-only ntfy notifications (NAS)
+
+NAS exposes `ntfy.bepis.lol` through the existing tailnet-only HTTPS ingress for
+Element X Android UnifiedPush and an authenticated `test` topic. The phone uses
+a dedicated non-admin account; no harness/bridge changes or automated alerts are
+added. See [ntfy.md](./ntfy.md) for the required SOPS environment file, narrow
+Synapse private-address exception, phone setup and deployment acceptance.
+
 ### Vikunja task agents (NAS and GRILL)
 
 `todo.bepis.lol` is tailnet-only. NAS has a dedicated managed task workspace/room;

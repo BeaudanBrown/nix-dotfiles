@@ -12,6 +12,7 @@
   ../../modules/hosted-services/joan/nas.nix
   ../../modules/hosted-services/lights/nas.nix
   ../../modules/hosted-services/nas.nix
+  ../../modules/hosted-services/ntfy/nas.nix
   ../../modules/hosted-services/vikunja/nas.nix
   ../../modules/nix/nas.nix
   ../../modules/scripts/fleet-installer/nas.nix

@@ -42,6 +42,7 @@ in
     workspaceRoots = {
       projects = workspaceRoot;
       documents = "${config.hostSpec.home}/documents";
+      collab = "${config.hostSpec.home}/collab";
     };
     launcherPackage = managedSessionLauncher;
   };
