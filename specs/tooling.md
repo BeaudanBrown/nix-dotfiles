@@ -186,6 +186,15 @@ restrictions. No scheduled agents or confirmation gates are added.
 See [vikunja-agent.md](./vikunja-agent.md) for SOPS values, account/bootstrap order,
 NAS tmux maintenance, room creation, API limitations and offline/live verification.
 
+### Opt-in agent sandbox trial (Grill)
+
+The disabled-by-default `local.agentSandboxTrial.enable` option imports the
+locally pinned reusable sandbox module without changing ordinary Pi sessions.
+See [agent-sandbox-trial.md](./agent-sandbox-trial.md) for the unpublished revision
+strategy, evaluation-only check, explicit provisioning, rollback and separate
+activation approval. `nix eval --impure --json --file tests/agent-sandbox-trial.nix`
+checks only public/local inputs, not the private fleet configuration.
+
 ### Building
 
 | Command              | Description                                    |

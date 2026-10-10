@@ -1,5 +1,40 @@
 {
   "nodes": {
+    "agent-sandbox": {
+      "inputs": {
+        "nixpkgs": "agent-sandbox-nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1791608833,
+        "narHash": "sha256-V8VhWDZBrHPRBglQ5rfUqlqR4Fm408XRFb8yO9e8CUk=",
+        "ref": "refs/heads/main",
+        "rev": "589dc772e3d3119709e1d93f1464bc066f1b0f65",
+        "revCount": 68,
+        "type": "git",
+        "url": "file:///home/beau/documents/projects/agent-sandbox-hs"
+      },
+      "original": {
+        "rev": "589dc772e3d3119709e1d93f1464bc066f1b0f65",
+        "type": "git",
+        "url": "file:///home/beau/documents/projects/agent-sandbox-hs"
+      }
+    },
+    "agent-sandbox-nixpkgs": {
+      "locked": {
+        "lastModified": 1790822859,
+        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "agentgraph": {
       "inputs": {
         "nixpkgs": [
@@ -1281,6 +1316,7 @@
     },
     "root": {
       "inputs": {
+        "agent-sandbox": "agent-sandbox",
         "art-domain": "art-domain",
         "authentik-nix": "authentik-nix",
         "complix": "complix",

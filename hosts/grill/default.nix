@@ -8,6 +8,7 @@
 {
   imports = [
     ./hardware.nix
+    ../../modules/services/agent-sandbox/trial.nix
 
     inputs.sops-nix.nixosModules.sops
     inputs.nixvim.nixosModules.nixvim

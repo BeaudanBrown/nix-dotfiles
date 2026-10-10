@@ -93,6 +93,9 @@
   };
 
   inputs = {
+    # Local committed pin until explicitly authorized publication; no mutable path.
+    # See specs/agent-sandbox-trial.md before consuming on another machine.
+    agent-sandbox.url = "git+file:///home/beau/documents/projects/agent-sandbox-hs?rev=589dc772e3d3119709e1d93f1464bc066f1b0f65";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
