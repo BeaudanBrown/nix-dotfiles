@@ -41,6 +41,14 @@ unpublished and deliberately NOT resolved in flake.lock. Seven source checks,
 six syntax parses, 46 schema fixtures and the final harness canonical/package
 gate passed. The fixture-only isolation follow-up passed another full candidate
 build and installed-wrapper smoke. Dedicated test accounts are not provisioned.
+Final verification AFTER the fixture change and follow-up review passed:
+.pi/tmp/workers/2026-10-10T06-27-38-103Z-managed-staging-final-post-isolation-gate-703ae4139d45/.
+All 66 Go race tests, 46 production schema fixtures, source7/parse6, canonical12
+and harness production packages passed. No test skips in the full packaged runs.
+The final follow-up review reported no source defects; an outdated harness
+smoke-evidence paragraph was corrected with the newer store path/timings and this
+separate post-fixture gate. Only evidence prose changed after that final gate.
+
 Production identity metadata is not permission to use production credentials.
 After offline work, require test-only credential provisioning and exact identities
 before any real Matrix smoke traffic. Harness plan: docs/managed-live-workspaces-staging.md.
