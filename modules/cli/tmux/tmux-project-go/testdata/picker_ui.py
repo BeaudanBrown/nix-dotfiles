@@ -7,8 +7,12 @@ for p in (home/'documents',home/'monash',cache,tmp,bins):p.mkdir(parents=True,ex
 repos=[]
 for i in range(80):
  p=home/'documents'/('same-%03d'%i);p.mkdir();(p/'.git').mkdir();repos.append(p)
-env=dict(os.environ,HOME=str(home),XDG_CACHE_HOME=str(cache),XDG_RUNTIME_DIR=str(r/'unused-private-xdg'),TMPDIR=str(tmp),TERM='xterm-256color',PATH=str(bins)+':'+str(pathlib.Path(fzf).parent)+':'+os.environ['PATH'],FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE='')
-env.pop('TMUX',None);env.pop('TMUX_PANE',None)
+# Allowlist the environment, including a known non-login shell: absent SHELL
+# makes tmux consult the host login shell, whose startup can rewrite PATH/TMPDIR
+# and select an installed launcher instead of this candidate. Never inherit
+# credentials, agent settings, shell startup hooks or production managed roots.
+shell=shutil.which('sh');assert shell, 'controlled POSIX shell unavailable'
+env=dict(HOME=str(home),SHELL=shell,LANG='C.UTF-8',XDG_CONFIG_HOME=str(home/'config'),XDG_DATA_HOME=str(home/'data'),XDG_STATE_HOME=str(home/'state'),XDG_CACHE_HOME=str(cache),XDG_RUNTIME_DIR=str(r/'unused-private-xdg'),TMPDIR=str(tmp),TERM='xterm-256color',PATH=str(bins)+':'+str(pathlib.Path(fzf).parent)+':'+os.environ['PATH'],FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE='')
 (bins/'tmux_project').symlink_to(binary)
 project='project_'+'b'*32
 h=hashlib.sha256(b'pi-managed-sessions:checkout:live-v1\0')

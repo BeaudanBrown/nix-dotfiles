@@ -7,11 +7,12 @@ existing-room migration. #120's publication/fleet-lock boundary remains open.
 
 Standalone candidate: import the real tmux_project.nix using public nixpkgs from
 the harness input, NOT the fleet flake or private SOPS inputs. Full Nix package
-build/check now passed66 tests, zero skips, output
-/nix/store/kw69i1nrnxabs8g9qnwkc7ahxl71n204-tmux_project-0.1.0.
+build/check now passed 66 tests, zero skips, final output
+/nix/store/vhdwssijypi581g24vgm94m2fsfjd2k3-tmux_project-0.1.0.
 Harness artifacts:
 - .pi/tmp/workers/2026-10-10T05-55-41-968Z-picker-candidate-complete-checks-6458070bcc7e/
 - .pi/tmp/workers/2026-10-10T05-57-30-498Z-managed-smoke-installed-picker-c3228cff3432/
+- .pi/tmp/workers/2026-10-10T06-22-56-273Z-managed-smoke-controlled-shell-candidate-5d0488e6b53c/
 
 Build exposed a real service-context bug: with no UTF-8 locale and absent TMUX
 variable, tmux replaces tab separators/Unicode with underscores. Setting TMUX to
@@ -24,12 +25,22 @@ All original checks remained enabled; verbose package checks make skips visible.
 
 The installed package wrapper also passed real private-tmux/fzf/PTY reload,
 selection, cache and cancellation smoke. Its actual keypress UI timings were
-~205–314ms, materially slower than direct-binary tests; do not reuse earlier
-35ms figures as packaged performance. This used a private fake public-host socket,
+initially ~205–314ms, then ~174–224ms with the hardened environment fixture,
+materially slower than direct-binary tests; do not reuse earlier 35ms figures as
+packaged performance. A clean-environment attempt exposed dependence on tmux's
+host login-shell fallback. The fixture now supplies a controlled POSIX shell and
+an explicit environment allowlist with private HOME/XDG paths: no inherited
+credentials, agent settings, startup hooks or managed roots. This used a private fake public-host socket,
 NOT real Matrix or the full relay/account path. No full-system evaluation is claimed.
 
-Cumulative review must cover harness8b768ca..current and dotfilesc2a1ab8..current,
-including this fix. Dedicated test owner/bot accounts have not been provisioned.
+Cumulative review covered harness 8b768ca..7580563 and dotfiles c2a1ab8..6a7b294.
+One high finding (production dispatcher dropped expectedGenerationId) was fixed
+in harness 99f5941 with a red/green production IPC regression; both follow-up
+review axes cleared it. The requested harness source pin is now 99f5941, still
+unpublished and deliberately NOT resolved in flake.lock. Seven source checks,
+six syntax parses, 46 schema fixtures and the final harness canonical/package
+gate passed. The fixture-only isolation follow-up passed another full candidate
+build and installed-wrapper smoke. Dedicated test accounts are not provisioned.
 Production identity metadata is not permission to use production credentials.
 After offline work, require test-only credential provisioning and exact identities
 before any real Matrix smoke traffic. Harness plan: docs/managed-live-workspaces-staging.md.
