@@ -297,7 +297,7 @@ func TestManagedWindowSelectionNeverCleansUpDefaultSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(calls) != "switch-client\n-c\nclient\n-t\n=project:@3.%4\n" {
+	if string(calls) != "-u\nswitch-client\n-c\nclient\n-t\n=project:@3.%4\n" {
 		t.Fatalf("unexpected cleanup or targeting: %s", calls)
 	}
 }

@@ -17,7 +17,7 @@ func exactTestServer(t *testing.T) exactTmux {
 	}
 	socket := filepath.Join(t.TempDir(), "tmux.sock")
 	run := func(args ...string) (string, error) {
-		output, err := exec.Command("tmux", append([]string{"-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
+		output, err := exec.Command("tmux", append([]string{"-u", "-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
 		if err != nil {
 			return "", fmt.Errorf("tmux: %w: %s", err, output)
 		}
@@ -220,7 +220,13 @@ func testManagedExactCreateDispatch(t *testing.T, coordinator bool) {
 			t.Fatal(err)
 		}
 	}
-	for name, body := range map[string]string{"pi": "#!/usr/bin/env sh\nexec sleep 120\n", "direnv": "#!/usr/bin/env sh\nshift 2\nexec \"$@\"\n"} {
+	// Generated test scripts are not processed by Nix's patchShebangs. The
+	// sandbox provides store interpreters, not /usr/bin/env.
+	shell, err := exec.LookPath("sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range map[string]string{"pi": "#!" + shell + "\nexec sleep 120\n", "direnv": "#!" + shell + "\nshift 2\nexec \"$@\"\n"} {
 		if err := os.WriteFile(filepath.Join(bin, name), []byte(body), 0700); err != nil {
 			t.Fatal(err)
 		}

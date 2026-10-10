@@ -22,6 +22,8 @@ pkgs.buildGoModule {
     pkgs.python3
   ];
   PI_TEST_FZF = "${pkgs.fzf}/bin/fzf";
+  # Keep real terminal/process test execution and any skips visible in build logs.
+  checkFlags = [ "-v" ];
 
   postInstall = ''
     # Both the launcher and plugin subprocesses use this entrypoint. Pin the

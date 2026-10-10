@@ -107,10 +107,14 @@ func tmux(args ...string) (string, error) {
 }
 
 func tmuxAt(socket string, args ...string) (string, error) {
-	commandArgs := args
+	// Machine formats contain tabs and UTF-8 paths. With no locale/TMUX hint,
+	// tmux otherwise replaces both with underscores (notably in service/build
+	// environments), destroying identity field boundaries.
+	commandArgs := []string{"-u"}
 	if socket != "" {
-		commandArgs = append([]string{"-S", socket}, args...)
+		commandArgs = append(commandArgs, "-S", socket)
 	}
+	commandArgs = append(commandArgs, args...)
 	cmd := exec.Command("tmux", commandArgs...)
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &out

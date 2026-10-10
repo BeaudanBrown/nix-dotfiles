@@ -168,6 +168,9 @@ func TestPickerOrdinaryFocusNeverSelectsManagedLastWindow(t *testing.T) {
 		t.Fatal(err)
 	}
 	p := strings.Split(target, "\t")
+	if len(p) != 2 {
+		t.Fatalf("unexpected new-window identity: %q", target)
+	}
 	w := pickerWindow{Session: "exact", Window: p[0], Pane: p[1]}
 	client, pid := focusTestClient(t, run, "exact")
 	if err := focusPickerOrdinary(w, client, pid, run); err != nil {
