@@ -3,13 +3,19 @@
 This is the source-only #120 handoff for pi-harness epic #103. It is **not an
 activation instruction or evidence of deployment**. No external Nix evaluation,
 build, lock resolution, push, service/shared-tmux restart, live Matrix traffic,
-secret access, migration or real-client test was authorized or performed.
+secret access, migration or real-client test was authorized or performed at that
+handoff. Subsequent #121 authorization permits standalone candidate package
+builds and isolated testing, not fleet evaluation/activation or production traffic.
+The actual picker expression now built with public harness nixpkgs (66 tests,
+zero skips), and its installed wrapper passed private-tmux/fake-host smoke.
+See `.loom/workstreams/managed-smoke/handoff.md`; this is not host wiring evidence.
 
 ## Package boundary (must be resolved before deployment)
 
 `flake.nix` requests the tested harness commit
-`ec7dda83ab344283aab9c35e177cc6ba02f7cfe9`; the local picker includes #118/#119
-through `a128141`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
+`99f59415a6564afe23a454244da7726b2b68a43f`, including the cumulative-review
+production generation-fence fix; the local picker includes #118/#119 and the
+service-locale fix through `6a7b294`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
 both the ordinary picker/keybinding and the managed exact-window launcher.
 
 **The requested harness commit is local/unpublished and flake.lock still records
