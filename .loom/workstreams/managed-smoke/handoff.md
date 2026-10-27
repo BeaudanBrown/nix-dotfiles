@@ -1,5 +1,13 @@
 # Isolated candidate testing / cumulative review
 
+**Production repair:** current harness pin is `9c79abe84b3bb244ade5b1d75b5c5950f64075f9`.
+The operator's GRILL rebuild uncovered a production-baseline compatibility gap
+not exercised by the earlier isolated smoke. Restored production commits passed
+all 12 canonical gates (623 managed tests, zero skips), standalone packages and
+read-only parsing of the real registry without writes. Post-rebuild live health
+remains operator-owned. No agent host builds, service changes or migration.
+See `specs/managed-live-workspaces.md`; the following sections are historical.
+
 **2026-10-27 update:** operator authorized publication and actual harness pin/lock
 resolution only (steps 1–2, no host builds). Feature branches are published and
 the dotfiles lock now selects harness 692426351a318a56422f7a38b78ce2ea3c80af7f;

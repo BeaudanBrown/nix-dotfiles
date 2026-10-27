@@ -2,7 +2,7 @@
   "nodes": {
     "agent-sandbox": {
       "inputs": {
-        "nixpkgs": "agent-sandbox-nixpkgs"
+        "nixpkgs": "nixpkgs"
       },
       "locked": {
         "lastModified": 1791608833,
@@ -17,22 +17,6 @@
         "rev": "589dc772e3d3119709e1d93f1464bc066f1b0f65",
         "type": "git",
         "url": "file:///home/beau/documents/projects/agent-sandbox-hs"
-      }
-    },
-    "agent-sandbox-nixpkgs": {
-      "locked": {
-        "lastModified": 1790822859,
-        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
       }
     },
     "agentgraph": {
@@ -247,7 +231,7 @@
     "complix": {
       "inputs": {
         "flake-utils": "flake-utils_3",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "rust-overlay": "rust-overlay"
       },
       "locked": {
@@ -848,7 +832,7 @@
       "inputs": {
         "bun2nix": "bun2nix",
         "flake-parts": "flake-parts_4",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "systems": "systems_6",
         "treefmt-nix": "treefmt-nix"
       },
@@ -888,7 +872,7 @@
     },
     "nix-steipete-tools": {
       "inputs": {
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": "nixpkgs_5"
       },
       "locked": {
         "lastModified": 1773561580,
@@ -922,16 +906,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1770843696,
-        "narHash": "sha256-LovWTGDwXhkfCOmbgLVA10bvsi/P8eDDpRudgk68HA8=",
+        "lastModified": 1790822859,
+        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "2343bbb58f99267223bc2aac4fc9ea301a155a16",
+        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -1015,6 +999,22 @@
     },
     "nixpkgs_2": {
       "locked": {
+        "lastModified": 1770843696,
+        "narHash": "sha256-LovWTGDwXhkfCOmbgLVA10bvsi/P8eDDpRudgk68HA8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2343bbb58f99267223bc2aac4fc9ea301a155a16",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
         "lastModified": 1788400875,
         "narHash": "sha256-JIHQ6xNAN53cdo6zZ72LRcQ9lpvnABCnNE4hldJ5uZU=",
         "owner": "NixOS",
@@ -1029,7 +1029,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_3": {
+    "nixpkgs_4": {
       "locked": {
         "lastModified": 1790920529,
         "narHash": "sha256-nQyFkMR78WP6PiXKkDW2SjqzLf/spQqjRuxRGSbcV8k=",
@@ -1045,7 +1045,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "nixpkgs_5": {
       "locked": {
         "lastModified": 1767364772,
         "narHash": "sha256-fFUnEYMla8b7UKjijLnMe+oVFOz6HjijGGNS1l7dYaQ=",
@@ -1061,7 +1061,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_5": {
+    "nixpkgs_6": {
       "locked": {
         "lastModified": 1774709303,
         "narHash": "sha256-D3Q07BbIA2KnTcSXIqqu9P586uWxN74zNoCH3h2ESHg=",
@@ -1077,7 +1077,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_6": {
+    "nixpkgs_7": {
       "locked": {
         "lastModified": 1787498568,
         "narHash": "sha256-9i/VTdusq/+NM/tz+J1Re+ojkMB8MBf0QshnYfzHz30=",
@@ -1172,22 +1172,22 @@
         "nix-ai-tools": [
           "nix-ai-tools"
         ],
-        "nixpkgs": "nixpkgs_5",
+        "nixpkgs": "nixpkgs_6",
         "pi-lsp-extension-src": "pi-lsp-extension-src_2",
         "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1793106913,
-        "narHash": "sha256-CEdC9JY/E7KaVgo3JaxoWMHKbULUxSJuBlR1ll2utBY=",
+        "lastModified": 1793120439,
+        "narHash": "sha256-ts+naLC2Jds9Bx19XS/1hanE4QP/KJnUtQDQK859Uic=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "692426351a318a56422f7a38b78ce2ea3c80af7f",
+        "rev": "9c79abe84b3bb244ade5b1d75b5c5950f64075f9",
         "type": "github"
       },
       "original": {
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "692426351a318a56422f7a38b78ce2ea3c80af7f",
+        "rev": "9c79abe84b3bb244ade5b1d75b5c5950f64075f9",
         "type": "github"
       }
     },
@@ -1227,7 +1227,7 @@
     },
     "pi-r": {
       "inputs": {
-        "nixpkgs": "nixpkgs_6"
+        "nixpkgs": "nixpkgs_7"
       },
       "locked": {
         "lastModified": 1787881078,
@@ -1332,7 +1332,7 @@
         "nix-ai-tools": "nix-ai-tools",
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": "nixpkgs_4",
         "nixpkgs-oneplus-kernel": "nixpkgs-oneplus-kernel",
         "nixpkgsUnstable": "nixpkgsUnstable",
         "nixvim": "nixvim",

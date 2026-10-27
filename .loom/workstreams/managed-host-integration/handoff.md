@@ -1,5 +1,15 @@
 # Managed host integration — harness #120
 
+**Production repair:** current harness pin is `9c79abe84b3bb244ade5b1d75b5c5950f64075f9`.
+The operator's first GRILL rebuild exposed missing production projection-schema
+compatibility. Restored production fixes passed all 12 canonical gates, including
+623 managed tests without skips; final packaged parsing preserved all 34 GRILL
+conversations and registry bytes. No agent host rebuild or restart was performed.
+See `specs/managed-live-workspaces.md` for the exact pin/hash and lock-graph check.
+The operator will rebuild GRILL; no state reset or migration is part of the repair.
+
+## Earlier publication and source-only history
+
 This preserves the original source-only #120 handoff below. Subsequent #121
 cumulative review and separately authorized standalone candidate builds/private
 smoke are recorded in `../managed-smoke/handoff.md`. The current harness revision

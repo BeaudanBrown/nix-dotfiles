@@ -1,12 +1,22 @@
 # Managed live workspaces — pinned GRILL/NAS configuration
 
+**Production compatibility repair (2026-10-27):** the operator's GRILL rebuild
+exposed an omitted production state format (`renderingVersion: 2`). Harness
+`9c79abe` merges the deployed `c65509a` production fixes into the feature, preserving
+frozen projection bytes, durable input receipts and existing session history.
+All 12 canonical source gates passed (623 managed tests, zero skips), standalone
+packages built, and the final packaged parser read all 34 GRILL conversations
+without modifying the registry. See harness `docs/managed-production-upgrade-evidence.md`.
+The operator owns the next rebuild; the agent has not evaluated/built hosts,
+restarted services, reset state, or migrated conversations.
+
 **Normal-checkout integration:** the operator subsequently requested updating
 `~/documents/nix-dotfiles`. The feature changes are integrated into local `master`,
 retaining its newer ntfy, workspace roots, host changes and dependency locks.
 The only lock node replaced relative to that master is `pi-harness`. This is not
-a host evaluation, build, activation or migration. Publishing master is separate
-from the already-published feature branches; an existing local sandbox commit
-also precedes this merge.
+a host evaluation, build, activation or migration. The operator authorized and
+completed publication of master at `31d0f67`, including the existing sandbox
+commit, before the production compatibility repair.
 
 **Publication/lock update (2026-10-27):** the operator authorized pushing both
 feature branches and resolving the reviewed harness pin/lock, but explicitly
@@ -27,19 +37,23 @@ See `.loom/workstreams/managed-smoke/handoff.md`; this is not host wiring eviden
 ## Resolved package pin (host validation remains outstanding)
 
 `flake.nix` requests the tested harness commit
-`692426351a318a56422f7a38b78ce2ea3c80af7f`, including generation fencing,
-room-v12 compatibility, Matrix-origin/departure recovery and prose approvals; the local picker includes #118/#119 and the
+`9c79abe84b3bb244ade5b1d75b5c5950f64075f9`, including deployed production
+state/retry compatibility, generation fencing, room-v12 authority,
+Matrix-origin/departure recovery and prose approvals; the local picker includes #118/#119 and the
 service-locale fix through `6a7b294`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
 both the ordinary picker/keybinding and the managed exact-window launcher.
 
 `nix flake update pi-harness --option builders ''` resolved the published revision
-above with `narHash = sha256-CEdC9JY/E7KaVgo3JaxoWMHKbULUxSJuBlR1ll2utBY=`.
-Only the `pi-harness` lock node changed; all other nodes, root inputs and follows
-relationships remain unchanged. This replaces the old `1604a97` runtime lock.
+above with `narHash = sha256-ts+naLC2Jds9Bx19XS/1hanE4QP/KJnUtQDQK859Uic=`.
+Only the harness source changed semantically. Nix also normalized lock-node names
+for existing nixpkgs dependencies (including the sandbox input); a graph mapping
+verified unchanged source revisions/hashes and dependency/follows relationships
+for every other input. This replaces the broken `6924263` runtime lock.
 Hash and revision come from Nix resolution, not a manually invented lock entry.
 
-**A resolved lock is not a successful host build or deployment.** Host evaluation
-and builds remain outstanding; activation and migration require separate approval.
+**A resolved lock is not a successful host build or deployment.** The corrected
+host rebuild and post-activation health check remain operator-owned. No migration
+is authorized by this repair.
 The initial publication did not modify default branches; the subsequent local
 master integration is described above. Neither step is deployment evidence.
 

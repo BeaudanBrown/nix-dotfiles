@@ -90,12 +90,12 @@ class ManagedIntegration(unittest.TestCase):
             self.assertIn(line, shared)
 
     def test_selected_revision_is_pinned_and_locked(self):
-        revision = '692426351a318a56422f7a38b78ce2ea3c80af7f'
+        revision = '9c79abe84b3bb244ade5b1d75b5c5950f64075f9'
         self.assertIn('github:BeaudanBrown/pi-harness/' + revision, source('flake.nix'))
         node = json.loads(source('flake.lock'))['nodes']['pi-harness']
         self.assertEqual(node['locked']['rev'], revision)
         self.assertEqual(node['original']['rev'], revision)
-        self.assertEqual(node['locked']['narHash'], 'sha256-CEdC9JY/E7KaVgo3JaxoWMHKbULUxSJuBlR1ll2utBY=')
+        self.assertEqual(node['locked']['narHash'], 'sha256-ts+naLC2Jds9Bx19XS/1hanE4QP/KJnUtQDQK859Uic=')
         self.assertEqual(node['inputs']['nix-ai-tools'], ['nix-ai-tools'])
 
     def test_package_checks_have_real_ui_dependencies(self):
