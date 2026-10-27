@@ -36,11 +36,12 @@ NOT real Matrix or the full relay/account path. No full-system evaluation is cla
 Cumulative review covered harness 8b768ca..7580563 and dotfiles c2a1ab8..6a7b294.
 One high finding (production dispatcher dropped expectedGenerationId) was fixed
 in harness 99f5941 with a red/green production IPC regression; both follow-up
-review axes cleared it. The requested harness source pin is now 99f5941, still
+review axes cleared it. The requested harness source pin is now 4415c7c (including the subsequent room-v12 fix), still
 unpublished and deliberately NOT resolved in flake.lock. Seven source checks,
 six syntax parses, 46 schema fixtures and the final harness canonical/package
 gate passed. The fixture-only isolation follow-up passed another full candidate
-build and installed-wrapper smoke. Dedicated test accounts are not provisioned.
+build and installed-wrapper smoke. At that offline checkpoint, dedicated test
+accounts were not yet provisioned; the later live result below supersedes it.
 Final verification AFTER the fixture change and follow-up review passed:
 .pi/tmp/workers/2026-10-10T06-27-38-103Z-managed-staging-final-post-isolation-gate-703ae4139d45/.
 All 66 Go race tests, 46 production schema fixtures, source7/parse6, canonical12
@@ -50,5 +51,12 @@ smoke-evidence paragraph was corrected with the newer store path/timings and thi
 separate post-fixture gate. Only evidence prose changed after that final gate.
 
 Production identity metadata is not permission to use production credentials.
-After offline work, require test-only credential provisioning and exact identities
-before any real Matrix smoke traffic. Harness plan: docs/managed-live-workspaces-staging.md.
+Subsequently the operator provisioned separate test accounts and authorized live
+smoke. It exposed room-v12 ID validation, creator authority and opaque-ID routing
+incompatibility. Harness 4415c7c fixes these with shared bounded contracts and
+regressions; the SAME original test host Space was recovered, not recreated.
+Actual native coordinator/project launch, exact open and stale-fence refusal,
+five-room hierarchy/owner autojoin, and durable account-ready ACKs after restart
+passed. Processes stopped; five test rooms/state retained. No production accounts,
+model calls, existing-room migration or host activation. Broader client acceptance
+remains pending. See harness docs/managed-room-v12-evidence.md. Harness plan: docs/managed-live-workspaces-staging.md.

@@ -90,7 +90,7 @@ class ManagedIntegration(unittest.TestCase):
             self.assertIn(line, shared)
 
     def test_selected_revision_is_explicitly_staged(self):
-        revision = '99f59415a6564afe23a454244da7726b2b68a43f'
+        revision = '4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b'
         self.assertIn('github:BeaudanBrown/pi-harness/' + revision, source('flake.nix'))
         locked = json.loads(source('flake.lock'))['nodes']['pi-harness']['locked']['rev']
         # Intentional outstanding publication/lock boundary, not a valid build claim.

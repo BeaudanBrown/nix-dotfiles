@@ -13,8 +13,8 @@ See `.loom/workstreams/managed-smoke/handoff.md`; this is not host wiring eviden
 ## Package boundary (must be resolved before deployment)
 
 `flake.nix` requests the tested harness commit
-`99f59415a6564afe23a454244da7726b2b68a43f`, including the cumulative-review
-production generation-fence fix; the local picker includes #118/#119 and the
+`4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b`, including the generation-fence
+and room-v12 ID/creator-authority fixes; the local picker includes #118/#119 and the
 service-locale fix through `6a7b294`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
 both the ordinary picker/keybinding and the managed exact-window launcher.
 

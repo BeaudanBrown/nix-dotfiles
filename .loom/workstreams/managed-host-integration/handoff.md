@@ -3,7 +3,7 @@
 This preserves the original source-only #120 handoff below. Subsequent #121
 cumulative review and separately authorized standalone candidate builds/private
 smoke are recorded in `../managed-smoke/handoff.md`. The current requested harness
-revision is 99f59415a6564afe23a454244da7726b2b68a43f (generation-fence fix), not the
+revision is 4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b (generation-fence and room-v12 fixes), not the
 original ec7dda8 below. The real fleet lock remains unresolved and neither host
 has been rebuilt/activated; real Matrix/client acceptance remains pending.
 

@@ -197,7 +197,7 @@
       # Source-only managed-live-workspaces handoff. Publish this reviewed
       # commit and refresh the lock under separate approval before evaluation
       # or deployment; the old lock is deliberately not fabricated here.
-      url = "github:BeaudanBrown/pi-harness/99f59415a6564afe23a454244da7726b2b68a43f";
+      url = "github:BeaudanBrown/pi-harness/4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b";
       inputs.nix-ai-tools.follows = "nix-ai-tools";
     };
 
