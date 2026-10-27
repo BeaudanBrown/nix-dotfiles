@@ -2,12 +2,18 @@
 
 This preserves the original source-only #120 handoff below. Subsequent #121
 cumulative review and separately authorized standalone candidate builds/private
-smoke are recorded in `../managed-smoke/handoff.md`. The current requested harness
-revision is 4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b (generation-fence and room-v12 fixes), not the
-original ec7dda8 below. The real fleet lock remains unresolved and neither host
-has been rebuilt/activated; real Matrix/client acceptance remains pending.
+smoke are recorded in `../managed-smoke/handoff.md`. The current harness revision
+is now **692426351a318a56422f7a38b78ce2ea3c80af7f**, published and resolved in the
+actual feature-worktree lock under explicit steps 1–2 authorization. Only its lock
+node changed. Element X functional acceptance passed; the final prose wording
+has deterministic/review verification but no fresh phone confirmation. Desktop
+checks are deferred, not passed. Neither host has been built or activated.
 
-## Authorization and state
+Publication/lock changes do not merge default branches or affect running systems.
+Builds, activation and migration remain separately gated. See the current package
+boundary in `specs/managed-live-workspaces.md`.
+
+## Original source-only authorization and state
 
 Operator approved source-only configuration/package/keybinding work and local
 commits in this worktree. No external Nix evaluation/build, push, activation,
@@ -34,9 +40,9 @@ already references its dedicated owner-login token via SOPS; do not inspect it.
 ## Deployment/crash boundaries
 
 No persistent runtime operation is authorized here. Future activation must:
-1. Publish/select a compatible harness input and validate the fleet configuration
-   under separate permission. Current lock still selects 1604a971d5990e520399186de7dd90a7071dca65;
-   do not invent a replacement narHash or claim this old pin supplies new options.
+1. Publication and exact harness lock resolution are complete at 6924263.
+   Validate/build the fleet configuration only under separate permission; a
+   resolved input is not evidence of successful host evaluation or deployment.
 2. Verify the three exact Matrix device IDs before enabling account effects.
    Public host and bot names do not prove token/device identity.
 3. Retain existing host/account journals, receipts, retirement tombstones and

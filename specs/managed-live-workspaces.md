@@ -1,4 +1,10 @@
-# Managed live workspaces — staged GRILL/NAS configuration
+# Managed live workspaces — pinned GRILL/NAS configuration
+
+**Publication/lock update (2026-10-27):** the operator authorized pushing both
+feature branches and resolving the reviewed harness pin/lock, but explicitly
+excluded host builds. Both `feat/managed-live-workspaces` branches are published;
+no default-branch merge, host build/evaluation, activation, production service
+restart or migration is part of this step. The prior source-only history follows.
 
 This is the source-only #120 handoff for pi-harness epic #103. It is **not an
 activation instruction or evidence of deployment**. No external Nix evaluation,
@@ -10,22 +16,23 @@ The actual picker expression now built with public harness nixpkgs (66 tests,
 zero skips), and its installed wrapper passed private-tmux/fake-host smoke.
 See `.loom/workstreams/managed-smoke/handoff.md`; this is not host wiring evidence.
 
-## Package boundary (must be resolved before deployment)
+## Resolved package pin (host validation remains outstanding)
 
 `flake.nix` requests the tested harness commit
-`4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b`, including the generation-fence
-and room-v12 ID/creator-authority fixes; the local picker includes #118/#119 and the
+`692426351a318a56422f7a38b78ce2ea3c80af7f`, including generation fencing,
+room-v12 compatibility, Matrix-origin/departure recovery and prose approvals; the local picker includes #118/#119 and the
 service-locale fix through `6a7b294`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
 both the ordinary picker/keybinding and the managed exact-window launcher.
 
-**The requested harness commit is local/unpublished and flake.lock still records
-1604a971d5990e520399186de7dd90a7071dca65. This worktree is not presently a resolved,
-buildable deployment configuration.** Its new options must not be evaluated
-against the old input. No narHash, remote availability or successful evaluation
-is fabricated. After separate publication/lock-update authorization, publish the
-reviewed harness revision, resolve that exact input and its transitive graph,
-then review the lock diff. If cumulative review changes the harness, explicitly
-select that reviewed replacement revision instead. Do not silently use latest.
+`nix flake update pi-harness --option builders ''` resolved the published revision
+above with `narHash = sha256-CEdC9JY/E7KaVgo3JaxoWMHKbULUxSJuBlR1ll2utBY=`.
+Only the `pi-harness` lock node changed; all other nodes, root inputs and follows
+relationships remain unchanged. This replaces the old `1604a97` runtime lock.
+Hash and revision come from Nix resolution, not a manually invented lock entry.
+
+**A resolved lock is not a successful host build or deployment.** Host evaluation
+and builds remain outstanding; activation and migration require separate approval.
+Default branches and existing normal worktrees have not been merged or modified.
 
 Minimum picker prerequisites: tmux3.6 and the tested fzf0.70 Unix-listen/result/
 transform API. The derivation asserts these floors and supplies git, raw tmux,

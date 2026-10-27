@@ -194,10 +194,9 @@
     };
 
     pi-harness = {
-      # Source-only managed-live-workspaces handoff. Publish this reviewed
-      # commit and refresh the lock under separate approval before evaluation
-      # or deployment; the old lock is deliberately not fabricated here.
-      url = "github:BeaudanBrown/pi-harness/4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b";
+      # Published managed-live-workspaces revision. Lock resolution is authorized;
+      # host builds, activation and migration remain separate approval boundaries.
+      url = "github:BeaudanBrown/pi-harness/692426351a318a56422f7a38b78ce2ea3c80af7f";
       inputs.nix-ai-tools.follows = "nix-ai-tools";
     };
 

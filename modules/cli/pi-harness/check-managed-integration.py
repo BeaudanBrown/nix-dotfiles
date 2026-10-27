@@ -89,14 +89,14 @@ class ManagedIntegration(unittest.TestCase):
         for line in ('managedSessions.updateGuard = guard;', 'restartIfChanged = false;', 'stopIfChanged = false;'):
             self.assertIn(line, shared)
 
-    def test_selected_revision_is_explicitly_staged(self):
-        revision = '4415c7ce683a3af2f666e3d8f1c3f3ea3d9c099b'
+    def test_selected_revision_is_pinned_and_locked(self):
+        revision = '692426351a318a56422f7a38b78ce2ea3c80af7f'
         self.assertIn('github:BeaudanBrown/pi-harness/' + revision, source('flake.nix'))
-        locked = json.loads(source('flake.lock'))['nodes']['pi-harness']['locked']['rev']
-        # Intentional outstanding publication/lock boundary, not a valid build claim.
-        self.assertIn(locked, ('1604a971d5990e520399186de7dd90a7071dca65', revision))
-        if locked != revision:
-            self.assertIn('not presently a resolved', source('specs/managed-live-workspaces.md'))
+        node = json.loads(source('flake.lock'))['nodes']['pi-harness']
+        self.assertEqual(node['locked']['rev'], revision)
+        self.assertEqual(node['original']['rev'], revision)
+        self.assertEqual(node['locked']['narHash'], 'sha256-CEdC9JY/E7KaVgo3JaxoWMHKbULUxSJuBlR1ll2utBY=')
+        self.assertEqual(node['inputs']['nix-ai-tools'], ['nix-ai-tools'])
 
     def test_package_checks_have_real_ui_dependencies(self):
         package = source('modules/cli/tmux/tmux_project.nix')

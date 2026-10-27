@@ -1,5 +1,13 @@
 # Isolated candidate testing / cumulative review
 
+**2026-10-27 update:** operator authorized publication and actual harness pin/lock
+resolution only (steps 1–2, no host builds). Feature branches are published and
+the dotfiles lock now selects harness 692426351a318a56422f7a38b78ce2ea3c80af7f;
+only that lock node changed. Element X functional tests passed, desktop testing
+is deferred, and prose approval wording passed review/canonical checks. Host
+build/evaluation, activation and migration remain outstanding. The sections below
+preserve the historical offline authorization/results, not current lock status.
+
 Operator subsequently authorized proceeding through offline review, candidate
 package verification and isolated smoke testing without rebuilding/activating a
 host. Still no push, production credentials/traffic, shared-service restart or
