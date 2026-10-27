@@ -130,6 +130,21 @@ in
     homeserver = "https://${domain}";
     ownerUserId = userId;
     matrixTokenFile = config.sops.secrets."pi-chat/matrix-token".path;
+    # Exact bot-login devices supplied by the operator's whoami checks.
+    # Deterministic account work uses the existing isolated transport/token,
+    # not the model worker. This does not widen the assistant's room allowlist.
+    managedAccountHosts = [
+      {
+        hostId = "grill";
+        botUserId = "@pi-grill:matrix.bepis.lol";
+        deviceId = "PI_GRILL_RELAY";
+      }
+      {
+        hostId = "nas";
+        botUserId = "@pi-nas:matrix.bepis.lol";
+        deviceId = "LKVMVRCIUY";
+      }
+    ];
     modelUser = config.hostSpec.username;
     piAgentDirectory = "${config.hostSpec.home}/.pi/agent";
     roomIds = [ "!XljGtOqHxkwHiILSto:matrix.bepis.lol" ];

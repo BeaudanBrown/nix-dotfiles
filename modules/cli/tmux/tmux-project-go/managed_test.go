@@ -274,13 +274,17 @@ func TestManagedProjectWindowStartsInNewSessionButPreservesExistingWindows(t *te
 }
 
 func TestManagedProjectWindowDoesNotCreatePlaceholderOrReplaceExistingWindow(t *testing.T) {
-	if _, err := exec.LookPath("tmux"); err != nil { t.Skip("tmux unavailable") }
+	if _, err := exec.LookPath("tmux"); err != nil {
+		t.Skip("tmux unavailable")
+	}
 	socket := filepath.Join(t.TempDir(), "tmux.sock")
 	const id = "conv_0123456789abcdef0123456789abcdef"
 	run := func(args ...string) string {
 		t.Helper()
-		out, err := exec.Command("tmux", append([]string{"-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
-		if err != nil { t.Fatalf("tmux %v: %v: %s", args, err, out) }
+		out, err := exec.Command("tmux", append([]string{"-u", "-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
+		if err != nil {
+			t.Fatalf("tmux %v: %v: %s", args, err, out)
+		}
 		return strings.TrimSpace(string(out))
 	}
 	defer func() { _ = exec.Command("tmux", "-S", socket, "kill-server").Run() }()

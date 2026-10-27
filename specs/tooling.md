@@ -61,12 +61,290 @@ identity fail unchanged.
 Managed Matrix Pi windows use the same per-user tmux server as the interactive
 `tmux_project launcher-popup`: managed invocations require `TMUX_TMPDIR` to equal
 `XDG_RUNTIME_DIR`. The existing launcher lists ordinary project sessions and
-paths plus marked live managed windows. Selecting a managed entry switches the
-requesting client to that exact existing window; it never starts or resumes a
-conversation or sends keys. The host launcher validates and forwards optional
+paths plus public-inventory managed conversations. Enter on a managed entry calls
+generation-fenced window-first open and switches only the captured requesting
+client to the returned exact window/pane; it never sends keys. The host launcher validates and forwards optional
 model/thinking selections, derives the canonical workspace path itself, and
 stores only bounded conversation ID/concept display options on the window.
-Dormant conversations have no tmux candidate.
+Dormant and starting conversations and the coordinator are selectable without
+waiting for Pi attachment. Failed startup remains stopped until explicit Enter
+retries through the host owner. No stop/refresh/delete bindings are provided.
+
+#### Inventory-backed picker (#118, staged source)
+
+The picker uses only the documented bounded `host-control-v1` inventory/open
+protocol, never private registry files. Its native Unix client uses
+`PI_MANAGED_SESSIONS_RUNTIME_DIR`, or `$XDG_RUNTIME_DIR/pi-managed-sessions`,
+with the same UID/private-directory/socket checks as `pi-managed-session`.
+Custom runtime placement must be exported to the picker as well as the CLI.
+Missing runtime environment fails closed; there is no CLI fallback or transport
+retry. This avoids both an unsupported endpoint-discovery claim and an uncorrelated
+second request. Response decoding mirrors the three exact public operation schemas,
+including required fields, tagged unions, capability enums, Unicode-code-point length bounds,
+case-sensitive keys, and request-ID matching. It rejects partial inventories, repeated
+cursors/identities, oversized output and unsupported states. Open is issued once
+with the selected generation fence; unknown outcomes are not replayed or cancelled.
+Exact focus rechecks the captured client name/PID and the target's birth-bound
+window ownership. The existing host lifecycle owns launch joining, retained error
+windows and first-window placement.
+
+**Operator-approved outage policy:** managed selection fails closed without the
+relay. A tmux marker is not proof that a conversation has not been retired. Ordinary
+sessions/raw paths remain available. Ordinary rows target an explicitly unmarked
+window, never a mixed session's last managed window. Raw Enter validates the Git
+checkout and, if necessary, opens an ordinary shell in a managed-only session.
+
+Rows use immutable conversation IDs. The shared live-v1 checkout digest matches
+canonical local paths, not titles, project equality or relative cwd; multiple
+same-checkout conversations remain separate while redundant raw paths disappear.
+An existing ordinary session remains selectable. Sorting mixes autojump scores
+and name/key ties; there is no conversation recency database.
+
+Source-only verification: **58 top-level Go tests passed, zero skips**, including
+bounded/malformed inventory, checkout digest compatibility, same-checkout dedup,
+outage refusal, exact requester/window selection after renumbering, mixed-session
+ordinary selection, and accepted work surviving a lost open response. An integrated
+fixture runs the picker through a fake public CLI and selection executable into
+real disposable tmux focus. It does not claim real-fzf latency or live relay/Matrix
+acceptance; progressive UI and timing evidence belong to #119. External Nix
+validation/build and activation were deliberately not run.
+
+#### Progressive picker (#119, staged source)
+
+Start fzf before local/host/path discovery. One combined tmux inventory supplies
+sessions, windows and the captured requester; autojump is read once. Independent
+roots scan concurrently with fd, without Git per repository. Raw Enter remains the
+Git-validation boundary. Host reads and scans are independently bounded.
+
+`$XDG_CACHE_HOME/tmux-project/paths.json` (default `~/.cache`) is disposable path-only
+cache data: bounded/schema-checked, basic directory-existence checks, refreshed on
+every invocation, private atomic publication with separate concurrent temporaries.
+Failed/cancelled scans do not publish partial results. No transcripts, credentials,
+conversation recency or lifecycle authority are cached.
+
+Raw rows wait at most a configured **50ms** for managed inventory (headroom inside
+the 100ms budget); ordinary live rows/UI never wait for it. Late full reload removes
+redundant raw rows. Since fzf's index tracking does not preserve identity across
+reordering, a private per-invocation Unix listener and short-lived helper commands
+capture the opaque key in fzf's event queue, then restore it on the **result** event.
+The query is untouched. A removed selection disables Enter until navigation/query
+change, rather than accepting an unrelated replacement. These temporary files are
+UI snapshots/receipts only, removed at exit; they are not another session manager.
+
+Escape cancels/drains discovery, not accepted host work. Open runs under its own
+bounded context after selection; no stop/delete/cancel/replay is sent. An unavailable
+local host-control authority hides managed rows and leaves ordinary navigation
+usable. Public `relayState: disconnected` describes **Matrix transport**, not loss
+of local retirement/open authority; a reachable local host can still serve safe
+inventory and generation-fenced opens while Matrix is disconnected.
+
+Final source checks: **65 top-level tests, zero skips, with `go test -race`**.
+Paired Standards/Spec review was followed by strict-schema and transport remediation.
+All46 emitted `public-schema-fixture` records also agree with the harness's real
+TypeBox parser, checked by `tests/fixtures/managed-picker-schema-check.cjs` in the
+harness repository. The checker takes the harness TypeScript-build path and verbose
+Go-test log. This caught code-point/UTF-16 length differences rather than trusting
+another handwritten fixture. Missing runtime configuration refuses managed reads
+without executing a CLI; strict native framing/identity remains the only transport.
+Real fzf **0.70.0** / tmux **3.6a** tests exercise an actual keybinding through
+`launcher-popup`, a controlling PTY, the public protocol on a private fixture
+socket, two late same-checkout conversations, identity/query retention, removed
+selection refusal, cache additions/removals and early exit during delayed discovery.
+No running relay, Matrix or model is contacted. Deployment must supply a compatible
+fzf Unix-listen/result/transform API; external Nix validation remains unauthorized.
+
+Seven cold/warm/error trials distinguish keypress→UI, first selectable row,
+managed rows and full discovery. Final medians were **34–36ms UI,
+65–67ms first/managed rows**, with full discovery **75–108ms** (cold path-cache
+versus warm; OS cache not evicted). Some UI tails exceeded the 50ms target; targets
+are not guarantees. A real packaged-CLI baseline took roughly 0.5s for managed
+rows due to repeated Node/schema startup; the native client of the same public
+protocol removes that overhead without reading private state. Final review and
+verification evidence is in harness `docs/managed-picker-evidence.md`; no activation
+is implied. Review's request to gate on Matrix `relayState: ready` was rejected with
+`HostReadModel.matrixReady()` source evidence and a dedicated regression: local
+retirement authority availability is distinct from Matrix transport connectivity.
+
+The #120 GRILL/NAS configuration, exact public device mappings, unresolved package
+publication/lock boundary, permitted source checks and staged rollout/rollback are
+in [managed-live-workspaces.md](./managed-live-workspaces.md). This is source-only
+staging, not a resolved deployment or permission to activate it.
+
+#### Exact managed-window ownership (staged harness integration)
+
+Forced stopping uses Linux pidfds on amd64/arm64, never a numeric-PID signal or
+window-container kill. Unsupported kernels, denied syscalls, missing process
+birth proof and other platforms fail closed. Kernel support is checked before
+exact creation. There is no extra daemon or dependency; the existing launcher
+continues to own this protocol.
+
+The read-only `root-resolve` returns canonical project session placement without
+creating a shell window. Exact project creation can therefore use the existing
+first-window placement behavior. `root-ensure` remains an explicit ensure action.
+
+The additive operations `coordinator-ensure-exact`, `window-create-exact`, `window-inspect-exact`,
+`window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
+existing running windows are not automatically upgraded or adopted. Legacy
+`window-terminate` and `legacy-window-cleanup` now refuse mutation; neither can
+bypass exact process identity through a window-container kill.
+
+Coordinator exact ensure accepts conversation and launch identities only, uses
+fixed host environment and the original persisted coordinator session, and
+returns the same birth-bound ownership in the protected `default` session. It
+never adopts an existing or retained dead pane and never switches a client.
+
+An exact project create takes the normal conversation/placement request plus a fresh
+`launch_<32 hex>` identity. Its `ownership` result binds the conversation, server
+PID/start time/private random server token, launch ID, session/window/pane IDs,
+original pane PID, `processBootId` and `processStartTicks` (Linux boot UUID and
+kernel process start ticks). The creation process is pinned while its birth is
+captured and verified again after marker installation. A birth token in the command supplied to tmux at creation
+prevents later marker installation from adopting a replacement window. The
+server-side marker guard also checks that the original pane is still the only
+pane in the window. Reserved `@managed_pi_server_id`, `@managed_pi_launch_id`,
+`@managed_pi_pane_id`, `@managed_pi_pane_pid`, `@managed_pi_process_boot`, and
+`@managed_pi_process_start` options are private runtime
+ownership, not user configuration; do not restore them into another server.
+
+Exact inspect returns `{conversationId, exists, ownership?}`. Malformed,
+legacy, changed-PID respawned, multi-pane, linked, or ambiguous observations fail
+closed; connection failure is not an absence claim. Older proofs without birth
+fields remain readable but never authorize forced stopping. Birth fields must
+be present together and are not silently added to old records.
+
+The additive read-only `window-observe-exact` accepts `{proofs:[...]}` with 1–64
+unique conversation proofs. It returns `{observations:[{conversationId,launchId,state}]}`
+in request order, where state is `running`, `stopped`, or `unknown`. One tmux
+inventory is shared across the batch, with original process/birth checks per proof.
+An exactly matching retained dead pane is stopped; changed ownership remains
+unknown unless the original process is independently proven gone. Legacy proofs
+without birth identity remain unknown. Malformed/partial responses are not usable.
+This is last-known presentation evidence only: it never authorizes termination,
+adoption, replacement or window cleanup. Existing exact-check/terminate behavior
+is unchanged. It creates no daemon and does not send terminating signals.
+
+Termination opens a pidfd first, verifies the recorded birth identity and live
+handle, checks the frozen terminal ownership, then revalidates the pinned
+process. TERM and, after a bounded two-second grace, KILL are sent through that
+same handle. A replacement or additional pane after the ownership observation
+cannot redirect the signal or be destroyed by a container kill. No process
+handle survives the launcher invocation. The former format-only mutation
+prototype has been removed, including from tests.
+The read-only exact check distinguishes `match`, `gone`, and `changed`. A missing
+original window on the same server or a different server lifetime can be `gone`;
+changed markers/processes/panes/session links are not absence. If the server
+cannot be contacted, the result remains unknown unless read-only process
+existence observation proves the original server PID no longer exists. PIDs are
+bounded to positive signed 32-bit values before that observation. This sends no
+process signal. `gone` additionally requires positive absence of the original
+process, or a different verified birth identity for its reused PID. Window
+closure alone cannot hide a surviving/orphaned process; uncertainty remains an
+error and never authorizes a PID kill. Callers must check after a termination
+acknowledgement, which acknowledges signalling, not completed cleanup. Retained
+dead panes or windows containing replacement work are never forcibly removed;
+window cleanup stays pending until their disappearance can be established. This is window ownership, not proof that Pi is currently
+attached or idle.
+
+Acceptance/crash evidence: Go tests use disposable private tmux sockets to cover
+server restart with reused numeric IDs, changed markers/process/session,
+respawned panes, added unrelated panes, foreign birth tokens, legacy refusal,
+last-window acknowledgement, dead-handle rejection, birth mismatch, TERM-to-KILL
+escalation, replacement during observation, and panes added after observation.
+The real dispatch test creates and stops a dummy process using the public API. The entire
+launcher suite passes with `go test -count=1 ./...` from
+`modules/cli/tmux/tmux-project-go`. No Nix build, host evaluation, activation or
+live-session migration is implied. Harness integration belongs to epic #103
+retirement/launch work; rollout must install the compatible launcher before
+using these new operations.
+
+#### Exact requesting-client focus (#116/#118 integration)
+
+`tmux_project managed window-focus-exact` accepts the public open result's
+`conversationId`, `launchId`, `sessionName`, `windowId`, `paneId`, plus an explicit
+`clientName` and decimal-string `clientPid`, as a strict JSON object on stdin.
+Capture both client fields before admitting a launch. Like other managed primitives it
+requires `TMUX` to be unset and `TMUX_TMPDIR` to equal `XDG_RUNTIME_DIR`; the caller
+must capture its requesting client before clearing inherited tmux targeting.
+It refuses an absent/ambiguous client, missing kernel ownership or changed
+launch/window/pane. A final tmux-server-side guard covers replacement and client
+disconnection between observation and switching. The guard checks the captured
+PID with the client-loop format; `switch-client -c` itself requires the client
+name, not a numeric PID. It returns `{ "focused": true }` only after switching.
+No implicit client, launch, readiness wait, replacement, session/window cleanup or
+mutation replay is supplied. A disconnected caller does not grant retry authority.
+
+| Acceptance/crash boundary | Evidence |
+| --- | --- |
+| Stable window/pane after index renumbering | Disposable-server/control-client test |
+| Switch only the explicitly requested client | Two disposable clients in different sessions |
+| Target changes after inspection | Inject changed launch marker immediately before server-side guard; no switch |
+| Missing/detached client, changed PID or stale launch/window | Refusal without fallback to another client, including disconnect after observation |
+| Managed selection preserves ordinary sessions | No automatic default-session cleanup on managed-window selection; stable-ID candidate targets |
+
+Direct Go verification with tmux **3.6a** passed **43 top-level tests, zero skips**,
+including eight focus/dispatch/no-cleanup cases and the existing kernel ownership
+suite. Tests use disposable sockets and real control-mode clients. LSP could not
+establish an active build for this cross-repository folder; direct Go compilation
+and tests provide that evidence. Native tmux shared-session semantics remain:
+clients deliberately attached to the same session share its selected window;
+this does not introduce per-client session groups or a session manager.
+
+This is a targeting primitive and legacy live-row safety improvement, not the
+completed inventory-backed conversation picker or automatic Pi wrapper. Ordinary
+navigation discovery, cancellation/performance and full frontend integration
+remain owned by the epic handoffs. No Nix evaluation/build, activation, shared
+server restart or live Matrix acceptance is implied.
+
+#### Requester capture and outside-tmux attachment (#116)
+
+The operator authorized source changes and disposable Go/tmux tests in the
+managed-live-workspaces worktree, retaining all no-Nix-build/evaluation/deployment/
+push restrictions. UI-only operations support default launch:
+
+- `managed ui-capabilities` accepts only `{}` and reports version 1 with
+  `clientCapture`, `exactFocus`, and `exactAttach`. It requires Linux and tmux
+  3.6+ by read-only `tmux -V`; it neither contacts nor creates a server. Default
+  launch negotiates this before host admission rather than discovering an
+  unsupported focus/attach interface after creating resources.
+
+- `managed client-capture` accepts `{paneId, sourceServerPid, clientName?}`. Capture
+  the original server PID and pane from the invocation before clearing `TMUX`.
+  It rejects client inventories over 64 KiB, requires exactly one matching
+  original server/pane/client, and returns `{clientName, clientPid}` for subsequent
+  exact focus. Multiple viewers of the same pane require an explicit client name;
+  it never chooses the most recent client. A foreign server with reused pane IDs,
+  detached client, malformed or oversized inventory is refused. No server is
+  started, marked or modified by capture.
+- `managed window-attach-exact` accepts the five exact target fields used by focus
+  (no client fields). This is a Linux terminal UI operation, not a JSON success
+  receipt. After exact ownership inspection it rechecks the same target guard in
+  the server queue before attaching a new client to that exact window/pane. It
+  occupies the caller's terminal until detach; it never creates a window, replaces
+  a process or cleans up a session. A stale guard returns an actual error, rather
+  than treating `display-message`'s zero status as success. Caller stdout must be
+  a terminal. The real terminal device is passed to tmux, not the `/dev/tty` alias;
+  the UI goes directly to that terminal while command output is bounded to 64 KiB.
+
+These retain unset `TMUX` and matching `TMUX_TMPDIR`/`XDG_RUNTIME_DIR` requirements.
+Capture happens before host admission; loss of the caller after admission never
+cancels or replays the host operation. Attach/focus failure leaves the existing
+owned process intact for explicit recovery. Native shared-session selection
+semantics remain unchanged.
+
+Acceptance evidence: **48 top-level Go tests passed, zero skips** with tmux 3.6a.
+New cases cover ambiguous shared-pane clients, explicit client selection, foreign
+server identity, detached requester, malformed/oversized capture, bounded attach
+output and nonterminal refusal without changing a redirected file. Linux PTY
+subprocess tests exercise the actual strict dispatcher, terminal attach and
+explicit detach, plus marker replacement between inspection and queued attach
+with nonzero refusal and no surviving client. Existing exact-focus/process tests
+pass after sharing the target-guard implementation. Initial PTY tests exposed
+and corrected tmux's rejection of the `/dev/tty` alias. LSP has no active build
+for this external folder; direct Go compilation/tests are the evidence.
+
+Full default-launch and picker integration still belongs to the harness/epic;
+these primitives alone do not complete #116 or #118. No Nix evaluation/build,
+activation, shared tmux restart or live Matrix traffic was performed.
 
 #### Shared tmux privilege contract (GRILL and NAS)
 
@@ -138,11 +416,11 @@ startup is not proof that the bridge attachment lifecycle is fixed.
 
 For the one-time transition from deployments that used `/tmp/tmux-$UID/default`,
 `tmux_project managed legacy-window-preview` accepts `{}` and reports only valid
-marked windows. After reviewing the preview and stopping the managed relay,
-`tmux_project managed legacy-window-cleanup` accepts exactly
-`{"confirmed":true}` and kills only those marked windows. It leaves every
-unmarked pane, window, and session unchanged; project conversations are resumed
-explicitly after the rebuilt relay starts on the runtime-directory socket.
+marked windows. `tmux_project managed legacy-window-cleanup` still parses exactly
+`{"confirmed":true}` but refuses mutation even with the relay stopped: a marker
+cannot prove which current processes belong to the original window. Preserve
+these windows pending ownership-safe inspection; this command no longer performs
+migration cleanup. No automatic restart or adoption is implied.
 
 ### dump.bepis.lol content publishing
 

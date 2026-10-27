@@ -23,6 +23,11 @@
     homeserver = "https://matrix.bepis.lol";
     botUserId = "@pi-nas:matrix.bepis.lol";
     operatorUserId = "@beau:matrix.bepis.lol";
+    # Same dedicated owner-login recipient as GRILL; never copy its token here.
+    accountDeviceId = "PXZRSYBGDY";
+    retainRuntime = true;
+    # Inherit central read-free/model-mutation-approval policy unchanged.
+    actionPolicyOverrides = { };
     ignoredSenderUserIds = [
       "@whatsappbot:matrix.bepis.lol"
       "@signalbot:matrix.bepis.lol"

@@ -197,7 +197,9 @@
     };
 
     pi-harness = {
-      url = "github:BeaudanBrown/pi-harness";
+      # Published managed-live-workspaces revision. Lock resolution is authorized;
+      # host builds, activation and migration remain separate approval boundaries.
+      url = "github:BeaudanBrown/pi-harness/692426351a318a56422f7a38b78ce2ea3c80af7f";
       inputs.nix-ai-tools.follows = "nix-ai-tools";
     };
 

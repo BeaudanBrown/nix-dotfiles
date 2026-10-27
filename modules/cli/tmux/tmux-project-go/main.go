@@ -3,14 +3,15 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
+	"time"
 )
 
 type Session struct {
@@ -39,6 +40,8 @@ func main() {
 	switch os.Args[1] {
 	case "managed":
 		err = managed(os.Args[2:])
+	case "picker-lines", "picker-refresh", "picker-restore":
+		err = pickerUIHelper(os.Args[1], arg(2), arg(3))
 	case "launcher":
 		err = launcher(arg(2))
 	case "launcher-popup":
@@ -104,10 +107,14 @@ func tmux(args ...string) (string, error) {
 }
 
 func tmuxAt(socket string, args ...string) (string, error) {
-	commandArgs := args
+	// Machine formats contain tabs and UTF-8 paths. With no locale/TMUX hint,
+	// tmux otherwise replaces both with underscores (notably in service/build
+	// environments), destroying identity field boundaries.
+	commandArgs := []string{"-u"}
 	if socket != "" {
-		commandArgs = append([]string{"-S", socket}, args...)
+		commandArgs = append(commandArgs, "-S", socket)
 	}
+	commandArgs = append(commandArgs, args...)
 	cmd := exec.Command("tmux", commandArgs...)
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -316,9 +323,7 @@ func switchToManagedWindow(target, session, client string) error {
 	} else {
 		_, err = tmux("switch-client", "-t", target)
 	}
-	if err == nil {
-		maybeCleanupDefault(session)
-	}
+	// Selecting managed work never authorizes cleanup of the caller's session.
 	return err
 }
 
@@ -405,37 +410,9 @@ func homeRelative(path string) string {
 }
 
 func projectPaths() []string {
-	h, _ := os.UserHomeDir()
-	roots := []string{filepath.Join(h, "documents"), filepath.Join(h, "monash")}
-	seen := map[string]bool{}
-	var paths []string
-	for _, root := range roots {
-		if st, err := os.Stat(root); err != nil || !st.IsDir() {
-			continue
-		}
-		// Main checkouts contain a .git directory, while linked worktrees contain
-		// a .git file. Ask fd for both so each checkout is independently selectable.
-		cmd := exec.Command("fd", "-H", "-t", "d", "-t", "f", "^\\.git$", root, "--max-depth", "6", "--absolute-path", "--exclude", "node_modules", "--exclude", ".direnv", "--exclude", "result", "--exclude", ".venv", "--exclude", "venv")
-		out, err := cmd.Output()
-		if err != nil {
-			continue
-		}
-		s := bufio.NewScanner(bytes.NewReader(out))
-		for s.Scan() {
-			gitDir := strings.TrimRight(s.Text(), string(os.PathSeparator))
-			dir := filepath.Dir(gitDir)
-			git := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel")
-			top, err := git.Output()
-			if err != nil {
-				continue
-			}
-			path := strings.TrimSpace(string(top))
-			if path != "" && !seen[path] {
-				seen[path] = true
-				paths = append(paths, path)
-			}
-		}
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	paths, _ := scanPickerPaths(ctx, pickerRoots())
 	return paths
 }
 
@@ -490,42 +467,11 @@ func managedLauncherWindows() []managedLauncherWindow {
 }
 
 func candidates() []Candidate {
-	seenRoots := map[string]bool{}
-	var cs []Candidate
-	for _, s := range rootSessions() {
-		root := s.Root
-		if root == "" {
-			root = sessionRoot(s.Name)
-		}
-		seenRoots[root] = true
-		name := s.Name
-		if s.Name != "default" && root != "" {
-			name = filepath.Base(root)
-		}
-		cs = append(cs, Candidate{"session", s.Name, name, homeRelative(root), s.Name, autojumpScore(root)})
+	var result []Candidate
+	for _, row := range discoverPickerRows() {
+		result = append(result, row.Candidate)
 	}
-	for _, window := range managedLauncherWindows() {
-		root := sessionRoot(window.Session)
-		name := window.Concept
-		if window.Session != "default" {
-			name = filepath.Base(root) + " › " + name
-		}
-		cs = append(cs, Candidate{"managed-window", "=" + window.Session + ":" + window.Index + "." + window.PaneIndex, name,
-			homeRelative(root), window.Session, autojumpScore(root)})
-	}
-	for _, path := range projectPaths() {
-		if seenRoots[path] {
-			continue
-		}
-		cs = append(cs, Candidate{"path", path, filepath.Base(path), homeRelative(path), "", autojumpScore(path)})
-	}
-	sort.SliceStable(cs, func(i, j int) bool {
-		if cs[i].Score == cs[j].Score {
-			return cs[i].Name < cs[j].Name
-		}
-		return cs[i].Score > cs[j].Score
-	})
-	return cs
+	return result
 }
 
 func color(code, text string) string {
@@ -548,29 +494,6 @@ func printCandidates() error {
 	return nil
 }
 
-func autojumpScore(path string) float64 {
-	h, _ := os.UserHomeDir()
-	db := os.Getenv("AUTOJUMP_DATA_DIR")
-	if db == "" {
-		db = filepath.Join(h, ".local/share/autojump")
-	}
-	f, err := os.Open(filepath.Join(db, "autojump.txt"))
-	if err != nil {
-		return 0
-	}
-	defer f.Close()
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		parts := strings.SplitN(s.Text(), "\t", 2)
-		if len(parts) == 2 && parts[1] == path {
-			var score float64
-			fmt.Sscanf(parts[0], "%f", &score)
-			return score
-		}
-	}
-	return 0
-}
-
 func recordVisit(path string) {
 	if st, err := os.Stat(path); err != nil || !st.IsDir() {
 		return
@@ -578,45 +501,7 @@ func recordVisit(path string) {
 	_ = exec.Command("autojump", "--add", path).Run()
 }
 
-func launcher(clientArg string) error {
-	client, err := clientName(clientArg)
-	if err != nil {
-		return err
-	}
-	var input strings.Builder
-	for _, c := range candidates() {
-		name, path := candidateDisplay(c)
-		fmt.Fprintf(&input, "%s\t%s\t%s\t%s\t%s\n", c.Kind, c.Value, name, path, c.Session)
-	}
-	cmd := exec.Command("fzf", "--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--nth=1,2", "--with-nth=3,4", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Search sessions, live managed conversations, and paths.")
-	cmd.Env = append(os.Environ(), "FZF_DEFAULT_OPTS=")
-	cmd.Stdin = strings.NewReader(input.String())
-	out, err := cmd.Output()
-	if err != nil {
-		return nil
-	}
-	parts := strings.Split(strings.TrimSpace(string(out)), "\t")
-	if len(parts) < 2 {
-		return nil
-	}
-	if parts[0] == "session" {
-		recordVisit(sessionRoot(parts[1]))
-		return switchTo(parts[1], client)
-	}
-	if parts[0] == "managed-window" {
-		if len(parts) != 5 || parts[4] == "" {
-			return fmt.Errorf("managed launcher candidate is malformed")
-		}
-		recordVisit(sessionRoot(parts[4]))
-		return switchToManagedWindow(parts[1], parts[4], client)
-	}
-	recordVisit(parts[1])
-	session, err := ensureProjectSession(parts[1])
-	if err != nil {
-		return err
-	}
-	return switchTo(session, client)
-}
+func launcher(clientArg string) error { return runPicker(clientArg) }
 
 func launcherPopup(clientArg string) error {
 	_, _, _, _, owner, err := popupContext(clientArg)
