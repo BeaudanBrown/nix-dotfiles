@@ -1,5 +1,13 @@
 # Managed live workspaces — pinned GRILL/NAS configuration
 
+**Reconnect-warning follow-up:** current harness `36e286c` includes the production
+repair below and limits repeated connection failures to one warning per bound
+adapter/outage, while automatic retries continue. A successful reconnect reports
+restoration once. All 12 canonical gates passed (625 managed tests, zero skips).
+Already-loaded adapters acquire this change only through normal idle refresh or
+restart; rebuilding the relay alone cannot replace code in a running Pi process.
+No host rebuild, service restart or state mutation was performed by the agent.
+
 **Production compatibility repair (2026-10-27):** the operator's GRILL rebuild
 exposed an omitted production state format (`renderingVersion: 2`). Harness
 `9c79abe` merges the deployed `c65509a` production fixes into the feature, preserving
@@ -37,18 +45,17 @@ See `.loom/workstreams/managed-smoke/handoff.md`; this is not host wiring eviden
 ## Resolved package pin (host validation remains outstanding)
 
 `flake.nix` requests the tested harness commit
-`9c79abe84b3bb244ade5b1d75b5c5950f64075f9`, including deployed production
+`36e286cecd8eededfb7299778d03804d014ff045`, including bounded reconnect warnings and deployed production
 state/retry compatibility, generation fencing, room-v12 authority,
 Matrix-origin/departure recovery and prose approvals; the local picker includes #118/#119 and the
 service-locale fix through `6a7b294`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
 both the ordinary picker/keybinding and the managed exact-window launcher.
 
 `nix flake update pi-harness --option builders ''` resolved the published revision
-above with `narHash = sha256-ts+naLC2Jds9Bx19XS/1hanE4QP/KJnUtQDQK859Uic=`.
-Only the harness source changed semantically. Nix also normalized lock-node names
-for existing nixpkgs dependencies (including the sandbox input); a graph mapping
-verified unchanged source revisions/hashes and dependency/follows relationships
-for every other input. This replaces the broken `6924263` runtime lock.
+above with `narHash = sha256-p8G9nHbIQxiz9ZmCnL03sOG0rWpkoMwaez/FwB1uLXg=`.
+Only the harness node changed from `9c79abe`; all other nodes and follows are
+unchanged. The earlier production repair replaced broken `6924263` and normalized
+existing nixpkgs node names; graph comparison proved no unrelated source upgrades.
 Hash and revision come from Nix resolution, not a manually invented lock entry.
 
 **A resolved lock is not a successful host build or deployment.** The corrected

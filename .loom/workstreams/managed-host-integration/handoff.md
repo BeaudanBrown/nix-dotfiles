@@ -1,6 +1,12 @@
 # Managed host integration — harness #120
 
-**Production repair:** current harness pin is `9c79abe84b3bb244ade5b1d75b5c5950f64075f9`.
+**Current runtime:** `36e286cecd8eededfb7299778d03804d014ff045` adds bounded
+reconnect warnings to the production repair: one warning per bound outage,
+silent automatic retries, one recovery notice. All 12 gates passed, including
+625 managed tests without skips. Loaded adapters need normal idle refresh/restart;
+no agent host build or service operation was performed.
+
+**Earlier production repair:** harness pin was `9c79abe84b3bb244ade5b1d75b5c5950f64075f9`.
 The operator's first GRILL rebuild exposed missing production projection-schema
 compatibility. Restored production fixes passed all 12 canonical gates, including
 623 managed tests without skips; final packaged parsing preserved all 34 GRILL

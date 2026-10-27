@@ -1,6 +1,12 @@
 # Isolated candidate testing / cumulative review
 
-**Production repair:** current harness pin is `9c79abe84b3bb244ade5b1d75b5c5950f64075f9`.
+**Current runtime:** `36e286cecd8eededfb7299778d03804d014ff045` adds bounded
+reconnect warnings: real missing-socket red/green tests for both adapter roles,
+UI-enabled shutdown/session-switch race coverage, and all 12 canonical gates
+(625 managed tests without skips). Retry timing is unchanged. Loaded adapters
+need normal idle refresh/restart; no host build, restart or state mutation by agent.
+
+**Earlier production repair:** harness pin was `9c79abe84b3bb244ade5b1d75b5c5950f64075f9`.
 The operator's GRILL rebuild uncovered a production-baseline compatibility gap
 not exercised by the earlier isolated smoke. Restored production commits passed
 all 12 canonical gates (623 managed tests, zero skips), standalone packages and
