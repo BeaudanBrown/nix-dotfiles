@@ -1,6 +1,13 @@
 # Managed host integration — harness #120
 
-**Current runtime:** `36e286cecd8eededfb7299778d03804d014ff045` adds bounded
+**Current runtime:** `2c62151b5b5126e8ebb87425a1dcfdb85db1b5ed` repairs offline-only
+activity finalization revision zero, which blocks replies after reconnect.
+All 12 gates passed (626 managed tests, zero skips). Old stuck closing records
+also block automatic refresh; exact-session restart requires separate operator
+agreement after deployment. No state edits, service actions or host builds done.
+See harness `docs/managed-offline-finalization-evidence.md`.
+
+**Earlier reconnect runtime:** `36e286cecd8eededfb7299778d03804d014ff045` adds bounded
 reconnect warnings to the production repair: one warning per bound outage,
 silent automatic retries, one recovery notice. All 12 gates passed, including
 625 managed tests without skips. Loaded adapters need normal idle refresh/restart;

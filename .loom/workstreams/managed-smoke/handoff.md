@@ -1,6 +1,13 @@
 # Isolated candidate testing / cumulative review
 
-**Current runtime:** `36e286cecd8eededfb7299778d03804d014ff045` adds bounded
+**Current runtime:** `2c62151b5b5126e8ebb87425a1dcfdb85db1b5ed` repairs offline-only
+activity finalization. Exact reported envelope error and blocked answer reproduced
+in isolation; deterministic disconnect regression and five affected tests pass.
+All 12 gates pass (626 managed tests, zero skips); paired review addressed.
+Production recovery is still unconfirmed: stuck old closing state blocks automatic
+refresh and requires explicitly agreed exact-session restart after deployment.
+
+**Earlier reconnect runtime:** `36e286cecd8eededfb7299778d03804d014ff045` adds bounded
 reconnect warnings: real missing-socket red/green tests for both adapter roles,
 UI-enabled shutdown/session-switch race coverage, and all 12 canonical gates
 (625 managed tests without skips). Retry timing is unchanged. Loaded adapters

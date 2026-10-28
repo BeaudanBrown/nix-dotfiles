@@ -1,6 +1,16 @@
 # Managed live workspaces — pinned GRILL/NAS configuration
 
-**Reconnect-warning follow-up:** current harness `36e286c` includes the production
+**Offline-finalization repair:** current harness `2c62151` fixes a turn completed
+fully offline freezing an invalid revision-zero final, repeatedly producing
+`managed-session envelope: /type: must be equal to constant` and blocking replies.
+An isolated real adapter/client/projector test reproduced the exact error, then
+passed with both the original and subsequent answers. All 12 gates passed,
+including 626 managed tests without skips. A stuck old adapter's closing backlog
+also blocks automatic idle refresh: an explicitly agreed exact-session restart
+is needed after deployment. No restart, production-state repair or input replay
+was performed. Preserve the registered session/history and Matrix room.
+
+**Earlier reconnect-warning follow-up:** harness `36e286c` includes the production
 repair below and limits repeated connection failures to one warning per bound
 adapter/outage, while automatic retries continue. A successful reconnect reports
 restoration once. All 12 canonical gates passed (625 managed tests, zero skips).
@@ -45,15 +55,15 @@ See `.loom/workstreams/managed-smoke/handoff.md`; this is not host wiring eviden
 ## Resolved package pin (host validation remains outstanding)
 
 `flake.nix` requests the tested harness commit
-`36e286cecd8eededfb7299778d03804d014ff045`, including bounded reconnect warnings and deployed production
+`2c62151b5b5126e8ebb87425a1dcfdb85db1b5ed`, including offline-finalization repair, bounded reconnect warnings and deployed production
 state/retry compatibility, generation fencing, room-v12 authority,
 Matrix-origin/departure recovery and prose approvals; the local picker includes #118/#119 and the
 service-locale fix through `6a7b294`. The same `modules/cli/tmux/tmux_project.nix` derivation supplies
 both the ordinary picker/keybinding and the managed exact-window launcher.
 
 `nix flake update pi-harness --option builders ''` resolved the published revision
-above with `narHash = sha256-p8G9nHbIQxiz9ZmCnL03sOG0rWpkoMwaez/FwB1uLXg=`.
-Only the harness node changed from `9c79abe`; all other nodes and follows are
+above with `narHash = sha256-cvRDlFQ6TYopWh6p/Bu2uTODHf427bBH1KlqdpNWoUw=`.
+Only the harness node changed from `36e286c`; all other nodes and follows are
 unchanged. The earlier production repair replaced broken `6924263` and normalized
 existing nixpkgs node names; graph comparison proved no unrelated source upgrades.
 Hash and revision come from Nix resolution, not a manually invented lock entry.
