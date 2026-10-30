@@ -67,8 +67,11 @@ client to the returned exact window/pane; it never sends keys. The host launcher
 model/thinking selections, derives the canonical workspace path itself, and
 stores only bounded conversation ID/concept display options on the window.
 Dormant and starting conversations and the coordinator are selectable without
-waiting for Pi attachment. Failed startup remains stopped until explicit Enter
-retries through the host owner. No stop/refresh/delete bindings are provided.
+waiting for Pi attachment. Failed startup is labelled `launch failed`, never
+inferred to be stopped. An unknown runtime additionally displays `ownership unknown`.
+Rows display the conversation ID to distinguish chats sharing a checkout or title.
+Explicit Enter retries through the host owner; unverified ownership still blocks
+there. No stop/refresh/delete bindings are provided.
 
 #### Inventory-backed picker (#118, staged source)
 

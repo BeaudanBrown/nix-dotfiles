@@ -151,10 +151,12 @@ func buildPickerRows(ctx context.Context, sessions []Session, windows []pickerWi
 	for _, item := range inventory.Rows {
 		row := item
 		root := matched[item.CheckoutID]
-		state := "unknown"
+		state := "ownership unknown"
 		switch {
+		case item.LaunchState == "failed" && item.RuntimeState == "unknown":
+			state = "launch failed; ownership unknown"
 		case item.LaunchState == "failed":
-			state = "stopped; Enter retries"
+			state = "launch failed; Enter retries"
 		case item.LaunchState == "prepared" || item.LaunchState == "window_created":
 			state = "starting"
 		case item.RuntimeState == "running":
@@ -169,7 +171,7 @@ func buildPickerRows(ctx context.Context, sessions []Session, windows []pickerWi
 		if root != "" {
 			path = homeRelative(root)
 		}
-		rows = append(rows, pickerRow{Key: "conversation:" + item.ConversationID, Candidate: Candidate{Kind: "conversation", Value: item.ConversationID, Name: item.Title + " [" + state + "]", Path: path, Score: scores[root]}, Conversation: &row})
+		rows = append(rows, pickerRow{Key: "conversation:" + item.ConversationID, Candidate: Candidate{Kind: "conversation", Value: item.ConversationID, Name: item.Title + " [" + item.ConversationID + "; " + state + "]", Path: path, Score: scores[root]}, Conversation: &row})
 	}
 	for path := range rawRoots {
 		if ordinaryRoots[path] || managedRoots[path] {

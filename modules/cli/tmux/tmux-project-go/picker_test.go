@@ -70,6 +70,24 @@ func TestPickerPublicInventoryBoundaries(t *testing.T) {
 		})
 	}
 }
+func TestPickerFailedUnknownIsNotStoppedAndNamesExposeIdentity(t *testing.T) {
+	a, b := pickerFixtureRow("a"), pickerFixtureRow("b")
+	a.RuntimeState, a.LaunchState = "unknown", "failed"
+	b.RuntimeState, b.LaunchState = "running", "attached"
+	rows := buildPickerRows(context.Background(), nil, nil, nil, pickerInventory{HostID: "host", Rows: []pickerConversation{a, b}}, nil)
+	if len(rows) != 2 {
+		t.Fatalf("rows: %+v", rows)
+	}
+	for _, row := range rows {
+		if !strings.Contains(row.Candidate.Name, row.Conversation.ConversationID) {
+			t.Fatal("conversation identity missing from display")
+		}
+		if row.Conversation.ConversationID == a.ConversationID && (!strings.Contains(row.Candidate.Name, "launch failed; ownership unknown") || strings.Contains(row.Candidate.Name, "stopped")) {
+			t.Fatal("failed launch is not proof of process exit")
+		}
+	}
+}
+
 func TestPickerDigestAndCheckoutIdentityDedup(t *testing.T) {
 	if got := pickerCheckout("host", "project_"+strings.Repeat("a", 32), "/work/project"); got != "checkout_34ec3bf360e92b747b6668f5cdc39557" {
 		t.Fatal(got)
