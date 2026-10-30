@@ -1,7 +1,7 @@
 { ... }:
 {
-  # Set your time zone.
-  time.timeZone = "Australia/Melbourne";
+  # Let GeoClue determine the local timezone instead of fixing it fleet-wide.
+  services.automatic-timezoned.enable = true;
 
   # Select internationalisation properties.
   i18n = {
