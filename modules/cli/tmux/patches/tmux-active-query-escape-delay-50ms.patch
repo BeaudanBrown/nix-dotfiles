@@ -8,24 +8,23 @@ queries are active. This protects slow/split terminal replies from being
 misparsed as input, but causes a visible Escape delay for tmux popup and
 nested tmux workflows.
 
-Respect the configured escape-time instead.
+Respect the configured escape-time instead, including for forwarded
+terminal queries. Keep the separate partial bracketed-paste end delay.
 ---
- tty-keys.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ tty-keys.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/tty-keys.c b/tty-keys.c
 --- a/tty-keys.c
 +++ b/tty-keys.c
-@@ -950,11 +950,8 @@
- 	if (delay == 0)
- 		delay = 1;
+@@ -979,9 +979,7 @@
  	if ((tty->flags & (TTY_WAITFG|TTY_WAITBG) ||
--	    (tty->flags & TTY_ALL_REQUEST_FLAGS) != TTY_ALL_REQUEST_FLAGS)) {
--		log_debug("%s: increasing delay for active query", c->name);
+ 	    (tty->flags & TTY_ALL_REQUEST_FLAGS) != TTY_ALL_REQUEST_FLAGS) ||
+ 	    !TAILQ_EMPTY(&c->input_requests)) {
+-		log_debug("%s: increasing delay (active query)", c->name);
 -		if (delay < 500)
 -			delay = 500;
--	}
-+	    (tty->flags & TTY_ALL_REQUEST_FLAGS) != TTY_ALL_REQUEST_FLAGS))
 +		log_debug("%s: active query; respecting configured escape-time", c->name);
+ 	}
  	tv.tv_sec = delay / 1000;
  	tv.tv_usec = (delay % 1000) * 1000L;
