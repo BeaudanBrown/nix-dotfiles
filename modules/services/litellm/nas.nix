@@ -83,6 +83,42 @@ let
       };
     }
     {
+      model_name = "sub-gpt-6.1-sol";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-6.1-sol";
+      };
+    }
+    {
+      model_name = "sub-gpt-6-astra";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-6-astra";
+      };
+    }
+    {
+      model_name = "sub-gpt-6.1-terra";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-6.1-terra";
+      };
+    }
+    {
+      model_name = "sub-gpt-6.1-luna";
+      model_info = {
+        mode = "responses";
+      };
+      litellm_params = {
+        model = "chatgpt/gpt-6.1-luna";
+      };
+    }
+    {
       model_name = "sub-gpt-5.5";
       model_info = {
         mode = "responses";
@@ -259,6 +295,13 @@ in
     }
   ];
 
+  # LiteLLM response headers can exceed nginx's default 4/8 KiB buffer.
+  services.nginx.virtualHosts.${litellmDomain}.locations."/".extraConfig = ''
+    proxy_buffer_size 32k;
+    proxy_buffers 8 32k;
+    proxy_busy_buffers_size 64k;
+  '';
+
   virtualisation.oci-containers.containers = {
     "litellm" =
       let
@@ -278,10 +321,9 @@ in
         litellm_yaml = pkgs.writeText "config.yaml" (lib.generators.toYAML { } litellm_config);
       in
       {
-        image = "docker.litellm.ai/berriai/litellm-database:main-stable";
-        # Prefer serving from the cached image when registries or DNS are
-        # temporarily unavailable; updates happen on rebuild/deploy instead of
-        # blocking service startup.
+        image = "docker.litellm.ai/berriai/litellm-database@sha256:7ef0e78fe00ad5ea7ea45666cc1d1f02cb7076aee69091543bf397de52db33ce";
+        # Pin the image for reproducible deployments. Upgrade by changing the
+        # digest and deploying NAS; pull only when that exact image is missing.
         pull = "missing";
         autoStart = true;
         # Use host networking so the container shares the host's network stack,
