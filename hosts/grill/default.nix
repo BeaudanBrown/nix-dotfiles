@@ -26,6 +26,11 @@
   ]
   ++ (import ../../generated/imports/grill.nix);
 
+  # Feed Grill's SP5100 hardware watchdog from PID 1. This resets the host
+  # if systemd freezes; it does not detect network loss or select a rollback.
+  # Verify arming before relying on it during a later trial activation.
+  systemd.settings.Manager.RuntimeWatchdogSec = "120s";
+
   nix.settings.cores = 12;
   hardware.graphics = {
     enable = true;

@@ -199,6 +199,14 @@ modules/desktop/hyprland/t480.nix   # Only imported for t480
 
 The `importAll` function automatically discovers and imports these files for the matching host.
 
+## Grill runtime watchdog
+
+`hosts/grill/default.nix` configures `systemd.settings.Manager.RuntimeWatchdogSec = "120s"` for Grill only. The host exposes an SP5100 TCO hardware watchdog. PID 1 feeds it; expiration forces a reset, not a graceful shutdown. This detects failure to feed the watchdog, not loss of SSH, Wi-Fi or Tailscale, and does not choose a previous NixOS generation.
+
+Configuration evaluation and the generated `system.conf` were checked. Following operator trial activation, live inspection confirmed the SP5100 watchdog active with an effective 120-second timeout; the operator subsequently reported a successful rebuild. An actual hardware-reset/recovery test has **not** been performed. After future activation, verify `systemctl show -p RuntimeWatchdogUSec`, watchdog initialization in the boot journal, and `/sys/class/watchdog/watchdog0/{identity,state,timeout}`. Do not open `/dev/watchdog*` just to inspect it: opening a watchdog device can arm it. The hardware's effective timeout may differ from the requested value.
+
+Verify arming before relying on this protection for a later risky trial activation. Keep a known-good boot default unchanged during that trial; automatic reboot only returns to whatever the boot loader selects. The initial watchdog activation itself is not protected by an as-yet-inactive watchdog. Test actual reset/recovery only in an approved maintenance window with independent recovery access. See [dump publishing remote-maintenance safety](./dump-publishing.md#remote-maintenance-safety) for native-mount transition precautions.
+
 ## Related Specifications
 
 - [Roots System](./roots.md) - Understanding which modules get imported

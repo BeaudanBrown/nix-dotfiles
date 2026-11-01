@@ -18,7 +18,7 @@ The Hugo source project is `~/documents/projects/dump` on GRILL. NAS backs that 
 Infrastructure lives in `modules/hosted-services/dump/`:
 
 - `nas.nix`: public DNS/ACME registration, owned Nginx vhost, shared TLS ingress integration, dedicated NFS export, publisher identity, timer and sandbox.
-- `grill.nix`: dedicated systemd NFS automount and `dump-publish`/Hugo packages. The existing autofs `autoMaster` option is a non-merging string; this new mount deliberately does not redefine it. The project path is excluded from the enclosing `documents` Syncthing folder so Syncthing does not traverse the nested NFS mount.
+- `grill.nix`: native systemd NFS mount/automount units and `dump-publish`/Hugo packages. The project has no `fileSystems`/fstab entry, avoiding the remote path lookup in `systemd-fstab-generator` implicated in upstream systemd #44396. The existing autofs `autoMaster` option is a non-merging string; this mount deliberately does not redefine it. The project path is excluded from the enclosing `documents` Syncthing folder so Syncthing does not traverse the nested NFS mount.
 - `package.nix`, `publish.py`: fixed host-owned CLI/protocol shared by GRILL and NAS.
 - `test_publish.py`: executable protocol tests with a fake Hugo (not template/render tests).
 
@@ -58,6 +58,16 @@ The NAS declaration also enables chat-only `download_file`/`send_file` in every 
 ## Matrix
 
 `modules/cli/pi-harness/grill.nix` already configures the GRILL bot, `@beau:matrix.bepis.lol` operator and `projects = ~/documents/projects` workspace. No new token or bot is needed. After mounting the transferred project, associate a managed conversation with the existing `projects` workspace's `dump` directory using the installed bridge workflow. No room was created or session restarted by this change. Matrix attachments are received/processed on GRILL; the project AGENTS.md specifies inbox, untrusted-document handling, publication and success reporting.
+
+## Remote-maintenance safety
+
+The native mount retains NFSv4, TCP, `rw,hard,noatime`, a 30-second mount-operation timeout and a 300-second automount idle timeout. Only the mount wants/is ordered after `network-online.target` and `tailscaled.service`; the automount starts independently. These dependencies do not prove NAS reachability or automatically stop the mount on every network restart. Neither timeout bounds every NFS I/O operation.
+
+Before the first activation of this conversion, release consumers and cleanly stop the existing dump automount/mount while networking still works; inspect the mount table without traversing remote paths. Abort if busy rather than force/lazy-unmount. The currently installed fstab entry can still be involved in the transition before the new configuration takes effect. Apply the same maintenance precaution to other active remote shares before network-changing upgrades. Preserve the NAS project and existing local backup; do not repeat the historical initial transfer.
+
+A connectivity-confirmed rollback mechanism can recover ordinary failed activations only while its execution dependencies remain functional. A systemd rollback timer cannot recover frozen PID 1. Hardware-watchdog reboot plus an unchanged known-good boot default is a separate recovery design requiring explicit approval and controlled testing, not a guarantee of graceful shutdown or uninterrupted SSH. No watchdog or automatic rollback is enabled by this mount change.
+
+Validation of this conversion: evaluation of Grill's complete `system.build.toplevel.drvPath` succeeded; evaluated units retain the exact source/path/options/timeouts and automount activation, and `fileSystems` has no dump entry. The operator subsequently activated the configuration: live inspection confirmed both native units active and the dump entry absent from `/etc/fstab`. The initial trial reported separate desktop-session and transient VirtualBox activation errors; the operator later reported a successful rebuild. No build or activation was performed by the implementation agent.
 
 ## First deployment — order matters
 
