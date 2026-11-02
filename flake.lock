@@ -1177,17 +1177,17 @@
         "pi-r": "pi-r"
       },
       "locked": {
-        "lastModified": 1793405616,
-        "narHash": "sha256-Vi4ZqT9xh8+NjYyokdRVvb+fsmZyGb2B+0hTMeiS7AU=",
+        "lastModified": 1793434614,
+        "narHash": "sha256-OmndF29G9kfiyAvRvVJj3tmmlrfQQQi+hUL4YfhD3Xo=",
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "f9a8f195929d7f48a8f983f0a6ac90a17af59691",
+        "rev": "327130d264794a2c1fcb0b9f4d22e78d2a88093e",
         "type": "github"
       },
       "original": {
         "owner": "BeaudanBrown",
         "repo": "pi-harness",
-        "rev": "f9a8f195929d7f48a8f983f0a6ac90a17af59691",
+        "rev": "327130d264794a2c1fcb0b9f4d22e78d2a88093e",
         "type": "github"
       }
     },
