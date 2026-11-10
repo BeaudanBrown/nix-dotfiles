@@ -213,5 +213,5 @@ func publishPickerUI(ctx context.Context, dir, exe string, revision int, rows []
 	}
 }
 func pickerUIArgs(dir, exe string) []string {
-	return []string{"--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--with-nth=2,3", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Enter opens. Managed selection requires the relay.", "--listen=" + filepath.Join(dir, "ui.sock"), "--bind=result:transform:" + shellQuote(exe) + " picker-restore " + shellQuote(dir), "--bind=up:up+rebind(enter),down:down+rebind(enter),ctrl-p:up+rebind(enter),ctrl-n:down+rebind(enter),change:rebind(enter)"}
+	return []string{"--height=100%", "--layout=default", "--border=none", "--ansi", "--tiebreak=index", "--with-nth=2,3", "--delimiter=\t", "--prompt=PROJECT> ", "--header=Enter opens/focuses locally. Matrix is optional.", "--listen=" + filepath.Join(dir, "ui.sock"), "--bind=result:transform:" + shellQuote(exe) + " picker-restore " + shellQuote(dir), "--bind=up:up+rebind(enter),down:down+rebind(enter),ctrl-p:up+rebind(enter),ctrl-n:down+rebind(enter),change:rebind(enter)"}
 }

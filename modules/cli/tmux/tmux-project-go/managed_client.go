@@ -20,8 +20,7 @@ type managedClientIdentity struct {
 }
 
 func validManagedClientName(name string) bool {
-	return name != "" && len(name) <= 256 && !strings.ContainsAny(name, "#{},") &&
-		strings.IndexFunc(name, func(r rune) bool { return r < 0x20 || r == 0x7f }) < 0
+	return validClientName(name)
 }
 
 func captureManagedClient(run exactTmux, request managedClientRequest) (managedClientIdentity, error) {

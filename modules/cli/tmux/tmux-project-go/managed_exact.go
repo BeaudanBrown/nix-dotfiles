@@ -21,9 +21,6 @@ const exactProofFormat = "#{pid}|#{start_time}|#{@managed_pi_server_id}|#{sessio
 var exactLaunchPattern = regexp.MustCompile(`^launch_[a-f0-9]{32}$`)
 var exactServerPattern = regexp.MustCompile(`^[1-9][0-9]{0,19}:[0-9]{1,20}:[a-f0-9]{32}$`)
 var exactSessionPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,128}$`)
-var exactWindowPattern = regexp.MustCompile(`^@[0-9]{1,20}$`)
-var exactPanePattern = regexp.MustCompile(`^%[0-9]{1,20}$`)
-var exactPIDPattern = regexp.MustCompile(`^[1-9][0-9]{0,19}$`)
 var exactStartPattern = regexp.MustCompile(`^[0-9]{1,20}$`)
 var exactBootPattern = regexp.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`)
 
@@ -39,8 +36,6 @@ type exactWindowProof struct {
 	ProcessStartTicks string `json:"processStartTicks,omitempty"`
 }
 
-type exactTmux func(...string) (string, error)
-
 func requireExactProcessSupport() error {
 	pid := fmt.Sprint(os.Getpid())
 	handle, err := openProcessHandle(pid)
@@ -53,11 +48,6 @@ func requireExactProcessSupport() error {
 		return err
 	}
 	return handle.verify(pid, boot, ticks)
-}
-
-func exactPID(value string) bool {
-	pid, err := strconv.ParseUint(value, 10, 31)
-	return err == nil && pid > 0 && exactPIDPattern.MatchString(value)
 }
 
 func validExactProof(p exactWindowProof) bool {
@@ -122,15 +112,6 @@ func inspectExactWindow(run exactTmux, conversationID string) (*exactWindowProof
 	}
 	return found, nil
 }
-
-func formatAnd(parts ...string) string {
-	result := "1"
-	for _, part := range parts {
-		result = "#{&&:" + result + "," + part + "}"
-	}
-	return result
-}
-func formatEqual(field, value string) string { return "#{==:#{" + field + "}," + value + "}" }
 
 // The birth token is in pane_start_command from new-window itself. A later marker
 // write must not adopt a reused target following a server restart or pane respawn.

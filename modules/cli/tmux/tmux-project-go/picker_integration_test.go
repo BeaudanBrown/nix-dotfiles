@@ -1,126 +1,149 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 )
 
-func TestPickerPublicSocketAndDisposableTmuxRoundtrip(t *testing.T) {
-	run := exactTestServer(t)
-	proof := exactTestWindow(t, run, "a")
-	if _, err := run("new-session", "-d", "-s", "other", "sleep 120"); err != nil {
-		t.Fatal(err)
-	}
-	client, _ := focusTestClient(t, run, "other")
-	socket, err := run("display-message", "-p", "#{socket_path}")
+func TestPickerUsesLocalCLIWithoutAnyRelaySocket(t *testing.T) {
+	root := t.TempDir()
+	helper := filepath.Join(root, "pi-session")
+	record := filepath.Join(root, "args")
+	shell, err := exec.LookPath("sh")
 	if err != nil {
 		t.Fatal(err)
 	}
-	server, err := run("display-message", "-p", "#{pid}")
-	if err != nil {
+	rows, _ := json.Marshal([]pickerNativeSession{pickerFixtureRow("a")})
+	script := fmt.Sprintf("#!%s\nprintf '%%s\\n' \"$@\" > %s\nprintf '%%s\\n' %s\n", shell, shellQuote(record), shellQuote(string(rows)))
+	if err = os.WriteFile(helper, []byte(script), 0700); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("TMUX", socket+","+server+",0")
-	t.Setenv("HOME", t.TempDir())
-	root, err := os.MkdirTemp("/tmp", "picker-roundtrip-")
-	if err != nil {
-		t.Fatal(err)
+	t.Setenv("PI_NATIVE_SESSION_HELPER", helper)
+	t.Setenv("XDG_RUNTIME_DIR", root)
+	inventory, err := loadPickerInventory(context.Background(), callPickerNative)
+	if err != nil || len(inventory.Rows) != 1 {
+		t.Fatalf("%+v %v", inventory, err)
 	}
-	defer os.RemoveAll(root)
-	path := filepath.Join(root, "control.sock")
-	listener, err := net.Listen("unix", path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer listener.Close()
-	if err = os.Chmod(path, 0600); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("PI_MANAGED_SESSIONS_RUNTIME_DIR", root)
-	row := pickerFixtureRow("a")
-	row.ConversationID = proof.ConversationID
-	admitted := make(chan map[string]any, 1)
-	go func() {
-		for n := 0; n < 3; n++ {
-			conn, err := listener.Accept()
-			if err != nil {
-				return
-			}
-			line, err := bufio.NewReader(conn).ReadBytes('\n')
-			if err != nil {
-				conn.Close()
-				return
-			}
-			var request struct {
-				Actor  struct{ RequestID string }
-				Action map[string]any
-			}
-			if json.Unmarshal(line, &request) != nil {
-				conn.Close()
-				return
-			}
-			var data any
-			switch request.Action["operation"] {
-			case "host.status":
-				data = pickerFixtureStatus()
-			case "conversation.list":
-				data = map[string]any{"items": []pickerConversation{row}, "nextCursor": nil}
-			case "conversation.open":
-				admitted <- request.Action
-				data = map[string]any{"conversationId": row.ConversationID, "launchId": proof.LaunchID, "launchState": "window_created", "window": map[string]any{"conversationId": row.ConversationID, "sessionName": proof.SessionName, "windowId": proof.WindowID, "paneId": proof.PaneID}}
-			}
-			_ = json.NewEncoder(conn).Encode(map[string]any{"version": "1.0.0", "requestId": request.Actor.RequestID, "ok": true, "data": data})
-			conn.Close()
-		}
-	}()
-	inventory, err := loadPickerInventory(context.Background(), callPickerHost)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rows := buildPickerRows(context.Background(), nil, nil, nil, inventory, nil)
-	if len(rows) != 1 || rows[0].Conversation == nil {
-		t.Fatalf("unexpected rows: %+v", rows)
-	}
-	pid, err := capturePickerClient(client, tmux)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := openPickerConversation(context.Background(), callPickerHost, *rows[0].Conversation, client, pid, tmux); err != nil {
-		t.Fatal(err)
-	}
-	if focusClientRows(t, run)[client] != "exact|"+proof.WindowID+"|"+proof.PaneID {
-		t.Fatal("picker did not reach exact target")
-	}
-	call := <-admitted
-	if call["expectedGenerationId"] != row.ActiveGenerationID || call["conversationId"] != row.ConversationID {
-		t.Fatalf("bad public admission: %+v", call)
+	args, _ := os.ReadFile(record)
+	if string(args) != "list\n--all\n" {
+		t.Fatalf("%q", args)
 	}
 }
-
-func TestPickerInterruptedOpenDoesNotCancelOrReplayAcceptedWork(t *testing.T) {
+func TestPickerInterruptedLocalOpenDoesNotCancelOrReplay(t *testing.T) {
 	run := exactTestServer(t)
 	client, pid := focusTestClient(t, run, "exact")
 	row := pickerFixtureRow("b")
 	calls := 0
-	var proof exactWindowProof
+	pane := ""
 	call := func(context.Context, []string, any) error {
 		calls++
-		proof = exactTestWindow(t, run, "b")
-		return fmt.Errorf("response lost after admission")
+		var err error
+		pane, err = run("new-window", "-d", "-P", "-F", "#{pane_id}", "-t", "=exact", "sleep 120")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return fmt.Errorf("reply lost")
 	}
-	if err := openPickerConversation(context.Background(), call, row, client, pid, run); err == nil {
-		t.Fatal("lost response claimed success")
+	if err := openPickerNative(context.Background(), call, row, client, pid, run); err == nil {
+		t.Fatal("lost reply claimed success")
 	}
-	if calls != 1 {
-		t.Fatal("automatic replay")
+	dead, err := run("display-message", "-p", "-t", pane, "#{pane_dead}")
+	if calls != 1 || err != nil || dead != "0" {
+		t.Fatalf("accepted local process changed: %d %s %v", calls, dead, err)
 	}
-	if state, err := checkExactWindow(run, proof); err != nil || state != "match" {
-		t.Fatalf("accepted work lost: %s %v", state, err)
+}
+func TestNativeWindowUsesOrdinaryWorkspaceWithoutGitOrManagedProtocol(t *testing.T) {
+	run := exactTestServer(t)
+	socket, err := run("display-message", "-p", "#{socket_path}")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TMUX_PROJECT_SOCKET", socket)
+	t.Setenv("TMUX", "")
+	cwd := t.TempDir()
+	executable, err := exec.LookPath("sleep")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, _ := json.Marshal(map[string]any{"cwd": cwd, "argv": []string{executable, "120"}})
+	var output bytes.Buffer
+	if err := nativeWindow(bytes.NewReader(request), &output); err != nil {
+		t.Fatal(err)
+	}
+	var opened struct {
+		Pane string `json:"pane"`
+	}
+	if err = json.Unmarshal(output.Bytes(), &opened); err != nil {
+		t.Fatal(err)
+	}
+	// Window creation precedes the child's chdir/exec; observe the actual
+	// process rather than treating a tmux creation reply as readiness.
+	path := ""
+	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); {
+		path, err = run("display-message", "-p", "-t", opened.Pane, "#{pane_current_path}")
+		if err == nil && path == cwd {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if err != nil || path != cwd {
+		t.Fatalf("%s %v", path, err)
+	}
+	before, _ := run("list-panes", "-a", "-F", "#{pane_id}")
+	for _, bad := range []string{`{"cwd":"/tmp","argv":["relative"]}`, `{"cwd":"/tmp","argv":["/single-argument-shell-form"]}`, string(request) + ` {}`, strings.Repeat(" ", 65537)} {
+		if err := nativeWindow(strings.NewReader(bad), &bytes.Buffer{}); err == nil {
+			t.Fatal("invalid request accepted")
+		}
+	}
+	after, _ := run("list-panes", "-a", "-F", "#{pane_id}")
+	if before != after {
+		t.Fatal("invalid request created a window")
+	}
+}
+
+func TestNativeWindowPreservesLiteralArgvAndSemicolonPaths(t *testing.T) {
+	run := exactTestServer(t)
+	socket, err := run("display-message", "-p", "#{socket_path}")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TMUX_PROJECT_SOCKET", socket)
+	t.Setenv("TMUX", "")
+	cwd := filepath.Join(t.TempDir(), "directory;")
+	if err := os.Mkdir(cwd, 0700); err != nil {
+		t.Fatal(err)
+	}
+	program, captured := filepath.Join(cwd, "program with spaces"), filepath.Join(cwd, "captured")
+	shell, err := exec.LookPath("sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := fmt.Sprintf("#!%s\nprintf '%%s\\n' \"$@\" > %s\nexec sleep 120\n", shell, shellQuote(captured))
+	if err := os.WriteFile(program, []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	argv := []string{program, ";", "literal;", "\\;", "inside;word", "literal '$()'"}
+	request, _ := json.Marshal(map[string]any{"cwd": cwd, "argv": argv})
+	if err := nativeWindow(bytes.NewReader(request), &bytes.Buffer{}); err != nil {
+		t.Fatal(err)
+	}
+	var data []byte
+	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); {
+		data, err = os.ReadFile(captured)
+		if err == nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if err != nil || string(data) != strings.Join(argv[1:], "\n")+"\n" {
+		t.Fatalf("literal argv changed: %q %v", data, err)
 	}
 }

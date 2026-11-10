@@ -13,8 +13,14 @@ done
 : "${XDG_RUNTIME_DIR:?Shared tmux requires XDG_RUNTIME_DIR}"
 export TMUX_TMPDIR="$XDG_RUNTIME_DIR"
 socket="$XDG_RUNTIME_DIR/tmux-$(id -u)/default"
-# Connect to legacy servers without replacing them. The rollout guard refuses
-# to restart the relay until an independently owned server is in use.
+# Explicit read-only probes must not create/start a server as a side effect.
+for argument in "$@"; do
+	if [[ $argument == -N ]]; then
+		exec "$raw_tmux" -N -S "$socket" "$@"
+	fi
+done
+# Connect to existing servers without replacing them. Server lifetime is
+# independent of the optional bridge and ordinary Pi processes.
 if ! "$raw_tmux" -N -S "$socket" display-message -p '#{pid}' >/dev/null 2>&1; then
 	systemctl --user start tmux-shared.service
 	ready=false

@@ -181,7 +181,8 @@ type pickerLocalSnapshot struct {
 
 func pickerSnapshot(ctx context.Context, client string) (pickerLocalSnapshot, error) {
 	var result pickerLocalSnapshot
-	cmd := exec.CommandContext(ctx, "tmux", "-u", "list-sessions", "-F", "S\t#{session_name}\t#{@project_root}\t#{@project_parent}\t#{@project_role}\t#{@project_group}\t#{@project_popup_owner}\t#{@project_popup_root}", ";", "list-windows", "-a", "-F", "W\t#{session_name}\t#{window_id}\t#{pane_id}\t#{@managed_pi_conversation_id}", ";", "list-clients", "-F", "C\t#{client_name}\t#{client_pid}")
+	args := []string{"list-sessions", "-F", "S\t#{session_name}\t#{@project_root}\t#{@project_parent}\t#{@project_role}\t#{@project_group}\t#{@project_popup_owner}\t#{@project_popup_root}", ";", "list-windows", "-a", "-F", "W\t#{session_name}\t#{window_id}\t#{pane_id}\t#{@pi_native_launch}", ";", "list-clients", "-F", "C\t#{client_name}\t#{client_pid}"}
+	cmd := exec.CommandContext(ctx, "tmux", tmuxCommandArgs(os.Getenv("TMUX_PROJECT_SOCKET"), args)...)
 	out := &pickerBoundedOutput{limit: 1024 * 1024}
 	cmd.Stdout = out
 	cmd.WaitDelay = 100 * time.Millisecond
@@ -208,7 +209,7 @@ func pickerSnapshot(ctx context.Context, client string) (pickerLocalSnapshot, er
 			}
 		}
 	}
-	if !validManagedClientName(client) || result.ClientPID == "" {
+	if !validClientName(client) || result.ClientPID == "" {
 		return pickerLocalSnapshot{}, fmt.Errorf("requesting client unavailable")
 	}
 	return result, nil

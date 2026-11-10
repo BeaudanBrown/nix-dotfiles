@@ -16,24 +16,23 @@ import (
 
 type pickerWindow struct{ Session, Window, Pane, Marker string }
 type pickerRow struct {
-	Key          string
-	Candidate    Candidate
-	Conversation *pickerConversation
-	Ordinary     *pickerWindow
+	Key       string
+	Candidate Candidate
+	Native    *pickerNativeSession
+	Ordinary  *pickerWindow
 }
 
 func pickerWindows(run exactTmux) []pickerWindow {
-	out, err := run("list-windows", "-a", "-F", "#{session_name}\t#{window_id}\t#{pane_id}\t#{@managed_pi_conversation_id}")
+	out, err := run("list-windows", "-a", "-F", "#{session_name}\t#{window_id}\t#{pane_id}\t#{@pi_native_launch}")
 	if err != nil || len(out) > 1024*1024 {
 		return nil
 	}
 	var rows []pickerWindow
 	for _, line := range strings.Split(out, "\n") {
 		p := strings.Split(line, "\t")
-		if len(p) != 4 || !pickerText(p[0], 128) || !exactWindowPattern.MatchString(p[1]) || !exactPanePattern.MatchString(p[2]) {
-			continue
+		if len(p) == 4 && pickerText(p[0], 128) && exactWindowPattern.MatchString(p[1]) && exactPanePattern.MatchString(p[2]) {
+			rows = append(rows, pickerWindow{p[0], p[1], p[2], p[3]})
 		}
-		rows = append(rows, pickerWindow{p[0], p[1], p[2], p[3]})
 	}
 	return rows
 }
@@ -60,14 +59,6 @@ func pickerScores() map[string]float64 {
 	}
 	return scores
 }
-func pickerCheckout(host, project, path string) string {
-	h := sha256.New()
-	fmt.Fprint(h, "pi-managed-sessions:checkout:live-v1\x00")
-	for _, part := range []string{host, project, path} {
-		fmt.Fprintf(h, "%d:%s", len(part), part)
-	}
-	return fmt.Sprintf("checkout_%x", h.Sum(nil)[:16])
-}
 func pickerCanonical(path string) string {
 	if !filepath.IsAbs(path) || !pickerText(path, 4096) {
 		return ""
@@ -82,31 +73,20 @@ func pickerCanonical(path string) string {
 	}
 	return filepath.Clean(resolved)
 }
+func nativePickerKey(file string) string { return fmt.Sprintf("pi:%x", sha256.Sum256([]byte(file))) }
 func buildPickerRows(ctx context.Context, sessions []Session, windows []pickerWindow, paths []string, inventory pickerInventory, scores map[string]float64) []pickerRow {
-	// Match checkout digests against locally discovered canonical paths. Relative
-	// cwd and display names never identify a checkout; no Git subprocess is needed.
-	if ctx.Err() != nil {
-		return nil
+	ordinaryRoots, rawRoots, nativePanes := map[string]bool{}, map[string]bool{}, map[string]bool{}
+	for _, item := range inventory.Rows {
+		if item.Pane != "" {
+			nativePanes[item.Pane] = true
+		}
 	}
-	roots := map[string]bool{}
-	rawRoots := map[string]bool{}
-	ordinaryRoots := map[string]bool{}
-	managedRoots := map[string]bool{}
 	for _, path := range paths {
 		if ctx.Err() != nil {
 			return nil
 		}
 		if root := pickerCanonical(path); root != "" {
-			roots[root] = true
 			rawRoots[root] = true
-		}
-	}
-	for _, s := range sessions {
-		if ctx.Err() != nil {
-			return nil
-		}
-		if root := pickerCanonical(s.Root); root != "" {
-			roots[root] = true
 		}
 	}
 	var rows []pickerRow
@@ -117,67 +97,37 @@ func buildPickerRows(ctx context.Context, sessions []Session, windows []pickerWi
 		if !isRoot(s) || !pickerText(s.Name, 128) {
 			continue
 		}
+		root := pickerCanonical(s.Root)
 		for _, w := range windows {
-			if w.Session != s.Name || w.Marker != "" {
+			if w.Session != s.Name || w.Marker != "" || nativePanes[w.Pane] {
 				continue
 			}
-			root := pickerCanonical(s.Root)
 			ordinaryRoots[root] = true
 			window := w
 			rows = append(rows, pickerRow{Key: "session:" + s.Name, Candidate: Candidate{Kind: "session", Value: s.Name, Name: s.Name, Path: homeRelative(root), Session: s.Name, Score: scores[root]}, Ordinary: &window})
 			break
 		}
 	}
-	projects, checkouts := map[string]bool{}, map[string]bool{}
 	for _, item := range inventory.Rows {
-		if item.CheckoutID != "" {
-			projects[item.ProjectKey] = true
-			checkouts[item.CheckoutID] = true
+		if ctx.Err() != nil {
+			return nil
 		}
-	}
-	matched := map[string]string{}
-	for candidate := range roots {
-		for project := range projects {
-			if ctx.Err() != nil {
-				return nil
-			}
-			id := pickerCheckout(inventory.HostID, project, candidate)
-			if checkouts[id] {
-				matched[id] = candidate
-				managedRoots[candidate] = true
-			}
-		}
-	}
-	for _, item := range inventory.Rows {
-		row := item
-		root := matched[item.CheckoutID]
-		state := "ownership unknown"
-		switch {
-		case item.LaunchState == "failed" && item.RuntimeState == "unknown":
-			state = "launch failed; ownership unknown"
-		case item.LaunchState == "failed":
-			state = "launch failed; Enter retries"
-		case item.LaunchState == "prepared" || item.LaunchState == "window_created":
-			state = "starting"
-		case item.RuntimeState == "running":
-			state = "running"
-		case item.RuntimeState == "stopped":
-			state = "dormant"
-		}
-		path := item.Kind
-		if pickerText(item.CheckoutDisplayName, 512) {
-			path = item.CheckoutDisplayName
-		}
-		if root != "" {
-			path = homeRelative(root)
-		}
-		rows = append(rows, pickerRow{Key: "conversation:" + item.ConversationID, Candidate: Candidate{Kind: "conversation", Value: item.ConversationID, Name: item.Title + " [" + item.ConversationID + "; " + state + "]", Path: path, Score: scores[root]}, Conversation: &row})
-	}
-	for path := range rawRoots {
-		if ordinaryRoots[path] || managedRoots[path] {
+		if item.Archived {
 			continue
 		}
-		rows = append(rows, pickerRow{Key: "path:" + path, Candidate: Candidate{Kind: "path", Value: path, Name: filepath.Base(path), Path: homeRelative(path), Score: scores[path]}})
+		row, state := item, "saved"
+		if item.Running {
+			state = "running"
+		} else if item.Pending {
+			state = "starting"
+		}
+		name := pickerLabel(item.Title) + " [" + item.ID + "; " + state + "]"
+		rows = append(rows, pickerRow{Key: nativePickerKey(item.File), Candidate: Candidate{Kind: "pi", Value: item.File, Name: name, Path: homeRelative(item.Cwd), Score: scores[item.Cwd]}, Native: &row})
+	}
+	for path := range rawRoots {
+		if !ordinaryRoots[path] {
+			rows = append(rows, pickerRow{Key: "path:" + path, Candidate: Candidate{Kind: "path", Value: path, Name: filepath.Base(path), Path: homeRelative(path), Score: scores[path]}})
+		}
 	}
 	sort.Slice(rows, func(i, j int) bool {
 		a, b := rows[i], rows[j]
@@ -192,7 +142,7 @@ func buildPickerRows(ctx context.Context, sessions []Session, windows []pickerWi
 	return rows
 }
 func capturePickerClient(client string, run exactTmux) (string, error) {
-	if !validManagedClientName(client) {
+	if !validClientName(client) {
 		return "", fmt.Errorf("invalid requesting client")
 	}
 	out, err := run("list-clients", "-F", "#{client_name}\t#{client_pid}")
@@ -217,20 +167,30 @@ func capturePickerClient(client string, run exactTmux) (string, error) {
 	}
 	return pid, nil
 }
-func focusPickerOrdinary(w pickerWindow, client, pid string, run exactTmux) error {
-	if w.Marker != "" || !pickerText(w.Session, 128) || strings.ContainsAny(w.Session, "#{},") || !exactWindowPattern.MatchString(w.Window) || !exactPanePattern.MatchString(w.Pane) || !validManagedClientName(client) || !exactPID(pid) {
-		return fmt.Errorf("invalid ordinary target")
+func focusPickerWindow(w pickerWindow, client, pid string, server int, run exactTmux) error {
+	if !pickerText(w.Session, 128) || strings.ContainsAny(w.Session, "#{},") || !exactWindowPattern.MatchString(w.Window) || !exactPanePattern.MatchString(w.Pane) || !validClientName(client) || !exactPID(pid) {
+		return fmt.Errorf("invalid window target")
 	}
-	condition := formatAnd(formatEqual("session_name", w.Session), formatEqual("window_id", w.Window), formatEqual("pane_id", w.Pane), formatEqual(managedWindowOption, ""),
-		"#{m:*1*,#{L:"+formatAnd(formatEqual("client_name", client), formatEqual("client_pid", pid), "#{!=:#{client_session},}")+"}}")
-	out, err := run("if-shell", "-F", "-t", w.Pane, condition, "switch-client -c "+shellQuote(client)+" -t "+shellQuote("="+w.Session+":"+w.Window+"."+w.Pane), "display-message -p picker-target-stale")
+	parts := []string{formatEqual("session_name", w.Session), formatEqual("window_id", w.Window), formatEqual("pane_id", w.Pane), "#{m:*1*,#{L:" + formatAnd(formatEqual("client_name", client), formatEqual("client_pid", pid), "#{!=:#{client_session},}") + "}}"}
+	if server > 0 {
+		parts = append(parts, formatEqual("pid", strconv.Itoa(server)))
+	} else {
+		parts = append(parts, formatEqual("@pi_native_launch", ""))
+	}
+	out, err := run("if-shell", "-F", "-t", w.Pane, formatAnd(parts...), "switch-client -c "+shellQuote(client)+" -t "+shellQuote("="+w.Session+":"+w.Window+"."+w.Pane), "display-message -p picker-target-stale")
 	if err != nil {
 		return err
 	}
 	if strings.TrimSpace(out) != "" {
-		return fmt.Errorf("ordinary target or requester changed")
+		return fmt.Errorf("window target or requester changed")
 	}
 	return nil
+}
+func focusPickerOrdinary(w pickerWindow, client, pid string, run exactTmux) error {
+	if w.Marker != "" {
+		return fmt.Errorf("ordinary target changed")
+	}
+	return focusPickerWindow(w, client, pid, 0, run)
 }
 func selectPickerPath(path, client, pid string) error {
 	root := pickerCanonical(path)
@@ -239,12 +199,10 @@ func selectPickerPath(path, client, pid string) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "git", "-C", root, "rev-parse", "--show-toplevel")
-	out, err := cmd.Output()
+	out, err := exec.CommandContext(ctx, "git", "-C", root, "rev-parse", "--show-toplevel").Output()
 	if err != nil || pickerCanonical(strings.TrimSpace(string(out))) != root {
 		return fmt.Errorf("selected path is no longer a Git checkout")
 	}
-	// Verify caller before any ordinary shell creation, then queue-guard focus too.
 	current, err := capturePickerClient(client, tmux)
 	if err != nil || current != pid {
 		return fmt.Errorf("requester changed")
@@ -253,20 +211,17 @@ func selectPickerPath(path, client, pid string) error {
 	if err != nil {
 		return err
 	}
-	windows := pickerWindows(tmux)
-	for _, w := range windows {
+	for _, w := range pickerWindows(tmux) {
 		if w.Session == session && w.Marker == "" {
 			recordVisit(root)
 			return focusPickerOrdinary(w, client, pid, tmux)
 		}
 	}
-	// A raw path may coincide with a managed-only project session during outage.
-	// Enter creates an ordinary shell, never focuses its managed last window.
-	outString, err := tmux("new-window", "-d", "-P", "-F", "#{window_id}\t#{pane_id}", "-t", "="+session, "-c", root)
+	value, err := tmux("new-window", "-d", "-P", "-F", "#{window_id}\t#{pane_id}", "-t", "="+session, "-c", root)
 	if err != nil {
 		return err
 	}
-	parts := strings.Split(outString, "\t")
+	parts := strings.Split(value, "\t")
 	if len(parts) != 2 {
 		return fmt.Errorf("ordinary window result invalid")
 	}
@@ -276,7 +231,7 @@ func selectPickerPath(path, client, pid string) error {
 func discoverPickerRows() []pickerRow {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	inventory, _ := loadPickerInventory(ctx, callPickerHost)
+	inventory, _ := loadPickerInventory(ctx, callPickerNative)
 	sessions, _ := allSessions()
 	return buildPickerRows(context.Background(), sessions, pickerWindows(tmux), projectPaths(), inventory, pickerScores())
 }

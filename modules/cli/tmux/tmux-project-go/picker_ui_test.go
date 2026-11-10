@@ -15,12 +15,12 @@ func TestPickerRealPopupReloadAndLatencyDistributions(t *testing.T) {
 		var err error
 		fzf, err = exec.LookPath("fzf")
 		if err != nil {
-			t.Skip("fzf unavailable")
+			t.Fatal("real picker verification requires fzf")
 		}
 	}
 	for _, program := range []string{"tmux", "python3", "fd", "go"} {
 		if _, err := exec.LookPath(program); err != nil {
-			t.Skip(program + " unavailable")
+			t.Fatal("real picker verification requires " + program)
 		}
 	}
 	root, err := os.MkdirTemp("/tmp", "picker-test-")

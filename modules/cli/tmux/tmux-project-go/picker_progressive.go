@@ -40,8 +40,8 @@ func discoverPickerProgressively(ctx context.Context, client string, emit func(p
 	start(func() {
 		limited, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()
-		inventory, err := loadPickerInventory(limited, callPickerHost)
-		emit(pickerUpdate{Kind: "managed", Inventory: inventory, Err: err})
+		inventory, err := loadPickerInventory(limited, callPickerNative)
+		emit(pickerUpdate{Kind: "native", Inventory: inventory, Err: err})
 	})
 	start(func() { emit(pickerUpdate{Kind: "cache", Paths: loadPickerCache(cache, roots)}) })
 	start(func() {
@@ -58,7 +58,7 @@ func discoverPickerProgressively(ctx context.Context, client string, emit func(p
 func drivePickerUI(ctx context.Context, client, dir, exe string, state *pickerSelectionState) error {
 	ctx, cancelDiscovery := context.WithCancel(ctx)
 	defer cancelDiscovery()
-	// Start the terminal first. Even slow/missing relay and discovery cannot defer it.
+	// Start the terminal first. Even slow native metadata and discovery cannot defer it.
 	readyCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	for {
@@ -115,7 +115,7 @@ func drivePickerUI(ctx context.Context, client, dir, exe string, state *pickerSe
 				local = update.Local
 				scores = update.Scores
 				localReady = true
-			case "managed":
+			case "native":
 				inventory = update.Inventory
 				rawReady = true
 			case "cache":
@@ -217,12 +217,12 @@ func runProgressivePicker(clientArg string) error {
 	if !ok || pid == "" {
 		return fmt.Errorf("selection changed; open picker again")
 	}
-	// Deliberately independent of the cancelled discovery context. Accepted host
-	// work is never cancelled or replayed by UI/scanner lifetime.
-	if row.Conversation != nil {
-		openCtx, done := context.WithTimeout(context.Background(), 35*time.Second)
+	// Opening/focusing native Pi is independent of the cancelled discovery
+	// context. A lost helper reply never authorizes killing or replaying Pi.
+	if row.Native != nil {
+		openCtx, done := context.WithTimeout(context.Background(), 20*time.Second)
 		defer done()
-		return openPickerConversation(openCtx, callPickerHost, *row.Conversation, client, pid, tmux)
+		return openPickerNative(openCtx, callPickerNative, *row.Native, client, pid, tmux)
 	}
 	if row.Ordinary != nil {
 		return focusPickerOrdinary(*row.Ordinary, client, pid, tmux)

@@ -1,5 +1,5 @@
 # Real fzf in a real popup on a disposable tmux server. No shared/live socket.
-import os, sys, json, time, socket, subprocess, pathlib, pty, fcntl, termios, struct, threading, re, hashlib, shutil
+import os, sys, json, time, socket, subprocess, pathlib, pty, fcntl, termios, struct, threading, re, shutil
 binary, fzf, root = sys.argv[1:]
 stop=False
 r=pathlib.Path(root); home=r/'home'; cache=r/'cache'; tmp=r/'tmp'; bins=r/'bin'
@@ -14,43 +14,20 @@ for i in range(80):
 shell=shutil.which('sh');assert shell, 'controlled POSIX shell unavailable'
 env=dict(HOME=str(home),SHELL=shell,LANG='C.UTF-8',XDG_CONFIG_HOME=str(home/'config'),XDG_DATA_HOME=str(home/'data'),XDG_STATE_HOME=str(home/'state'),XDG_CACHE_HOME=str(cache),XDG_RUNTIME_DIR=str(r/'unused-private-xdg'),TMPDIR=str(tmp),TERM='xterm-256color',PATH=str(bins)+':'+str(pathlib.Path(fzf).parent)+':'+os.environ['PATH'],FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE='')
 (bins/'tmux_project').symlink_to(binary)
-project='project_'+'b'*32
-h=hashlib.sha256(b'pi-managed-sessions:checkout:live-v1\0')
-for s in ['fixture',project,str(repos[1])]:b=s.encode();h.update(str(len(b)).encode()+b':'+b)
-rows=[dict(conversationId='conv_'+c*32,kind='project',title='same managed '+c,activeGenerationId='generation_'+'a'*32,runtimeState='stopped',launchState='none',projectKey=project,checkoutId='checkout_'+h.hexdigest()[:32]) for c in ('a','b')]
-for row in rows:row.update(setupState='ready',capabilities=['host-control-v1'])
-mode=r/'mode.json';mode.write_text('{}')
-host=bins/'pi-managed-session'
-host.write_text('#!/bin/sh\n: > '+str(r/'forbidden-cli')+'\nexit 99\n');host.chmod(0o700)
-# Public socket fixture only: never inherit a live host endpoint.
-def start_control():
- runtime=r/'runtime';runtime.mkdir(mode=0o700);env['PI_MANAGED_SESSIONS_RUNTIME_DIR']=str(runtime)
- control=socket.socket(socket.AF_UNIX);control.bind(str(runtime/'control.sock'));os.chmod(runtime/'control.sock',0o600);control.listen();control.settimeout(.1)
- def serve():
-  while not stop:
-   try:conn,_=control.accept()
-   except socket.timeout:continue
-   except OSError:return
-   with conn:
-    try:
-     incoming=b''
-     while not incoming.endswith(b'\n'):
-      chunk=conn.recv(65536)
-      if not chunk:raise EOFError()
-      incoming+=chunk
-      if len(incoming)>65536:raise ValueError('oversized fixture request')
-     req=json.loads(incoming);m=json.loads(mode.read_text());op=req['action']['operation']
-     reply={'version':'1.0.0','requestId':req['actor']['requestId'],'ok':not m.get('error',False)}
-     if not reply['ok']:reply['error']={'code':'unavailable','message':'fixture offline','retryable':True}
-     elif op=='host.status':
-      time.sleep(m.get('delay',0));reply['data']={'hostId':'fixture','relayState':'ready','accountState':'ready','capabilities':['host-control-v1','window-first-open-v1']}
-     elif op=='conversation.list':reply['data']={'items':rows,'nextCursor':None}
-     else:raise AssertionError('unexpected action '+op)
-     conn.sendall(json.dumps(reply).encode()+b'\n')
-    except (BrokenPipeError,ConnectionResetError,EOFError):pass
- threading.Thread(target=serve,daemon=True).start()
- return control
-control=start_control()
+rows=[dict(version=1,file=str(r/('native-'+c+'.jsonl')),id='native-'+c,cwd=str(repos[i]),title='same native '+c,running=False) for i,c in enumerate(('a','b'))]
+mode=r/'mode.json';mode.write_text('{}');data=r/'native.json';data.write_text(json.dumps(rows))
+legacy=bins/'pi-managed-session'
+legacy.write_text('#!'+shell+'\n: > '+str(r/'forbidden-cli')+'\nexit 99\n');legacy.chmod(0o700)
+# Local CLI fixture only. There is deliberately no bridge/Matrix/host socket.
+helper=bins/'pi-session'
+helper.write_text(f'''#!{sys.executable}
+import json,sys,time,pathlib
+assert sys.argv[1:]==['list','--all']
+mode=json.loads(pathlib.Path({str(mode)!r}).read_text())
+time.sleep(mode.get('delay',0))
+if mode.get('error'):sys.exit(2)
+print(pathlib.Path({str(data)!r}).read_text())
+''');helper.chmod(0o700)
 git=bins/'git';git.write_text('#!/bin/sh\n: > '+str(r/'forbidden-git')+'\nexit 99\n');git.chmod(0o700)
 sock=str(r/'server.sock')
 def tmux(*args):return subprocess.check_output(['tmux','-f','/dev/null','-S',sock,*args],env=env,stderr=subprocess.PIPE).decode().strip()
@@ -92,10 +69,10 @@ def one(kind,identity=False):
  with lock:stream.clear()
  started=time.monotonic();os.write(master,b'\x1b[24~')
  ui=wait(lambda:next((p for p in tmp.glob('tmux-picker-*') if (p/'ui.sock').exists()),None))
- observed={'raw_ms':None,'managed_ms':None}
+ observed={'raw_ms':None,'native_ms':None}
  def readstate():
   state=request(ui)
-  for key,prefix in [('raw_ms','path:'),('managed_ms','conversation:')]:
+  for key,prefix in [('raw_ms','path:'),('native_ms','pi:')]:
    if observed[key] is None and any(x['text'].startswith(prefix) for x in state['matches']):observed[key]=round((time.monotonic()-started)*1000,2)
   return state
  def prompt():
@@ -109,9 +86,9 @@ def one(kind,identity=False):
  state=wait(lambda:(s if (s:=readstate()).get('current') else None));first_ms=(time.monotonic()-started)*1000
  if identity:
   wait(lambda:readstate()['totalCount']>20)
-  assert not any(x['text'].startswith('conversation:') for x in readstate()['matches']), 'late-inventory fixture was not late'
+  assert not any(x['text'].startswith('pi:') for x in readstate()['matches']), 'late-inventory fixture was not late'
   request(ui,'change-query(same)');state=wait(lambda:(s if (s:=readstate())['query']=='same' else None))
-  target='path:'+str(repos[1 if identity=='remove' else 50]);index=next(i for i,item in enumerate(state['matches']) if item['text'].split('\t')[0]==target)
+  target='session:same' if identity=='remove' else 'path:'+str(repos[50]);index=next(i for i,item in enumerate(state['matches']) if item['text'].split('\t')[0]==target)
   request(ui,'pos(%d)'%(index+1));wait(lambda:readstate()['current']['text'].split('\t')[0]==target)
  def complete():readstate();return (ui/'discovery.json').exists()
  wait(complete);full_ms=(time.monotonic()-started)*1000
@@ -121,10 +98,10 @@ def one(kind,identity=False):
   if identity!='remove':assert state['current']['text'].split('\t')[0]==target,state
   else:
    os.write(master,b'\r');time.sleep(.1);assert ui.exists(),'removed selection silently accepted another row'
-  assert not any(x['text'].split('\t')[0]=='path:'+str(repos[1]) for x in state['matches']),state
-  assert sum(x['text'].startswith('conversation:') for x in state['matches'])==2,state
- if kind=='error':assert not any(x['text'].startswith('conversation:') for x in state['matches'])
- else:assert sum(x['text'].startswith('conversation:') for x in state['matches'])==2,state
+  assert any(x['text'].split('\t')[0]=='path:'+str(repos[1]) for x in state['matches']),state
+  assert sum(x['text'].startswith('pi:') for x in state['matches'])==2,state
+ if kind=='error':assert not any(x['text'].startswith('pi:') for x in state['matches'])
+ else:assert sum(x['text'].startswith('pi:') for x in state['matches'])==2,state
  if (home/'documents'/'same-new').exists():
   keys={x['text'].split('\t')[0] for x in state['matches']}
   assert 'path:'+str(home/'documents'/'same-new') in keys,'addition not refreshed'
@@ -137,6 +114,7 @@ def one(kind,identity=False):
 try:
  tmux('new-session','-d','-s','same','-c',str(repos[0]),'sleep 120')
  tmux('set-option','-t','same','@project_role','root');tmux('set-option','-t','same','@project_root',str(repos[0]))
+ rows[0].update(running=True,pane=tmux('display-message','-p','#{pane_id}'),serverPid=int(tmux('display-message','-p','#{pid}')));data.write_text(json.dumps(rows))
  tmux('bind-key','-n','F12','run-shell',binary+' launcher-popup "#{client_name}"')
  def setup():os.setsid();fcntl.ioctl(slave,termios.TIOCSCTTY,0)
  client=subprocess.Popen(['tmux','-S',sock,'attach-session','-t','same'],stdin=slave,stdout=slave,stderr=slave,env=env,preexec_fn=setup)
@@ -145,12 +123,12 @@ try:
  removed=one('cold','remove')
  results={kind:[one(kind) for _ in range(7)] for kind in ('cold','warm','error')}
  fresh=home/'documents'/'same-new';fresh.mkdir();(fresh/'.git').mkdir();shutil.rmtree(repos[79]);refreshed=one('warm')
- # Exit while the read-only host is still delayed; no launch is cancelled/replayed.
+ # Exit while read-only native metadata is delayed; no Pi is cancelled/replayed.
  mode.write_text(json.dumps({'delay':1.5}));os.write(master,b'\x1b[24~')
  cancelling=wait(lambda:next((p for p in tmp.glob('tmux-picker-*') if (p/'ui.sock').exists()),None))
  wait(lambda:request(cancelling).get('current'))
  aborted=time.monotonic();os.write(master,b'\x1b');wait(lambda:not cancelling.exists(),.9);cancel_ms=(time.monotonic()-aborted)*1000
- print(json.dumps({'identity_reload':identity,'removed_selection':removed,'cache_refresh':refreshed,'cancel_ms':round(cancel_ms,2),'public_transport':'native host-control-v1 Unix socket','timings':results}),flush=True)
+ print(json.dumps({'identity_reload':identity,'removed_selection':removed,'cache_refresh':refreshed,'cancel_ms':round(cancel_ms,2),'public_transport':'relay-independent pi-session JSON CLI','timings':results}),flush=True)
 except Exception:
  with lock:print('terminal failure:',b' '.join(re.sub(rb'[^ -~]',b' ',ansi.sub(b'',bytes(stream))).split())[-1600:],flush=True)
  print('remaining UI dirs:',list(tmp.glob('*')),flush=True)
@@ -158,7 +136,6 @@ except Exception:
  raise
 finally:
  stop=True
- if control:control.close()
  try:tmux('kill-server')
  except Exception:pass
  if client is not None:

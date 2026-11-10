@@ -200,7 +200,8 @@
       # Published managed-live-workspaces revision. Lock resolution is authorized;
       # host builds, activation and migration remain separate approval boundaries.
       url = "github:BeaudanBrown/pi-harness/edb9ede8143dda4330a7d17c0b42cc8aa2690c84";
-      inputs.nix-ai-tools.follows = "nix-ai-tools";
+      # Native persistence/locking patches are verified against the harness's
+      # own Pi pin; do not substitute the independently updated host bundle.
     };
 
     sdm845-linux = {

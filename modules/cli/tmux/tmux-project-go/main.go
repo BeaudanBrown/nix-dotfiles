@@ -40,6 +40,8 @@ func main() {
 	switch os.Args[1] {
 	case "managed":
 		err = managed(os.Args[2:])
+	case "native-window":
+		err = runNativeWindow()
 	case "picker-lines", "picker-refresh", "picker-restore":
 		err = pickerUIHelper(os.Args[1], arg(2), arg(3))
 	case "launcher":
@@ -91,7 +93,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "tmux_project <managed|launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
+	fmt.Fprintln(os.Stderr, "tmux_project <managed|native-window|launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
 	os.Exit(1)
 }
 
@@ -103,10 +105,19 @@ func arg(i int) string {
 }
 
 func tmux(args ...string) (string, error) {
-	return tmuxAt("", args...)
+	return tmuxAt(os.Getenv("TMUX_PROJECT_SOCKET"), args...)
 }
 
-func tmuxAt(socket string, args ...string) (string, error) {
+// tmux interprets a trailing semicolon even when supplied as a separate argv
+// value. Escape that transport syntax only; no shell parses these data values.
+func tmuxLiteral(value string) string {
+	if strings.HasSuffix(value, ";") {
+		return strings.TrimSuffix(value, ";") + "\\;"
+	}
+	return value
+}
+
+func tmuxCommandArgs(socket string, args []string) []string {
 	// Machine formats contain tabs and UTF-8 paths. With no locale/TMUX hint,
 	// tmux otherwise replaces both with underscores (notably in service/build
 	// environments), destroying identity field boundaries.
@@ -114,8 +125,14 @@ func tmuxAt(socket string, args ...string) (string, error) {
 	if socket != "" {
 		commandArgs = append(commandArgs, "-S", socket)
 	}
-	commandArgs = append(commandArgs, args...)
-	cmd := exec.Command("tmux", commandArgs...)
+	if len(args) == 0 || (args[0] != "new-session" && args[0] != "new-window" && args[0] != "start-server") {
+		commandArgs = append(commandArgs, "-N") // Reads/focus/annotations cannot start a replacement server.
+	}
+	return append(commandArgs, args...)
+}
+
+func tmuxAt(socket string, args ...string) (string, error) {
+	cmd := exec.Command("tmux", tmuxCommandArgs(socket, args)...)
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -180,7 +197,7 @@ func sessionOption(session, key string) string {
 }
 
 func setSessionOption(session, key, value string) {
-	_, _ = tmux("set-option", "-t", session, key, value)
+	_, _ = tmux("set-option", "-t", session, key, tmuxLiteral(value))
 }
 
 func globalOption(key string) string {
@@ -192,7 +209,7 @@ func globalOption(key string) string {
 }
 
 func setGlobalOption(key, value string) {
-	_, _ = tmux("set-option", "-g", key, value)
+	_, _ = tmux("set-option", "-g", key, tmuxLiteral(value))
 }
 
 func allSessions() ([]Session, error) {
@@ -292,7 +309,7 @@ func sessionForPath(path string) string {
 func ensureProjectSession(path string) (string, error) {
 	session := sessionForPath(path)
 	if !tmuxOk("has-session", "-t", "="+session) {
-		if _, err := tmux("new-session", "-d", "-s", session, "-c", path); err != nil {
+		if _, err := tmux("new-session", "-d", "-s", session, "-c", tmuxLiteral(path)); err != nil {
 			return "", err
 		}
 	}

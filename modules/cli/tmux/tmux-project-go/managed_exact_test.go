@@ -10,25 +10,6 @@ import (
 	"testing"
 )
 
-func exactTestServer(t *testing.T) exactTmux {
-	t.Helper()
-	if _, err := exec.LookPath("tmux"); err != nil {
-		t.Skip("tmux unavailable")
-	}
-	socket := filepath.Join(t.TempDir(), "tmux.sock")
-	run := func(args ...string) (string, error) {
-		output, err := exec.Command("tmux", append([]string{"-u", "-f", "/dev/null", "-S", socket}, args...)...).CombinedOutput()
-		if err != nil {
-			return "", fmt.Errorf("tmux: %w: %s", err, output)
-		}
-		return strings.TrimSpace(string(output)), nil
-	}
-	if _, err := run("new-session", "-d", "-s", "exact", "-n", "keep", "sleep 120"); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _, _ = run("kill-server") })
-	return run
-}
 func exactTestWindow(t *testing.T, run exactTmux, suffix string) exactWindowProof {
 	t.Helper()
 	conversationID := "conv_" + strings.Repeat(suffix, 32)

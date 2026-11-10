@@ -1,20 +1,6 @@
 { config, pkgs, ... }:
 let
   rawTmux = pkgs.tmux.rawTmux;
-  guard = pkgs.writeShellApplication {
-    name = "tmux-relay-update-guard";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.systemd
-      pkgs.gnugrep
-    ];
-    text = ''
-      socket="''${XDG_RUNTIME_DIR:?}/tmux-$(id -u)/default"
-      raw_tmux=${rawTmux}/bin/tmux
-      shared_unit=tmux-shared.service
-      ${builtins.readFile ./shared-guard.sh}
-    '';
-  };
   start = pkgs.writeShellApplication {
     name = "tmux-shared-start";
     runtimeInputs = [
@@ -41,13 +27,12 @@ let
   };
 in
 {
-  services.pi-harness.managedSessions.updateGuard = guard;
   systemd.user.services.tmux-shared = {
     description = "Independent shared tmux server (never replaced during rebuild)";
     unitConfig.ConditionUser = config.hostSpec.username;
     restartIfChanged = false;
     stopIfChanged = false;
-    # Deliberately no PartOf/BindsTo/Requires relation to the relay.
+    # Deliberately no PartOf/BindsTo/Requires relation to the optional bridge.
     path = [ pkgs.tmux ] ++ (import ./tmux-runtime.nix { inherit pkgs; });
     serviceConfig = {
       Type = "simple";

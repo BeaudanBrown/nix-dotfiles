@@ -2,81 +2,16 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
 
 func focusRequest(proof exactWindowProof, client, pid string) managedFocusRequest {
 	return managedFocusRequest{proof.ConversationID, proof.LaunchID, proof.SessionName, proof.WindowID, proof.PaneID, client, pid}
-}
-
-// Control-mode clients need no real terminal and attach only to this test's
-// private socket. Never attach to or restart the shared user server.
-func focusTestClient(t *testing.T, run exactTmux, session string) (string, string) {
-	t.Helper()
-	socket, err := run("display-message", "-p", "#{socket_path}")
-	if err != nil {
-		t.Fatal(err)
-	}
-	cmd := exec.Command("tmux", "-S", socket, "-C", "attach-session", "-t", "="+session)
-	input, err := cmd.StdinPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cmd.Stdout = io.Discard
-	cmd.Stderr = io.Discard
-	if err := cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
-	done := make(chan struct{})
-	go func() { _ = cmd.Wait(); close(done) }()
-	t.Cleanup(func() {
-		_ = input.Close()
-		select {
-		case <-done:
-		case <-time.After(2 * time.Second):
-			_ = cmd.Process.Kill()
-			<-done
-		}
-	})
-	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); {
-		output, err := run("list-clients", "-F", "#{client_pid}|#{client_name}")
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, line := range strings.Split(output, "\n") {
-			parts := strings.SplitN(line, "|", 2)
-			if len(parts) == 2 && parts[0] == fmt.Sprint(cmd.Process.Pid) {
-				return parts[1], parts[0]
-			}
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	t.Fatal("test client did not attach")
-	return "", ""
-}
-
-func focusClientRows(t *testing.T, run exactTmux) map[string]string {
-	t.Helper()
-	output, err := run("list-clients", "-F", "#{client_name}|#{session_name}|#{window_id}|#{pane_id}")
-	if err != nil {
-		t.Fatal(err)
-	}
-	rows := map[string]string{}
-	for _, line := range strings.Split(output, "\n") {
-		parts := strings.SplitN(line, "|", 2)
-		if len(parts) == 2 {
-			rows[parts[0]] = parts[1]
-		}
-	}
-	return rows
 }
 
 func TestExactFocusRechecksClientNameAndPIDAsAPair(t *testing.T) {
@@ -297,7 +232,7 @@ func TestManagedWindowSelectionNeverCleansUpDefaultSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(calls) != "-u\nswitch-client\n-c\nclient\n-t\n=project:@3.%4\n" {
+	if string(calls) != "-u\n-N\nswitch-client\n-c\nclient\n-t\n=project:@3.%4\n" {
 		t.Fatalf("unexpected cleanup or targeting: %s", calls)
 	}
 }

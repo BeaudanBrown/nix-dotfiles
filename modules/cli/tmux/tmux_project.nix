@@ -7,6 +7,7 @@ assert pkgs.lib.versionAtLeast pkgs.fzf.version "0.70";
 pkgs.buildGoModule {
   pname = "tmux_project";
   version = "0.1.0";
+  meta.mainProgram = "tmux_project";
 
   src = ./tmux-project-go;
   vendorHash = null;

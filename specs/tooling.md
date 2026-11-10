@@ -48,132 +48,94 @@ later restore the lean surface. The dedicated Pi configuration uses a 4K
 compaction reserve and keeps 6K recent tokens; normal `pi` sessions retain the
 full harness and their existing settings.
 
-Managed Matrix project creation uses the host-owned `tmux_project managed
-project-create` operation. It accepts only a configured root key, a safe
-immediate-child workspace name, a bounded creation key, and an explicit retry
-flag. The operation creates no scaffold, task, remote, or publication: it uses a
-deterministic private staging directory, initializes local Git on `main`, stores
-the creation key in local Git metadata, and atomically publishes the directory.
-An exact retry can recover recognized staging phases or a matching completed
-repository; symlinks, foreign state, ownership mismatches, and conflicting Git
-identity fail unchanged.
+### Native Pi picker and optional Matrix bridge (#164, staged replacement)
 
-Managed Matrix Pi windows use the same per-user tmux server as the interactive
-`tmux_project launcher-popup`: managed invocations require `TMUX_TMPDIR` to equal
-`XDG_RUNTIME_DIR`. The existing launcher lists ordinary project sessions and
-paths plus public-inventory managed conversations. Enter on a managed entry calls
-generation-fenced window-first open and switches only the captured requesting
-client to the returned exact window/pane; it never sends keys. The host launcher validates and forwards optional
-model/thinking selections, derives the canonical workspace path itself, and
-stores only bounded conversation ID/concept display options on the window.
-Dormant and starting conversations and the coordinator are selectable without
-waiting for Pi attachment. Failed startup is labelled `launch failed`, never
-inferred to be stopped. An unknown runtime additionally displays `ownership unknown`.
-Rows display the conversation ID to distinguish chats sharing a checkout or title.
-Explicit Enter retries through the host owner; unverified ownership still blocks
-there. No stop/refresh/delete bindings are provided.
+**Not rebuild-ready.** Harness epic #160 / ADR 0003 supersedes the managed
+platform. Source changes, isolated package builds and NixOS evaluation are not
+activation or migration permission. Quiescing old writers/consumers and the final
+migration/release checks remain required. The old runtime/protocol stays only
+until the controlled removal slice; it is not the ordinary launch path.
 
-#### Inventory-backed picker (#118, staged source)
+The progressive picker starts fzf before discovery. Ordinary sessions/raw paths
+remain usable independently of Pi history, the optional bridge, Matrix, NAS,
+coordinators, account setup or Git metadata for a **native session**. Raw repository
+navigation still validates Git on Enter. Path-only cache data under
+`$XDG_CACHE_HOME/tmux-project/paths.json` is disposable; no native/Matrix lifecycle
+authority is cached there.
 
-The picker uses only the documented bounded `host-control-v1` inventory/open
-protocol, never private registry files. Its native Unix client uses
-`PI_MANAGED_SESSIONS_RUNTIME_DIR`, or `$XDG_RUNTIME_DIR/pi-managed-sessions`,
-with the same UID/private-directory/socket checks as `pi-managed-session`.
-Custom runtime placement must be exported to the picker as well as the CLI.
-Missing runtime environment fails closed; there is no CLI fallback or transport
-retry. This avoids both an unsupported endpoint-discovery claim and an uncorrelated
-second request. Response decoding mirrors the three exact public operation schemas,
-including required fields, tagged unions, capability enums, Unicode-code-point length bounds,
-case-sensitive keys, and request-ID matching. It rejects partial inventories, repeated
-cursors/identities, oversized output and unsupported states. Open is issued once
-with the selected generation fence; unknown outcomes are not replayed or cancelled.
-Exact focus rechecks the captured client name/PID and the target's birth-bound
-window ownership. The existing host lifecycle owns launch joining, retained error
-windows and first-window placement.
+The sole Pi seam is `pi-session list --all`, `open FILE --expected-id ID`, and
+`status FILE`. `PI_NATIVE_SESSION_HELPER` can select an absolute fixture/host helper;
+the default is the packaged `pi-session`. Version-1 JSON rows contain canonical
+`file`, native `id`, `cwd`, `title`, `running`, and optional `pending`, `pane`,
+`serverPid`, `archived`. The picker never reads SQLite or a host-control socket.
+The harness helper optionally reads archive presentation; an unavailable ledger
+falls back to native roots. Archive hides picker presentation, not the ability to
+open a local native file. No archive/restore mutation is supplied by this picker.
 
-**Operator-approved outage policy:** managed selection fails closed without the
-relay. A tmux marker is not proof that a conversation has not been retired. Ordinary
-sessions/raw paths remain available. Ordinary rows target an explicitly unmarked
-window, never a mixed session's last managed window. Raw Enter validates the Git
-checkout and, if necessary, opens an ordinary shell in a managed-only session.
+Stable row keys hash the native path; labels include native IDs, so duplicate
+titles/checkouts remain distinct. The returned file/ID must match the selection.
+Focus guards the captured requesting client PID and the returned server/pane;
+there is no implicit alternative client. An actual writer outside this tmux
+server is reported instead of starting another writer. Lost helper replies never
+cause cancellation or replay. Native kernel locks, not annotations, enforce
+host-local writer exclusion. Pending hints are short-lived/reconstructible and
+cannot reserve a file after native `/new`, a replaced pane or failed bootstrap.
 
-Rows use immutable conversation IDs. The shared live-v1 checkout digest matches
-canonical local paths, not titles, project equality or relative cwd; multiple
-same-checkout conversations remain separate while redundant raw paths disappear.
-An existing ordinary session remains selectable. Sorting mixes autojump scores
-and name/key ties; there is no conversation recency database.
+The host-owned `tmux_project native-window` primitive accepts only bounded JSON
+`{cwd, argv}` (2–32 argv elements). It uses the existing project session, literal
+argv and an absolute executable, returning `{pane}`. The one-string shell form is
+rejected; tmux's trailing-semicolon transport syntax is escaped for data values. It requires no repository/coordinator/account-ready
+state. `TMUX_PROJECT_SOCKET` selects a disposable/explicit server when supplied.
+The harness helper applies direnv without bypassing trust, and remote wake invokes
+that same helper with the frozen native file/ID and a sanitized environment.
 
-Source-only verification: **58 top-level Go tests passed, zero skips**, including
-bounded/malformed inventory, checkout digest compatibility, same-checkout dedup,
-outage refusal, exact requester/window selection after renumbering, mixed-session
-ordinary selection, and accepted work surviving a lost open response. An integrated
-fixture runs the picker through a fake public CLI and selection executable into
-real disposable tmux focus. It does not claim real-fzf latency or live relay/Matrix
-acceptance; progressive UI and timing evidence belong to #119. External Nix
-validation/build and activation were deliberately not run.
+The existing real-fzf identity/query retention and removed-selection refusal remain.
+Raw rows wait at most 50ms for native discovery; ordinary rows/UI do not wait.
+Escape drains discovery, not accepted work; selected opens have their own bounded
+context. Real popup fixtures use a local JSON CLI and **no bridge/host socket**.
+No stop, delete, repair, generation or schema-negotiation interface is involved.
 
-#### Progressive picker (#119, staged source)
+GRILL/NAS now stage `services.pi-harness.matrixBridge`, preserving their host bot
+identities, roots and SOPS files. The service reads the token with `LoadCredential`
+as data; neither the native launcher nor tmux receives it. Only socket/root config
+reaches the adapter. Ordinary Pi uses the existing centralized engineering profile;
+`pi-local-only` is explicit, and workers/headless/experiments do not auto-enroll.
+Native and historical managed native-file directories remain discoverable.
 
-Start fzf before local/host/path discovery. One combined tmux inventory supplies
-sessions, windows and the captured requester; autojump is read once. Independent
-roots scan concurrently with fd, without Git per repository. Raw Enter remains the
-Git-validation boundary. Host reads and scans are independently bounded.
+The shared server is independently owned and cannot be replaced during a rebuild.
+Bridge restart has no tmux/Pi stop hook, PartOf/BindsTo/Requires coupling, or idle
+runtime replacement. Running native launchers retain their Nix closures. Explicit
+`tmux -N` probes must not start the shared service.
 
-`$XDG_CACHE_HOME/tmux-project/paths.json` (default `~/.cache`) is disposable path-only
-cache data: bounded/schema-checked, basic directory-existence checks, refreshed on
-every invocation, private atomic publication with separate concurrent temporaries.
-Failed/cancelled scans do not publish partial results. No transcripts, credentials,
-conversation recency or lifecycle authority are cached.
+The harness's own tested Pi pin (**0.84.4** in this slice) must not be replaced by
+this host's independently updated `nix-ai-tools` input. The published harness URL/
+lock has **not** yet advanced to this unpublished replacement. Until release, use
+a Git-aware local override for evaluation, not a `path:` import of ignored logs:
 
-Raw rows wait at most a configured **50ms** for managed inventory (headroom inside
-the 100ms budget); ordinary live rows/UI never wait for it. Late full reload removes
-redundant raw rows. Since fzf's index tracking does not preserve identity across
-reordering, a private per-invocation Unix listener and short-lived helper commands
-capture the opaque key in fzf's event queue, then restore it on the **result** event.
-The query is untouched. A removed selection disables Enter until navigation/query
-change, rather than accepting an unrelated replacement. These temporary files are
-UI snapshots/receipts only, removed at exit; they are not another session manager.
+```sh
+python3 modules/cli/pi-harness/check-native-integration.py \
+  --harness-source /path/to/pi-harness --evaluate
+bash modules/cli/pi-harness/check-shared-session-privileges.sh \
+  --harness-source /path/to/pi-harness
+```
 
-Escape cancels/drains discovery, not accepted host work. Open runs under its own
-bounded context after selection; no stop/delete/cancel/replay is sent. An unavailable
-local host-control authority hides managed rows and leaves ordinary navigation
-usable. Public `relayState: disconnected` describes **Matrix transport**, not loss
-of local retirement/open authority; a reachable local host can still serve safe
-inventory and generation-fenced opens while Matrix is disconnected.
+Evidence: 66 top-level Go tests passed with `-race`, zero skips, including real
+fzf/tmux, requester-only focus, no-socket discovery, duplicate titles, lost replies
+and non-Git native windows. The isolated production picker package built, and its
+launcher passed eight helper scenarios against actual patched Pi (direct tmux and
+packaged launcher), including `/new`, outside-tmux ownership, partial appends,
+slow/failed bootstrap, literal semicolon paths and real direnv. GRILL/NAS evaluation reported Pi 0.84.4,
+legacy disabled, native bridge enabled, independent lifetimes and no failed
+assertions. These are not Matrix delivery or live cutover receipts. The canonical
+cross-repository review/release evidence belongs to harness
+`docs/matrix-pi-bridge-evidence.md`; rooms/media/workspaces/archive/migration remain
+separate epic slices.
 
-Final source checks: **65 top-level tests, zero skips, with `go test -race`**.
-Paired Standards/Spec review was followed by strict-schema and transport remediation.
-All46 emitted `public-schema-fixture` records also agree with the harness's real
-TypeBox parser, checked by `tests/fixtures/managed-picker-schema-check.cjs` in the
-harness repository. The checker takes the harness TypeScript-build path and verbose
-Go-test log. This caught code-point/UTF-16 length differences rather than trusting
-another handwritten fixture. Missing runtime configuration refuses managed reads
-without executing a CLI; strict native framing/identity remains the only transport.
-Real fzf **0.70.0** / tmux **3.6a** tests exercise an actual keybinding through
-`launcher-popup`, a controlling PTY, the public protocol on a private fixture
-socket, two late same-checkout conversations, identity/query retention, removed
-selection refusal, cache additions/removals and early exit during delayed discovery.
-No running relay, Matrix or model is contacted. Deployment must supply a compatible
-fzf Unix-listen/result/transform API; external Nix validation remains unauthorized.
+#### Historical exact managed-window ownership (retired from ordinary launch)
 
-Seven cold/warm/error trials distinguish keypress→UI, first selectable row,
-managed rows and full discovery. Final medians were **34–36ms UI,
-65–67ms first/managed rows**, with full discovery **75–108ms** (cold path-cache
-versus warm; OS cache not evicted). Some UI tails exceeded the 50ms target; targets
-are not guarantees. A real packaged-CLI baseline took roughly 0.5s for managed
-rows due to repeated Node/schema startup; the native client of the same public
-protocol removes that overhead without reading private state. Final review and
-verification evidence is in harness `docs/managed-picker-evidence.md`; no activation
-is implied. Review's request to gate on Matrix `relayState: ready` was rejected with
-`HostReadModel.matrixReady()` source evidence and a dedicated regression: local
-retirement authority availability is distinct from Matrix transport connectivity.
-
-The #120 GRILL/NAS configuration, exact public device mappings, unresolved package
-publication/lock boundary, permitted source checks and staged rollout/rollback are
-in [managed-live-workspaces.md](./managed-live-workspaces.md). This is source-only
-staging, not a resolved deployment or permission to activate it.
-
-#### Exact managed-window ownership (staged harness integration)
+The following managed protocol notes describe the legacy implementation retained
+until epic #160's controlled removal, not the new picker/launch API. Earlier
+managed rollout instructions are not a replacement cutover procedure.
 
 Forced stopping uses Linux pidfds on amd64/arm64, never a numeric-PID signal or
 window-container kill. Unsupported kernels, denied syscalls, missing process
@@ -351,15 +313,14 @@ activation, shared tmux restart or live Matrix traffic was performed.
 
 #### Shared tmux privilege contract (GRILL and NAS)
 
-Managed and interactive windows share the same Unix user and tmux server; they
-are trusted with that user's authority. GRILL and NAS override the upstream relay's
-`NoNewPrivileges` to `false` in their respective `modules/cli/pi-harness/<host>.nix`.
-Both import `modules/cli/tmux/shared-server.nix` for independent server ownership.
-Otherwise a
-relay-first boot permanently sets `NoNewPrivs=1` on the shared server and all
-its shells, breaking `sudo` (including `shutup`). An operator-first server
-already lets relay-requested windows execute without that restriction, so
-keeping it on the relay is not reliable isolation. Separate untrusted agents
+Native Pi and interactive windows share the same Unix user and tmux server;
+they are trusted with that user's authority. The harness native bridge unit sets
+`NoNewPrivileges=false`; both hosts import `modules/cli/tmux/shared-server.nix`
+for independent server ownership. A bridge-first boot with this flag enabled
+would permanently set `NoNewPrivs=1` on a newly started shared server and its
+shells, breaking `sudo` (including `shutup`). An operator-first server already
+lets bridge-requested windows execute without that restriction, so keeping it on
+the bridge is not reliable isolation. Separate untrusted agents
 would require a separate identity and tmux server, not this shared socket.
 Other Pi chat services retain their own hardening. Sudo authentication and
 sudoers permissions are unchanged; this does not grant passwordless access.
@@ -370,31 +331,19 @@ Evaluation-only regression check (no build or activation):
 bash modules/cli/pi-harness/check-shared-session-privileges.sh
 ```
 
-For an existing affected deployment:
+Do not apply the old privilege-only rebuild/reboot recipe to this staged
+replacement. It does not quiesce old writers, migrate queues or preserve uncertain
+delivery identities. Use the separately approved epic cutover procedure once
+available. NoNewPrivs cannot be cleared on existing processes; a configuration
+evaluation does not prove their kernel flags changed.
 
-1. Save work in **all** tmux/managed Pi windows. Do not kill the shared server
-   while work is running. Restarting the relay alone cannot repair it.
-2. Detach from tmux or open a fresh SSH shell without attaching to tmux. Check
-   `grep '^NoNewPrivs:' /proc/$$/status` reports `0` and `sudo -v` works.
-3. From that clean shell, activate with
-   `sudo nixos-rebuild switch --flake /home/beau/documents/nix-dotfiles#grill`.
-4. Once all work is saved and a reboot is acceptable, run `sudo reboot` from
-   that clean shell. This terminates existing sessions and ensures a fresh
-   relay-first server. NoNewPrivs cannot be cleared on a running process.
-5. After reboot, attach to tmux and run
-   `bash modules/cli/pi-harness/check-shared-session-privileges.sh --live`
-   from this repository. It checks the active relay setting and the relay,
-   shared server, and invoking shell's kernel flags without changing them.
-   Verify `sudo -v`, then coordinator and managed-project attachment. Do not
-   use `shutup` as a test unless an actual shutdown is intended.
+After approved activation, `check-shared-session-privileges.sh --live` reads the
+active `pi-matrix-bridge.service`, shared server and invoking shell flags. It never
+starts/stops them. This check is not migration permission or proof of delivery.
 
-The live check requires activation and fresh processes; an evaluation pass
-alone does not mean the currently running server is fixed.
-
-The host `tmux_project` package owns the runtime for relay-created tmux servers.
+The host `tmux_project` package owns the runtime for bridge-created tmux windows.
 Its private `libexec/tmux` entrypoint supplies plugin interpreters/utilities from
-`modules/cli/tmux/tmux-runtime.nix`, puts the full host launcher ahead of the
-bridge's managed-only wrapper, and explicitly selects
+`modules/cli/tmux/tmux-runtime.nix`, preserves the full host launcher, and selects
 `${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf`. Config hooks and clipboard
 commands use absolute host-package paths. Do not solve boot failures by adding
 host-specific tmux plugins or dependencies to the generic Pi relay.
@@ -409,13 +358,13 @@ It starts disposable servers with restricted and interactive environments,
 checks core options, plugin bindings, command resolution, hooks and reload, then
 cleans up only its own sockets. It does not exercise Matrix attachment. A live
 server retains its original environment: rebuilding alone does not replace it.
-Save work and reboot for the final relay-first acceptance test. Before closing
-any terminal, check `tmux show-options -gv prefix` (`C-Space`),
+Use the approved maintenance plan for the final bridge-first acceptance test.
+Before closing any terminal, check `tmux show-options -gv prefix` (`C-Space`),
 `tmux show-options -gv status-position` (`top`), reload with prefix-r, test project
-shortcuts and copy/paste, and attach both coordinator and managed project Pi
-windows. Inspect `journalctl --user -u pi-managed-session-relay.service -b` for
-attachment timeouts. Those timeouts may have a separate cause; fixing plugin
-startup is not proof that the bridge attachment lifecycle is fixed.
+shortcuts and copy/paste, and resume a native Pi file. Inspect
+`journalctl --user -u pi-matrix-bridge.service -b` for communication failures.
+Successful plugin startup, native focus or attachment is not proof of Matrix
+delivery or external tool effects.
 
 For the one-time transition from deployments that used `/tmp/tmux-$UID/default`,
 `tmux_project managed legacy-window-preview` accepts `{}` and reports only valid
