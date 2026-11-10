@@ -63,6 +63,15 @@ class NativeIntegration(unittest.TestCase):
         block = source("flake.nix").split("    pi-harness = {", 1)[1].split("    };", 1)[0]
         self.assertNotIn("inputs.nix-ai-tools.follows", block)
 
+    def test_narrow_owner_invitations_replace_managed_account_policy(self):
+        matrix = source("modules/services/matrix/nas.nix")
+        block = matrix.split("trustedBridgeBots = {", 1)[1].split("};", 1)[0]
+        self.assertIn('grill = "@pi-grill:matrix.bepis.lol";', block)
+        self.assertIn('nas = "@pi-nas:matrix.bepis.lol";', block)
+        self.assertNotIn("managedAccountHosts", matrix)
+        self.assertIn('matrixTokenFile = config.sops.secrets."pi-chat/matrix-token".path;', matrix)
+        self.assertIn("allJoinedRooms = false;", matrix)
+
     def test_real_ui_dependencies_remain_packaged(self):
         package = source("modules/cli/tmux/tmux_project.nix")
         for text in ('versionAtLeast pkgs.tmux.version "3.6"', 'versionAtLeast pkgs.fzf.version "0.70"',
@@ -78,6 +87,8 @@ if args.evaluate:
               legacy = c.services.pi-harness.managedSessions.enable;
               piVersion = c.services.pi-harness.package.pi.version;
               retainRuntime = c.services.pi-harness.matrixBridge.retainRuntime;
+              invitationHosts = c.services.pi-harness.bridgeChat.assistant.trustedBridgeBots;
+              managedAccountHosts = c.services.pi-harness.bridgeChat.assistant.managedAccountHosts;
               service = unit.serviceConfig;
               dependencies = unit.requires ++ unit.bindsTo ++ unit.partOf;
               sharedRestart = c.systemd.user.services.tmux-shared.restartIfChanged;
@@ -97,6 +108,10 @@ if args.evaluate:
                     self.assertFalse(view["legacy"])
                     self.assertEqual(view["piVersion"], "0.84.4")
                     self.assertTrue(view["retainRuntime"])
+                    self.assertEqual(view["managedAccountHosts"], [])
+                    self.assertEqual(view["invitationHosts"], {
+                        "grill": "@pi-grill:matrix.bepis.lol", "nas": "@pi-nas:matrix.bepis.lol",
+                    } if host == "nas" else {})
                     self.assertEqual(view["dependencies"], [])
                     self.assertFalse(view["sharedRestart"])
                     self.assertFalse(view["sharedStop"])

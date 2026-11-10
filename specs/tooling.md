@@ -134,6 +134,32 @@ cross-repository review/release evidence belongs to harness
 `docs/matrix-pi-bridge-evidence.md`; rooms/media/workspaces/archive/migration remain
 separate epic slices.
 
+#### Background native rooms and invitations (#165)
+
+Native room setup runs separately from text delivery. Saved room IDs and
+immutable create-event provenance win over aliases/display names. Uncertain
+creation reuses only the original alias; it never makes a second room. Git errors
+or incomplete Space links show setup-pending without blocking local Pi or an
+already-bound room. Projects share a Space by Git common directory; linked
+worktrees have separate checkout Spaces. Plain workspaces need no Git.
+
+NAS now declares `bridgeChat.assistant.trustedBridgeBots` as an exact host-ID to
+bot-MXID map for grill and NAS, replacing `managedAccountHosts`. The existing
+owner transport retains the existing credential; the model worker and hosts do
+not receive it. This small optional consumer has its own cursor and
+`bridge-invites.sqlite` journal, separate from stateless `!pi` requests and from
+the historical managed account database. It accepts only first invitations with
+matching immutable native-room provenance and exact bot sender/creator. Lost
+join acknowledgements are observed, not replayed. Departures stay suppressed;
+there is no leave/forget/unban, notification repair or to-device action protocol.
+A current room-scoped snapshot precedes join, but Matrix does not offer a
+membership CAS against simultaneous actions from another client.
+
+The old account data is retained for the later approved offline migration, not
+read or rewritten on startup. Source/evaluation checks cover this policy on both
+hosts. This is still an unpublished, undeployed replacement; it is not permission
+to activate either host or mutate Matrix membership.
+
 #### Historical exact managed-window ownership (retired from ordinary launch)
 
 The following managed protocol notes describe the legacy implementation retained
