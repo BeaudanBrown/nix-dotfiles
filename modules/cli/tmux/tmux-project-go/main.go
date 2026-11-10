@@ -38,8 +38,6 @@ func main() {
 	}
 	var err error
 	switch os.Args[1] {
-	case "managed":
-		err = managed(os.Args[2:])
 	case "native-window":
 		err = runNativeWindow()
 	case "picker-lines", "picker-refresh", "picker-restore":
@@ -93,7 +91,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "tmux_project <managed|native-window|launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
+	fmt.Fprintln(os.Stderr, "tmux_project <native-window|launcher|launcher-popup|candidates|switch|scratch|scratch-new-window|build|rebuild|rebuild-run|llm|obsidian|toggle-last-popup|move-pane|note-root-focus|session-closed>")
 	os.Exit(1)
 }
 
@@ -330,20 +328,6 @@ func switchTo(session, client string) error {
 	return err
 }
 
-func switchToManagedWindow(target, session, client string) error {
-	if !strings.HasPrefix(target, "="+session+":") {
-		return fmt.Errorf("managed window target does not match its session")
-	}
-	var err error
-	if client != "" {
-		_, err = tmux("switch-client", "-c", client, "-t", target)
-	} else {
-		_, err = tmux("switch-client", "-t", target)
-	}
-	// Selecting managed work never authorizes cleanup of the caller's session.
-	return err
-}
-
 func maybeCleanupDefault(activeRoot string) {
 	if activeRoot == "" || activeRoot == "default" || !tmuxOk("has-session", "-t", "=default") {
 		return
@@ -436,51 +420,6 @@ func projectPaths() []string {
 type Candidate struct {
 	Kind, Value, Name, Path, Session string
 	Score                            float64
-}
-
-type managedLauncherWindow struct {
-	Session, Index, WindowID, PaneID, PaneIndex, ConversationID, Concept string
-}
-
-func numericTmuxValue(value, prefix string) bool {
-	if !strings.HasPrefix(value, prefix) || len(value) == len(prefix) {
-		return false
-	}
-	for _, r := range value[len(prefix):] {
-		if r < '0' || r > '9' {
-			return false
-		}
-	}
-	return true
-}
-
-func parseManagedLauncherWindows(output string) []managedLauncherWindow {
-	var windows []managedLauncherWindow
-	s := bufio.NewScanner(strings.NewReader(output))
-	for s.Scan() {
-		parts := strings.SplitN(s.Text(), "\t", 8)
-		if len(parts) != 8 || !validConversationID(parts[6]) || parts[0] == "" || !numericTmuxValue(parts[1], "") ||
-			!numericTmuxValue(parts[2], "@") || !numericTmuxValue(parts[3], "%") || !numericTmuxValue(parts[4], "") {
-			continue
-		}
-		concept := strings.TrimSpace(parts[7])
-		if concept == "" || len(concept) > 128 || strings.IndexFunc(concept, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
-			concept = parts[5]
-		}
-		windows = append(windows, managedLauncherWindow{Session: parts[0], Index: parts[1], WindowID: parts[2], PaneID: parts[3], PaneIndex: parts[4],
-			ConversationID: parts[6], Concept: concept})
-	}
-	return windows
-}
-
-func managedLauncherWindows() []managedLauncherWindow {
-	format := strings.Join([]string{"#{session_name}", "#{window_index}", "#{window_id}", "#{pane_id}", "#{pane_index}", "#{window_name}",
-		"#{@managed_pi_conversation_id}", "#{@managed_pi_concept}"}, "\t")
-	out, err := tmux("list-windows", "-a", "-F", format)
-	if err != nil {
-		return nil
-	}
-	return parseManagedLauncherWindows(out)
 }
 
 func candidates() []Candidate {

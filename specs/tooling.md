@@ -53,8 +53,8 @@ full harness and their existing settings.
 **Not rebuild-ready.** Harness epic #160 / ADR 0003 supersedes the managed
 platform. Source changes, isolated package builds and NixOS evaluation are not
 activation or migration permission. Quiescing old writers/consumers and the final
-migration/release checks remain required. The old runtime/protocol stays only
-until the controlled removal slice; it is not the ordinary launch path.
+migration/release checks remain required. #170 removes the old runtime/protocol
+from both source trees, without stopping or modifying the installed deployment.
 
 The progressive picker starts fzf before discovery. Ordinary sessions/raw paths
 remain usable independently of Pi history, the optional bridge, Matrix, NAS,
@@ -119,7 +119,7 @@ bash modules/cli/pi-harness/check-shared-session-privileges.sh \
   --harness-source /path/to/pi-harness
 ```
 
-Evidence: 67 top-level Go tests passed with `-race`, zero skips, including real
+Historical #164 evidence: 67 top-level Go tests passed with `-race`, zero skips, including real
 fzf/tmux, requester-only focus, no-socket discovery, duplicate titles, lost replies
 and non-Git native windows. The isolated production picker package built, and its
 launcher passed nine helper scenarios against actual patched Pi (direct tmux and
@@ -128,11 +128,16 @@ slow/failed bootstrap, literal semicolon paths, real direnv and daemon-context
 wake with no tmux on inherited PATH. The packaged launcher supplies its own
 private tmux/runtime PATH; the bridge need not inherit an interactive shell PATH.
 Relative `PI_NATIVE_SESSION_HELPER` overrides are rejected before invocation. GRILL/NAS evaluation reported Pi 0.84.4,
-legacy disabled, native bridge enabled, independent lifetimes and no failed
+legacy then disabled, native bridge enabled, independent lifetimes and no failed
 assertions. These are not Matrix delivery or live cutover receipts. The canonical
 cross-repository review/release evidence belongs to harness
-`docs/matrix-pi-bridge-evidence.md`; rooms/media/workspaces/archive/migration remain
-separate epic slices.
+`docs/matrix-pi-bridge-evidence.md`. After #170 deletion, **18 retained Go tests**
+pass under `-race`, including a removed-command refusal. The isolated picker
+package and six consuming source/evaluation checks pass. Removed lifecycle and
+pidfd-termination tests disappeared with their obsolete features, not weakened
+assertions. Native writer locks remain in Pi; narrow requester/pane/PID/argv
+presentation helpers remain here. The legacy Nix options/units/account option
+are absent, not disabled alternatives. No published pin or live state changed.
 
 #### Background native rooms and invitations (#165)
 
@@ -160,185 +165,19 @@ read or rewritten on startup. Source/evaluation checks cover this policy on both
 hosts. This is still an unpublished, undeployed replacement; it is not permission
 to activate either host or mutate Matrix membership.
 
-#### Historical exact managed-window ownership (retired from ordinary launch)
+#### Removed managed-window platform (#170)
 
-The following managed protocol notes describe the legacy implementation retained
-until epic #160's controlled removal, not the new picker/launch API. Earlier
-managed rollout instructions are not a replacement cutover procedure.
+The managed command catalogue, exact-window ownership/termination, pidfd owner,
+coordinator creation, capture/attach protocol and old rollout guard/checker are
+removed. `tmux_project managed ...` fails as an unknown command, not a compatibility
+mode. The small `tmux_identity.go` presentation validators, literal argv helper,
+native picker and fixed-argv native-window launcher remain.
 
-Forced stopping uses Linux pidfds on amd64/arm64, never a numeric-PID signal or
-window-container kill. Unsupported kernels, denied syscalls, missing process
-birth proof and other platforms fail closed. Kernel support is checked before
-exact creation. There is no extra daemon or dependency; the existing launcher
-continues to own this protocol.
-
-The read-only `root-resolve` returns canonical project session placement without
-creating a shell window. Exact project creation can therefore use the existing
-first-window placement behavior. `root-ensure` remains an explicit ensure action.
-
-The additive operations `coordinator-ensure-exact`, `window-create-exact`, `window-inspect-exact`,
-`window-check-exact`, and `window-terminate-exact` retain ownership in this launcher. Legacy operations and
-existing running windows are not automatically upgraded or adopted. Legacy
-`window-terminate` and `legacy-window-cleanup` now refuse mutation; neither can
-bypass exact process identity through a window-container kill.
-
-Coordinator exact ensure accepts conversation and launch identities only, uses
-fixed host environment and the original persisted coordinator session, and
-returns the same birth-bound ownership in the protected `default` session. It
-never adopts an existing or retained dead pane and never switches a client.
-
-An exact project create takes the normal conversation/placement request plus a fresh
-`launch_<32 hex>` identity. Its `ownership` result binds the conversation, server
-PID/start time/private random server token, launch ID, session/window/pane IDs,
-original pane PID, `processBootId` and `processStartTicks` (Linux boot UUID and
-kernel process start ticks). The creation process is pinned while its birth is
-captured and verified again after marker installation. A birth token in the command supplied to tmux at creation
-prevents later marker installation from adopting a replacement window. The
-server-side marker guard also checks that the original pane is still the only
-pane in the window. Reserved `@managed_pi_server_id`, `@managed_pi_launch_id`,
-`@managed_pi_pane_id`, `@managed_pi_pane_pid`, `@managed_pi_process_boot`, and
-`@managed_pi_process_start` options are private runtime
-ownership, not user configuration; do not restore them into another server.
-
-Exact inspect returns `{conversationId, exists, ownership?}`. Malformed,
-legacy, changed-PID respawned, multi-pane, linked, or ambiguous observations fail
-closed; connection failure is not an absence claim. Older proofs without birth
-fields remain readable but never authorize forced stopping. Birth fields must
-be present together and are not silently added to old records.
-
-The additive read-only `window-observe-exact` accepts `{proofs:[...]}` with 1–64
-unique conversation proofs. It returns `{observations:[{conversationId,launchId,state}]}`
-in request order, where state is `running`, `stopped`, or `unknown`. One tmux
-inventory is shared across the batch, with original process/birth checks per proof.
-An exactly matching retained dead pane is stopped; changed ownership remains
-unknown unless the original process is independently proven gone. Legacy proofs
-without birth identity remain unknown. Malformed/partial responses are not usable.
-This is last-known presentation evidence only: it never authorizes termination,
-adoption, replacement or window cleanup. Existing exact-check/terminate behavior
-is unchanged. It creates no daemon and does not send terminating signals.
-
-Termination opens a pidfd first, verifies the recorded birth identity and live
-handle, checks the frozen terminal ownership, then revalidates the pinned
-process. TERM and, after a bounded two-second grace, KILL are sent through that
-same handle. A replacement or additional pane after the ownership observation
-cannot redirect the signal or be destroyed by a container kill. No process
-handle survives the launcher invocation. The former format-only mutation
-prototype has been removed, including from tests.
-The read-only exact check distinguishes `match`, `gone`, and `changed`. A missing
-original window on the same server or a different server lifetime can be `gone`;
-changed markers/processes/panes/session links are not absence. If the server
-cannot be contacted, the result remains unknown unless read-only process
-existence observation proves the original server PID no longer exists. PIDs are
-bounded to positive signed 32-bit values before that observation. This sends no
-process signal. `gone` additionally requires positive absence of the original
-process, or a different verified birth identity for its reused PID. Window
-closure alone cannot hide a surviving/orphaned process; uncertainty remains an
-error and never authorizes a PID kill. Callers must check after a termination
-acknowledgement, which acknowledges signalling, not completed cleanup. Retained
-dead panes or windows containing replacement work are never forcibly removed;
-window cleanup stays pending until their disappearance can be established. This is window ownership, not proof that Pi is currently
-attached or idle.
-
-Acceptance/crash evidence: Go tests use disposable private tmux sockets to cover
-server restart with reused numeric IDs, changed markers/process/session,
-respawned panes, added unrelated panes, foreign birth tokens, legacy refusal,
-last-window acknowledgement, dead-handle rejection, birth mismatch, TERM-to-KILL
-escalation, replacement during observation, and panes added after observation.
-The real dispatch test creates and stops a dummy process using the public API. The entire
-launcher suite passes with `go test -count=1 ./...` from
-`modules/cli/tmux/tmux-project-go`. No Nix build, host evaluation, activation or
-live-session migration is implied. Harness integration belongs to epic #103
-retirement/launch work; rollout must install the compatible launcher before
-using these new operations.
-
-#### Exact requesting-client focus (#116/#118 integration)
-
-`tmux_project managed window-focus-exact` accepts the public open result's
-`conversationId`, `launchId`, `sessionName`, `windowId`, `paneId`, plus an explicit
-`clientName` and decimal-string `clientPid`, as a strict JSON object on stdin.
-Capture both client fields before admitting a launch. Like other managed primitives it
-requires `TMUX` to be unset and `TMUX_TMPDIR` to equal `XDG_RUNTIME_DIR`; the caller
-must capture its requesting client before clearing inherited tmux targeting.
-It refuses an absent/ambiguous client, missing kernel ownership or changed
-launch/window/pane. A final tmux-server-side guard covers replacement and client
-disconnection between observation and switching. The guard checks the captured
-PID with the client-loop format; `switch-client -c` itself requires the client
-name, not a numeric PID. It returns `{ "focused": true }` only after switching.
-No implicit client, launch, readiness wait, replacement, session/window cleanup or
-mutation replay is supplied. A disconnected caller does not grant retry authority.
-
-| Acceptance/crash boundary | Evidence |
-| --- | --- |
-| Stable window/pane after index renumbering | Disposable-server/control-client test |
-| Switch only the explicitly requested client | Two disposable clients in different sessions |
-| Target changes after inspection | Inject changed launch marker immediately before server-side guard; no switch |
-| Missing/detached client, changed PID or stale launch/window | Refusal without fallback to another client, including disconnect after observation |
-| Managed selection preserves ordinary sessions | No automatic default-session cleanup on managed-window selection; stable-ID candidate targets |
-
-Direct Go verification with tmux **3.6a** passed **43 top-level tests, zero skips**,
-including eight focus/dispatch/no-cleanup cases and the existing kernel ownership
-suite. Tests use disposable sockets and real control-mode clients. LSP could not
-establish an active build for this cross-repository folder; direct Go compilation
-and tests provide that evidence. Native tmux shared-session semantics remain:
-clients deliberately attached to the same session share its selected window;
-this does not introduce per-client session groups or a session manager.
-
-This is a targeting primitive and legacy live-row safety improvement, not the
-completed inventory-backed conversation picker or automatic Pi wrapper. Ordinary
-navigation discovery, cancellation/performance and full frontend integration
-remain owned by the epic handoffs. No Nix evaluation/build, activation, shared
-server restart or live Matrix acceptance is implied.
-
-#### Requester capture and outside-tmux attachment (#116)
-
-The operator authorized source changes and disposable Go/tmux tests in the
-managed-live-workspaces worktree, retaining all no-Nix-build/evaluation/deployment/
-push restrictions. UI-only operations support default launch:
-
-- `managed ui-capabilities` accepts only `{}` and reports version 1 with
-  `clientCapture`, `exactFocus`, and `exactAttach`. It requires Linux and tmux
-  3.6+ by read-only `tmux -V`; it neither contacts nor creates a server. Default
-  launch negotiates this before host admission rather than discovering an
-  unsupported focus/attach interface after creating resources.
-
-- `managed client-capture` accepts `{paneId, sourceServerPid, clientName?}`. Capture
-  the original server PID and pane from the invocation before clearing `TMUX`.
-  It rejects client inventories over 64 KiB, requires exactly one matching
-  original server/pane/client, and returns `{clientName, clientPid}` for subsequent
-  exact focus. Multiple viewers of the same pane require an explicit client name;
-  it never chooses the most recent client. A foreign server with reused pane IDs,
-  detached client, malformed or oversized inventory is refused. No server is
-  started, marked or modified by capture.
-- `managed window-attach-exact` accepts the five exact target fields used by focus
-  (no client fields). This is a Linux terminal UI operation, not a JSON success
-  receipt. After exact ownership inspection it rechecks the same target guard in
-  the server queue before attaching a new client to that exact window/pane. It
-  occupies the caller's terminal until detach; it never creates a window, replaces
-  a process or cleans up a session. A stale guard returns an actual error, rather
-  than treating `display-message`'s zero status as success. Caller stdout must be
-  a terminal. The real terminal device is passed to tmux, not the `/dev/tty` alias;
-  the UI goes directly to that terminal while command output is bounded to 64 KiB.
-
-These retain unset `TMUX` and matching `TMUX_TMPDIR`/`XDG_RUNTIME_DIR` requirements.
-Capture happens before host admission; loss of the caller after admission never
-cancels or replays the host operation. Attach/focus failure leaves the existing
-owned process intact for explicit recovery. Native shared-session selection
-semantics remain unchanged.
-
-Acceptance evidence: **48 top-level Go tests passed, zero skips** with tmux 3.6a.
-New cases cover ambiguous shared-pane clients, explicit client selection, foreign
-server identity, detached requester, malformed/oversized capture, bounded attach
-output and nonterminal refusal without changing a redirected file. Linux PTY
-subprocess tests exercise the actual strict dispatcher, terminal attach and
-explicit detach, plus marker replacement between inspection and queued attach
-with nonzero refusal and no surviving client. Existing exact-focus/process tests
-pass after sharing the target-guard implementation. Initial PTY tests exposed
-and corrected tmux's rejection of the `/dev/tty` alias. LSP has no active build
-for this external folder; direct Go compilation/tests are the evidence.
-
-Full default-launch and picker integration still belongs to the harness/epic;
-these primitives alone do not complete #116 or #118. No Nix evaluation/build,
-activation, shared tmux restart or live Matrix traffic was performed.
+Historical ownership/PTY/focus verification is preserved in Git baseline
+`c8d681d64b4a9086a9bbd19aa69f6e410f836e78:specs/tooling.md`, not current operating
+instructions. No existing socket, process, history or installed closure was
+modified by source removal. The old tmux crash/admission/account incidents remain
+unresolved unless independently verified; see the harness historical index.
 
 #### Shared tmux privilege contract (GRILL and NAS)
 
@@ -395,13 +234,10 @@ shortcuts and copy/paste, and resume a native Pi file. Inspect
 Successful plugin startup, native focus or attachment is not proof of Matrix
 delivery or external tool effects.
 
-For the one-time transition from deployments that used `/tmp/tmux-$UID/default`,
-`tmux_project managed legacy-window-preview` accepts `{}` and reports only valid
-marked windows. `tmux_project managed legacy-window-cleanup` still parses exactly
-`{"confirmed":true}` but refuses mutation even with the relay stopped: a marker
-cannot prove which current processes belong to the original window. Preserve
-these windows pending ownership-safe inspection; this command no longer performs
-migration cleanup. No automatic restart or adoption is implied.
+Existing windows on historical `/tmp/tmux-$UID/default` sockets remain untouched.
+No preview/cleanup command is shipped. Preserve them for separately approved
+quiescence and real process-exit observation; a marker or vanished socket cannot
+prove process ownership or completion.
 
 ### dump.bepis.lol content publishing
 
@@ -668,7 +504,7 @@ just deploy-test <hostname>
 just deploy <hostname>
 ```
 
-## Restart-safe managed-session updates (GRILL and NAS)
+## Independent native Pi and shared tmux lifetimes (GRILL and NAS)
 
 `nr` generates host imports and runs `nh os switch` with the dotfiles flake,
 restoring the original build/activation interface. It does not use a custom
@@ -686,35 +522,20 @@ explicitly restarted; rebuilding alone will not alter running panes. Custom
 `-S`/`-L` sockets remain unmanaged for disposable tests. The server is not
 restarted or configuration-reloaded by rebuilds. Its initial system generation
 is rooted at `~/.local/state/tmux-shared/runtime`, retaining plugins and hooks.
-New Pi processes use the installed launcher. With the harness runtime-update
-support deployed, the relay compares managed project adapters' launcher identities
-and automatically refreshes changed instances only after the adapter confirms it
-is idle and settled. Busy or unknown instances defer; dormant conversations are
-not started for an update. Ordinary unmanaged Pi instances and the coordinator
-are not automatically refreshed. `!status` reports pending project updates.
+New Pi processes use the installed launcher; existing Pi processes keep their
+retained runtime. Neither idle nor busy Pi is automatically refreshed. Approved
+task creators may outlive their caller; failed/uncertain creators retain closure
+roots conservatively. A bridge restart has no authority to restart Pi or tmux.
 
-The harness's `pi-managed-session-rollout.service` checks the server PID and
-cgroup before submitting a single relay restart. Legacy ownership blocks rollout
-without killing sessions. For the first migration, finish work and explicitly
-close the old tmux server in an approved maintenance window, then run:
+The old managed rollout service/guard is removed. The independent shared server
+still refuses to replace a live server at its socket. Unit-file changes cannot
+adopt an old process or establish that it exited. Initial cutover must use the
+separately approved offline migration runbook, with no overlapping old/new writers.
+Do not restart any live service merely to make evaluation match the source.
 
-```sh
-systemctl --user start tmux-shared.service
-systemctl --user restart pi-managed-session-rollout.service
-pi-managed-session-status
-```
-
-Do not bypass a failed guard by restarting the relay directly. The independent
-server cannot adopt an existing relay-owned PID merely by changing unit files.
-
-New managed project sessions start directly with Pi as their first window;
-existing project sessions keep all their windows and receive a new Pi window.
-The coordinator's `default` session follows its separate existing policy.
-
-Disposable lifecycle verification (never operates on the live socket or relay):
+Disposable shared-PATH verification (not live Matrix or process-exit acceptance):
 
 ```sh
-bash modules/cli/tmux/check-update-lifecycle.sh ../projects/pi-harness/scripts/relay-rollout.sh
 bash modules/cli/tmux/check-shared-path.sh
 ```
 

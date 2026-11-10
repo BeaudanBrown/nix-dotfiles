@@ -51,6 +51,9 @@ class NativeIntegration(unittest.TestCase):
         window = source("modules/cli/tmux/tmux-project-go/native_window.go")
         self.assertIn("DisallowUnknownFields", window)
         self.assertNotIn("managed(", window)
+        main = source("modules/cli/tmux/tmux-project-go/main.go")
+        self.assertNotIn('case "managed":', main)
+        self.assertFalse(list((ROOT / "modules/cli/tmux/tmux-project-go").glob("managed*.go")))
 
     def test_central_profile_experiments_and_tested_pi_pin(self):
         network = source("modules/cli/pi-harness/network.nix")
@@ -84,11 +87,12 @@ if args.evaluate:
         def test_both_hosts(self):
             expression = '''c: let unit = c.systemd.user.services.pi-matrix-bridge; in {
               bridge = c.services.pi-harness.matrixBridge.enable;
-              legacy = c.services.pi-harness.managedSessions.enable;
+              legacyOptionAbsent = !(c.services.pi-harness ? managedSessions);
+              legacyUnitsAbsent = !(c.systemd.user.services ? pi-managed-session-relay) && !(c.systemd.user.services ? pi-managed-session-rollout);
               piVersion = c.services.pi-harness.package.pi.version;
               retainRuntime = c.services.pi-harness.matrixBridge.retainRuntime;
               invitationHosts = c.services.pi-harness.bridgeChat.assistant.trustedBridgeBots;
-              managedAccountHosts = c.services.pi-harness.bridgeChat.assistant.managedAccountHosts;
+              legacyAccountOptionAbsent = !(c.services.pi-harness.bridgeChat.assistant ? managedAccountHosts);
               service = unit.serviceConfig;
               dependencies = unit.requires ++ unit.bindsTo ++ unit.partOf;
               sharedRestart = c.systemd.user.services.tmux-shared.restartIfChanged;
@@ -105,10 +109,11 @@ if args.evaluate:
                     self.assertEqual(result.returncode, 0, result.stderr)
                     view = json.loads(result.stdout)
                     self.assertTrue(view["bridge"])
-                    self.assertFalse(view["legacy"])
+                    self.assertTrue(view["legacyOptionAbsent"])
+                    self.assertTrue(view["legacyUnitsAbsent"])
                     self.assertEqual(view["piVersion"], "0.84.4")
                     self.assertTrue(view["retainRuntime"])
-                    self.assertEqual(view["managedAccountHosts"], [])
+                    self.assertTrue(view["legacyAccountOptionAbsent"])
                     self.assertEqual(view["invitationHosts"], {
                         "grill": "@pi-grill:matrix.bepis.lol", "nas": "@pi-nas:matrix.bepis.lol",
                     } if host == "nas" else {})
