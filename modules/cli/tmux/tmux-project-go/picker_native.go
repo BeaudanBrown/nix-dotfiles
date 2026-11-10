@@ -64,6 +64,8 @@ func callPickerNative(ctx context.Context, args []string, target any) error {
 	helper := os.Getenv("PI_NATIVE_SESSION_HELPER")
 	if helper == "" {
 		helper = "pi-session"
+	} else if !filepath.IsAbs(helper) {
+		return fmt.Errorf("PI_NATIVE_SESSION_HELPER must be an absolute executable")
 	}
 	cmd := exec.CommandContext(ctx, helper, args...)
 	out, stderr := &pickerBoundedOutput{limit: 8 * 1024 * 1024}, &pickerBoundedOutput{limit: 65536}

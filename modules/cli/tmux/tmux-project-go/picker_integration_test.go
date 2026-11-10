@@ -37,6 +37,15 @@ func TestPickerUsesLocalCLIWithoutAnyRelaySocket(t *testing.T) {
 		t.Fatalf("%q", args)
 	}
 }
+func TestPickerRejectsRelativeHelperOverrides(t *testing.T) {
+	for _, helper := range []string{"sh", "./pi-session", "subdirectory/pi-session"} {
+		t.Setenv("PI_NATIVE_SESSION_HELPER", helper)
+		var result any
+		if err := callPickerNative(context.Background(), []string{"-c", "echo null"}, &result); err == nil || !strings.Contains(err.Error(), "absolute executable") {
+			t.Fatalf("relative helper %q was not rejected before invocation: %v", helper, err)
+		}
+	}
+}
 func TestPickerInterruptedLocalOpenDoesNotCancelOrReplay(t *testing.T) {
 	run := exactTestServer(t)
 	client, pid := focusTestClient(t, run, "exact")

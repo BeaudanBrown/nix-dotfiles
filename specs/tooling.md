@@ -119,12 +119,15 @@ bash modules/cli/pi-harness/check-shared-session-privileges.sh \
   --harness-source /path/to/pi-harness
 ```
 
-Evidence: 66 top-level Go tests passed with `-race`, zero skips, including real
+Evidence: 67 top-level Go tests passed with `-race`, zero skips, including real
 fzf/tmux, requester-only focus, no-socket discovery, duplicate titles, lost replies
 and non-Git native windows. The isolated production picker package built, and its
-launcher passed eight helper scenarios against actual patched Pi (direct tmux and
+launcher passed nine helper scenarios against actual patched Pi (direct tmux and
 packaged launcher), including `/new`, outside-tmux ownership, partial appends,
-slow/failed bootstrap, literal semicolon paths and real direnv. GRILL/NAS evaluation reported Pi 0.84.4,
+slow/failed bootstrap, literal semicolon paths, real direnv and daemon-context
+wake with no tmux on inherited PATH. The packaged launcher supplies its own
+private tmux/runtime PATH; the bridge need not inherit an interactive shell PATH.
+Relative `PI_NATIVE_SESSION_HELPER` overrides are rejected before invocation. GRILL/NAS evaluation reported Pi 0.84.4,
 legacy disabled, native bridge enabled, independent lifetimes and no failed
 assertions. These are not Matrix delivery or live cutover receipts. The canonical
 cross-repository review/release evidence belongs to harness
