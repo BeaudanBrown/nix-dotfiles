@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   domain = "img.bepis.lol";
   portKey = "immich";
@@ -14,6 +19,10 @@ in
       webSockets = true;
     }
   ];
+
+  services.nginx.virtualHosts.${domain}.extraConfig = lib.mkForce ''
+    client_max_body_size 10g;
+  '';
 
   services.immich = {
     enable = true;
