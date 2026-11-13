@@ -185,6 +185,29 @@ in
   };
 
   services.mautrix-signal = {
+    # Signal now requires encrypted uploadLength (upstream #703). Keep the
+    # stable libsignal/dependency set until nixpkgs carries the fix itself.
+    # A source guard avoids double-patching future packages; unknown source
+    # layouts deliberately fail the build instead of silently losing the fix.
+    package = pkgs.mautrix-signal.overrideAttrs (old: {
+      postPatch = (old.postPatch or "") + ''
+        attachmentSource=pkg/signalmeow/attachments.go
+        if grep -Fq 'attributesPath := fmt.Sprintf("/v4/attachments/form/upload?uploadLength=%d", len(encryptedWithMAC))' "$attachmentSource"; then
+          echo "Signal uploadLength fix already present; skipping backport"
+        elif grep -Fq 'attributesPath := "/v4/attachments/form/upload"' "$attachmentSource"; then
+          patch -p1 < ${
+            pkgs.fetchurl {
+              url = "https://github.com/mautrix/signal/commit/e2e994f99f8dfffe5ad1cc88a2d36449639a609e.patch";
+              sha256 = "cf938f4c3737a6cf2414e1c1f9d7944b22d1dbe924746bcf6fa771e74ff5f421";
+            }
+          }
+          grep -Fq 'attributesPath := fmt.Sprintf("/v4/attachments/form/upload?uploadLength=%d", len(encryptedWithMAC))' "$attachmentSource"
+        else
+          echo "Review mautrix-signal uploadLength backport: unrecognized attachment source" >&2
+          exit 1
+        fi
+      '';
+    });
     enable = true;
     registerToSynapse = true;
     environmentFile = config.sops.secrets."matrix/mautrix-signal-env".path;
