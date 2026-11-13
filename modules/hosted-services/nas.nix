@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 let
@@ -84,12 +85,32 @@ let
     }
   '';
 
-  corednsConfig =
+  # Keep local DNS alive independently of the tailnet listener. Exact hosted
+  # zones are authoritative locally: unknown private names must not leak to
+  # the public forwarders. Keep lan's search/forward behavior for short names.
+  localCorednsConfig =
     [
-      blocklistConfig
       nasLocalResolverConfig
       nasMagicDnsConfig
     ]
+    ++ (
+      tailServices
+      |> map (s: ''
+        ${s.domain}:53 {
+          bind 127.0.0.55
+          hosts {
+            ${hostedServiceHosts}
+            ttl 60
+          }
+          log
+          errors
+        }
+      '')
+    )
+    |> concatStringsSep "\n\n";
+
+  tailnetCorednsConfig =
+    [ blocklistConfig ]
     ++ (
       tailServices
       |> map (s: ''
@@ -139,7 +160,7 @@ in
 
     services.coredns = {
       enable = true;
-      config = corednsConfig;
+      config = localCorednsConfig;
     };
 
     services.resolved.settings.Resolve = {
@@ -148,21 +169,40 @@ in
       Domains = hostedRouteDomains ++ [ magicDnsDomain ];
     };
 
-    systemd.services.coredns = {
-      requires = [
-        "wait-for-tailscale-ip.service"
-        "tailscaled.service"
-      ];
-      after = [
-        "wait-for-tailscale-ip.service"
-        "tailscaled.service"
-        "headscale.service"
-      ];
-      wants = [ "network-online.target" ];
+    # No Headscale/Tailscale dependency on the loopback resolver. A missing
+    # tailnet IP must never prevent local DNS or OIDC discovery from working.
+    systemd.services.coredns.serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "10s";
+    };
+
+    systemd.services.coredns-tailnet = {
+      description = "Tailnet DNS and domain blocking";
+      wantedBy = [ "multi-user.target" ];
+      wants = [ "tailscaled.service" ];
+      after = [ "tailscaled.service" ];
+      # Retry our own readiness check, rather than failing a Requires job that
+      # Restart=on-failure cannot recover when the IP arrives later.
+      startLimitIntervalSec = 0;
+      preStart = ''
+        for attempt in $(${pkgs.coreutils}/bin/seq 1 120); do
+          if ${pkgs.iproute2}/bin/ip -4 addr show dev tailscale0 | ${pkgs.gnugrep}/bin/grep -qw ${lib.escapeShellArg tailIP}; then
+            exit 0
+          fi
+          ${pkgs.coreutils}/bin/sleep 1
+        done
+        echo "Tailnet DNS waiting for ${tailIP}; will retry" >&2
+        exit 1
+      '';
       serviceConfig = {
+        ExecStart = "${config.services.coredns.package}/bin/coredns -conf=${pkgs.writeText "Corefile-tailnet" tailnetCorednsConfig}";
+        DynamicUser = true;
+        AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
+        CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
+        NoNewPrivileges = true;
         Restart = "on-failure";
         RestartSec = "10s";
-        TimeoutStartSec = "5m";
+        TimeoutStartSec = "150s";
       };
     };
 
