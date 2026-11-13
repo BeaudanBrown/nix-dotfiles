@@ -199,7 +199,7 @@
     pi-harness = {
       # Published managed-live-workspaces revision. Lock resolution is authorized;
       # host builds, activation and migration remain separate approval boundaries.
-      url = "github:BeaudanBrown/pi-harness/edb9ede8143dda4330a7d17c0b42cc8aa2690c84";
+      url = "github:BeaudanBrown/pi-harness/27935287f3ecae4b2904139c4127b4d9f955d0d1";
       # Native persistence/locking patches are verified against the harness's
       # own Pi pin; do not substitute the independently updated host bundle.
     };
