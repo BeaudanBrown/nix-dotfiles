@@ -11,7 +11,10 @@ in
   imports = [ ./cutover-172.nix ];
   services.piNativeCutover172 = {
     enable = true;
-    startAfterMigration = false; # Separate activation approval after report review.
+    # Startup candidate only: NAS bridge, owner transport/invitations and SDK
+    # worker require separate exact-output activation approval.
+    startAfterMigration = true;
+    holdSynchronization = true;
   };
 
   sops.secrets."pi/matrix-nas-env" = {
@@ -23,8 +26,8 @@ in
     # Separate from the owner-account helper/stateless !pi service.
   };
 
-  # The temporary cutover job also holds NAS assistant startup. Source changes
-  # are not live maintenance approval; native Pi and tmux remain independent.
+  # The temporary cutover job validates existing migration completion before
+  # approved consumer startup; native Pi and tmux remain independent.
   services.pi-harness.matrixBridge = {
     enable = true;
     user = config.hostSpec.username;
