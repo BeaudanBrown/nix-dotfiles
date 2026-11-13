@@ -58,9 +58,12 @@ Newer grill histories must be retained; pending legacy account work stays held.
 This normal source now carries the same temporary adapter and harness pin while
 preserving newer unrelated host/tooling changes.
 
-**Build preparation is not activation or live acceptance.** Both hosts retain
-`startAfterMigration = false` and `holdSynchronization = true`. Bridge/chat
-startup, synchronization restoration and live canaries need separate approval.
+**Build preparation is not activation or live acceptance.** The normal held
+baseline `8a48b3d` retains `startAfterMigration = false` on both hosts. This isolated
+[grill startup candidate](./pi-grill-startup-172.md) permits grill's host-wide bridge
+only after separate activation approval; NAS remains held. Both hosts retain
+`holdSynchronization = true`. Synchronization restoration and live canaries
+remain separately approved.
 See the [temporary cutover runbook](./pi-native-cutover-172.md). Existing completion
 records are revalidated without recapturing/importing old history; do not create
 new permits or rerun first-migration maintenance commands.

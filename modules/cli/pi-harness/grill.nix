@@ -11,7 +11,10 @@ in
   imports = [ ./cutover-172.nix ];
   services.piNativeCutover172 = {
     enable = true;
-    startAfterMigration = false; # Separate activation approval after report review.
+    # Startup candidate only: exact activation and host-wide Matrix effects
+    # require separate operator approval. NAS remains held independently.
+    startAfterMigration = true;
+    holdSynchronization = true;
   };
 
   sops.secrets."pi/matrix-grill-env" = {
