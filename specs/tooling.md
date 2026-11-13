@@ -290,6 +290,33 @@ strategy, evaluation-only check, explicit provisioning, rollback and separate
 activation approval. `nix eval --impure --json --file tests/agent-sandbox-trial.nix`
 checks only public/local inputs, not the private fleet configuration.
 
+### Syncthing Git inventory
+
+Read-only inventory of `.git` entries in `~/documents`, `~/monash`, and `~/collab`:
+
+```sh
+python3 scripts/inventory-synced-git.py > /tmp/git-inventory-local.json
+python3 scripts/inventory-synced-git.py nas grill laptop t480 > /tmp/git-inventory-fleet.json
+```
+
+SSH targets need Python 3 and use their login user's home by default;
+`--home /home/beau` explicitly selects a home on all targets. No files are installed
+remotely. Output includes paths and ref names: keep reports private and outside
+synced folders. Inspect `error`, `errors`, and `skipped` fields on every target;
+JSON output alone does not mean coverage is complete. Missing hosts remain unresolved.
+
+The script skips mounts, symlinks, the private `sops-secrets` directory, and
+`documents/projects/dump`. Git pointer files are reported without following them.
+It parses loose/packed refs and HEAD without invoking Git or reading Git config.
+Reftable storage is reported as incomplete. It does not inventory reflogs,
+unreachable objects, bare repositories, worktree changes, or ancestry; mandatory
+separate checks for partial clones, external alternates and LFS are still needed
+before satisfying the preparation plan's coverage gate. Equal/different IDs alone cannot prove which
+host is ahead. It does not fetch, back up, seed, or alter repositories. Keep `.git`
+ignored while gathering inventory; see [syncthing-git-preparation.md](./syncthing-git-preparation.md).
+
+Synthetic regression tests: `python3 -B tests/test-inventory-synced-git.py`.
+
 ### Building
 
 | Command              | Description                                    |
