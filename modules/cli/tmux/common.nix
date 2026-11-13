@@ -151,7 +151,10 @@ in
             set -g extended-keys on
             set -g extended-keys-format csi-u
             set -g allow-passthrough on
-            set -g detach-on-destroy previous
+            # tmux 3.7b crashes in previous-session sorting when the project
+            # switcher cleans up default. Keep clients attached without that path.
+            # Regression: check-session-cleanup.py (uses a disposable socket).
+            set -g detach-on-destroy off
             set-hook -g client-session-changed 'run-shell "tmux_project note-root-focus \"#{client_name}\" \"#{session_name}\""'
             set-hook -g session-closed 'run-shell "tmux_project session-closed \"#{hook_session_name}\""'
             run-shell "tmux_project note-root-focus '#{client_name}' '#{session_name}'"

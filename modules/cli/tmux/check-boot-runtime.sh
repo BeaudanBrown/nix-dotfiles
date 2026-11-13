@@ -31,6 +31,8 @@ for mode in relay interactive; do
 	t() { "${environment[@]}" "$tmux" -S "$socket" "$@"; }
 	[[ $(t show-options -gv prefix) == C-Space ]]
 	[[ $(t show-options -gv status-position) == top ]]
+	# previous/next enters the crashing session-sort path on tmux 3.7b.
+	[[ $(t show-options -gv detach-on-destroy) == off ]]
 	[[ -n $(t show-options -gqv @catppuccin_cpu_color) ]]
 	t list-keys >"$root/all-keys"
 	grep -q extrakto "$root/all-keys"
