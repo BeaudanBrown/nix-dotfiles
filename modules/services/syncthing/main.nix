@@ -42,6 +42,7 @@ in
 {
   systemd.tmpfiles.rules = [
     "d ${config.hostSpec.home}/.config/syncthing 0700 ${config.hostSpec.username} users - -"
+    "d ${config.hostSpec.home}/mobile 0700 ${config.hostSpec.username} users - -"
   ];
   users.users.${config.hostSpec.username}.extraGroups = [ "syncthing" ];
   systemd.services.syncthing.environment.STNODEFAULTFOLDER = "true"; # Don't create default ~/Sync folder
@@ -55,6 +56,10 @@ in
         urAccepted = -1;
       };
       devices = {
+        "mobile" = {
+          id = "52BE6Z2-CIYG3LV-MIDF5MT-XHTNHML-6ZJ56FC-VEI2LX3-GQ7GLJW-NHYP4AB";
+          autoAcceptFolder = false;
+        };
         "server" = {
           id = "YZLDZHW-7MYKYEM-5PTTWLU-TBPEQJX-CJEFVBS-UYIOQJM-OKCQ723-25HTDAT";
           autoAcceptFolder = true;
@@ -109,6 +114,20 @@ in
               "laptop"
               "t480"
               "lachy-thinkpad"
+            ];
+          };
+        }
+        // {
+          "mobile" = {
+            id = "mobile";
+            path = "${config.hostSpec.home}/mobile";
+            type = "sendreceive";
+            devices = [
+              "server"
+              "grill"
+              "laptop"
+              "t480"
+              "mobile"
             ];
           };
         }
