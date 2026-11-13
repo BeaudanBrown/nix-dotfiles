@@ -8,6 +8,12 @@ let
   windowLauncher = import ../tmux/tmux_project.nix { inherit pkgs; };
 in
 {
+  imports = [ ./cutover-172.nix ];
+  services.piNativeCutover172 = {
+    enable = true;
+    startAfterMigration = false; # Separate activation approval after report review.
+  };
+
   sops.secrets."pi/matrix-nas-env" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
     owner = config.hostSpec.username;
@@ -17,7 +23,8 @@ in
     # Separate from the owner-account helper/stateless !pi service.
   };
 
-  # Staged replacement, not permission to activate/migrate existing sessions.
+  # The temporary cutover job also holds NAS assistant startup. Source changes
+  # are not live maintenance approval; native Pi and tmux remain independent.
   services.pi-harness.matrixBridge = {
     enable = true;
     user = config.hostSpec.username;

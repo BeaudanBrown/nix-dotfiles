@@ -197,9 +197,9 @@
     };
 
     pi-harness = {
-      # Published managed-live-workspaces revision. Lock resolution is authorized;
-      # host builds, activation and migration remain separate approval boundaries.
-      url = "github:BeaudanBrown/pi-harness/27935287f3ecae4b2904139c4127b4d9f955d0d1";
+      # Published native Matrix–Pi candidate (#160/#172).
+      # Source/build approval does not authorize activation or service startup.
+      url = "github:BeaudanBrown/pi-harness/7f329295a88d7db69b9564296c2fd0809f5ee398";
       # Native persistence/locking patches are verified against the harness's
       # own Pi pin; do not substitute the independently updated host bundle.
     };

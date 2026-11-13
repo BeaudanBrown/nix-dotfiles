@@ -50,11 +50,20 @@ full harness and their existing settings.
 
 ### Native Pi picker and optional Matrix bridge (#164, staged replacement)
 
-**Not rebuild-ready.** Harness epic #160 / ADR 0003 supersedes the managed
-platform. Source changes, isolated package builds and NixOS evaluation are not
-activation or migration permission. Quiescing old writers/consumers and the final
-migration/release checks remain required. #170 removes the old runtime/protocol
-from both source trees, without stopping or modifying the installed deployment.
+Harness epic #160 / ADR 0003 supersedes the managed platform. #172's separately
+approved migration-only activation completed on grill/NAS using downstream
+`3faed95` and published harness `7f32929`. Both native ledgers and frozen backups
+were verified; the privileged NAS original/account byte comparison also passed.
+Newer grill histories must be retained; pending legacy account work stays held.
+This normal source now carries the same temporary adapter and harness pin while
+preserving newer unrelated host/tooling changes.
+
+**Build preparation is not activation or live acceptance.** Both hosts retain
+`startAfterMigration = false` and `holdSynchronization = true`. Bridge/chat
+startup, synchronization restoration and live canaries need separate approval.
+See the [temporary cutover runbook](./pi-native-cutover-172.md). Existing completion
+records are revalidated without recapturing/importing old history; do not create
+new permits or rerun first-migration maintenance commands.
 
 The progressive picker starts fzf before discovery. Ordinary sessions/raw paths
 remain usable independently of Pi history, the optional bridge, Matrix, NAS,
@@ -108,9 +117,10 @@ runtime replacement. Running native launchers retain their Nix closures. Explici
 `tmux -N` probes must not start the shared service.
 
 The harness's own tested Pi pin (**0.84.4** in this slice) must not be replaced by
-this host's independently updated `nix-ai-tools` input. The published harness URL/
-lock has **not** yet advanced to this unpublished replacement. Until release, use
-a Git-aware local override for evaluation, not a `path:` import of ignored logs:
+this host's independently updated `nix-ai-tools` input. #172 advanced the published
+harness URL/lock and its verified private dependency graph without changing other
+root input graphs. For isolated source development, use a Git-aware local override
+for evaluation, not a `path:` import of ignored logs:
 
 ```sh
 python3 modules/cli/pi-harness/check-native-integration.py \
@@ -160,10 +170,11 @@ there is no leave/forget/unban, notification repair or to-device action protocol
 A current room-scoped snapshot precedes join, but Matrix does not offer a
 membership CAS against simultaneous actions from another client.
 
-The old account data is retained for the later approved offline migration, not
-read or rewritten on startup. Source/evaluation checks cover this policy on both
-hosts. This is still an unpublished, undeployed replacement; it is not permission
-to activate either host or mutate Matrix membership.
+The old account data remains retained in place and in the verified private #172
+backup, not read or rewritten by the new transport on startup. Source/evaluation
+checks cover this policy on both hosts. Source reconciliation and completed
+migration-only activation do not authorize service startup or Matrix membership
+effects; legacy pending account jobs are not a new execution queue.
 
 #### Removed managed-window platform (#170)
 

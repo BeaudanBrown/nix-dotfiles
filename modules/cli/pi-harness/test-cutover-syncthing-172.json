@@ -1,0 +1,10 @@
+{
+  "folders": [{"id": "state-sync", "paused": true, "devices": [], "versioning": {"params": {}}}],
+  "devices": [],
+  "remoteIgnoredDevices": [],
+  "options": {"listenAddresses": [], "globalAnnounceServers": [], "alwaysLocalNets": [], "unackedNotificationIDs": []},
+  "defaults": {
+    "folder": {"devices": [], "versioning": {"params": {}}},
+    "device": {"addresses": [], "allowedNetworks": [], "ignoredFolders": []}
+  }
+}
