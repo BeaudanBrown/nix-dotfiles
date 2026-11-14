@@ -197,9 +197,9 @@
     };
 
     pi-harness = {
-      # Published native Matrix–Pi candidate (#160/#172).
-      # Source/build approval does not authorize activation or service startup.
-      url = "github:BeaudanBrown/pi-harness/7f329295a88d7db69b9564296c2fd0809f5ee398";
+      # Published native runtime with the #172 systemd invitation-state fix.
+      # Activate only approved host outputs; synchronization remains separate.
+      url = "github:BeaudanBrown/pi-harness/0b07c796a86bb14c757388132e3e8cd6f94e2ac7";
       # Native persistence/locking patches are verified against the harness's
       # own Pi pin; do not substitute the independently updated host bundle.
     };
