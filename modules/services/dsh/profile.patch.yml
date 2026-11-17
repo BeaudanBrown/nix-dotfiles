@@ -1,0 +1,27 @@
+# Pinned against DSH 0.2.2-rc.1. OS policy, not model approvals, is the boundary.
+- id: hmr
+  disabled: true
+- id: plugin-manager
+  disabled: true
+- id: ui-plugin-manager
+  disabled: true
+- id: tool-plugin-manager
+  disabled: true
+- id: session-log-deepseek
+  disabled: true
+- id: session-telemetry-otel
+  disabled: true
+- id: sandbox-policy
+  config:
+    mode: danger-full-access
+    workspaceRoot: /agent
+- id: approval
+  config:
+    policy: never
+- id: permission
+  config:
+    presets:
+      danger-full-access:
+        sandbox: danger-full-access
+        approval: never
+    defaultPreset: danger-full-access

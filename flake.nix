@@ -93,6 +93,9 @@
   };
 
   inputs = {
+    # DSH/SecretSpec trial packages; independent of fleet and Pi toolchain pins.
+    agent-tools-nixpkgs.url = "github:NixOS/nixpkgs/623ef1c827745a0d653f72992ac1e222e81ebb2a";
+
     # Local committed pin until explicitly authorized publication; no mutable path.
     # See specs/agent-sandbox-trial.md before consuming on another machine.
     agent-sandbox.url = "git+file:///home/beau/documents/projects/agent-sandbox-hs?rev=589dc772e3d3119709e1d93f1464bc066f1b0f65";

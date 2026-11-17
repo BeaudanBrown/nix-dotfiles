@@ -19,6 +19,22 @@
         "url": "file:///home/beau/documents/projects/agent-sandbox-hs"
       }
     },
+    "agent-tools-nixpkgs": {
+      "locked": {
+        "lastModified": 1794382513,
+        "narHash": "sha256-0KLWXQ/XHeSz0ofuaiI7LqOaPeXprxhAq5KaSe88aL8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "623ef1c827745a0d653f72992ac1e222e81ebb2a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "623ef1c827745a0d653f72992ac1e222e81ebb2a",
+        "type": "github"
+      }
+    },
     "agentgraph": {
       "inputs": {
         "nixpkgs": [
@@ -1410,6 +1426,7 @@
     "root": {
       "inputs": {
         "agent-sandbox": "agent-sandbox",
+        "agent-tools-nixpkgs": "agent-tools-nixpkgs",
         "art-domain": "art-domain",
         "authentik-nix": "authentik-nix",
         "complix": "complix",
