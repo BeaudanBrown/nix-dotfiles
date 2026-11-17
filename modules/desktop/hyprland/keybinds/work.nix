@@ -296,7 +296,7 @@ in
       key = "n";
       app = "element-desktop";
       workspace = "Element";
-      class = "element";
+      class = "element-desktop";
     }
     config.hypr.windowsLauncher
     {

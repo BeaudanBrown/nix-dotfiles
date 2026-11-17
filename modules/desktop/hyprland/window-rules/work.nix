@@ -29,7 +29,7 @@ let
     (matchClass "(grill)")
     (matchClass "(bottom)")
     (matchClass "(signal)")
-    (matchClass "(element)")
+    (matchClass "(element-desktop)")
     (matchClass "(brave-browser)")
     (matchClass "(slack)")
     (matchClass "(steam)")
