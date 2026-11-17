@@ -9,6 +9,7 @@
     enable = true;
     openFirewall = true;
     authKeyFile = config.sops.secrets."headscale/pre_auth".path;
+    extraSetFlags = [ "--exit-node-allow-lan-access=true" ];
     extraUpFlags = [
       "--login-server=https://hs.bepis.lol"
       "--accept-dns=true"
@@ -20,7 +21,7 @@
   };
 
   environment.shellAliases = {
-    exit-on = "sudo tailscale set --exit-node=nas";
+    exit-on = "sudo tailscale set --exit-node=nas --exit-node-allow-lan-access=true";
     exit-off = "sudo tailscale set --exit-node=";
     exit-status = "tailscale status | grep -i 'exit node'";
   };
