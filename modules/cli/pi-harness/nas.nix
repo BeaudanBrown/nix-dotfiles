@@ -8,14 +8,7 @@ let
   windowLauncher = import ../tmux/tmux_project.nix { inherit pkgs; };
 in
 {
-  imports = [ ./cutover-172.nix ];
-  services.piNativeCutover172 = {
-    enable = true;
-    # Startup candidate only: NAS bridge, owner transport/invitations and SDK
-    # worker require separate exact-output activation approval.
-    startAfterMigration = true;
-    holdSynchronization = true;
-  };
+  imports = [ ./native-retention.nix ];
 
   sops.secrets."pi/matrix-nas-env" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
@@ -26,8 +19,8 @@ in
     # Separate from the owner-account helper/stateless !pi service.
   };
 
-  # The temporary cutover job validates existing migration completion before
-  # approved consumer startup; native Pi and tmux remain independent.
+  # Normal native startup after completed migration; native Pi and tmux remain
+  # independent. Retained account state is neither reimported nor cleaned up.
   services.pi-harness.matrixBridge = {
     enable = true;
     user = config.hostSpec.username;

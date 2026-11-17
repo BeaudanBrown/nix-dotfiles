@@ -52,10 +52,11 @@ full harness and their existing settings.
 
 Current source pins published harness `21f9a4b` (#175), including the native
 bridge, invitation-state fix and approval-backed `create_project` tool. Both
-hosts retain live startup gates and `holdSynchronization = true`. The historical
-cutover notes below are evidence, not instructions to rerun migration. Source
-reconciliation restores the reviewed safeguards if an older replicated checkout
-has removed them. Activate only the exact approved grill/NAS build outputs;
+hosts now use normal native startup, with migration services/readiness gates
+retired. `native-retention.nix` independently preserves the state-sync pause,
+legacy-service masks, frozen-capture group and NAS file-spool cleanup exclusion.
+See [post-migration startup](./pi-native-startup.md). The historical cutover notes
+below describe earlier generations only, not instructions to rerun migration. Activate only the exact approved grill/NAS build outputs;
 existing Pi processes are not automatically refreshed. New project creation
 saves an idle native session and arranges its Matrix room without launching Pi.
 Both hosts explicitly set `matrixBridge.projectRoot` to `~/documents/projects`;
@@ -67,8 +68,8 @@ approved migration-only activation completed on grill/NAS using downstream
 `3faed95` and published harness `7f32929`. Both native ledgers and frozen backups
 were verified; the privileged NAS original/account byte comparison also passed.
 Newer grill histories must be retained; pending legacy account work stays held.
-This normal source now carries the same temporary adapter and harness pin while
-preserving newer unrelated host/tooling changes.
+That historical source carried a temporary adapter. Current normal source no longer
+imports it; its source/tests remain historical evidence, not installed commands.
 
 **Build preparation is not activation or live acceptance.** Promoted normal source
 `3db870e` preserves the separately activated grill bridge and keeps NAS held. The

@@ -8,14 +8,7 @@ let
   windowLauncher = import ../tmux/tmux_project.nix { inherit pkgs; };
 in
 {
-  imports = [ ./cutover-172.nix ];
-  services.piNativeCutover172 = {
-    enable = true;
-    # Startup candidate only: exact activation and host-wide Matrix effects
-    # require separate operator approval. NAS remains held independently.
-    startAfterMigration = true;
-    holdSynchronization = true;
-  };
+  imports = [ ./native-retention.nix ];
 
   sops.secrets."pi/matrix-grill-env" = {
     sopsFile = lib.custom.sopsFileForModule __curPos.file;
@@ -26,8 +19,8 @@ in
     # The bridge reads a systemd credential; Pi/tmux never inherit this token.
   };
 
-  # The temporary cutover job automates offline conversion after explicit
-  # maintenance preparation. It gates startup, never closes Pi or shared tmux.
+  # Normal native startup: migration is complete. Retention protects old data
+  # independently; neither startup nor rebuild launches or replaces native Pi.
   services.pi-harness.matrixBridge = {
     enable = true;
     user = config.hostSpec.username;
