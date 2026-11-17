@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   domain = "registry.bepis.lol";
   portKey = "docker-registry";
@@ -23,17 +28,41 @@ in
     enableGarbageCollect = true;
     garbageCollectDates = "weekly";
     extraConfig = {
+      # Authenticate the loopback backend too; nginx alone is bypassable by
+      # local users. Existing entries MUST use bcrypt (verify before switch).
+      auth.htpasswd = {
+        realm = "Private Docker Registry";
+        path = "/run/credentials/docker-registry.service/htpasswd";
+      };
       http.headers = {
         "X-Content-Type-Options" = [ "nosniff" ];
       };
     };
   };
 
+  systemd.services.docker-registry = {
+    serviceConfig.LoadCredential = [
+      "htpasswd:${config.sops.secrets."docker-registry/htpasswd".path}"
+    ];
+    # Native Distribution auth only accepts bcrypt. Refuse incompatible files
+    # without printing usernames/hashes; the operator must migrate them first.
+    preStart = lib.mkBefore ''
+      if ! ${pkgs.gawk}/bin/awk -F: '
+        NF != 2 || $2 !~ /^\$2[aby]\$[0-9][0-9]\$[./A-Za-z0-9]{53}$/ { bad = 1 }
+        END { exit (NR == 0 || bad) }
+      ' "$CREDENTIALS_DIRECTORY/htpasswd"; then
+        echo "Registry htpasswd must contain nonempty bcrypt entries before activation" >&2
+        exit 1
+      fi
+    '';
+  };
+
   services.nginx.virtualHosts.${domain} = {
     locations."/v2/" = {
       proxyPass = "http://127.0.0.1:${toString config.custom.ports.assigned.${portKey}}";
       extraConfig = ''
-        # AuthN at nginx so the registry can stay simple
+        # Keep the existing frontend challenge; Authorization also reaches
+        # the now-authenticated backend.
         auth_basic "Private Docker Registry";
         auth_basic_user_file ${config.sops.secrets."docker-registry/htpasswd".path};
 
