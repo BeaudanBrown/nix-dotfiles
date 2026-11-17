@@ -7,7 +7,7 @@ dsh.overrideAttrs (old: {
     substituteInPlace apps/cli/src/profile-boot.ts \
       --replace-fail 'existsSync, mkdirSync,' 'existsSync, readFileSync, mkdirSync,' \
       --replace-fail 'writeFileSync(join(profile.dir, PROFILE_ROOT_FILENAME), PROFILE_ROOT_CONFIG)' \
-        '((existsSync(join(profile.dir, PROFILE_ROOT_FILENAME)) && readFileSync(join(profile.dir, PROFILE_ROOT_FILENAME), "utf8") === PROFILE_ROOT_CONFIG) || writeFileSync(join(profile.dir, PROFILE_ROOT_FILENAME), PROFILE_ROOT_CONFIG))'
+        'if (!existsSync(join(profile.dir, PROFILE_ROOT_FILENAME)) || readFileSync(join(profile.dir, PROFILE_ROOT_FILENAME), "utf8") !== PROFILE_ROOT_CONFIG) { writeFileSync(join(profile.dir, PROFILE_ROOT_FILENAME), PROFILE_ROOT_CONFIG) }'
   '';
   meta = old.meta // {
     description = "${old.meta.description} (immutable-profile compatibility)";
