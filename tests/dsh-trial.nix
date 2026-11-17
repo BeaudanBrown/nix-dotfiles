@@ -155,6 +155,10 @@ let
     if failures == [ ] then true else throw (lib.concatStringsSep "\n" failures);
 in
 assert passed grill && passed nas && passed nasPassthrough && passed t480 && passed laptop;
+# Even `false` triggers nix.conf validation errors without the experimental feature.
+assert !(grill.nix.settings ? auto-allocate-uids);
+assert !(nas.nix.settings ? auto-allocate-uids);
+assert !(nas.systemd.services ? dsh-nfs-deny);
 assert lib.all (
   listener: !listener.ssl || (listener.addr == "127.0.0.1" && listener.port == 11443)
 ) nasPassthrough.services.nginx.virtualHosts."dsg.bepis.lol".listen;
@@ -186,6 +190,10 @@ assert
     nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".extraConfig
   );
 assert nas.security.acme.certs."dsg.bepis.lol".environmentFile == "/run/secrets/cloudflare/env";
+assert nas.security.acme.defaults.dnsResolver == "1.1.1.1:53";
+assert nas.security.acme.certs."registry.bepis.lol".dnsResolver == "1.1.1.1:53";
+assert nas.security.acme.certs."dsg.bepis.lol".dnsResolver == "1.1.1.1:53";
+assert nasPassthrough.security.acme.certs."dsg.bepis.lol".dnsResolver == "1.1.1.1:53";
 assert !(lib.elem "dsg.bepis.lol" nas.services.cloudflare-dyndns.domains);
 assert grill.sops.secrets == { } && !(grill.services.nginx.virtualHosts ? "dsg.bepis.lol");
 assert lib.hasInfix "--host 100.64.0.2" sc.ExecStart;
@@ -209,6 +217,20 @@ assert !(lib.elem "docker" grill.users.users.dsh-agent.extraGroups);
 assert !(lib.elem "wheel" grill.users.users.dsh-agent.extraGroups);
 assert lib.elem "agent-workspace" grill.users.users.operator.extraGroups;
 assert folder.path == "/agent" && folder.ignorePerms;
+assert lib.all
+  (
+    c:
+    lib.elem "d /agent 2770 operator agent-workspace - -" c.systemd.tmpfiles.rules
+    && lib.elem "agent-workspace" c.systemd.services.syncthing.serviceConfig.SupplementaryGroups
+    && lib.elem "agent-workspace" c.systemd.services.syncthing-init.serviceConfig.SupplementaryGroups
+    && c.systemd.services.syncthing.serviceConfig.PrivateUsers
+  )
+  [
+    grill
+    nas
+    t480
+    laptop
+  ];
 assert !(lib.elem "(?d)**/.git" folder.ignorePatterns);
 assert !(lib.elem "(?d)**/*.sync-conflict-*" folder.ignorePatterns);
 assert lib.elem "t480" folder.devices && lib.elem "server" folder.devices;

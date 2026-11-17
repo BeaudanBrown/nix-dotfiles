@@ -24,9 +24,14 @@
       });
 
   systemd.tmpfiles.rules = [
-    "d /agent 2770 root agent-workspace - -"
+    "d /agent 2770 ${config.services.syncthing.user} agent-workspace - -"
     "a /agent - - - - u::rwx,g::rwx,m::rwx,o::---,d:u::rwx,d:g::rwx,d:m::rwx,d:o::---"
   ];
+
+  # Group database changes alone need not restart an existing daemon. Put the
+  # shared group in both units so activation refreshes their credentials.
+  systemd.services.syncthing.serviceConfig.SupplementaryGroups = [ "agent-workspace" ];
+  systemd.services.syncthing-init.serviceConfig.SupplementaryGroups = [ "agent-workspace" ];
 
   services.syncthing.settings.folders.agent-workspace = {
     id = "agent-workspace-v1";

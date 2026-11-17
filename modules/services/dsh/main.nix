@@ -150,7 +150,8 @@ in
     ];
     nix.settings = {
       build-users-group = lib.mkDefault "nixbld";
-      auto-allocate-uids = lib.mkDefault false;
+      # Leave auto-allocate-uids unset: even false requires its experimental
+      # feature. The assertion above rejects enabling it elsewhere.
     };
     environment.etc = configFiles;
     systemd.tmpfiles.rules = [

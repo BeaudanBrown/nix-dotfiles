@@ -219,6 +219,9 @@ in
     security.acme = {
       acceptTerms = true;
       defaults = {
+        # Certificate challenge checks must use public DNS, not the private
+        # authoritative zones used to route tailnet-only hosted services.
+        dnsResolver = "1.1.1.1:53";
         email = "beaudan.brown@gmail.com";
         group = "nginx";
       };

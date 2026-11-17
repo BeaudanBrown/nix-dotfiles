@@ -44,7 +44,10 @@ not replace Pi, tmux or Matrix. Existing workflows and sleep policy are unchange
 
 ## Shared projects and state
 
-`/agent` is root:agent-workspace, mode 2770, with default ACLs. Syncthing ignores
+`/agent` is owned by the configured Syncthing user (normally the primary user)
+and group `agent-workspace`, mode 2770, with default ACLs. Both Syncthing units
+explicitly declare this supplementary group so activation refreshes process
+credentials when adding the workspace; existing `PrivateUsers` hardening remains. Syncthing ignores
 permissions: local tmpfiles rules establish the root ACL. Files *moved* into the
 workspace may retain old modes/ACLs; the operator must normalize those files
 before expecting group collaboration. Restrictive application-created modes may
@@ -80,6 +83,10 @@ Tailnet browser -> NAS HTTPS ingress -> grill tailnet IP:3080 -> DSH
 NAS registers a normal `hostedServices` entry with `tailnet = true` and
 `webSockets = true`. This reuses existing NAS DNS, nginx ingress and ACME with
 `cloudflare/env`; it does not publish this service through Cloudflare DDNS.
+Shared hosting ACME defaults use `1.1.1.1:53` for certificate challenge checks,
+avoiding NAS's private authoritative zones. This applies to all certificates
+inheriting those defaults, not a DSH-specific exception. This changes only
+certificate validation, not client DNS or ingress exposure.
 NAS DNS points the name at NAS, not grill. The existing ingress machinery
 restricts the virtual host to the tailnet listener (or the private backend when
 TLS passthrough is enabled for other services). There is **no new secret**, ACME
