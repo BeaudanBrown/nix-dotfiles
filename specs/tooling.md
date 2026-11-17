@@ -18,6 +18,17 @@ The `justfile` provides shortcuts for common operations. Run `just` with no argu
 |---------------|------------------------------------|
 | `just update` | Update all flake inputs (flake.lock) |
 
+### NAS agent VM hold
+
+`agent-vm-ensure.service` is disabled in Nix after the existing managed-save
+session failed to restore virtio-fs backend state. Keep the domain, saved state,
+disk and shares intact; do not run `agent-vm-reset`, reconfigure or force a cold
+boot. The independent persistent libvirt autostart flag must also be disabled
+once with `sudo virsh -c qemu:///system autostart --disable agent` on NAS.
+The Nix service mask takes effect on the next NAS rebuild; this flag change
+neither starts the VM nor discards its saved session. Re-enabling requires a
+separate recovery decision. Other VMs and the default libvirt network are unchanged.
+
 ### Grill Local LLM
 
 Network hosts install a `local-llm` lifecycle command for the Tailnet-only

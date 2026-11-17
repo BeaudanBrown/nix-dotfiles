@@ -448,6 +448,11 @@ in
 
   # Ensures a persistent libvirt VM exists and is started.
   systemd.services.agent-vm-ensure = {
+    # Operator hold: preserve the managed save and disk after virtio-fs resume
+    # failure. Also disable the existing domain's persistent libvirt autostart
+    # with `virsh -c qemu:///system autostart --disable agent` (once, as root).
+    # Re-enabling is a separate decision; do not reset or discard saved state.
+    enable = false;
     description = "Ensure libvirt VM '${vmName}' is defined and running";
     after = [
       "agent-share-restore.service"
