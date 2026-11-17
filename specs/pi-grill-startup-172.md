@@ -1,4 +1,10 @@
-# #172 grill startup candidate — not activation approval
+# Historical #172 grill startup candidate
+
+> RETIRED — EVIDENCE ONLY. Do not run the commands or apply the configuration
+> below. The migration service, permits and readiness gates are retired.
+> Use [normal native startup](./pi-native-startup.md); do not recreate permits,
+> invoke old gate/import commands or restore old state. Remaining text records
+> a previous rollout, not current activation instructions.
 
 This isolated candidate changes only grill's temporary cutover options to
 `startAfterMigration = true` and explicitly retains `holdSynchronization = true`.

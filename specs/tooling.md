@@ -71,18 +71,12 @@ Newer grill histories must be retained; pending legacy account work stays held.
 That historical source carried a temporary adapter. Current normal source no longer
 imports it; its source/tests remain historical evidence, not installed commands.
 
-**Build preparation is not activation or live acceptance.** Promoted normal source
-`3db870e` preserves the separately activated grill bridge and keeps NAS held. The
-operator reported a successful original-room fresh grill text canary; broader
-acceptance remains open. This isolated [NAS startup candidate](./pi-nas-startup-172.md)
-permits NAS bridge, owner transport/invitations and SDK worker only after separate
-exact-output activation approval. Existing owner chat file/workspace/publication
-powers are unchanged but become usable on startup. Both hosts retain
-`holdSynchronization = true`; synchronization restoration and further live
-canaries remain separately approved.
-See the [temporary cutover runbook](./pi-native-cutover-172.md). Existing completion
-records are revalidated without recapturing/importing old history; do not create
-new permits or rerun first-migration maintenance commands.
+**Build preparation is not activation or live acceptance.** Use only the current
+[normal-startup instructions](./pi-native-startup.md). Earlier grill/NAS startup
+candidate and cutover documents are historical evidence, not runnable procedures.
+Do not create migration permits, set `startAfterMigration`, or invoke old gate or
+migration commands. Synchronization restoration and further live canaries remain
+separately approved.
 
 The progressive picker starts fzf before discovery. Ordinary sessions/raw paths
 remain usable independently of Pi history, the optional bridge, Matrix, NAS,

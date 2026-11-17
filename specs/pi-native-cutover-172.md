@@ -1,4 +1,10 @@
-# Temporary native Matrix bridge cutover (#172 / #173)
+# Historical native Matrix bridge cutover (#172 / #173)
+
+> RETIRED — EVIDENCE ONLY. Do not execute the commands or configuration changes
+> below on grill or NAS. Migration completed; permits, importer and startup gates
+> are no longer part of current startup. Never rerun migration or rewrite receipts.
+> Use [normal native startup](./pi-native-startup.md) instead. The remainder records
+> the original migration procedure, not a supported operational runbook.
 
 This is a **deployment adapter**, not a session manager. Pi still owns histories
 and execution; tmux still owns presentation. No local Pi/tmux unit depends on
