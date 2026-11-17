@@ -201,7 +201,20 @@ assert lib.hasInfix "https://dsg.bepis.lol/" sc.ExecStart;
 assert lib.hasInfix "ip saddr != 100.64.0.1 drop" grill.systemd.services.dsh-backend-guard.script;
 assert lib.elem "dsh-backend-guard.service" grill.systemd.services.dsh-agent.requires;
 # Launcher parsing stops at the first app flag: overlays must precede --no-open.
-assert lib.hasInfix "--patch /etc/dsh-host.patch.yml --no-open" sc.ExecStart;
+assert lib.hasInfix "--patch /etc/dsh-policy.patch.yml --patch /etc/dsh-host.patch.yml --no-open"
+  sc.ExecStart;
+# The actual upstream package, not a local source override.
+assert grill.services.dshTrial.package.drvPath == tools.deepseek-harness.drvPath;
+assert lib.hasInfix "seed-profile.py" sc.ExecStartPre;
+assert lib.all (
+  mount: !(lib.hasInfix ":/var/lib/dsh-agent/dsh/profiles" mount)
+) sc.BindReadOnlyPaths;
+assert lib.any (mount: lib.hasSuffix ":/etc/dsh-policy.patch.yml" mount) sc.BindReadOnlyPaths;
+assert lib.elem "d /var/lib/dsh-agent/dsh/profiles/web 0700 dsh-agent dsh-agent - -"
+  grill.systemd.tmpfiles.rules;
+assert lib.hasInfix "- id: plugin-manager\n  disabled: true" (
+  builtins.readFile ../modules/services/dsh/profile.patch.yml
+);
 assert
   (lib.findFirst (s: s.domain == "dsg.bepis.lol") { tailnet = false; } nas.hostedServices).tailnet;
 assert sc.User == "dsh-agent" && sc.NoNewPrivileges;

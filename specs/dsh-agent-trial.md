@@ -1,7 +1,11 @@
 # Grill-first DSH trial
 
-Status: configuration drafted; **not built, deployed or authenticated**. This does
-not replace Pi, tmux or Matrix. Existing workflows and sleep policy are unchanged.
+Status: the operator reports the previous configuration built and started on
+grill, with NAS HTTPS returning an unauthenticated 401 and browser login reaching
+the preview notice. Acknowledgement failed because the profile was read-only.
+The writable-settings revision below is evaluated and locally tested, but has
+**not yet been built or activated**. GPU, Codex and full isolation acceptance
+remain pending. This does not replace Pi, tmux or Matrix or change sleep policy.
 
 ## Architecture and scope
 
@@ -10,10 +14,16 @@ not replace Pi, tmux or Matrix. Existing workflows and sleep policy are unchange
 - Only grill enables `services.dshTrial`. It runs upstream DSH 0.2.2-rc.1 as
   `dsh-agent`, at boot, with restart-on-failure. A separate nixpkgs input pins
   DSH and SecretSpec 0.21.1 without updating the fleet/Pi pins.
-- The web/base bundle composition and profile are Nix-owned read-only mounts.
-  Plugin management, HMR, session upload and session telemetry are disabled.
-  A small package patch skips rewriting an *identical* profile root; mismatched
-  roots still fail/write as upstream specifies. No community plugins are added.
+- DSH now uses the unmodified pinned nixpkgs package; the local source patch is
+  removed. Its web/base profile is seeded once into writable host-local state.
+  DSH saves preview acknowledgement and ordinary settings in `cordis.patch.yml`;
+  it also rewrites `cordis.yml` during startup. Both operations must be allowed.
+- Nix-owned CLI policy overlays load after the writable settings. They disable
+  plugin management, HMR, session upload and session telemetry and retain the
+  configured permission preset, trusted hostname and cookie lifetime. No
+  community plugins are added. This does not make the profile immutable: agent
+  commands can modify it or execute other downloaded code. The installed package
+  stays pinned in the store; OS restrictions remain the security boundary.
 - This is a shared, autonomous single-user development identity. All `/agent`
   projects can read/change each other. Approvals are `never`; the only configured
   permission preset is `danger-full-access`. These settings are not a sandbox.
@@ -65,6 +75,18 @@ Harness state, sessions, model authentication, browser-token/cookie state and
 private service logs live under `/var/lib/dsh-agent` (0700), outside Syncthing.
 They are intentionally accessible to commands running as the same agent user.
 No backup or state-migration rollback guarantee is supplied for this trial.
+
+The seeder creates missing profile files with mode 0600 and does not overwrite
+existing settings, even on restart or a Nix upgrade. It publishes complete files
+without replacing concurrent edits. Moving from the old read-only profile repairs
+ownership of its former mountpoint directories via tmpfiles, then seeds the empty
+profile after the old service mount namespace is gone. Sessions and credentials
+are not moved or deleted, and the preview notice is not pre-accepted.
+
+A Nix rollback does not roll back mutable settings. Resetting a profile is an
+explicit operator action: stop DSH, move its `dsh/profiles/web` directory aside,
+then restart to seed a fresh profile. This resets profile settings but leaves
+other state intact. Do not reset/delete the entire harness state directory.
 
 Normal-user Git/SSH/GitHub/vault credentials are not supplied. The operator
 handles private clones, fetches, pushes and GitHub actions; agents can make
@@ -176,13 +198,20 @@ Evaluation-only checks (public locked inputs, no private fleet flake evaluation)
 ```sh
 nix eval --impure --json --file tests/dsh-trial.nix
 python3 tests/test_agent_secretspec.py
+python3 tests/test_dsh_profile_state.py
 ruff check modules/cli/secretspec/agent_provider.py tests/test_agent_secretspec.py
 ruff format --check modules/cli/secretspec/agent_provider.py tests/test_agent_secretspec.py
 pyright modules/cli/secretspec/agent_provider.py tests/test_agent_secretspec.py
+ruff check modules/services/dsh/seed-profile.py tests/test_dsh_profile_state.py
+pyright modules/services/dsh/seed-profile.py tests/test_dsh_profile_state.py
 ```
 
-These checks passed during implementation (five routing tests, Pyright zero
-errors/warnings); Nix formatting and `git diff --check` also passed. Tools were
+The writable-settings revision passes five routing tests, four profile-state
+tests, evaluation assertions, Ruff and Pyright (zero errors/warnings).
+The profile-state tests cover writable private copies, atomic settings replacement
+surviving restart, an empty former mountpoint and preservation of a partial profile.
+These are local filesystem tests, not proof of successful browser acknowledgement.
+`git diff --check` also passed. Tools were
 already available locally; no package build was performed.
 
 They check module assertions, disabled hosts, unit/derivation evaluation,
@@ -195,14 +224,16 @@ the new modules explicitly; no private flake input was opened.
 Separate approval is required for builds, host switches, service probes and
 account logins. Before unattended use, record all of:
 
-1. Build pinned DSH (including patch), boot with the immutable profile, verify
-   complete web/base bundle activation, no upload telemetry and no approvals.
+1. Build the unmodified pinned DSH, start with the writable seeded profile,
+   accept the preview notice in the UI, change an ordinary setting and verify
+   both persist after a service restart. Verify complete web/base bundle
+   activation, disabled plugin management, no upload telemetry and no approvals.
 2. Verify NAS nginx configuration/ACME, tailnet desktop+phone access, off-tailnet
    refusal (including public ingress with this Host/SNI), NAS-to-grill backend
    access and backend refusal from other peers, persistent token login and
    cookie attributes/lifetime after restart.
 3. Complete per-host Codex OAuth, refresh and a real model/tool round trip.
-4. Test filesystem/socket denial, inability to edit profiles or gain privileges,
+4. Test filesystem/socket denial, inability to edit Nix-owned policy or gain privileges,
    Nix daemon operation and sandboxing; test NFS refusal both directly and from
    a fixed-output derivation. Verify no unintended alternate NFS ports/relays.
 5. Test AMD compute, resource headroom, stop/restart behavior and log growth.

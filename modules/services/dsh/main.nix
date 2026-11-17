@@ -8,7 +8,7 @@
 let
   cfg = config.services.dshTrial;
   tools = inputs.agent-tools-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  dsh = import ../../../packages/dsh { dsh = tools.deepseek-harness; };
+  dsh = tools.deepseek-harness;
   state = "/var/lib/dsh-agent";
   home = "${state}/home";
   dshHome = "${state}/dsh";
@@ -44,13 +44,9 @@ let
     cat > "$out/web/package.json" <<'EOF'
     {"name":"dsh-profile-web","private":true,"dependencies":{},"dsh":{"profile":{"bundles":["@deepseek-ai/dsh-base","@deepseek-ai/dsh-web-app"]}}}
     EOF
-    cat > "$out/web/cordis.yml" <<'EOF'
-    # dsh profile root — an empty entry list. The tree is composed as patches:
-    # each bundle in package.json's dsh.profile.bundles, then cordis.patch.yml, then any
-    # --patch overlays. Edit cordis.patch.yml, not this file.
-    []
-    EOF
-    cp ${./profile.patch.yml} "$out/web/cordis.patch.yml"
+    # User settings (including preview acknowledgement) are saved here by DSH.
+    # Service policy is a separate, later Nix-owned CLI overlay.
+    printf '[]\n' > "$out/web/cordis.patch.yml"
     cat > "$out/web/pnpm-workspace.yaml" <<'EOF'
     packages:
       - .
@@ -75,7 +71,7 @@ let
   root = pkgs.runCommand "dsh-service-root" { } ''
     mkdir -p "$out"/{agent,bin,usr/bin,etc/ssl/certs,etc/nix,nix/store,nix/var/nix/daemon-socket,proc,sys,dev/dri,tmp,var/tmp,opt/rocm,run/nix/daemon-socket,run/opengl-driver,run/opengl-driver-32,var/lib/dsh-agent,var/lib/agent-mocks}
     # Mount targets must exist: this tree itself lives in the read-only store.
-    touch "$out"/etc/{resolv.conf,hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml}
+    touch "$out"/etc/{resolv.conf,hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
     touch "$out/etc/nix/nix.conf" "$out/etc/ssl/certs/ca-certificates.crt"
     touch "$out/dev/kfd" "$out/dev/dri/renderD128" "$out/dev/dri/renderD129"
     ln -s ${pkgs.bashInteractive}/bin/bash "$out/bin/bash"
@@ -158,6 +154,10 @@ in
       "d ${state} 0700 dsh-agent dsh-agent - -"
       "d ${home} 0700 dsh-agent dsh-agent - -"
       "d ${dshHome} 0700 dsh-agent dsh-agent - -"
+      # Also repairs ownership of mountpoint directories from the former
+      # read-only profile setup; no sessions/authentication are removed.
+      "d ${dshHome}/profiles 0700 dsh-agent dsh-agent - -"
+      "d ${dshHome}/profiles/web 0700 dsh-agent dsh-agent - -"
     ];
     users.users.dsh-agent.extraGroups = lib.optional cfg.gpu "render";
     systemd.services.dsh-agent = {
@@ -192,7 +192,8 @@ in
         RootDirectory = root;
         MountAPIVFS = true;
         WorkingDirectory = "/agent";
-        ExecStart = "${cfg.package}/bin/dsh --profile web --patch /etc/dsh-host.patch.yml --no-open --host ${cfg.listenAddress} --port ${toString cfg.port} --public-url https://${cfg.hostname}/ --trusted-host ${cfg.hostname}";
+        ExecStartPre = "${pkgs.python3}/bin/python3 ${./seed-profile.py} ${profile}/web ${dshHome}/profiles/web";
+        ExecStart = "${cfg.package}/bin/dsh --profile web --patch /etc/dsh-policy.patch.yml --patch /etc/dsh-host.patch.yml --no-open --host ${cfg.listenAddress} --port ${toString cfg.port} --public-url https://${cfg.hostname}/ --trusted-host ${cfg.hostname}";
         Restart = "on-failure";
         RestartSec = 5;
         KillMode = "control-group";
@@ -251,7 +252,7 @@ in
           "/etc/group"
           "/etc/nsswitch.conf"
           "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt"
-          "${profile}:${dshHome}/profiles"
+          "${./profile.patch.yml}:/etc/dsh-policy.patch.yml"
           "${emptyPatch}:${dshHome}/cordis.patch.yml"
           "${connectionPatch}:/etc/dsh-host.patch.yml"
           "/etc/dsh-agent/gitconfig:/etc/gitconfig"
