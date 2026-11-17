@@ -178,6 +178,13 @@ assert
   nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".proxyPass == "http://100.64.0.2:3080";
 assert nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".proxyWebsockets;
 assert !(nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".recommendedProxySettings);
+# Gixy rejects forwarding the raw, client-controlled $http_host value.
+assert lib.hasInfix "proxy_set_header Host $host;"
+  nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".extraConfig;
+assert
+  !(lib.hasInfix "$http_host"
+    nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".extraConfig
+  );
 assert nas.security.acme.certs."dsg.bepis.lol".environmentFile == "/run/secrets/cloudflare/env";
 assert !(lib.elem "dsg.bepis.lol" nas.services.cloudflare-dyndns.domains);
 assert grill.sops.secrets == { } && !(grill.services.nginx.virtualHosts ? "dsg.bepis.lol");

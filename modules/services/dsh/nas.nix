@@ -22,7 +22,7 @@ in
     '';
     locations."/".recommendedProxySettings = false;
     locations."/".extraConfig = lib.mkForce ''
-      proxy_set_header Host $http_host;
+      proxy_set_header Host $host;
       proxy_cookie_flags ~ secure httponly samesite=strict;
       proxy_read_timeout 3600s;
       proxy_send_timeout 3600s;
