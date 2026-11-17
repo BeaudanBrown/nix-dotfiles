@@ -2,7 +2,6 @@
 # Effective roots: minimal, common, network, main, work
 # Do not edit manually.
 [
-  ../../modules/apps/moonlight_qt/laptop.nix
   ../../modules/cli/starship/laptop.nix
   ../../modules/desktop/addons/waybar/laptop.nix
   ../../modules/desktop/hyprland/keybinds/laptop.nix

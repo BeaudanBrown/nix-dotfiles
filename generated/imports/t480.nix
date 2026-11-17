@@ -2,6 +2,7 @@
 # Effective roots: minimal, common, network, client, main, work, gaming
 # Do not edit manually.
 [
+  ../../modules/apps/moonlight_qt/t480.nix
   ../../modules/cli/starship/t480.nix
   ../../modules/desktop/hyprland/keybinds/t480.nix
   ../../modules/desktop/hyprland/t480.nix
