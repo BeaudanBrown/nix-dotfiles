@@ -42,6 +42,7 @@ in
       "@facebookbot:matrix.bepis.lol"
     ];
     hostId = "nas";
+    projectRoot = "${config.hostSpec.home}/documents/projects";
     roots = [ "${config.hostSpec.home}/documents/projects" ];
     sessionRoots = [
       "%h/.pi/agent/sessions"

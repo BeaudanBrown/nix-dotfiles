@@ -199,7 +199,7 @@
     pi-harness = {
       # Published native runtime with approved idle fresh-project creation (#175).
       # Activate only approved host outputs; synchronization remains separate.
-      url = "github:BeaudanBrown/pi-harness/45ff167374be7acb46d4fe0d9510b23c1d2d51ef";
+      url = "github:BeaudanBrown/pi-harness/21f9a4b4db9a90518d5e173e53cbae2b407daa6f";
       # Native persistence/locking patches are verified against the harness's
       # own Pi pin; do not substitute the independently updated host bundle.
     };

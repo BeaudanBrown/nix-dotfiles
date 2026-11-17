@@ -50,7 +50,7 @@ full harness and their existing settings.
 
 ### Native Pi picker and optional Matrix bridge
 
-Current source pins published harness `45ff167` (#175), including the native
+Current source pins published harness `21f9a4b` (#175), including the native
 bridge, invitation-state fix and approval-backed `create_project` tool. Both
 hosts retain live startup gates and `holdSynchronization = true`. The historical
 cutover notes below are evidence, not instructions to rerun migration. Source
@@ -58,6 +58,8 @@ reconciliation restores the reviewed safeguards if an older replicated checkout
 has removed them. Activate only the exact approved grill/NAS build outputs;
 existing Pi processes are not automatically refreshed. New project creation
 saves an idle native session and arranges its Matrix room without launching Pi.
+Both hosts explicitly set `matrixBridge.projectRoot` to `~/documents/projects`;
+this is independent of enrollment roots, including grill's documents/collab roots.
 No synchronization restoration, old-queue replay or backup cleanup is implied.
 
 Harness epic #160 / ADR 0003 supersedes the managed platform. #172's separately

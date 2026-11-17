@@ -42,6 +42,7 @@ in
       "@facebookbot:matrix.bepis.lol"
     ];
     hostId = "grill";
+    projectRoot = "${config.hostSpec.home}/documents/projects";
     roots = [
       "${config.hostSpec.home}/documents/projects"
       "${config.hostSpec.home}/documents"
