@@ -197,9 +197,9 @@
     };
 
     pi-harness = {
-      # Published native runtime with the #172 systemd invitation-state fix.
+      # Published native runtime with approved idle fresh-project creation (#175).
       # Activate only approved host outputs; synchronization remains separate.
-      url = "github:BeaudanBrown/pi-harness/0b07c796a86bb14c757388132e3e8cd6f94e2ac7";
+      url = "github:BeaudanBrown/pi-harness/45ff167374be7acb46d4fe0d9510b23c1d2d51ef";
       # Native persistence/locking patches are verified against the harness's
       # own Pi pin; do not substitute the independently updated host bundle.
     };
