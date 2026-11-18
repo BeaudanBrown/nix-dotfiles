@@ -1,6 +1,7 @@
-# Pinned against DSH 0.2.2-rc.1. OS policy, not model approvals, is the boundary.
-- id: hmr
-  disabled: true
+# Deployment policy only. DSH owns the web profile, live reload and user settings.
+- id: workspace-controller
+  config:
+    documentsDirectory: /etc/dsh-documents
 - id: plugin-manager
   disabled: true
 - id: ui-plugin-manager

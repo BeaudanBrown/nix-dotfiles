@@ -1,9 +1,7 @@
 # Evaluation-only fixture: never opens the fleet's private sopsSecrets input.
 let
-  lock = builtins.fromJSON (builtins.readFile ../flake.lock);
-  source = name: builtins.fetchTree lock.nodes.${lock.nodes.root.inputs.${name}}.locked;
-  nixpkgs = source "nixpkgs";
-  toolsSource = source "agent-tools-nixpkgs";
+  inputs = import ./dsh-inputs.nix;
+  inherit (inputs) nixpkgs;
   baseLib = import (nixpkgs + "/lib");
   lib = baseLib.extend (
     _: _: {
@@ -16,8 +14,7 @@ let
         };
     }
   );
-  tools = import toolsSource { system = "x86_64-linux"; };
-  inputs.agent-tools-nixpkgs.legacyPackages.x86_64-linux = tools;
+  tools = inputs.agent-tools-nixpkgs.legacyPackages.x86_64-linux;
   evaluateWith =
     name: enabled: passthrough:
     (import (nixpkgs + "/nixos/lib/eval-config.nix") {
@@ -203,15 +200,19 @@ assert lib.elem "dsh-backend-guard.service" grill.systemd.services.dsh-agent.req
 # Launcher parsing stops at the first app flag: overlays must precede --no-open.
 assert lib.hasInfix "--patch /etc/dsh-policy.patch.yml --patch /etc/dsh-host.patch.yml --no-open"
   sc.ExecStart;
-# The actual upstream package, not a local source override.
-assert grill.services.dshTrial.package.drvPath == tools.deepseek-harness.drvPath;
-assert lib.hasInfix "seed-profile.py" sc.ExecStartPre;
+assert
+  grill.services.dshTrial.package.drvPath == inputs.nix-ai-tools.packages.x86_64-linux.dsh.drvPath;
+assert !(sc ? ExecStartPre);
+assert sc.WorkingDirectory == grill.systemd.services.dsh-agent.environment.HOME;
+assert
+  !(lib.any (
+    mount: lib.hasSuffix ":/var/lib/dsh-agent/dsh/cordis.patch.yml" mount
+  ) sc.BindReadOnlyPaths);
 assert lib.all (
   mount: !(lib.hasInfix ":/var/lib/dsh-agent/dsh/profiles" mount)
 ) sc.BindReadOnlyPaths;
 assert lib.any (mount: lib.hasSuffix ":/etc/dsh-policy.patch.yml" mount) sc.BindReadOnlyPaths;
-assert lib.elem "d /var/lib/dsh-agent/dsh/profiles/web 0700 dsh-agent dsh-agent - -"
-  grill.systemd.tmpfiles.rules;
+assert grill.services.logrotate.settings.dsh-agent.copytruncate;
 assert lib.hasInfix "- id: plugin-manager\n  disabled: true" (
   builtins.readFile ../modules/services/dsh/profile.patch.yml
 );

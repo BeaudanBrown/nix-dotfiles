@@ -8,7 +8,7 @@
 let
   cfg = config.services.dshTrial;
   tools = inputs.agent-tools-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  dsh = tools.deepseek-harness;
+  dsh = inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.dsh;
   state = "/var/lib/dsh-agent";
   home = "${state}/home";
   dshHome = "${state}/dsh";
@@ -25,35 +25,11 @@ let
       pkgs.findutils
       pkgs.gnugrep
       pkgs.gnused
-      pkgs.gawk
-      pkgs.git
-      pkgs.curl
-      pkgs.jq
+      pkgs.gitMinimal
       pkgs.ripgrep
       pkgs.nix
-      pkgs.direnv
-      pkgs.devenv
-      pkgs.gnumake
-      pkgs.openssh
-      pkgs.python3
-      pkgs.procps
     ];
   };
-  profile = pkgs.runCommand "dsh-nix-profile" { } ''
-    mkdir -p "$out/web"
-    cat > "$out/web/package.json" <<'EOF'
-    {"name":"dsh-profile-web","private":true,"dependencies":{},"dsh":{"profile":{"bundles":["@deepseek-ai/dsh-base","@deepseek-ai/dsh-web-app"]}}}
-    EOF
-    # User settings (including preview acknowledgement) are saved here by DSH.
-    # Service policy is a separate, later Nix-owned CLI overlay.
-    printf '[]\n' > "$out/web/cordis.patch.yml"
-    cat > "$out/web/pnpm-workspace.yaml" <<'EOF'
-    packages:
-      - .
-    nodeLinker: hoisted
-    autoInstallPeers: false
-    EOF
-  '';
   connectionPatch = pkgs.writeText "dsh-host.patch.yml" (
     builtins.toJSON [
       {
@@ -65,11 +41,14 @@ let
       }
     ]
   );
-  emptyPatch = pkgs.writeText "dsh-empty.patch.yml" "[]\n";
   # A read-only filesystem view, not another OS. No broad /home, /run or
   # /var/lib mount: private secrets, NFS mounts and privileged sockets stay out.
   root = pkgs.runCommand "dsh-service-root" { } ''
     mkdir -p "$out"/{agent,bin,usr/bin,etc/ssl/certs,etc/nix,nix/store,nix/var/nix/daemon-socket,proc,sys,dev/dri,tmp,var/tmp,opt/rocm,run/nix/daemon-socket,run/opengl-driver,run/opengl-driver-32,var/lib/dsh-agent,var/lib/agent-mocks}
+    # rc.4 initializes the first Web workspace beneath documentsDirectory,
+    # appending deepseek-harness/default-workspace and taking its realpath.
+    mkdir -p "$out/etc/dsh-documents/deepseek-harness"
+    ln -s /agent "$out/etc/dsh-documents/deepseek-harness/default-workspace"
     # Mount targets must exist: this tree itself lives in the read-only store.
     touch "$out"/etc/{resolv.conf,hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
     touch "$out/etc/nix/nix.conf" "$out/etc/ssl/certs/ca-certificates.crt"
@@ -154,11 +133,17 @@ in
       "d ${state} 0700 dsh-agent dsh-agent - -"
       "d ${home} 0700 dsh-agent dsh-agent - -"
       "d ${dshHome} 0700 dsh-agent dsh-agent - -"
-      # Also repairs ownership of mountpoint directories from the former
-      # read-only profile setup; no sessions/authentication are removed.
-      "d ${dshHome}/profiles 0700 dsh-agent dsh-agent - -"
-      "d ${dshHome}/profiles/web 0700 dsh-agent dsh-agent - -"
+      "f ${state}/service.log 0600 dsh-agent dsh-agent - -"
     ];
+    services.logrotate.settings.dsh-agent = {
+      files = "${state}/service.log";
+      frequency = "weekly";
+      rotate = 4;
+      missingok = true;
+      notifempty = true;
+      copytruncate = true; # systemd keeps the append fd open until restart
+      su = "dsh-agent dsh-agent";
+    };
     users.users.dsh-agent.extraGroups = lib.optional cfg.gpu "render";
     systemd.services.dsh-agent = {
       description = "Private DSH development agent";
@@ -191,8 +176,7 @@ in
         UMask = "0007";
         RootDirectory = root;
         MountAPIVFS = true;
-        WorkingDirectory = "/agent";
-        ExecStartPre = "${pkgs.python3}/bin/python3 ${./seed-profile.py} ${profile}/web ${dshHome}/profiles/web";
+        WorkingDirectory = home;
         ExecStart = "${cfg.package}/bin/dsh --profile web --patch /etc/dsh-policy.patch.yml --patch /etc/dsh-host.patch.yml --no-open --host ${cfg.listenAddress} --port ${toString cfg.port} --public-url https://${cfg.hostname}/ --trusted-host ${cfg.hostname}";
         Restart = "on-failure";
         RestartSec = 5;
@@ -253,7 +237,6 @@ in
           "/etc/nsswitch.conf"
           "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt"
           "${./profile.patch.yml}:/etc/dsh-policy.patch.yml"
-          "${emptyPatch}:${dshHome}/cordis.patch.yml"
           "${connectionPatch}:/etc/dsh-host.patch.yml"
           "/etc/dsh-agent/gitconfig:/etc/gitconfig"
           "/etc/dsh-agent/nix.conf:/etc/nix/nix.conf"
