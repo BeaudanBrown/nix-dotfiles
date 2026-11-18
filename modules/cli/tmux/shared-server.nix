@@ -27,8 +27,11 @@ let
   };
 in
 {
+  users.users.${config.hostSpec.username}.linger = true;
   systemd.user.services.tmux-shared = {
     description = "Independent shared tmux server (never replaced during rebuild)";
+    wantedBy = [ "default.target" ];
+    before = [ "pi-matrix-bridge.service" ];
     unitConfig.ConditionUser = config.hostSpec.username;
     restartIfChanged = false;
     stopIfChanged = false;
@@ -37,6 +40,15 @@ in
     serviceConfig = {
       Type = "simple";
       ExecStart = "${start}/bin/tmux-shared-start";
+      ExecStartPost = pkgs.writeShellScript "tmux-shared-ready" ''
+        socket="$XDG_RUNTIME_DIR/tmux-$(${pkgs.coreutils}/bin/id -u)/default"
+        for ((i = 0; i < 100; i++)); do
+          pid=$(${rawTmux}/bin/tmux -N -S "$socket" display-message -p '#{pid}' 2>/dev/null) && [[ $pid == "$MAINPID" ]] && exit 0
+          ${pkgs.coreutils}/bin/sleep 0.05
+        done
+        echo 'Shared tmux did not become ready' >&2
+        exit 1
+      '';
       Restart = "on-failure";
       RestartSec = 2;
       UMask = "0077";

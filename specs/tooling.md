@@ -589,8 +589,12 @@ transient activation service, activation lock, or candidate GC root. Direct
 Terminal-independent activation is not a guarantee of this wrapper; shared tmux
 survives relay replacement because its process ownership is independent.
 
-GRILL and NAS default tmux clients ensure `tmux-shared.service`. The foreground
-server owns the existing runtime socket independently of the Pi relay. Its
+On GRILL and NAS the lingering user manager starts `tmux-shared.service` at
+boot, before the bridge. Default clients connect only: if the service is down,
+inspect `systemctl --user status tmux-shared` instead of starting an unmanaged
+server. GRILL's interactive Zsh panes load the packaged Ghostty hook when not
+inherited, so insert/command cursor shapes work without modifying tmux mouse
+bindings or exporting a graphical terminal environment. The foreground server owns the existing runtime socket independently of the Pi relay. Its
 startup PATH combines current host/user profiles with pinned boot tools: panes
 can find ordinary system commands and tmux popup hooks can resolve
 `tmux_project`. A server started before this fix retains its old PATH until

@@ -5,7 +5,6 @@ pkgs.symlinkJoin {
     rawTmux
     rawTmux.man
   ];
-  nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     rm "$out/bin/tmux"
     cat > "$out/bin/tmux" <<'EOF'
@@ -14,12 +13,6 @@ pkgs.symlinkJoin {
     ${builtins.readFile ./shared-client.sh}
     EOF
     chmod +x "$out/bin/tmux"
-    wrapProgram "$out/bin/tmux" --prefix PATH : ${
-      pkgs.lib.makeBinPath [
-        pkgs.coreutils
-        pkgs.systemd
-      ]
-    }
   '';
   passthru = {
     inherit rawTmux;

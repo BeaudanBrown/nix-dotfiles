@@ -77,7 +77,7 @@ master integration is described above. Neither step is deployment evidence.
 Minimum picker prerequisites: tmux3.6 and the tested fzf0.70 Unix-listen/result/
 transform API. The derivation asserts these floors and supplies git, raw tmux,
 fzf, fd and Python to its checks. It selects raw tmux for tests, never the fleet
-shared-server bootstrap wrapper. Runtime PATH dependencies and the existing
+shared-server connect-only wrapper. Runtime PATH dependencies and the existing
 requesting-client keybinding are retained. Direct Go tests are not proof that
 this Nix package has been built.
 
