@@ -6,6 +6,7 @@ let
   qdrantDomain = "qdrant.bepis.lol";
   ragMcpDomain = "rag-mcp.bepis.lol";
   projectsRoot = "/pool1/appdata/rag/projects";
+  litellmKeyFile = config.sops.secrets."pi/litellm_api".path;
   rag-indexer = pkgs.writers.writePython3Bin "rag-indexer" {
     libraries = with pkgs.python3Packages; [
       openai
@@ -95,7 +96,7 @@ in
         "RAG_COLLECTION=rag_chunks"
         "RAG_EMBEDDING_MODEL=openai/text-embedding-3-small"
         "LITELLM_BASE_URL=http://127.0.0.1:${toString config.custom.ports.assigned.litellm}/v1"
-        "LITELLM_API_KEY_FILE=${config.sops.secrets.litellm_api.path}"
+        "LITELLM_API_KEY_FILE=${litellmKeyFile}"
         "RAG_PROJECTS_ROOT=${projectsRoot}"
         "RAG_INDEXER_CMD=RAG_STATE_FILE=/pool1/appdata/rag/state.json ${rag-indexer}/bin/rag-indexer --scan"
       ];
@@ -125,7 +126,7 @@ in
         "RAG_UPSERT_BATCH_SIZE=128"
         "RAG_QDRANT_TIMEOUT=120"
         "LITELLM_BASE_URL=http://127.0.0.1:${toString config.custom.ports.assigned.litellm}/v1"
-        "LITELLM_API_KEY_FILE=${config.sops.secrets.litellm_api.path}"
+        "LITELLM_API_KEY_FILE=${litellmKeyFile}"
         "PDFTOTEXT_BIN=${pkgs.poppler-utils}/bin/pdftotext"
         "RAG_STATE_FILE=/pool1/appdata/rag/state.json"
       ];
