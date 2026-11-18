@@ -5,6 +5,7 @@
   ../../modules/cli/pi-harness/grill.nix
   ../../modules/cli/starship/grill.nix
   ../../modules/cli/tmux/grill.nix
+  ../../modules/cli/zsh/grill.nix
   ../../modules/desktop/addons/waybar/grill.nix
   ../../modules/desktop/hyprland/grill.nix
   ../../modules/desktop/hyprland/keybinds/grill.nix
