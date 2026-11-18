@@ -18,8 +18,9 @@ remain pending. This does not replace Pi, tmux or Matrix or change sleep policy.
   No seed files or home-level patch mount. Live reload uses the upstream default.
 - Nix-owned CLI policy overlays load after the writable settings. They disable
   plugin management, session upload and session telemetry and retain the
-  configured permission preset, trusted hostname and cookie lifetime. No
-  community plugins are added. This does not make the profile immutable: agent
+  configured permission preset, trusted hostname and cookie lifetime. The sole
+  extra plugin, `dsh-native-codex-oauth`, is pinned and packaged by Nix; it runs
+  as `dsh-agent` and is trusted with that identity's credentials. This does not make the profile immutable: agent
   commands can modify it or execute other downloaded code. The installed package
   stays pinned in the store; OS restrictions remain the security boundary.
 - This is a shared, autonomous single-user development identity. All `/agent`
@@ -131,8 +132,13 @@ convenient time for a new one.
 Log in via the browser only after approval. Use DSH's built-in model/provider
 OAuth UI for Codex on each host. The pinned `llm-pi-ai` integration advertises
 OAuth, but actual Codex account login, refresh and model calls are acceptance
-checks, not established by configuration evaluation. No LiteLLM or community
-OAuth plugin was added. If upstream login fails, stop and report it.
+checks, not established by configuration evaluation. In Settings → Models select
+`openai-codex` without an API key; look for **Sign in with ChatGPT** on the
+provider card. The plugin supplies the web controls; DSH owns the OAuth flow
+and credential store. Do not reset private state when adding this plugin.
+`modules/services/dsh/codex-oauth.nix` adapts the pinned alpha plugin's Typert
+codec descriptors for rc.4; re-test both host registration and browser controls
+before upgrading either package.
 
 ## One SecretSpec workflow, two stores
 

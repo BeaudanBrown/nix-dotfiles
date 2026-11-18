@@ -1,4 +1,8 @@
 # Deployment policy only. DSH owns the web profile, live reload and user settings.
+# rc.4's base already provides authorization; insert only the plugin row.
+- insert:
+    - id: dsh-native-codex-oauth
+      name: dsh-native-codex-oauth
 - id: workspace-controller
   config:
     documentsDirectory: /etc/dsh-documents

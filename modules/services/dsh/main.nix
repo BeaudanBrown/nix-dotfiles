@@ -9,6 +9,16 @@ let
   cfg = config.services.dshTrial;
   tools = inputs.agent-tools-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   dsh = inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.dsh;
+  oauthPlugin = import ./codex-oauth.nix {
+    inherit pkgs;
+    dsh = cfg.package;
+  };
+  managedModules = pkgs.linkFarm "dsh-managed-node-modules" [
+    {
+      name = "dsh-native-codex-oauth";
+      path = oauthPlugin;
+    }
+  ];
   state = "/var/lib/dsh-agent";
   home = "${state}/home";
   dshHome = "${state}/dsh";
@@ -236,6 +246,8 @@ in
           "/etc/group"
           "/etc/nsswitch.conf"
           "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt"
+          # Node walks up from profiles/web. Leave the profile itself writable.
+          "${managedModules}:${dshHome}/node_modules"
           "${./profile.patch.yml}:/etc/dsh-policy.patch.yml"
           "${connectionPatch}:/etc/dsh-host.patch.yml"
           "/etc/dsh-agent/gitconfig:/etc/gitconfig"

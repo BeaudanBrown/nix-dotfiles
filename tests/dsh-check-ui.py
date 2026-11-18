@@ -19,8 +19,11 @@ def check():
     response.read()
     conn.request("GET", "/", headers={"Cookie": cookie})
     response = conn.getresponse()
-    return response.status == 200 and "text/html" in response.getheader(
-        "Content-Type", ""
+    return (
+        response.status == 200
+        and "text/html" in response.getheader("Content-Type", "")
+        and b"dsh-native-codex-oauth" in response.read()
+        and "typert contributor(s) failed to register" not in log
     )
 
 
