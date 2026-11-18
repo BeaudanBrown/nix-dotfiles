@@ -48,7 +48,7 @@ in
       WEB_FETCH_MAX_CONTENT_LENGTH = "20000";
       ENABLE_IMAGE_GENERATION = "True";
       IMAGE_GENERATION_ENGINE = "openai";
-      IMAGE_GENERATION_MODEL = "gemini-2.5-flash-image";
+      IMAGE_GENERATION_MODEL = "gemini-3.1-flash-lite-image";
       CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE = "20971520";
     };
 

@@ -38,7 +38,7 @@ in
       THOUGHT_CAPTURE_PORT = toString port;
       THOUGHT_CAPTURE_STT_URL = "https://stt.bepis.lol/inference";
       THOUGHT_CAPTURE_LLM_BASE_URL = "https://litellm.bepis.lol/v1";
-      THOUGHT_CAPTURE_LLM_MODEL = "gpt-5-mini";
+      THOUGHT_CAPTURE_LLM_MODEL = "gpt-6.1-terra";
       THOUGHT_CAPTURE_LLM_API_KEY_FILE = config.sops.secrets."pi/litellm_api".path;
       REQUESTS_CA_BUNDLE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
       SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";

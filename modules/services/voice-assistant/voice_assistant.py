@@ -41,7 +41,7 @@ def ask():
             return jsonify({"error": "No JSON body"}), 400
 
         user_text = data.get("text", "").strip()
-        model = data.get("model", "gpt-5-mini")
+        model = data.get("model", "gpt-6.1-terra")
         mode = data.get("mode", "speak")
 
         if not user_text:

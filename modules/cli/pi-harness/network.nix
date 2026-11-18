@@ -80,6 +80,30 @@ let
       };
     };
     models = [
+      # Conservative client limits, consistent with our existing subscription
+      # entries; these are not the upstream models' maximum capacities.
+      {
+        id = "sub-gpt-6.2-astra";
+        api = "openai-responses";
+        reasoning = true;
+        input = [
+          "text"
+          "image"
+        ];
+        contextWindow = 272000;
+        maxTokens = 16384;
+      }
+      {
+        id = "sub-gpt-6.2-sol";
+        api = "openai-responses";
+        reasoning = true;
+        input = [
+          "text"
+          "image"
+        ];
+        contextWindow = 272000;
+        maxTokens = 16384;
+      }
       {
         id = "sub-gpt-5.5";
         api = "openai-responses";

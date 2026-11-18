@@ -26,7 +26,7 @@ app = Flask(__name__)
 DATA_DIR = Path(os.environ.get("THOUGHT_CAPTURE_DATA_DIR", "/var/lib/thought-capture"))
 STT_URL = os.environ.get("THOUGHT_CAPTURE_STT_URL", "https://stt.bepis.lol/inference")
 LLM_BASE_URL = os.environ.get("THOUGHT_CAPTURE_LLM_BASE_URL", "https://litellm.bepis.lol/v1").rstrip("/")
-LLM_MODEL = os.environ.get("THOUGHT_CAPTURE_LLM_MODEL", "gpt-5-mini")
+LLM_MODEL = os.environ.get("THOUGHT_CAPTURE_LLM_MODEL", "gpt-6.1-terra")
 HOST = os.environ.get("THOUGHT_CAPTURE_HOST", "0.0.0.0")
 PORT = int(os.environ.get("THOUGHT_CAPTURE_PORT", "8787"))
 

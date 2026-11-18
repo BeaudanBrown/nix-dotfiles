@@ -69,35 +69,30 @@ let
       };
     }
     {
-      model_name = "gpt-5.3-codex";
+      model_name = "gpt-6.1-terra";
       litellm_params = {
-        model = "openai/gpt-5.3-codex";
+        model = "openai/gpt-6.1-terra";
         api_key = "os.environ/OPENAI_API_KEY";
       };
     }
     {
-      model_name = "gpt-5-mini";
+      model_name = "sub-gpt-6.2-astra";
+      model_info = {
+        mode = "responses";
+        supports_vision = true;
+      };
       litellm_params = {
-        model = "openai/gpt-5-mini";
-        api_key = "os.environ/OPENAI_API_KEY";
+        model = "chatgpt/gpt-6.2-astra";
       };
     }
     {
-      model_name = "sub-gpt-6.1-sol";
+      model_name = "sub-gpt-6.2-sol";
       model_info = {
         mode = "responses";
+        supports_vision = true;
       };
       litellm_params = {
-        model = "chatgpt/gpt-6.1-sol";
-      };
-    }
-    {
-      model_name = "sub-gpt-6-astra";
-      model_info = {
-        mode = "responses";
-      };
-      litellm_params = {
-        model = "chatgpt/gpt-6-astra";
+        model = "chatgpt/gpt-6.2-sol";
       };
     }
     {
@@ -213,16 +208,16 @@ let
       };
     }
     {
-      model_name = "gemini-2.5-flash-image";
+      model_name = "gemini-3.1-flash-lite-image";
       litellm_params = {
-        model = "gemini/gemini-2.5-flash-image";
+        model = "gemini/gemini-3.1-flash-lite-image";
         api_key = "os.environ/GOOGLE_API_KEY";
       };
     }
     {
-      model_name = "gemini-3-pro-image-preview";
+      model_name = "gemini-3-pro-image";
       litellm_params = {
-        model = "gemini/gemini-3-pro-image-preview";
+        model = "gemini/gemini-3-pro-image";
         api_key = "os.environ/GOOGLE_API_KEY";
       };
     }

@@ -59,7 +59,7 @@ in
         # Configuration
         STT_URL="https://stt.bepis.lol/inference"
         ASSISTANT_URL="https://assistant.bepis.lol/ask"
-        DEFAULT_MODEL="''${STT_ASSIST_MODEL:-gpt-5-mini}"
+        DEFAULT_MODEL="''${STT_ASSIST_MODEL:-gpt-6.1-terra}"
 
         PID_FILE="$XDG_RUNTIME_DIR/stt-assist.pid"
         WAV="$XDG_RUNTIME_DIR/stt-assist.wav"
