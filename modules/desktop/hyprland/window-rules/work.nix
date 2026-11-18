@@ -49,6 +49,8 @@ let
     (matchClass "(org.freecad.FreeCAD)")
   ];
   fullscreenWindows = rules { fullscreen = "on"; } [
+    # Steam game windows, without fullscreening the Steam client itself.
+    (matchClass "^(steam_app_[0-9]+)$")
     (matchClass "(VirtualBox Machine)")
     ({
       "match:class" = "(remote-viewer)";
