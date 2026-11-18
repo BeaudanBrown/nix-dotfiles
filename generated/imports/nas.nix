@@ -51,6 +51,7 @@
   ../../modules/services/rallly/nas.nix
   ../../modules/services/send/nas.nix
   ../../modules/services/stt/nas.nix
+  ../../modules/services/sunshine/nas.nix
   ../../modules/services/syncthing/nas.nix
   ../../modules/services/tailscale-proxy/nas.nix
   ../../modules/services/tailscale/nas.nix
