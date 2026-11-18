@@ -3,23 +3,21 @@
 Status: the operator reports the previous configuration built and started on
 grill, with NAS HTTPS returning an unauthenticated 401 and browser login reaching
 the preview notice. Acknowledgement failed because the profile was read-only.
-The writable-settings revision below is evaluated and locally tested, but has
-**not yet been built or activated**. GPU, Codex and full isolation acceptance
+The new Numtide revision has been evaluated, not built or activated here. GPU, Codex and full isolation acceptance
 remain pending. This does not replace Pi, tmux or Matrix or change sleep policy.
 
 ## Architecture and scope
 
 - `main` supplies `/agent`, the `agent-workspace` group, Syncthing and SecretSpec
   on grill, NAS, t480 and laptop. There is no automatic project migration.
-- Only grill enables `services.dshTrial`. It runs upstream DSH 0.2.2-rc.1 as
-  `dsh-agent`, at boot, with restart-on-failure. A separate nixpkgs input pins
-  DSH and SecretSpec 0.21.1 without updating the fleet/Pi pins.
-- DSH now uses the unmodified pinned nixpkgs package; the local source patch is
-  removed. Its web/base profile is seeded once into writable host-local state.
-  DSH saves preview acknowledgement and ordinary settings in `cordis.patch.yml`;
-  it also rewrites `cordis.yml` during startup. Both operations must be allowed.
+- Only grill enables `services.dshTrial`. It runs Numtide's `dsh` as `dsh-agent`,
+  at boot, with restart-on-failure. `nix-ai-tools` pins 0.2.2-rc.4; to upgrade,
+  `nix flake update nix-ai-tools` and repeat the smoke test. The separate tools
+  nixpkgs input still supplies SecretSpec.
+- DSH initializes its own stock `web` profile and owns settings and credentials.
+  No seed files or home-level patch mount. Live reload uses the upstream default.
 - Nix-owned CLI policy overlays load after the writable settings. They disable
-  plugin management, HMR, session upload and session telemetry and retain the
+  plugin management, session upload and session telemetry and retain the
   configured permission preset, trusted hostname and cookie lifetime. No
   community plugins are added. This does not make the profile immutable: agent
   commands can modify it or execute other downloaded code. The installed package
@@ -76,17 +74,14 @@ private service logs live under `/var/lib/dsh-agent` (0700), outside Syncthing.
 They are intentionally accessible to commands running as the same agent user.
 No backup or state-migration rollback guarantee is supplied for this trial.
 
-The seeder creates missing profile files with mode 0600 and does not overwrite
-existing settings, even on restart or a Nix upgrade. It publishes complete files
-without replacing concurrent edits. Moving from the old read-only profile repairs
-ownership of its former mountpoint directories via tmpfiles, then seeds the empty
-profile after the old service mount namespace is gone. Sessions and credentials
-are not moved or deleted, and the preview notice is not pre-accepted.
-
-A Nix rollback does not roll back mutable settings. Resetting a profile is an
-explicit operator action: stop DSH, move its `dsh/profiles/web` directory aside,
-then restart to seed a fresh profile. This resets profile settings but leaves
-other state intact. Do not reset/delete the entire harness state directory.
+DSH starts in `/var/lib/dsh-agent/home` with `DSH_HOME=/var/lib/dsh-agent/dsh`.
+A synced `/agent/.env` is not the server's launch environment. On first use,
+rc.4 appends `deepseek-harness/default-workspace` to its configured Documents
+directory and canonicalizes that path. A link inside the read-only service root
+points that directory to `/agent`; no registry or DSH-specific files are required
+in the projects. The base PATH supplies shell utilities, Git, rg, Nix and the
+mock SecretSpec wrapper. Enter project environments explicitly, e.g.
+`nix develop -c make test`; no automatic `.envrc` activation.
 
 Normal-user Git/SSH/GitHub/vault credentials are not supplied. The operator
 handles private clones, fetches, pushes and GitHub actions; agents can make
@@ -130,7 +125,9 @@ available to use the harness through this domain.
 Token-link login remains enabled. Connection cookie lifetime is **400 days**;
 browser policy may shorten it. Initial login URLs are in the private
 `/var/lib/dsh-agent/service.log`, not the shared journal. Treat this file as a
-credential. It currently has no rotation; monitor growth during the trial.
+credential. Private logrotate copies/truncates weekly, retaining four rotations
+without restarting the unit. If the original link has aged out, restart at a
+convenient time for a new one.
 Log in via the browser only after approval. Use DSH's built-in model/provider
 OAuth UI for Codex on each host. The pinned `llm-pi-ai` integration advertises
 OAuth, but actual Codex account login, refresh and model calls are acceptance
@@ -193,38 +190,48 @@ before considering the remediation operational.
 
 ## Evidence and acceptance gate
 
-Evaluation-only checks (public locked inputs, no private fleet flake evaluation):
+Public checks (no private fleet flake evaluation):
 
 ```sh
 nix eval --impure --json --file tests/dsh-trial.nix
 python3 tests/test_agent_secretspec.py
-python3 tests/test_dsh_profile_state.py
 ruff check modules/cli/secretspec/agent_provider.py tests/test_agent_secretspec.py
 ruff format --check modules/cli/secretspec/agent_provider.py tests/test_agent_secretspec.py
 pyright modules/cli/secretspec/agent_provider.py tests/test_agent_secretspec.py
-ruff check modules/services/dsh/seed-profile.py tests/test_dsh_profile_state.py
-pyright modules/services/dsh/seed-profile.py tests/test_dsh_profile_state.py
+# Disposable VM: build and run this BEFORE clearing any state on grill.
+nix build --impure --file tests/dsh-smoke.nix --no-link
 ```
 
-The writable-settings revision passes five routing tests, four profile-state
-tests, evaluation assertions, Ruff and Pyright (zero errors/warnings).
-The profile-state tests cover writable private copies, atomic settings replacement
-surviving restart, an empty former mountpoint and preservation of a partial profile.
-These are local filesystem tests, not proof of successful browser acknowledgement.
-`git diff --check` also passed. Tools were
-already available locally; no package build was performed.
+The eval fixture checks fleet wiring. The VM boots the actual Numtide package
+under the restricted unit with fresh private state, exchanges its disposable
+launch token, checks the HTML response and writable profile, and verifies the
+composed upload policy. It uses no OpenAI account and does not simulate NAS or GPU.
 
-They check module assertions, disabled hosts, unit/derivation evaluation,
-resource controls, identity, mount declarations, sync policy and mock routing.
-They do not prove systemd mounts/device access, external authentication or
-network enforcement. Generated imports were refreshed with the repository's
-selection algorithm, substituting the public locked nixpkgs input and including
-the new modules explicitly; no private flake input was opened.
+### Manual one-time cutover (operator only, on grill)
+
+First pass the VM test above and build the new generation without activating it:
+`sudo nixos-rebuild build --flake .#grill`. Stop here if either fails. From the
+same checkout, confirm the hostname and paths. This **irreversibly discards all
+old DSH settings, sessions, sign-ins and logs with no backup**, as intended.
+Never run this cleanup on ordinary restarts or upgrades.
+
+```sh
+# On grill only, after both builds have passed:
+(test "$(hostname -s)" = grill && sudo systemctl stop dsh-agent.service &&
+ sudo -u dsh-agent find /var/lib/dsh-agent -xdev -mindepth 1 -delete) &&
+ sudo nixos-rebuild switch --flake .#grill &&
+ sudo systemctl start dsh-agent.service &&
+ sudo systemctl is-active dsh-agent.service
+```
+
+Do not clear `/agent`, `/var/lib/agent-mocks` or any personal home. Read the
+new launch link locally with `sudo less /var/lib/dsh-agent/service.log`; never
+paste it into reports. Rolling back a generation cannot restore discarded state.
 
 Separate approval is required for builds, host switches, service probes and
 account logins. Before unattended use, record all of:
 
-1. Build the unmodified pinned DSH, start with the writable seeded profile,
+1. Build the unmodified pinned DSH, start with the stock writable profile,
    accept the preview notice in the UI, change an ordinary setting and verify
    both persist after a service restart. Verify complete web/base bundle
    activation, disabled plugin management, no upload telemetry and no approvals.
@@ -232,7 +239,10 @@ account logins. Before unattended use, record all of:
    refusal (including public ingress with this Host/SNI), NAS-to-grill backend
    access and backend refusal from other peers, persistent token login and
    cookie attributes/lifetime after restart.
-3. Complete per-host Codex OAuth, refresh and a real model/tool round trip.
+3. At `https://dsg.bepis.lol` select `openai-codex` and device-code login.
+   Have a new session run `pwd` and verify `/agent`. Restart `dsh-agent` and
+   make another model request without signing in again. Record refresh after
+   access-token expiry separately; persistence across restart isn't refresh.
 4. Test filesystem/socket denial, inability to edit Nix-owned policy or gain privileges,
    Nix daemon operation and sandboxing; test NFS refusal both directly and from
    a fixed-output derivation. Verify no unintended alternate NFS ports/relays.
@@ -250,8 +260,8 @@ checks above remain deployment gates, not assertions of implemented isolation.
 
 ### Pinned API references
 
-- [DSH CLI parsing and profile composition](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/apps/cli/reference/README.md)
-- [DSH profile startup](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/apps/cli/src/profile-boot.ts)
-- [DSH connection authentication](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/connection/src/index.ts)
+- [DSH CLI parsing and profile composition](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.4/apps/cli/reference/README.md)
+- [DSH profile startup](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.4/apps/cli/src/profile-boot.ts)
+- [DSH connection authentication](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.4/packages/client/connection/src/index.ts)
 - [SecretSpec 0.21.1 dotenv provider](https://github.com/cachix/secretspec/blob/v0.21.1/docs/src/content/docs/providers/dotenv.mdx)
 - [SecretSpec 0.21.1 Bitwarden provider](https://github.com/cachix/secretspec/blob/v0.21.1/docs/src/content/docs/providers/bw.mdx)
