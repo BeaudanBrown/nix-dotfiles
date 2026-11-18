@@ -200,11 +200,10 @@
     };
 
     pi-harness = {
-      # Published native runtime with approved idle fresh-project creation (#175).
-      # Activate only approved host outputs; synchronization remains separate.
-      url = "github:BeaudanBrown/pi-harness/21f9a4b4db9a90518d5e173e53cbae2b407daa6f";
-      # Native persistence/locking patches are verified against the harness's
-      # own Pi pin; do not substitute the independently updated host bundle.
+      # Verified unpatched Pi 1.5.2 with idle Matrix batches and local-only launch.
+      # Activation is separate; existing sessions must be reopened locally.
+      url = "github:BeaudanBrown/pi-harness/9c1ab03615ccde174207430e95e5e714bc75206c";
+      # Keep the harness's tested Pi pin independent of the host tools bundle.
     };
 
     sdm845-linux = {

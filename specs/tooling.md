@@ -140,9 +140,12 @@ Bridge restart has no tmux/Pi stop hook, PartOf/BindsTo/Requires coupling, or id
 runtime replacement. Running native launchers retain their Nix closures. Explicit
 `tmux -N` probes must not start the shared service.
 
-The patch-free upgrade candidate tests Pi **1.5.2** through a local harness override;
-the published consuming input remains at `21f9a4b` / Pi **0.84.4** until separately
-approved publication and pinning. The harness's own tested Pi pin must not be replaced by
+The published harness input is `9c1ab03`, using unpatched Pi **1.5.2**.
+All 11 deterministic harness checks passed before publication. Activation remains
+separate: reopen existing sessions locally on the new runtime; the bridge never
+restarts Pi or replays held input. The stateless chat default is `gpt-5.6-luna`,
+since `gpt-5.4` is absent from this Pi catalog; there is no model fallback.
+The harness's own tested Pi pin must not be replaced by
 this host's independently updated `nix-ai-tools` input. #172 advanced the published
 harness URL/lock and its verified private dependency graph without changing other
 root input graphs. For isolated source development, use a Git-aware local override
@@ -154,6 +157,9 @@ python3 modules/cli/pi-harness/check-native-integration.py \
 bash modules/cli/pi-harness/check-shared-session-privileges.sh \
   --harness-source /path/to/pi-harness
 ```
+
+After publishing and pinning, add `--locked` to the Python evaluation command
+to check the actual consuming lock without a local input override.
 
 Historical #164 evidence: 67 top-level Go tests passed with `-race`, zero skips, including real
 fzf/tmux, requester-only focus, no-socket discovery, duplicate titles, lost replies
@@ -173,7 +179,8 @@ package and six consuming source/evaluation checks pass. Removed lifecycle and
 pidfd-termination tests disappeared with their obsolete features, not weakened
 assertions. That historical evidence used patched writer locks. The patch-free upgrade
 removes that guarantee; narrow requester/pane/PID/argv presentation helpers remain here. The legacy Nix options/units/account option
-are absent, not disabled alternatives. No published pin or live state changed.
+are absent, not disabled alternatives. Those historical checks did not change
+published pins or live state.
 
 #### Background native rooms and invitations (#165)
 

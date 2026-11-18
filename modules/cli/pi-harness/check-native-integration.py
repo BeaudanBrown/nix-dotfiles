@@ -8,6 +8,7 @@ import unittest
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--harness-source", required=True, type=Path)
 parser.add_argument("--evaluate", action="store_true")
+parser.add_argument("--locked", action="store_true", help="Evaluate the consuming lock without a local harness override")
 args, remaining = parser.parse_known_args()
 ROOT = Path(__file__).resolve().parents[3]
 HARNESS = args.harness_source.resolve()
@@ -103,7 +104,7 @@ if args.evaluate:
                 with self.subTest(host=host):
                     result = subprocess.run([
                         "nix", "eval", "--json", f"{ROOT}#nixosConfigurations.{host}.config",
-                        "--override-input", "pi-harness", f"git+file://{HARNESS}",
+                        *([] if args.locked else ["--override-input", "pi-harness", f"git+file://{HARNESS}"]),
                         "--no-write-lock-file", "--apply", expression,
                     ], capture_output=True, text=True, timeout=180)
                     self.assertEqual(result.returncode, 0, result.stderr)
