@@ -202,7 +202,7 @@
     pi-harness = {
       # Verified unpatched Pi 1.5.2 with idle Matrix batches and local-only launch.
       # Activation is separate; existing sessions must be reopened locally.
-      url = "github:BeaudanBrown/pi-harness/9c1ab03615ccde174207430e95e5e714bc75206c";
+      url = "github:BeaudanBrown/pi-harness/6e572ace953111953b36e96d2e8bc5237696c4b2";
       # Keep the harness's tested Pi pin independent of the host tools bundle.
     };
 
