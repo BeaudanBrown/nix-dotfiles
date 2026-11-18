@@ -1,4 +1,4 @@
-{ ... }:
+{ config, lib, ... }:
 let
   leftMonitorWorkspaces =
     [
@@ -20,5 +20,9 @@ let
 in
 {
   hm.primary.wayland.windowManager.hyprland.settings.workspace =
-    leftMonitorWorkspaces ++ rightMonitorWorkspaces;
+    leftMonitorWorkspaces
+    ++ rightMonitorWorkspaces
+    ++ lib.optionals (config.hostSpec.hostName == "grill") [
+      "name:streaming,monitor:STREAM,default:true,persistent:true"
+    ];
 }

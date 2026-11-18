@@ -1,4 +1,4 @@
-{ ... }:
+{ config, lib, ... }:
 let
   matchClass = class: { "match:class" = class; };
   matchTitle = title: { "match:title" = title; };
@@ -103,6 +103,15 @@ in
     enable = true;
     xwayland.enable = true;
 
-    settings.windowrule = namedRules;
+    settings.windowrule =
+      namedRules
+      ++ lib.optionals (config.hostSpec.hostName == "grill") [
+        {
+          name = "streaming-fullscreen";
+          "match:workspace" = "name:streaming";
+          "match:modal" = false;
+          fullscreen = "on";
+        }
+      ];
   };
 }

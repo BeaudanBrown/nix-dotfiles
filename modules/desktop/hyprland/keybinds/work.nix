@@ -5,6 +5,10 @@
   ...
 }:
 let
+  streamingHost = config.hostSpec.hostName == "grill";
+  navigation =
+    action: fallback: if streamingHost then "exec, stream-session nav ${action}" else fallback;
+
   # Build the hyprland_show_app command and 3 binds for each launcher
   launchProgram =
     {
@@ -22,8 +26,18 @@ let
         + (if title != null then " -t \"${title}\"" else "");
     in
     [
-      "SUPER, ${key}, exec, ${appCmd}"
-      "SUPERALT, ${key}, exec, ${appCmd} -p"
+      (
+        if streamingHost && app == "steam" then
+          "SUPER, ${key}, exec, stream-session nav steam"
+        else
+          "SUPER, ${key}, exec, ${appCmd}"
+      )
+      (
+        if streamingHost && app == "steam" then
+          "SUPERALT, ${key}, exec, stream-session nav steam-pull"
+        else
+          "SUPERALT, ${key}, exec, ${appCmd} -p"
+      )
       "SUPERSHIFT, ${key}, movetoworkspace, name:${workspace}"
     ];
 
@@ -232,9 +246,9 @@ let
     "SUPER,u,togglespecialworkspace"
     "SUPERSHIFT,u,movetoworkspacesilent,special"
 
-    "SUPER,TAB,workspace,previous"
-    "SUPERSHIFT,TAB,workspace,m+1"
-    "ALT,TAB,focusCurrentOrLast"
+    "SUPER,TAB,${navigation "previous" "workspace,previous"}"
+    "SUPERSHIFT,TAB,${navigation "cycle" "workspace,m+1"}"
+    "ALT,TAB,${navigation "window-previous" "focusCurrentOrLast"}"
 
     # Media
     "SUPERSHIFT, equal, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
@@ -243,9 +257,9 @@ let
     "SUPER, comma, exec, playerctl previous"
 
     # Monitor switching
-    "SUPER, h, focusmonitor, +1"
-    "SUPERSHIFT, h, movewindow, mon:+1"
-    "SUPERALT, h, moveworkspacetomonitor, e+0 +1"
+    "SUPER, h, ${navigation "monitor" "focusmonitor, +1"}"
+    "SUPERSHIFT, h, ${navigation "window" "movewindow, mon:+1"}"
+    "SUPERALT, h, ${navigation "workspace-monitor" "moveworkspacetomonitor, e+0 +1"}"
 
     # Window focus
     "SUPER, j, layoutmsg, cyclenext"
