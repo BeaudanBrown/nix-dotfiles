@@ -108,19 +108,19 @@ open a local native file. No archive/restore mutation is supplied by this picker
 Stable row keys hash the native path; labels include native IDs, so duplicate
 titles/checkouts remain distinct. The returned file/ID must match the selection.
 Focus guards the captured requesting client PID and the returned server/pane;
-there is no implicit alternative client. An actual writer outside this tmux
-server is reported instead of starting another writer. Lost helper replies never
-cause cancellation or replay. Native kernel locks, not annotations, enforce
-host-local writer exclusion. Pending hints are short-lived/reconstructible and
-cannot reserve a file after native `/new`, a replaced pane or failed bootstrap.
+there is no implicit alternative client. With the unpatched Pi 1.5.2 harness,
+live process/pane hints support best-effort focus only. There is no single-writer
+guarantee, and processes without presentation hints are not discovered as owners.
+Lost helper replies never cause cancellation or replay. Pending hints are
+short-lived and cannot reserve a file after native `/new` or a replaced pane.
 
 The host-owned `tmux_project native-window` primitive accepts only bounded JSON
 `{cwd, argv}` (2–32 argv elements). It uses the existing project session, literal
 argv and an absolute executable, returning `{pane}`. The one-string shell form is
 rejected; tmux's trailing-semicolon transport syntax is escaped for data values. It requires no repository/coordinator/account-ready
 state. `TMUX_PROJECT_SOCKET` selects a disposable/explicit server when supplied.
-The harness helper applies direnv without bypassing trust, and remote wake invokes
-that same helper with the frozen native file/ID and a sanitized environment.
+The harness helper applies direnv without bypassing trust. Local opening is an
+explicit human action; Matrix cannot launch, wake, recover or terminate Pi.
 
 The existing real-fzf identity/query retention and removed-selection refusal remain.
 Raw rows wait at most 50ms for native discovery; ordinary rows/UI do not wait.
@@ -140,7 +140,9 @@ Bridge restart has no tmux/Pi stop hook, PartOf/BindsTo/Requires coupling, or id
 runtime replacement. Running native launchers retain their Nix closures. Explicit
 `tmux -N` probes must not start the shared service.
 
-The harness's own tested Pi pin (**0.84.4** in this slice) must not be replaced by
+The patch-free upgrade candidate tests Pi **1.5.2** through a local harness override;
+the published consuming input remains at `21f9a4b` / Pi **0.84.4** until separately
+approved publication and pinning. The harness's own tested Pi pin must not be replaced by
 this host's independently updated `nix-ai-tools` input. #172 advanced the published
 harness URL/lock and its verified private dependency graph without changing other
 root input graphs. For isolated source development, use a Git-aware local override
@@ -169,8 +171,8 @@ cross-repository review/release evidence belongs to harness
 pass under `-race`, including a removed-command refusal. The isolated picker
 package and six consuming source/evaluation checks pass. Removed lifecycle and
 pidfd-termination tests disappeared with their obsolete features, not weakened
-assertions. Native writer locks remain in Pi; narrow requester/pane/PID/argv
-presentation helpers remain here. The legacy Nix options/units/account option
+assertions. That historical evidence used patched writer locks. The patch-free upgrade
+removes that guarantee; narrow requester/pane/PID/argv presentation helpers remain here. The legacy Nix options/units/account option
 are absent, not disabled alternatives. No published pin or live state changed.
 
 #### Background native rooms and invitations (#165)

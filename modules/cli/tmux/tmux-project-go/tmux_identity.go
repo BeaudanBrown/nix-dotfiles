@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// Presentation targets only. These never authorize launching/terminating Pi;
-// native file locks own that decision.
+// Presentation targets only, never process termination or exclusive history
+// ownership. Local Pi opening is a separate explicit user action.
 type exactTmux func(...string) (string, error)
 
 var exactWindowPattern = regexp.MustCompile(`^@[0-9]{1,20}$`)

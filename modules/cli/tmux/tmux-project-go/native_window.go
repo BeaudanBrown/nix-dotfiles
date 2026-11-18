@@ -11,7 +11,8 @@ import (
 )
 
 // One window primitive, not a host/session lifecycle API. The harness helper
-// serializes native-file opens; Pi's kernel lock is the sole writer authority.
+// coalesces simultaneous picker opens; neither it nor upstream Pi promises
+// exclusive history ownership.
 func nativeWindow(input io.Reader, output io.Writer) error {
 	var request struct {
 		Cwd  string   `json:"cwd"`

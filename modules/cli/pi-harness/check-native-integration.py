@@ -111,7 +111,7 @@ if args.evaluate:
                     self.assertTrue(view["bridge"])
                     self.assertTrue(view["legacyOptionAbsent"])
                     self.assertTrue(view["legacyUnitsAbsent"])
-                    self.assertEqual(view["piVersion"], "0.84.4")
+                    self.assertEqual(view["piVersion"], "1.5.2")
                     self.assertTrue(view["retainRuntime"])
                     self.assertTrue(view["legacyAccountOptionAbsent"])
                     self.assertEqual(view["invitationHosts"], {
