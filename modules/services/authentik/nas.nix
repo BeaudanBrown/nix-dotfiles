@@ -24,6 +24,7 @@
           mkdir -p "$out/nas"
           cp ${../../hosted-services/forgejo/blueprint.yaml} "$out/nas/forgejo.yaml"
           cp ${./beau.yaml} "$out/nas/beau.yaml"
+          cp ${./passkey-first.yaml} "$out/nas/passkey-first.yaml"
         ''
         |> toString;
       disable_startup_analytics = true;
