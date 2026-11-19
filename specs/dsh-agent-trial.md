@@ -84,9 +84,21 @@ in the projects. The base PATH supplies shell utilities, Git, rg, Nix and the
 mock SecretSpec wrapper. Enter project environments explicitly, e.g.
 `nix develop -c make test`; no automatic `.envrc` activation.
 
-Normal-user Git/SSH/GitHub/vault credentials are not supplied. The operator
-handles private clones, fetches, pushes and GitHub actions; agents can make
-local commits and clone public repositories. Review changed code, hooks,
+On grill, SSH Git operations can authenticate as Beau using a dedicated GitHub
+account key (not Beau’s personal agent socket). The NixOS signer alone gets a
+systemd credential sourced from the root-only `dsh/git-ssh-private-key` SOPS
+secret. On first agent connection the socket activates the relay and signer;
+a fresh signer loads the identity constrained to `git@github.com`. DSH sees
+only its socket and GitHub’s pinned public Ed25519 host key. This delegates
+account-level Git access to any code running as `dsh-agent`, not GitHub API or
+vault access; local commit authorship does not change. Secret rotation restarts
+the signer. Revoke obsolete account keys on GitHub, including on rollback.
+
+After activation on grill, run `ssh-add -l` and `ssh -o BatchMode=yes -T git@github.com`
+inside a DSH session. Expect one fingerprint and GitHub’s greeting for Beau;
+GitHub normally returns status 1 on successful shell authentication. Use
+`git ls-remote git@github.com:BeaudanBrown/nix-dotfiles.git HEAD` for a
+non-mutating end-to-end transport check. Review changed code, hooks,
 `.envrc`, Nix expressions and manifests **before** running them as the normal
 user with real credentials.
 
