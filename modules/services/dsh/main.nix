@@ -36,6 +36,7 @@ let
       pkgs.gnugrep
       pkgs.gnused
       pkgs.gitMinimal
+      pkgs.openssh
       pkgs.ripgrep
       pkgs.nix
     ];
@@ -60,7 +61,9 @@ let
     mkdir -p "$out/etc/dsh-documents/deepseek-harness"
     ln -s /agent "$out/etc/dsh-documents/deepseek-harness/default-workspace"
     # Mount targets must exist: this tree itself lives in the read-only store.
-    mkdir -p "$out/run/systemd/resolve"
+    mkdir -p "$out/run/systemd/resolve" "$out/run/dsh-git-agent" "$out/etc/ssh"
+    touch "$out/etc/ssh/ssh_known_hosts"
+    printf '%s\n' 'Host github.com' '  StrictHostKeyChecking yes' '  BatchMode yes' > "$out/etc/ssh/ssh_config"
     ln -s /run/systemd/resolve/stub-resolv.conf "$out/etc/resolv.conf"
     touch "$out"/etc/{hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
     touch "$out/etc/nix/nix.conf" "$out/etc/ssl/certs/ca-certificates.crt"

@@ -44,12 +44,17 @@ let
             type = lib.types.attrs;
             default = { };
           };
+          options.sops.useSystemdActivation = lib.mkEnableOption "synthetic secrets activation";
           options.sops.secrets = lib.mkOption {
             default = { };
             type = lib.types.attrsOf (
               lib.types.submodule (
                 { name, ... }: {
                   options = {
+                    restartUnits = lib.mkOption {
+                      type = lib.types.listOf lib.types.str;
+                      default = [ ];
+                    };
                     sopsFile = lib.mkOption { type = lib.types.path; };
                     mode = lib.mkOption {
                       type = lib.types.str;
@@ -192,7 +197,17 @@ assert nas.security.acme.certs."registry.bepis.lol".dnsResolver == "1.1.1.1:53";
 assert nas.security.acme.certs."dsg.bepis.lol".dnsResolver == "1.1.1.1:53";
 assert nasPassthrough.security.acme.certs."dsg.bepis.lol".dnsResolver == "1.1.1.1:53";
 assert !(lib.elem "dsg.bepis.lol" nas.services.cloudflare-dyndns.domains);
-assert grill.sops.secrets == { } && !(grill.services.nginx.virtualHosts ? "dsg.bepis.lol");
+assert builtins.attrNames grill.sops.secrets == [ "dsh/git-ssh-private-key" ];
+assert grill.sops.secrets."dsh/git-ssh-private-key".owner == "root";
+assert grill.systemd.services.dsh-git-signer.serviceConfig.User != sc.User;
+assert
+  grill.systemd.services.dsh-git-signer.serviceConfig.LoadCredential
+  == "identity:/run/secrets/dsh/git-ssh-private-key";
+assert !(sc ? LoadCredential);
+assert
+  grill.systemd.services.dsh-agent.environment.SSH_AUTH_SOCK
+  == grill.systemd.sockets.dsh-git-agent.socketConfig.ListenStream;
+assert !(grill.services.nginx.virtualHosts ? "dsg.bepis.lol");
 assert lib.hasInfix "--host 100.64.0.2" sc.ExecStart;
 assert lib.hasInfix "https://dsg.bepis.lol/" sc.ExecStart;
 assert lib.hasInfix "ip saddr != 100.64.0.1 drop" grill.systemd.services.dsh-backend-guard.script;
