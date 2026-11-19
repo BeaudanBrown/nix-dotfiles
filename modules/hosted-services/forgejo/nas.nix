@@ -8,6 +8,14 @@ let
   domain = "git.bepis.lol";
   key = "forgejo/http";
   port = config.custom.ports.assigned.${key};
+  sshKey = "forgejo/ssh";
+  sshPort = config.custom.ports.assigned.${sshKey};
+  devices = [
+    "grill"
+    "t480"
+    "nas"
+  ];
+  pubFile = host: "forgejo-ssh-${host}";
   secret = config.sops.secrets."forgejo/oidc-client-secret".path;
   username = config.sops.secrets."forgejo/authentik-username".path;
   cfg = config.services.forgejo;
@@ -21,7 +29,11 @@ let
   });
 in
 {
-  custom.ports.requests = [ { inherit key; } ];
+  custom.ports.requests = [
+    { inherit key; }
+    { key = sshKey; }
+  ];
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ sshPort ];
   hostedServices = [
     {
       inherit domain;
@@ -41,13 +53,21 @@ in
         ROOT_URL = "https://${domain}/";
         HTTP_ADDR = "127.0.0.1";
         HTTP_PORT = port;
-        DISABLE_SSH = true;
+        START_SSH_SERVER = true;
+        SSH_DOMAIN = domain;
+        BUILTIN_SSH_SERVER_USER = "git";
+        SSH_LISTEN_HOST = config.hostSpec.tailIP;
+        SSH_PORT = sshPort;
+        SSH_LISTEN_PORT = sshPort;
+        SSH_CREATE_AUTHORIZED_KEYS_FILE = false;
       };
       service = {
         DISABLE_REGISTRATION = true;
         REQUIRE_SIGNIN_VIEW = true;
       };
       oauth2_client = {
+        # Empty global override: use the scopes on each individual auth source.
+        OPENID_CONNECT_SCOPES = "";
         ENABLE_AUTO_REGISTRATION = true;
         ACCOUNT_LINKING = "disabled";
         USERNAME = "nickname";
@@ -74,11 +94,20 @@ in
     ];
   };
 
+  # Root-owned runtime copies: never ask PID 1 to load credentials from the
+  # user's mutable ~/.ssh path. Reuse only the existing public SOPS values.
+  sops.templates = lib.genAttrs (map pubFile devices) (name: {
+    content = config.sops.placeholder."ssh/${lib.removePrefix "forgejo-ssh-" name}/pub";
+    restartUnits = [ "authentik-worker.service" ];
+  });
   systemd.services.authentik-worker.serviceConfig.LoadCredential = [
     "forgejo-secret:${secret}"
     "forgejo-username:${username}"
-  ];
+  ]
+  ++ map (host: "${pubFile host}:${config.sops.templates.${pubFile host}.path}") devices;
   systemd.services.forgejo = {
+    after = [ "wait-for-tailscale-ip.service" ];
+    wants = [ "wait-for-tailscale-ip.service" ];
     serviceConfig.LoadCredential = [
       "oidc:${secret}"
       "oidc-username:${username}"
@@ -108,7 +137,8 @@ in
       ${lib.getExe adminPackage} admin auth "''${command[@]}" --name authentik \
         --provider openidConnect --key nas-forgejo \
         --auto-discover-url https://auth.bepis.lol/application/o/forgejo/.well-known/openid-configuration \
-        --scopes openid --scopes profile --scopes email \
+        --scopes openid --scopes profile --scopes email --scopes forgejo_ssh_keys \
+        --attribute-ssh-public-key forgejo_ssh_keys \
         --required-claim-name preferred_username --required-claim-value "$user"
     '';
   };

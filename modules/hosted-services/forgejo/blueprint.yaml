@@ -2,6 +2,23 @@ version: 1
 metadata:
   name: NAS - Forgejo OIDC
 entries:
+  # Resolve the three public credentials when applying the blueprint. !Format
+  # uses Python %-formatting; %r quotes each value as data, including comments.
+  - id: forgejo-ssh-scope
+    model: authentik_providers_oauth2.scopemapping
+    identifiers:
+      name: NAS - Forgejo SSH public keys
+    attrs:
+      scope_name: forgejo_ssh_keys
+      description: Import approved SSH public keys into Forgejo
+      expression: !Format
+        - |
+          if request.user.username != "beau":
+              return {}
+          return {"forgejo_ssh_keys": [%r, %r, %r]}
+        - !File /run/credentials/authentik-worker.service/forgejo-ssh-grill
+        - !File /run/credentials/authentik-worker.service/forgejo-ssh-t480
+        - !File /run/credentials/authentik-worker.service/forgejo-ssh-nas
   - id: forgejo-provider
     model: authentik_providers_oauth2.oauth2provider
     identifiers:
@@ -17,6 +34,7 @@ entries:
         - matching_mode: strict
           url: https://git.bepis.lol/user/oauth2/authentik/callback
       property_mappings:
+        - !KeyOf forgejo-ssh-scope
         - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
         - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
         - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
