@@ -10,6 +10,7 @@ pkgs.testers.runNixOSTest {
     imports = [ ../modules/services/dsh/main.nix ];
     _module.args.inputs = inputs;
     services.dshTrial.enable = true;
+    services.resolved.enable = true;
     users.groups.dsh-agent = { };
     users.users.dsh-agent = {
       isSystemUser = true;
@@ -29,6 +30,9 @@ pkgs.testers.runNixOSTest {
       pkgs.writeShellScript "check-dsh-policy" ''
         set -eu
         test "$(pwd)" = "$HOME"
+        # Exercise libc DNS inside the restricted unit, without Internet access.
+        grep -Eq '^nameserver[[:space:]]+127\.0\.0\.53$' /etc/resolv.conf
+        ${pkgs.glibc.bin}/bin/getent -s dns ahostsv4 _localdnsstub. | grep -q '^127\.0\.0\.53 '
         test "$(readlink -f /etc/dsh-documents/deepseek-harness/default-workspace)" = /agent
         test -s "$DSH_HOME/profiles/web/package.json"
         test -w "$DSH_HOME/profiles/web/cordis.patch.yml"

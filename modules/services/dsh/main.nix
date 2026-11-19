@@ -60,7 +60,9 @@ let
     mkdir -p "$out/etc/dsh-documents/deepseek-harness"
     ln -s /agent "$out/etc/dsh-documents/deepseek-harness/default-workspace"
     # Mount targets must exist: this tree itself lives in the read-only store.
-    touch "$out"/etc/{resolv.conf,hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
+    mkdir -p "$out/run/systemd/resolve"
+    ln -s /run/systemd/resolve/stub-resolv.conf "$out/etc/resolv.conf"
+    touch "$out"/etc/{hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
     touch "$out/etc/nix/nix.conf" "$out/etc/ssl/certs/ca-certificates.crt"
     touch "$out/dev/kfd" "$out/dev/dri/renderD128" "$out/dev/dri/renderD129"
     ln -s ${pkgs.bashInteractive}/bin/bash "$out/bin/bash"
@@ -162,9 +164,13 @@ in
       after = [
         "network-online.target"
         "systemd-tmpfiles-setup.service"
+        "systemd-resolved.service"
         "dsh-nfs-deny.service"
       ];
-      requires = [ "dsh-nfs-deny.service" ];
+      requires = [
+        "dsh-nfs-deny.service"
+        "systemd-resolved.service"
+      ];
       environment = {
         HOME = home;
         DSH_HOME = dshHome;
@@ -240,7 +246,8 @@ in
         BindReadOnlyPaths = [
           "/nix/store"
           "/nix/var/nix/daemon-socket"
-          "/etc/resolv.conf"
+          # resolved replaces its stub file; bind the directory, not one inode.
+          "/run/systemd/resolve"
           "/etc/hosts"
           "/etc/passwd"
           "/etc/group"
