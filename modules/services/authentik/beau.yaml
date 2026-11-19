@@ -1,0 +1,15 @@
+version: 1
+metadata:
+  name: NAS - Beau personal account
+entries:
+  - model: authentik_core.user
+    state: created
+    identifiers:
+      username: beau
+    attrs:
+      name: Beau
+      type: internal
+      is_active: true
+      groups: []
+      email: !File /run/credentials/authentik-worker.service/beau-email
+      password: !File /run/credentials/authentik-worker.service/beau-initial-password

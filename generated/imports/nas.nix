@@ -33,7 +33,6 @@
   ../../modules/services/dsh/nas.nix
   ../../modules/services/grafana/nas.nix
   ../../modules/services/headscale/nas.nix
-  ../../modules/services/home-assistant/nas.nix
   ../../modules/services/immich/nas.nix
   ../../modules/services/invoice-ai/nas.nix
   ../../modules/services/invoiceshelf/nas.nix

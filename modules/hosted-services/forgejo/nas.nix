@@ -11,7 +11,6 @@ let
   secret = config.sops.secrets."forgejo/oidc-client-secret".path;
   username = config.sops.secrets."forgejo/authentik-username".path;
   cfg = config.services.forgejo;
-  ak = config.services.authentik.authentikComponents;
   # The LTS admin auth CLI otherwise requires the client secret in process argv.
   # Add a value source only to the OAuth admin flag, not to the web service.
   adminPackage = pkgs.forgejo-lts.overrideAttrs (old: {
@@ -75,16 +74,6 @@ in
     ];
   };
 
-  # Copy the complete tree, following symlinks: authentik discovers YAML by
-  # recursive traversal. Preserve relative names for already imported blueprints.
-  services.authentik.settings.blueprints_dir =
-    pkgs.runCommand "authentik-blueprints-with-forgejo" { } ''
-      mkdir -p "$out"
-      cp -rL --no-preserve=mode ${ak.staticWorkdirDeps}/blueprints/. "$out/"
-      mkdir -p "$out/nas"
-      cp ${./blueprint.yaml} "$out/nas/forgejo.yaml"
-    ''
-    |> toString;
   systemd.services.authentik-worker.serviceConfig.LoadCredential = [
     "forgejo-secret:${secret}"
     "forgejo-username:${username}"
