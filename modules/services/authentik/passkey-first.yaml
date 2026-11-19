@@ -7,12 +7,35 @@ entries:
     identifiers:
       name: nas-passkey-first-factor
     attrs:
+      not_configured_action: deny
       device_classes: [webauthn]
       webauthn_user_verification: required
-  # Supply the identification stage's optional conditional WebAuthn challenge.
+  - id: passwordless
+    model: authentik_flows.flow
+    identifiers:
+      slug: nas-passkey-login
+    attrs:
+      name: NAS passkey login
+      title: Sign in with a passkey
+      designation: authentication
+      authentication: none
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf passwordless
+      order: 10
+    attrs:
+      stage: !KeyOf first-factor
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf passwordless
+      order: 20
+    attrs:
+      stage: !Find [authentik_stages_user_login.userloginstage, [name, default-authentication-login]]
+  # Offer the visible passwordless button as well as conditional autofill.
   # Do not replace the password or MFA bindings used by the fallback path.
   - model: authentik_stages_identification.identificationstage
     identifiers:
       name: default-authentication-identification
     attrs:
+      passwordless_flow: !KeyOf passwordless
       webauthn_stage: !KeyOf first-factor
