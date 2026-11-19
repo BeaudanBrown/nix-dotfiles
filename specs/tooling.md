@@ -29,6 +29,29 @@ The Nix service mask takes effect on the next NAS rebuild; this flag change
 neither starts the VM nor discards its saved session. Re-enabling requires a
 separate recovery decision. Other VMs and the default libvirt network are unchanged.
 
+### Wake Grill from shutdown
+
+`wake-grill` sends the same request as a phone HTTP Shortcut:
+
+- URL: `https://wake.bepis.lol/grill`
+- Method: `POST`
+- Header: `X-Wake-Grill: 1`
+- Body: none
+
+Connect to the tailnet (including its DNS) first. The header is not a secret;
+no token is needed. `204` confirms NAS sent the magic packet, not that Grill is
+online. GET does not send a packet. The relay only targets Grill's wired NIC on
+`192.168.68.255:9` and doesn't change the Home Assistant WoL configuration.
+The command is installed on `main` hosts: `grill`, `laptop`, `nas`, and `t480`.
+The `laptop` config doesn't enable Tailscale, so it needs separate tailnet access.
+
+Deploy `nas` and `grill` first, then rebuild other hosts to install the command.
+After rebooting Grill, check that the active `enp6s0` profile still has magic
+packet wake enabled (`ethtool enp6s0` should show `Wake-on: g`). Shut it down
+normally, leave AC connected, and test `wake-grill` after 10 minutes. Repeat
+with the phone shortcut over mobile data with the tailnet connected. Also verify
+that the endpoint is unreachable from outside the tailnet.
+
 ### Grill Local LLM
 
 Network hosts install a `local-llm` lifecycle command for the Tailnet-only

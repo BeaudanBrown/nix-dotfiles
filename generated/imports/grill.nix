@@ -23,6 +23,7 @@
   ../../modules/services/thought-capture/grill.nix
   ../../modules/system/boot/grill.nix
   ../../modules/system/disko/grill.nix
+  ../../modules/system/networking/grill.nix
   ../../modules/triage/grill.nix
   ../../modules/cli/git/minimal.nix
   ../../modules/cli/htop/minimal.nix
@@ -68,6 +69,7 @@
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
   ../../modules/scripts/dev-tunnel/main.nix
+  ../../modules/scripts/wake-grill/main.nix
   ../../modules/services/agent-workspace/main.nix
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix

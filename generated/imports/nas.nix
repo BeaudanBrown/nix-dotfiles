@@ -58,6 +58,7 @@
   ../../modules/services/tailscale/nas.nix
   ../../modules/services/vaultwarden/nas.nix
   ../../modules/services/voice-assistant/nas.nix
+  ../../modules/services/wake-grill/nas.nix
   ../../modules/services/wastebin/nas.nix
   ../../modules/system/boot/nas.nix
   ../../modules/system/disko/nas.nix
@@ -105,6 +106,7 @@
   ../../modules/hardware/audio/main.nix
   ../../modules/scripts/bottom_wol/main.nix
   ../../modules/scripts/dev-tunnel/main.nix
+  ../../modules/scripts/wake-grill/main.nix
   ../../modules/services/agent-workspace/main.nix
   ../../modules/services/blueman/main.nix
   ../../modules/services/docker/main.nix
