@@ -37,7 +37,9 @@ in
       default_type text/html;
       add_header Cache-Control "no-store" always;
       add_header Referrer-Policy "no-referrer" always;
-      return 401 '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DSH sign-in</title><h1>DSH authentication required</h1><p><a href="/">Continue to DSH</a></p><p>If this page returns, this app needs a valid DSH login.</p></html>';
+      # A document-initiated navigation can carry the Strict cookie omitted on
+      # cold PWA launch. Only retry a bare URL: never replay a token or loop.
+      return 401 '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DSH sign-in</title><script>if (location.search === "") location.replace("/?pwa_retry=1");</script><h1>DSH authentication required</h1><p><a href="/">Continue to DSH</a></p><p>If this page returns, this app needs a valid DSH login.</p></html>';
     '';
     locations."/".recommendedProxySettings = false;
     locations."/".extraConfig = lib.mkForce ''

@@ -191,6 +191,8 @@ assert locations."= /".proxyPass == locations."/".proxyPass;
 assert lib.hasInfix "error_page 401 =401 @dsh_login_retry;" locations."= /".extraConfig;
 assert !(lib.hasInfix "proxy_intercept_errors on" locations."/".extraConfig);
 assert lib.hasInfix ''href="/"'' locations."@dsh_login_retry".extraConfig;
+assert lib.hasInfix ''if (location.search === "") location.replace("/?pwa_retry=1");''
+  locations."@dsh_login_retry".extraConfig;
 # Gixy rejects forwarding the raw, client-controlled $http_host value.
 assert lib.hasInfix "proxy_set_header Host $host;"
   nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".extraConfig;
