@@ -176,6 +176,8 @@ in
       ];
       environment = {
         HOME = home;
+        # Web terminals use SHELL before falling back to the system user's nologin.
+        SHELL = "/bin/bash";
         DSH_HOME = dshHome;
         PATH = lib.mkForce "${runtime}/bin";
         DSH_PERMISSION_MODE = "danger-full-access";

@@ -6,6 +6,14 @@
 - id: workspace-controller
   config:
     documentsDirectory: /etc/dsh-documents
+# Disable whole preset registrations rather than modifying their bundled tools.
+- id: preset-standard
+  disabled: true
+- id: preset-cordis
+  disabled: true
+- id: agent-preset-registry
+  config:
+    default: ptc
 - id: plugin-manager
   disabled: true
 - id: ui-plugin-manager

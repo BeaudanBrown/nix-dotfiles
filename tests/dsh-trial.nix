@@ -184,6 +184,13 @@ assert
   nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".proxyPass == "http://100.64.0.2:3080";
 assert nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".proxyWebsockets;
 assert !(nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".recommendedProxySettings);
+let
+  locations = nas.services.nginx.virtualHosts."dsg.bepis.lol".locations;
+in
+assert locations."= /".proxyPass == locations."/".proxyPass;
+assert lib.hasInfix "error_page 401 =401 @dsh_login_retry;" locations."= /".extraConfig;
+assert !(lib.hasInfix "proxy_intercept_errors on" locations."/".extraConfig);
+assert lib.hasInfix ''href="/"'' locations."@dsh_login_retry".extraConfig;
 # Gixy rejects forwarding the raw, client-controlled $http_host value.
 assert lib.hasInfix "proxy_set_header Host $host;"
   nas.services.nginx.virtualHosts."dsg.bepis.lol".locations."/".extraConfig;
@@ -219,6 +226,7 @@ assert
   grill.services.dshTrial.package.drvPath == inputs.nix-ai-tools.packages.x86_64-linux.dsh.drvPath;
 assert !(sc ? ExecStartPre);
 assert sc.WorkingDirectory == grill.systemd.services.dsh-agent.environment.HOME;
+assert grill.systemd.services.dsh-agent.environment.SHELL == "/bin/bash";
 assert
   !(lib.any (
     mount: lib.hasSuffix ":/var/lib/dsh-agent/dsh/cordis.patch.yml" mount
