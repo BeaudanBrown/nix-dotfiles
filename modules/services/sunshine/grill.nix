@@ -88,8 +88,6 @@ in
   config = {
     environment.systemPackages = lib.optional (!fixedMode) controller;
 
-    hm.primary.wayland.windowManager.hyprland.settings.monitor = lib.mkIf fixedMode [ fixedMonitorRule ];
-
     services.sunshine = {
       enable = true;
       autoStart = true;
