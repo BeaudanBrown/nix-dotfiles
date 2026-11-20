@@ -1,5 +1,23 @@
 # Grill: dedicated Moonlight output
 
+## Temporary fixed mode (active on Grill)
+
+With `custom.sunshine.fixedStream = true`, Sunshine's user service creates one
+1080p60 headless output named `STREAM` before starting in the Hyprland session.
+No physical monitor or `WOL-FALLBACK` is required. The **Streaming Desktop**
+entry has no prep or cleanup hooks, so quitting does not resize the output.
+Launch Steam manually if needed. Pairings and Hyprlock are unchanged.
+
+To test over SSH without rebooting, save and close anything on `STREAM`, stop
+both old user services, then activate with `sudo nixos-rebuild test --flake .#grill`.
+If the old `STREAM` is still at the wrong mode, stop Sunshine and remove that
+output with `hyprctl -i 0 output remove STREAM` before starting Sunshine again.
+Do not remove an output with unsaved work. Verify `STREAM` stays at 1080p60 after
+quitting a Moonlight stream and launching it again.
+
+Set `custom.sunshine.fixedStream = false` to restore the dynamic controller and
+Steam Big Picture entry. The rest of this document describes that dynamic mode.
+
 ## Scope and agreed behavior
 
 One existing Hyprland session and one Sunshine instance capture a persistent
@@ -16,10 +34,10 @@ seat. Both physical displays keep their existing 2560x1440/144 Hz modes.
   windows/focus/cursor, and return to 640x360/10 Hz.
 - A game that refuses closure, or a game of uncertain ownership, blocks cleanup.
   Never force-kill or shrink a display underneath it. Save/close it manually and
+  retry `stream-session stop`.
 - Mode changes wait up to two seconds after Hyprland acknowledges the rule.
   If the mode never applies, the controller logs the requested and last observed
   mode and retains the recovery snapshot.
-  retry `stream-session stop`.
 - Controller restart: recover the snapshot in the same Hyprland instance. Never
   reset an existing output simply because a service restarted. Lost output or
   corrupt state fails closed instead of inventing a recovery policy.

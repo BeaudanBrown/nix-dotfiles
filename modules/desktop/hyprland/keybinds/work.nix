@@ -5,9 +5,9 @@
   ...
 }:
 let
-  streamingHost = config.hostSpec.hostName == "grill";
+  dynamicStreaming = config.hostSpec.hostName == "grill" && !config.custom.sunshine.fixedStream;
   navigation =
-    action: fallback: if streamingHost then "exec, stream-session nav ${action}" else fallback;
+    action: fallback: if dynamicStreaming then "exec, stream-session nav ${action}" else fallback;
 
   # Build the hyprland_show_app command and 3 binds for each launcher
   launchProgram =
@@ -27,13 +27,13 @@ let
     in
     [
       (
-        if streamingHost && app == "steam" then
+        if dynamicStreaming && app == "steam" then
           "SUPER, ${key}, exec, stream-session nav steam"
         else
           "SUPER, ${key}, exec, ${appCmd}"
       )
       (
-        if streamingHost && app == "steam" then
+        if dynamicStreaming && app == "steam" then
           "SUPERALT, ${key}, exec, stream-session nav steam-pull"
         else
           "SUPERALT, ${key}, exec, ${appCmd} -p"
