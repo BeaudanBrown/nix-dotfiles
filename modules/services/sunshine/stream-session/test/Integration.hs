@@ -32,7 +32,7 @@ data Screen = Screen { screen :: String, ident :: Int, focused :: Bool, size :: 
 data Client = Client { addr :: String, processId :: Int, klass :: String, caption :: String, space :: String, full :: Int }
   deriving (Eq, Show, Generic, ToJSON, FromJSON)
 data World = World { screens :: [Screen], clients :: [Client], pointer :: (Int,Int), active :: String
-                   , refuseClose :: Bool, failMode :: Bool }
+                   , refuseClose :: Bool, failMode :: Bool, pendingMode :: Maybe (Int,Int,Int) }
   deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 assertThat :: String -> Bool -> IO ()
@@ -95,7 +95,7 @@ mutate w ["keyword", "monitor", value]
   | otherwise = case split ',' value of
       _:dimensions:_ -> case split '@' dimensions of
         [xy,rate] -> case split 'x' xy of
-          [x,y] -> (w { screens = map (\s -> if screen s == "STREAM" then s { size = (read x,read y,read rate) } else s) (screens w) }, "ok")
+          [x,y] -> (w { pendingMode = Just (read x,read y,read rate) }, "ok")
           _ -> error "bad dimensions"
         _ -> error "bad mode"
       _ -> error "bad monitor specification"
@@ -137,7 +137,12 @@ fixture name args = do
       appendFile (root </> "commands") (show (name:args) ++ "\n")
       w <- readWorld root
       case (name,args) of
-        ("hyprctl", ["-j",endpoint]) -> B.putStrLn (encode (queryWorld w endpoint))
+        ("hyprctl", ["-j",endpoint]) -> do
+          B.putStrLn (encode (queryWorld w endpoint))
+          -- The first monitor query after acknowledgement still sees the old mode.
+          when (endpoint == "monitors") $ forM_ (pendingMode w) $ \mode ->
+            writeWorld root (w { screens = map (\s -> if screen s == "STREAM" then s { size = mode } else s) (screens w)
+                               , pendingMode = Nothing })
         ("hyprctl", _) -> do
           let (changed,response) = mutate w args
           writeWorld root changed
@@ -196,7 +201,7 @@ acceptance = withTemp $ \root -> do
       control = root </> "stream-session" </> signature </> "control.sock"
       snapshot = root </> "stream-session" </> signature </> "session.json"
       hypr = root </> "hypr" </> signature </> ".socket2.sock"
-      initial = World [Screen "DP-1" 0 True (2560,1440,144) "work", Screen "DP-2" 1 False (2560,1440,144) "other"] [] (100,200) "" False False
+      initial = World [Screen "DP-1" 0 True (2560,1440,144) "work", Screen "DP-2" 1 False (2560,1440,144) "other"] [] (100,200) "" False False Nothing
   createDirectory bin
   forM_ ["hyprctl", "journalctl", "systemd-notify", "systemd-run", "steam", "hyprland_show_app"] $ \name ->
     createFileLink executable (bin </> name)

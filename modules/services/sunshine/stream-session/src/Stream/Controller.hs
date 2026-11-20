@@ -10,6 +10,7 @@ import Control.Monad
 import Data.Aeson
 import Data.Aeson.Types (Parser, parseEither)
 import qualified Data.ByteString.Lazy.Char8 as B
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.List (find, isInfixOf, isPrefixOf, sortOn)
 import Data.Maybe (fromMaybe, isJust, mapMaybe)
 import Network.Socket hiding (close)
@@ -92,9 +93,17 @@ streamMonitor = monitors >>= maybe (dieIO "STREAM output missing") pure . find (
 setMode :: Mode -> IO ()
 setMode (Mode w h f) = do
   ctl ["keyword", "monitor", output ++ "," ++ show w ++ "x" ++ show h ++ "@" ++ show f ++ ",10000x10000,1"]
-  m <- streamMonitor
-  unless (monWidth m == w && monHeight m == h && abs (monRate m - fromIntegral f) < 1) $
-    dieIO "Hyprland did not apply requested mode"
+  -- hyprctl can acknowledge a monitor rule before the compositor applies it.
+  observed <- newIORef "no mode reported"
+  let waitForMode = do
+        m <- streamMonitor
+        writeIORef observed (show (monWidth m) ++ "x" ++ show (monHeight m) ++ "@" ++ show (monRate m))
+        unless (monWidth m == w && monHeight m == h && abs (monRate m - fromIntegral f) < 1) $
+          threadDelay 50000 >> waitForMode
+  applied <- timeout 2000000 waitForMode
+  when (applied == Nothing) $ do
+    actual <- readIORef observed
+    dieIO ("Hyprland did not apply STREAM mode " ++ show w ++ "x" ++ show h ++ "@" ++ show f ++ "; last observed: " ++ actual)
 
 focusStream :: IO ()
 focusStream = do
@@ -376,6 +385,7 @@ daemon directory hyprSocket = do
                 Just text -> case eitherDecode (B.pack text) of
                   Left err -> pure (Left err)
                   Right command -> execute command
+              either (hPutStrLn stderr . ("stream-session request: " ++)) (const (pure ())) response
               hPutStrLn h (either ("ERROR " ++) ("OK " ++) response)
               hFlush h
           either (hPutStrLn stderr) (const $ pure ()) result

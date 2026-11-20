@@ -16,6 +16,9 @@ seat. Both physical displays keep their existing 2560x1440/144 Hz modes.
   windows/focus/cursor, and return to 640x360/10 Hz.
 - A game that refuses closure, or a game of uncertain ownership, blocks cleanup.
   Never force-kill or shrink a display underneath it. Save/close it manually and
+- Mode changes wait up to two seconds after Hyprland acknowledges the rule.
+  If the mode never applies, the controller logs the requested and last observed
+  mode and retains the recovery snapshot.
   retry `stream-session stop`.
 - Controller restart: recover the snapshot in the same Hyprland instance. Never
   reset an existing output simply because a service restarted. Lost output or
