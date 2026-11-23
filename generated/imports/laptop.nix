@@ -49,6 +49,7 @@
   ../../modules/system/networking/network.nix
   ../../modules/cli/atuin/main.nix
   ../../modules/cli/pi-harness/main.nix
+  ../../modules/cli/sec/main.nix
   ../../modules/cli/secretspec/main.nix
   ../../modules/cli/ticket/main.nix
   ../../modules/hardware/audio/main.nix

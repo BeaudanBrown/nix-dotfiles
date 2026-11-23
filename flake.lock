@@ -35,6 +35,97 @@
         "type": "github"
       }
     },
+    "agent-workshop": {
+      "inputs": {
+        "matt-pocock-skills": "agent-workshop-matt-pocock-skills",
+        "nixpkgs": "agent-workshop-nixpkgs",
+        "sec-tools-nixpkgs": "agent-workshop-sec-tools-nixpkgs",
+        "treefmt-nix": "agent-workshop-treefmt-nix"
+      },
+      "locked": {
+        "lastModified": 1795399363,
+        "narHash": "sha256-EELfCARNtWUYdZUVM/0tKZ4ZhbsB9XdEpx9ePCAwx3A=",
+        "owner": "BeaudanBrown",
+        "repo": "agent-workshop",
+        "rev": "369c53e9aa166e79fda1f9afeeb3366262cee99b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BeaudanBrown",
+        "repo": "agent-workshop",
+        "rev": "369c53e9aa166e79fda1f9afeeb3366262cee99b",
+        "type": "github"
+      }
+    },
+    "agent-workshop-matt-pocock-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794472958,
+        "narHash": "sha256-AYSRCvBL8TDDdW3rgKu2T7gl4YYDoDId0jYbabEFyfs=",
+        "owner": "mattpocock",
+        "repo": "skills",
+        "rev": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mattpocock",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
+    "agent-workshop-nixpkgs": {
+      "locked": {
+        "lastModified": 1794872590,
+        "narHash": "sha256-E+XLAfnC7+bdr4qlEgRv6cdGmiqTU5oeFNKCha7epqQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f68407657ad294471eb4b2e65d193df26edf729f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "agent-workshop-sec-tools-nixpkgs": {
+      "locked": {
+        "lastModified": 1794382513,
+        "narHash": "sha256-0KLWXQ/XHeSz0ofuaiI7LqOaPeXprxhAq5KaSe88aL8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "623ef1c827745a0d653f72992ac1e222e81ebb2a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "623ef1c827745a0d653f72992ac1e222e81ebb2a",
+        "type": "github"
+      }
+    },
+    "agent-workshop-treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "agent-workshop",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1795017206,
+        "narHash": "sha256-WSBJcYjPRxGetDNxVzKnRPs1TQasQQlAC25W/S4W6YE=",
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "rev": "0ba5d67225c3f5c88eb134e1a665a379bfd3bea9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
     "agentgraph": {
       "inputs": {
         "nixpkgs": [
@@ -1428,6 +1519,7 @@
       "inputs": {
         "agent-sandbox": "agent-sandbox",
         "agent-tools-nixpkgs": "agent-tools-nixpkgs",
+        "agent-workshop": "agent-workshop",
         "art-domain": "art-domain",
         "authentik-nix": "authentik-nix",
         "complix": "complix",

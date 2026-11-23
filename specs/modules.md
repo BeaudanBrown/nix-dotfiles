@@ -58,7 +58,7 @@ modules/cli/git/
   # User-level configuration (Home Manager via hm. shortcut)
   # ══════════════════════════════════════════════════════════
 
-  hm = {
+  hm.primary = {
     programs.git = {
       enable = true;
       userName = config.hostSpec.userFullName;
@@ -75,67 +75,48 @@ modules/cli/git/
 
 ## The `hm.` Shortcut
 
-### What It Is
+Use `hm.primary` for the primary user (the first user in the host specification),
+`hm.all` for shared settings, or `hm.<username>` for a particular user.
+[The host-spec bridge](../modules/host-spec/minimal.nix) merges those scopes into
+the users’ Home Manager configurations.
 
-The `hm` attribute is a custom NixOS option that provides a shortcut to Home Manager configuration. Instead of writing:
-
-```nix
-home-manager.users.${config.hostSpec.username}.programs.zsh = { ... };
-```
-
-You write:
-
-```nix
-hm.programs.zsh = { ... };
-```
-
-### How It Works
-
-Defined in `modules/host-spec/minimal.nix`:
+Use the separate `hmModules` option with the same scopes to import extra Home
+Manager modules, and use `hm` to set options they declare. For an exported module,
+use an `imports` wrapper: the bridge’s `types.anything` merges bare functions in a
+way that hides their named module arguments.
 
 ```nix
-options.hm = lib.mkOption {
-  type = lib.types.attrsOf lib.types.anything;
-  default = { };
-  description = "Shortcut to home-manager config";
-};
-
-config = {
-  home-manager.users.${config.hostSpec.username} = config.hm;
-};
+hmModules.primary = [ { imports = [ inputs.example.homeManagerModules.default ]; } ];
+hm.primary.programs.example.enable = true;
 ```
 
-### Why Use It
-
-- **Cleaner code**: Avoids deep nesting
-- **Automatic username**: Uses `hostSpec.username` automatically
-- **Proper merging**: Multiple modules can contribute to `hm` and values merge correctly
+See [Agent Workshop sec](./sec-home-manager.md) for a `main`-root consumer.
 
 ### Usage Examples
 
 ```nix
 # Shell configuration
-hm.programs.zsh = {
+hm.primary.programs.zsh = {
   enable = true;
   shellAliases = { ll = "ls -la"; };
 };
 
 # XDG directories
-hm.xdg = {
+hm.primary.xdg = {
   enable = true;
   userDirs.enable = true;
 };
 
 # Dotfiles
-hm.home.file.".config/app/config.toml".text = ''
+hm.primary.home.file.".config/app/config.toml".text = ''
   setting = "value"
 '';
 
 # User services
-hm.services.syncthing.enable = true;
+hm.primary.services.syncthing.enable = true;
 
 # User packages
-hm.home.packages = with pkgs; [ ripgrep fd ];
+hm.primary.home.packages = with pkgs; [ ripgrep fd ];
 ```
 
 ## Library Helpers
@@ -387,9 +368,9 @@ in
 ```nix
 { ... }:
 {
-  hm.programs.zsh.initExtra = builtins.readFile ./zshrc-extra.sh;
+  hm.primary.programs.zsh.initExtra = builtins.readFile ./zshrc-extra.sh;
 
-  hm.home.file.".config/app/config.toml".source = ./config.toml;
+  hm.primary.home.file.".config/app/config.toml".source = ./config.toml;
 }
 ```
 
@@ -402,7 +383,7 @@ in
 home-manager.users.beau.programs.zsh = { };
 
 # Correct
-hm.programs.zsh = { };
+hm.primary.programs.zsh = { };
 ```
 
 ### ❌ Don't hardcode usernames
