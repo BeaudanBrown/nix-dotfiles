@@ -56,13 +56,13 @@ in
       RuntimeDirectoryMode = "0700";
       LoadCredential = "identity:${config.sops.secrets.${secret}.path}";
       ExecStart = "${pkgs.openssh}/bin/ssh-agent -D -a ${privateSocket}";
-      ExecStartPost = pkgs.writeShellScript "load-dsh-github-identity" ''
+      ExecStartPost = pkgs.writeShellScript "load-dsh-git-identity" ''
         set -eu
         for i in {1..100}; do
           test ! -S "$SSH_AUTH_SOCK" || break
           ${pkgs.coreutils}/bin/sleep 0.05
         done
-        exec ${pkgs.openssh}/bin/ssh-add -q -H ${./github-known-hosts} -h git@github.com "$CREDENTIALS_DIRECTORY/identity"
+        exec ${pkgs.openssh}/bin/ssh-add -q ${lib.escapeShellArgs cfg.gitSshAddArgs} "$CREDENTIALS_DIRECTORY/identity"
       '';
     };
   };
@@ -89,10 +89,7 @@ in
   systemd.services.dsh-agent = {
     wants = [ "tailscaled.service" ];
     environment.SSH_AUTH_SOCK = clientSocket;
-    serviceConfig.BindReadOnlyPaths = [
-      "${clientDir}"
-      "${./github-known-hosts}:/etc/ssh/ssh_known_hosts"
-    ];
+    serviceConfig.BindReadOnlyPaths = [ clientDir ];
     after = [
       "tailscaled.service"
       "dsh-git-agent.socket"

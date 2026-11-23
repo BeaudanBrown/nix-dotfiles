@@ -19,6 +19,10 @@ let
       path = oauthPlugin;
     }
   ];
+  gitKnownHosts = pkgs.concatText "dsh-git-known-hosts" [
+    ./github-known-hosts
+    ./forgejo-known-hosts
+  ];
   state = "/var/lib/dsh-agent";
   home = "${state}/home";
   dshHome = "${state}/dsh";
@@ -63,7 +67,10 @@ let
     # Mount targets must exist: this tree itself lives in the read-only store.
     mkdir -p "$out/run/systemd/resolve" "$out/run/dsh-git-agent" "$out/etc/ssh"
     touch "$out/etc/ssh/ssh_known_hosts"
-    printf '%s\n' 'Host github.com' '  StrictHostKeyChecking yes' '  BatchMode yes' > "$out/etc/ssh/ssh_config"
+    printf '%s\n' 'Host github.com git.bepis.lol' \
+      '  StrictHostKeyChecking yes' '  BatchMode yes' \
+      '  UserKnownHostsFile /dev/null' '  GlobalKnownHostsFile /etc/ssh/ssh_known_hosts' \
+      '  HostKeyAlgorithms ssh-ed25519' > "$out/etc/ssh/ssh_config"
     ln -s /run/systemd/resolve/stub-resolv.conf "$out/etc/resolv.conf"
     touch "$out"/etc/{hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
     touch "$out/etc/nix/nix.conf" "$out/etc/ssl/certs/ca-certificates.crt"
@@ -109,6 +116,20 @@ in
       default = 3080;
     };
     gpu = lib.mkEnableOption "AMD compute devices (no display/input sockets)";
+    gitSshAddArgs = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      internal = true;
+      readOnly = true;
+      default = [
+        "-H"
+        "${gitKnownHosts}"
+        "-h"
+        "git@github.com"
+        "-h"
+        "git@[git.bepis.lol]:12595"
+      ];
+      description = "Pinned Git destination policy for the DSH signer.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -249,6 +270,7 @@ in
           "-/dev/dri/renderD129"
         ];
         BindReadOnlyPaths = [
+          "${gitKnownHosts}:/etc/ssh/ssh_known_hosts"
           "/nix/store"
           "/nix/var/nix/daemon-socket"
           # resolved replaces its stub file; bind the directory, not one inode.
