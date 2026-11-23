@@ -18,6 +18,9 @@ let
   pubFile = host: "forgejo-ssh-${host}";
   secret = config.sops.secrets."forgejo/oidc-client-secret".path;
   username = config.sops.secrets."forgejo/authentik-username".path;
+  dshLoginKey = config.sops.secrets."forgejo/dsh-ssh-public-key".path;
+  ed25519HostKey = config.sops.secrets."forgejo/ssh-host-ed25519-private-key".path;
+  ed25519Credential = "ssh-host-ed25519";
   cfg = config.services.forgejo;
   # The LTS admin auth CLI otherwise requires the client secret in process argv.
   # Add a value source only to the OAuth admin flag, not to the web service.
@@ -60,6 +63,8 @@ in
         SSH_PORT = sshPort;
         SSH_LISTEN_PORT = sshPort;
         SSH_CREATE_AUTHORIZED_KEYS_FILE = false;
+        # Relative paths resolve under APP_DATA_PATH. Preserve both legacy defaults.
+        SSH_SERVER_HOST_KEYS = "/run/credentials/forgejo.service/${ed25519Credential},ssh/gitea.rsa,ssh/gogs.rsa";
       };
       service = {
         DISABLE_REGISTRATION = true;
@@ -94,6 +99,17 @@ in
     ];
   };
 
+  sops.secrets."forgejo/ssh-host-ed25519-private-key" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    mode = "0400";
+    owner = "root";
+    restartUnits = [ "forgejo.service" ];
+  };
+  sops.secrets."forgejo/dsh-ssh-public-key" = {
+    sopsFile = lib.custom.sopsFileForModule __curPos.file;
+    restartUnits = [ "authentik-worker.service" ];
+  };
+
   # Root-owned runtime copies: never ask PID 1 to load credentials from the
   # user's mutable ~/.ssh path. Reuse only the existing public SOPS values.
   sops.templates = lib.genAttrs (map pubFile devices) (name: {
@@ -103,6 +119,7 @@ in
   systemd.services.authentik-worker.serviceConfig.LoadCredential = [
     "forgejo-secret:${secret}"
     "forgejo-username:${username}"
+    "forgejo-ssh-dsh:${dshLoginKey}"
   ]
   ++ map (host: "${pubFile host}:${config.sops.templates.${pubFile host}.path}") devices;
   systemd.services.forgejo = {
@@ -111,6 +128,7 @@ in
     serviceConfig.LoadCredential = [
       "oidc:${secret}"
       "oidc-username:${username}"
+      "${ed25519Credential}:${ed25519HostKey}"
     ];
     # The upstream preStart writes app.ini and migrates the DB first. Bootstrap
     # the local administrator before accepting the first external login.

@@ -2,7 +2,7 @@ version: 1
 metadata:
   name: NAS - Forgejo OIDC
 entries:
-  # Resolve the three public credentials when applying the blueprint. !Format
+  # Resolve the public credentials when applying the blueprint. !Format
   # uses Python %-formatting; %r quotes each value as data, including comments.
   - id: forgejo-ssh-scope
     model: authentik_providers_oauth2.scopemapping
@@ -15,10 +15,11 @@ entries:
         - |
           if request.user.username != "beau":
               return {}
-          return {"forgejo_ssh_keys": [%r, %r, %r]}
+          return {"forgejo_ssh_keys": [key.strip() for key in [%r, %r, %r, %r]]}
         - !File /run/credentials/authentik-worker.service/forgejo-ssh-grill
         - !File /run/credentials/authentik-worker.service/forgejo-ssh-t480
         - !File /run/credentials/authentik-worker.service/forgejo-ssh-nas
+        - !File /run/credentials/authentik-worker.service/forgejo-ssh-dsh
   - id: forgejo-provider
     model: authentik_providers_oauth2.oauth2provider
     identifiers:
