@@ -38,6 +38,14 @@ in
       public_baseurl = "https://${domain}/";
       report_stats = false;
       enable_registration = false;
+
+      # Auto-join room and DM invites from this homeserver only.
+      auto_accept_invites = {
+        enabled = true;
+        only_from_local_users = true;
+        only_for_direct_messages = false;
+      };
+
       # Allow concurrent agent updates and room provisioning without removing
       # throttling. Keep authentication and other rate limits at their defaults.
       rc_message = {
