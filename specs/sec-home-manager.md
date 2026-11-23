@@ -11,6 +11,13 @@ The generated host import lists select the module by its `main.nix` filename;
 no per-host import is needed. Future regeneration uses `just gen-imports <host>`
 from a checkout with the module tracked (the generator ignores untracked files).
 
+## Use sec
+
+Run `sec set KEY [KEY ...]` from a trusted project to add or replace declared
+values in its default profile. It unlocks once and stops at the first failed
+write; earlier successful writes remain saved. Use `sec COMMAND [ARG ...]`
+separately to launch with the resolved values.
+
 ## Evaluate the integration in isolation
 
 Run from the dotfiles checkout. The fixture evaluates the real Home Manager

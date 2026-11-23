@@ -93,7 +93,7 @@
   };
 
   inputs = {
-    agent-workshop.url = "github:BeaudanBrown/agent-workshop/369c53e9aa166e79fda1f9afeeb3366262cee99b";
+    agent-workshop.url = "github:BeaudanBrown/agent-workshop/177314359ed6a8f9f1adb3df96c6fca02b00882f";
 
     # SecretSpec trial package; DSH itself comes from nix-ai-tools.
     agent-tools-nixpkgs.url = "github:NixOS/nixpkgs/623ef1c827745a0d653f72992ac1e222e81ebb2a";
