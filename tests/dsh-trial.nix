@@ -41,7 +41,7 @@ let
             default = { };
           };
           options.hm = lib.mkOption {
-            type = lib.types.attrs;
+            type = lib.types.attrsOf lib.types.anything;
             default = { };
           };
           options.sops.useSystemdActivation = lib.mkEnableOption "synthetic secrets activation";
@@ -244,10 +244,15 @@ assert lib.hasInfix "- id: plugin-manager\n  disabled: true" (
 assert
   (lib.findFirst (s: s.domain == "dsg.bepis.lol") { tailnet = false; } nas.hostedServices).tailnet;
 assert sc.User == "dsh-agent" && sc.NoNewPrivileges;
+assert sc.UMask == "0007";
+assert grill.systemd.services.dsh-agent.environment.GIT_CONFIG_GLOBAL == "/etc/gitconfig";
+assert lib.hasInfix "directory = /agent/*" grill.environment.etc."dsh-agent/gitconfig".text;
 assert sc.MemoryHigh == "85%" && sc.MemoryMax == "90%" && sc.TasksMax == 4096;
 assert sc.RestrictNamespaces && sc.PrivateDevices && sc.ProtectHome;
 assert sc.CapabilityBoundingSet == "";
-assert sc.RootDirectory != "";
+assert lib.hasPrefix "/run/dsh-agent-roots/" sc.RootDirectory;
+assert lib.elem "dsh-prepare-root.service" grill.systemd.services.dsh-agent.requires;
+assert lib.elem "dsh-prepare-root.service" grill.systemd.services.dsh-agent.after;
 assert lib.elem "/agent" sc.BindPaths;
 assert !(lib.elem "/home" sc.BindPaths) && !(lib.elem "/run" sc.BindPaths);
 assert lib.elem "/nix/var/nix/daemon-socket" sc.BindReadOnlyPaths;
@@ -260,6 +265,12 @@ assert lib.all
   (
     c:
     lib.elem "d /agent 2770 operator agent-workspace - -" c.systemd.tmpfiles.rules
+    && c.hm.primary.xdg.configFile."git/config".text == ''
+      [safe]
+        directory = /agent/*
+    ''
+    && lib.elem "agent-workspace" c.users.users.operator.extraGroups
+    && lib.elem "agent-workspace" c.users.users.dsh-agent.extraGroups
     && lib.elem "agent-workspace" c.systemd.services.syncthing.serviceConfig.SupplementaryGroups
     && lib.elem "agent-workspace" c.systemd.services.syncthing-init.serviceConfig.SupplementaryGroups
     && c.systemd.services.syncthing.serviceConfig.PrivateUsers

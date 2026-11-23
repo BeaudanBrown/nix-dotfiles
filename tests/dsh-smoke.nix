@@ -46,11 +46,64 @@ pkgs.testers.runNixOSTest {
     virtualisation.cores = 2;
   };
   testScript = ''
+    service = "dsh-agent.service"
+
+    def main_pid():
+        return int(machine.succeed(f"systemctl show --property=MainPID --value {service}"))
+
+    def check_main_mounts(phase):
+        pid = main_pid()
+        assert pid > 0, f"{phase}: {service} has no main PID"
+        # ExecReload can get a fresh namespace, masking missing mounts in MainPID.
+        mountinfo = machine.succeed(f"awk '{{ print $5, $6 }}' /proc/{pid}/mountinfo")
+        mounts = dict(line.split() for line in mountinfo.splitlines() if line.strip())
+        for path in (
+            "/etc/passwd",
+            "/etc/group",
+            "/etc/nsswitch.conf",
+            "/etc/gitconfig",
+            "/etc/ssl/certs/ca-certificates.crt",
+            "/etc/ssh/ssh_config",
+            "/etc/ssh/ssh_known_hosts",
+        ):
+            options = mounts.get(path, "")
+            assert "ro" in options.split(","), (
+                f"{phase}: MainPID {pid} lacks a read-only mount at {path} (options: {options!r})"
+            )
+            machine.succeed(
+                f"test -s /proc/{pid}/root{path} || "
+                f"{{ echo '{phase}: MainPID {pid} sees {path} missing or empty' >&2; exit 1; }}"
+            )
+        # Keep the live bind targets off the store filesystem: store optimisation
+        # must not be able to replace the mount targets beneath this process.
+        configured_root = machine.succeed(
+            f"systemctl show --property=RootDirectory --value {service}"
+        ).strip()
+        assert configured_root.startswith("/run/dsh-agent-roots/"), (
+            f"{phase}: unexpected RootDirectory {configured_root!r}"
+        )
+        live_root, runtime_root, store_root = machine.succeed(
+            f"stat -Lc %d:%i /proc/{pid}/root {configured_root} /nix/store"
+        ).splitlines()
+        assert live_root == runtime_root, f"{phase}: MainPID {pid} is not using {configured_root}"
+        assert live_root.split(":", 1)[0] != store_root.split(":", 1)[0], (
+            f"{phase}: MainPID {pid} root still shares the Nix store filesystem"
+        )
+        assert main_pid() == pid, f"{phase}: {service} changed PID during the mount check"
+        return pid
+
     machine.start()
-    machine.wait_for_unit("dsh-agent.service")
+    machine.wait_for_unit(service)
     machine.wait_for_open_port(3080, timeout=180)
+    boot_pid = check_main_mounts("boot")
     machine.wait_until_succeeds("python3 ${./dsh-check-ui.py}", timeout=120)
-    machine.succeed("systemctl reload dsh-agent")
+    machine.succeed(f"systemctl reload {service}")
     machine.succeed("test -s ${state}/dsh/profiles/web/cordis.yml")
+
+    machine.succeed(f"systemctl restart {service}")
+    machine.wait_for_unit(service)
+    machine.wait_for_open_port(3080, timeout=180)
+    restart_pid = check_main_mounts("restart")
+    assert restart_pid != boot_pid, f"{service} kept MainPID {boot_pid} after restart"
   '';
 }

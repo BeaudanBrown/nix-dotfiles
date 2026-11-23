@@ -23,6 +23,14 @@
         extraGroups = [ "agent-workspace" ];
       });
 
+  # This workspace is intentionally shared with the agent and sync peers. Keep
+  # the exception in the operator's protected Git config, not root's or other users'.
+  # Git reads this alongside ~/.gitconfig, so existing personal entries still work.
+  hm.primary.xdg.configFile."git/config".text = ''
+    [safe]
+      directory = /agent/*
+  '';
+
   systemd.tmpfiles.rules = [
     "d /agent 2770 ${config.services.syncthing.user} agent-workspace - -"
     "a /agent - - - - u::rwx,g::rwx,m::rwx,o::---,d:u::rwx,d:g::rwx,d:m::rwx,d:o::---"

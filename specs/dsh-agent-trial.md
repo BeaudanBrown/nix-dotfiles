@@ -26,6 +26,22 @@ remain pending. This does not replace Pi, tmux or Matrix or change sleep policy.
 - This is a shared, autonomous single-user development identity. All `/agent`
   projects can read/change each other. Approvals are `never`; the only configured
   permission preset is `danger-full-access`. These settings are not a sandbox.
+- The DSH root template lives in the Nix store, but its **live bind mount destinations**
+  are in a root-owned, versioned copy under `/run/dsh-agent-roots/`. Store optimisation
+  can replace a regular file's directory entry with a hard link. If that file is a
+  live bind destination in another namespace, the service can see the empty
+  placeholder instead. The preparation unit copies the template before DSH starts;
+  no host secrets are copied, and version changes never rewrite the old root.
+  To check a suspected recurrence on the host, use the **main PID**, not a new shell
+  or reload helper. Check before restarting and again after the next optimisation:
+
+  ```sh
+  pid=$(systemctl show dsh-agent -p MainPID --value)
+  systemctl show dsh-agent -p RootDirectory
+  sudo stat -Lc '%s bytes %n' /proc/"$pid"/root/etc/{passwd,gitconfig,ssl/certs/ca-certificates.crt}
+  sudo journalctl -b -u dsh-prepare-root -u nix-optimise --no-pager
+  ```
+
 - systemd `RootDirectory` supplies a narrow filesystem view without a VM or
   container runtime. Writable binds: `/agent`, `/var/lib/dsh-agent`, and
   `/var/lib/agent-mocks`. Read-only mounts include the public Nix store, resolver
@@ -61,6 +77,22 @@ permissions: local tmpfiles rules establish the root ACL. Files *moved* into the
 workspace may retain old modes/ACLs; the operator must normalize those files
 before expecting group collaboration. Restrictive application-created modes may
 also need repair. We deliberately do not recursively chmod arbitrary projects.
+
+On the four workspace hosts, the primary account gets `safe.directory = /agent/*`
+in its Home Manager XDG Git config, alongside any existing `~/.gitconfig`. DSH
+already has the same exception in its private Git config. This trusts Git
+metadata in the shared tree regardless of local owner; it does not grant file
+access, set that exception for root, or loosen Git checks outside `/agent`.
+Use a separate checkout outside the shared tree for privileged tasks such as
+NixOS switches.
+
+After activation, check `git config --show-origin --get-all safe.directory` and
+`git status` from the primary login and from a DSH shell. For `Permission denied`
+or failures creating Git lock files, inspect the affected paths and their
+parents with `stat` and `getfacl`. Repair the affected entries locally: shared
+directories should have group `agent-workspace`, group write/traverse, setgid and
+a default ACL; files should allow the needed group access. Prefer creating or
+cloning projects directly under `/agent` so they inherit this policy.
 
 Syncthing includes Git metadata, uncommitted/untracked source, conflict files,
 lockfiles, databases and build outputs by default. Exclusions are limited to

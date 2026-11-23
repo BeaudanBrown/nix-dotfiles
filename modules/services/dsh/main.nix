@@ -90,6 +90,14 @@ let
     ln -s ${pkgs.bashInteractive}/bin/sh "$out/bin/sh"
     ln -s ${pkgs.coreutils}/bin/env "$out/usr/bin/env"
   '';
+  # Nix may deduplicate regular files by replacing their directory entries.
+  # A file bind attached to the old entry in a private namespace then disappears
+  # from path lookup. Never use the store template itself as the live mount tree.
+  runtimeRoot = "/run/dsh-agent-roots/${builtins.baseNameOf (toString root)}";
+  rootRules = pkgs.writeText "dsh-root.conf" ''
+    d /run/dsh-agent-roots 0755 root root - -
+    C ${runtimeRoot} 0555 root root - ${root}
+  '';
   configFiles = {
     "${sshConfigFile}".text = ''
       Host ${lib.concatMapStringsSep " " (entry: entry.host) gitHosts}
@@ -203,6 +211,15 @@ in
       su = "dsh-agent dsh-agent";
     };
     users.users.dsh-agent.extraGroups = lib.optional cfg.gpu "render";
+    # Materialise before namespace setup, including on switch/rollback (not just
+    # at boot). A changed template gets a new directory; never replace a live one.
+    systemd.services.dsh-prepare-root = {
+      description = "Prepare the root-owned DSH mount tree";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.systemd}/bin/systemd-tmpfiles --create ${rootRules}";
+      };
+    };
     systemd.services.dsh-agent = {
       description = "Private DSH development agent";
       wantedBy = [ "multi-user.target" ];
@@ -210,10 +227,12 @@ in
       after = [
         "network-online.target"
         "systemd-tmpfiles-setup.service"
+        "dsh-prepare-root.service"
         "systemd-resolved.service"
         "dsh-nfs-deny.service"
       ];
       requires = [
+        "dsh-prepare-root.service"
         "dsh-nfs-deny.service"
         "systemd-resolved.service"
       ];
@@ -238,7 +257,7 @@ in
         User = "dsh-agent";
         Group = "dsh-agent";
         UMask = "0007";
-        RootDirectory = root;
+        RootDirectory = runtimeRoot;
         MountAPIVFS = true;
         WorkingDirectory = home;
         ExecStart = "${cfg.package}/bin/dsh --profile web --patch /etc/dsh-policy.patch.yml --patch /etc/dsh-host.patch.yml --no-open --host ${cfg.listenAddress} --port ${toString cfg.port} --public-url https://${cfg.hostname}/ --trusted-host ${cfg.hostname}";
