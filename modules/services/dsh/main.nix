@@ -19,10 +19,25 @@ let
       path = oauthPlugin;
     }
   ];
-  gitKnownHosts = pkgs.concatText "dsh-git-known-hosts" [
-    ./github-known-hosts
-    ./forgejo-known-hosts
+  gitHosts = [
+    {
+      host = "github.com";
+      port = 22;
+      user = "git";
+      publicKeyFile = ./github-host-key.pub;
+    }
+    {
+      host = "git.bepis.lol";
+      port = 12595;
+      user = "git";
+      publicKeyFile = ./forgejo-host-key.pub;
+    }
   ];
+  knownHost = entry: if entry.port == 22 then entry.host else "[${entry.host}]:${toString entry.port}";
+  sshConfigFile = "dsh-agent/ssh/ssh_config";
+  sshKnownHostsFile = "dsh-agent/ssh/known_hosts";
+  # Share the immutable NixOS-generated file between DSH and the signer.
+  gitKnownHosts = config.environment.etc.${sshKnownHostsFile}.source;
   state = "/var/lib/dsh-agent";
   home = "${state}/home";
   dshHome = "${state}/dsh";
@@ -66,11 +81,7 @@ let
     ln -s /agent "$out/etc/dsh-documents/deepseek-harness/default-workspace"
     # Mount targets must exist: this tree itself lives in the read-only store.
     mkdir -p "$out/run/systemd/resolve" "$out/run/dsh-git-agent" "$out/etc/ssh"
-    touch "$out/etc/ssh/ssh_known_hosts"
-    printf '%s\n' 'Host github.com git.bepis.lol' \
-      '  StrictHostKeyChecking yes' '  BatchMode yes' \
-      '  UserKnownHostsFile /dev/null' '  GlobalKnownHostsFile /etc/ssh/ssh_known_hosts' \
-      '  HostKeyAlgorithms ssh-ed25519' > "$out/etc/ssh/ssh_config"
+    touch "$out"/etc/ssh/{ssh_config,ssh_known_hosts}
     ln -s /run/systemd/resolve/stub-resolv.conf "$out/etc/resolv.conf"
     touch "$out"/etc/{hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
     touch "$out/etc/nix/nix.conf" "$out/etc/ssl/certs/ca-certificates.crt"
@@ -80,6 +91,17 @@ let
     ln -s ${pkgs.coreutils}/bin/env "$out/usr/bin/env"
   '';
   configFiles = {
+    "${sshConfigFile}".text = ''
+      Host ${lib.concatMapStringsSep " " (entry: entry.host) gitHosts}
+        StrictHostKeyChecking yes
+        BatchMode yes
+        UserKnownHostsFile /dev/null
+        GlobalKnownHostsFile /etc/ssh/ssh_known_hosts
+        HostKeyAlgorithms ssh-ed25519
+    '';
+    "${sshKnownHostsFile}".text = lib.concatMapStrings (
+      entry: "${knownHost entry} ${lib.removeSuffix "\n" (builtins.readFile entry.publicKeyFile)}\n"
+    ) gitHosts;
     "dsh-agent/gitconfig".text = ''
       [user]
         name = Development Agent
@@ -123,11 +145,11 @@ in
       default = [
         "-H"
         "${gitKnownHosts}"
+      ]
+      ++ lib.concatMap (entry: [
         "-h"
-        "git@github.com"
-        "-h"
-        "git@[git.bepis.lol]:12595"
-      ];
+        "${entry.user}@${knownHost entry}"
+      ]) gitHosts;
       description = "Pinned Git destination policy for the DSH signer.";
     };
   };
@@ -270,6 +292,7 @@ in
           "-/dev/dri/renderD129"
         ];
         BindReadOnlyPaths = [
+          "${config.environment.etc.${sshConfigFile}.source}:/etc/ssh/ssh_config"
           "${gitKnownHosts}:/etc/ssh/ssh_known_hosts"
           "/nix/store"
           "/nix/var/nix/daemon-socket"
