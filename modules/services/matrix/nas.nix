@@ -246,28 +246,23 @@ in
     };
   };
 
-  # Meta's September 2026 protocol change added executeFirstBlockForSyncTransactionV4;
-  # older bridges fail initial sync and repeatedly report "not connected".
-  # Pin the Messenger hotfix until our locked nixpkgs includes it (then remove this override).
-  # https://github.com/mautrix/meta/releases/tag/v0.2608.1
-  # https://github.com/mautrix/meta/commit/001f276beca5b90dead1bbc1351e1036e3f966a7
-  # Nixpkgs update tracking: https://github.com/NixOS/nixpkgs/pull/553448
-  services.mautrix-meta.package = pkgs.mautrix-meta.overrideAttrs (_: {
-    version = "26.08.1";
-    tag = "v0.2608.1";
+  # Pin the Messenger MAC verification fix (libsignal 0.2.3) until the
+  # locked nixpkgs ships this release: https://github.com/NixOS/nixpkgs/pull/589344
+  services.mautrix-meta.package = pkgs.mautrix-meta.overrideAttrs (_: rec {
+    version = "26.11";
+    tag = "v0.2611.0";
     src = pkgs.fetchFromGitHub {
       owner = "mautrix";
       repo = "meta";
-      tag = "v0.2608.1";
-      hash = "sha256-xTfbLtQ1lo6ukWlGjNwjxYaLMod6hljhQEcwdSgoBcQ=";
+      inherit tag;
+      hash = "sha256-cyA8zi+jrOC6SCRXSb2RNmqpZkpVzXShrHnCCoxPwJs=";
     };
-    # Same dependencies as 26.08 in the linked nixpkgs PR; the hotfix leaves go.mod/go.sum unchanged.
-    vendorHash = "sha256-CCGF13D0QO2GAE+kN/7xl924rSloqikDoGPr00clofI=";
+    vendorHash = "sha256-sootqoQ0F6TjYnWYbXws2Nu6puCTA31oEtBN8F7lkQ8=";
     ldflags = [
       "-s"
       "-w"
       "-X"
-      "main.Tag=v0.2608.1"
+      "main.Tag=${tag}"
     ];
   });
 
