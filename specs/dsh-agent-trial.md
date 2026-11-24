@@ -86,6 +86,22 @@ access, set that exception for root, or loosen Git checks outside `/agent`.
 Use a separate checkout outside the shared tree for privileged tasks such as
 NixOS switches.
 
+The operator also trusts direnv environments under `/agent/`, including changes
+made by other workspace writers. Entering a directory can run their shell code
+as the operator. This uses direnv's native policy; no shell hook writes Git
+config. Nix's Git fetcher needs libgit2 to understand the same subtree rule
+as Git. Remove the temporary [upstream backport](https://github.com/libgit2/libgit2/pull/7265)
+and its package wiring once the pinned Nix uses that fix without modification;
+keep the two user-level trust rules.
+
+To verify after activation or before removing the backport, use a fresh,
+agent-owned test flake under `/agent/` with no exact Git trust entry. As the
+operator, run `nix flake metadata --offline --no-write-lock-file .` there and
+enter its direnv environment without running `direnv allow`. Use a simple
+fixture without external inputs, not a real project's development shell. An
+otherwise identical foreign-owned repository outside all approved paths must
+still be rejected, and a fresh environment there must still require approval.
+
 After activation, check `git config --show-origin --get-all safe.directory` and
 `git status` from the primary login and from a DSH shell. For `Permission denied`
 or failures creating Git lock files, inspect the affected paths and their

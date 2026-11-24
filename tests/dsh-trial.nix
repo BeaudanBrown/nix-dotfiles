@@ -265,6 +265,7 @@ assert lib.all
   (
     c:
     lib.elem "d /agent 2770 operator agent-workspace - -" c.systemd.tmpfiles.rules
+    && lib.elem "/agent/" c.hm.primary.programs.direnv.config.whitelist.prefix
     && c.hm.primary.xdg.configFile."git/config".text == ''
       [safe]
         directory = /agent/*

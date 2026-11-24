@@ -1,4 +1,14 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
+let
+  # Stock libgit2 1.9.7 treats /agent/* as a literal path rather than a prefix.
+  # Remove this scoped backport and the two package overrides once the pinned
+  # libgit2 includes upstream PR #7265; retain the operator's trust rules.
+  workspaceNix = pkgs.nix.overrideScope (_: _: {
+    libgit2 = pkgs.libgit2.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ./libgit2-safe-directory-prefix.patch ];
+    });
+  });
+in
 {
   # Shared project data only. Harness state, credentials and live databases
   # belong outside this tree. Replication deliberately has no writer lock.
@@ -30,6 +40,13 @@
     [safe]
       directory = /agent/*
   '';
+
+  # Every workspace writer can change .envrc. direnv matches a literal string
+  # prefix, so the trailing slash excludes siblings such as /agent-other.
+  hm.primary.programs.direnv.config.whitelist.prefix = [ "/agent/" ];
+  # nix-direnv prefers nix on PATH; use the same package for its built-in fallback.
+  nix.package = workspaceNix;
+  hm.primary.programs.direnv.nix-direnv.package = pkgs.nix-direnv.override { nix = workspaceNix; };
 
   systemd.tmpfiles.rules = [
     "d /agent 2770 ${config.services.syncthing.user} agent-workspace - -"
