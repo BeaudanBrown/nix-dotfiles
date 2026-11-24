@@ -21,6 +21,7 @@ let
       system = "x86_64-linux";
       specialArgs = { inherit inputs lib; };
       modules = [
+        ../modules/tools/direnv/common.nix
         ../modules/services/agent-workspace/main.nix
         ../modules/cli/secretspec/main.nix
         ../modules/services/dsh/main.nix
@@ -42,6 +43,10 @@ let
           };
           options.hm = lib.mkOption {
             type = lib.types.attrsOf lib.types.anything;
+            default = { };
+          };
+          options.hmModules = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.listOf lib.types.anything);
             default = { };
           };
           options.sops.useSystemdActivation = lib.mkEnableOption "synthetic secrets activation";
@@ -80,6 +85,7 @@ let
           config = {
             hostSpec = {
               username = "operator";
+              home = "/home/operator";
               email = "test@example.invalid";
               tailIP = if name == "nas" then "100.64.0.1" else "100.64.0.2";
             };
@@ -149,6 +155,13 @@ let
   laptop = evaluate "laptop" false;
   sc = grill.systemd.services.dsh-agent.serviceConfig;
   folder = grill.services.syncthing.settings.folders.agent-workspace;
+  # Exercise the same TOML merge boundary as Home Manager's direnv module.
+  direnvPrefixes = c: (lib.evalModules {
+    modules = [
+      { options.programs.direnv.config = lib.mkOption { type = ((import nixpkgs { system = "x86_64-linux"; }).formats.toml { }).type; }; }
+      { programs.direnv.config = c.hm.primary.programs.direnv.config; }
+    ] ++ c.hmModules.primary;
+  }).config.programs.direnv.config.whitelist.prefix;
   passed =
     c:
     let
@@ -265,7 +278,12 @@ assert lib.all
   (
     c:
     lib.elem "d /agent 2770 operator agent-workspace - -" c.systemd.tmpfiles.rules
-    && lib.elem "/agent/" c.hm.primary.programs.direnv.config.whitelist.prefix
+    && lib.sort builtins.lessThan (direnvPrefixes c) == [
+      "/agent/"
+      "/home/operator/collab"
+      "/home/operator/documents"
+      "/home/operator/monash"
+    ]
     && c.hm.primary.xdg.configFile."git/config".text == ''
       [safe]
         directory = /agent/*

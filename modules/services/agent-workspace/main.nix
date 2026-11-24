@@ -43,7 +43,10 @@ in
 
   # Every workspace writer can change .envrc. direnv matches a literal string
   # prefix, so the trailing slash excludes siblings such as /agent-other.
-  hm.primary.programs.direnv.config.whitelist.prefix = [ "/agent/" ];
+  # Merge at the typed Home Manager option, not in the generic hm.primary wrapper.
+  hmModules.primary = [
+    ({ lib, ... }: { programs.direnv.config.whitelist.prefix = lib.mkAfter [ "/agent/" ]; })
+  ];
   # nix-direnv prefers nix on PATH; use the same package for its built-in fallback.
   nix.package = workspaceNix;
   hm.primary.programs.direnv.nix-direnv.package = pkgs.nix-direnv.override { nix = workspaceNix; };
