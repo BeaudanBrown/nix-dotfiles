@@ -27,7 +27,7 @@ in
     tokenFile = config.sops.secrets."vikunja/api-token".path;
   };
   hm.primary.home.file."documents/projects/todo-agent/AGENTS.md".source = ./agent/AGENTS.md;
-  hmModules.primary = [
+  hm.primary.imports = [
     ({ lib, ... }: {
       home.activation.vikunjaWorkspace = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
         # Managed discovery requires a regular entrypoint, not a file symlink.

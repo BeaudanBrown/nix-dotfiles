@@ -7,6 +7,7 @@ let
 in
 {
   nixpkgs = source "nixpkgs";
+  home-manager = source "home-manager";
   agent-tools-nixpkgs.legacyPackages.x86_64-linux = import (source "agent-tools-nixpkgs") {
     system = "x86_64-linux";
   };

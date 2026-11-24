@@ -14,7 +14,7 @@ in
     ];
   };
 
-  hmModules.primary = [
+  hm.primary.imports = [
     (
       { config, ... }:
       {

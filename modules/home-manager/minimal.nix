@@ -5,7 +5,7 @@
 
   # Keep legacy Home Manager defaults explicit for pre-26.05 profiles.
   # This silences state-version migration warnings without changing behavior.
-  hmModules.all = lib.optionals (lib.versionOlder (config.system.stateVersion or "23.05") "26.05") [
+  hm.all.imports = lib.optionals (lib.versionOlder (config.system.stateVersion or "23.05") "26.05") [
     (
       { lib, ... }:
       {

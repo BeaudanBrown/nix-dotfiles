@@ -80,13 +80,14 @@ Use `hm.primary` for the primary user (the first user in the host specification)
 [The host-spec bridge](../modules/host-spec/minimal.nix) merges those scopes into
 the users’ Home Manager configurations.
 
-Use the separate `hmModules` option with the same scopes to import extra Home
-Manager modules, and use `hm` to set options they declare. For an exported module,
-use an `imports` wrapper: the bridge’s `types.anything` merges bare functions in a
-way that hides their named module arguments.
+Each scope is a deferred module: Home Manager merges its settings using the
+actual option types. Use the same scope for direct settings and module imports.
+An imported function receives the user's Home Manager `config` and `lib`, not the
+outer host configuration. To inspect the result on NixOS, read
+`config.home-manager.users.<username>`, not the deferred `config.hm` module.
 
 ```nix
-hmModules.primary = [ { imports = [ inputs.example.homeManagerModules.default ]; } ];
+hm.primary.imports = [ inputs.example.homeManagerModules.default ];
 hm.primary.programs.example.enable = true;
 ```
 

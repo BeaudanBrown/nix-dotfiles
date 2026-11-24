@@ -156,24 +156,11 @@ in
     };
 
     # Home Manager configuration for all users
-    # Special keys:
-    #   - hm.all: Configuration shared across all users
-    #   - hm.primary: Configuration for the primary user (merged with hm.<primaryUsername>)
-    #   - hm.<username>: Per-user configuration
-    # Usage:
-    #   hm.all.programs.git.enable = true;        # All users get git
-    #   hm.beau.programs.git.userEmail = "...";   # Only beau gets this email
-    #   hm.primary.programs.zsh.enable = true;    # Primary user gets zsh
+    # Collect modules by scope; let Home Manager merge their typed options.
     hm = lib.mkOption {
-      type = lib.types.attrsOf lib.types.anything;
+      type = lib.types.attrsOf lib.types.deferredModule;
       default = { };
-      description = "Home Manager configuration. Use 'all' for shared, 'primary' for primary user, or '<username>' for specific users.";
-    };
-
-    hmModules = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.listOf lib.types.anything);
-      default = { };
-      description = "Extra Home Manager modules. Use 'all' for shared modules, 'primary' for the primary user, or '<username>' for specific users.";
+      description = "Home Manager modules scoped to 'all', 'primary', or a username. Set options directly or use imports.";
     };
   };
 
@@ -198,30 +185,11 @@ in
       # Primary user name
       primaryUsername = computedHostSpec.primaryUser.username;
 
-      # Get per-user HM configs/modules (excluding 'all' and 'primary' keys)
-      perUserHmConfigs = lib.filterAttrs (n: v: n != "all" && n != "primary") config.hm;
-      perUserHmModules = lib.filterAttrs (n: v: n != "all" && n != "primary") config.hmModules;
-
-      # Build home-manager.users configuration
-      # Each user gets their specific config merged with primary config if they're primary
-      hmUsersConfig = lib.genAttrs computedHostSpec.usernames (
-        username:
-        let
-          userSpecific = perUserHmConfigs.${username} or { };
-          # Primary user also merges hm.primary
-          primaryExtra = if username == primaryUsername then config.hm.primary or { } else { };
-          userImports =
-            (perUserHmModules.${username} or [ ])
-            ++ lib.optionals (username == primaryUsername) (config.hmModules.primary or [ ]);
-        in
-        lib.mkMerge [
-          {
-            imports = userImports;
-          }
-          userSpecific
-          primaryExtra
-        ]
-      );
+      named = removeAttrs config.hm [ "all" "primary" ];
+      hmUsersConfig = lib.genAttrs computedHostSpec.usernames (username: {
+        imports = lib.optional (named ? ${username}) named.${username}
+          ++ lib.optional (username == primaryUsername && config.hm ? primary) config.hm.primary;
+      });
     in
     {
       # Set the convenience alias
@@ -239,8 +207,7 @@ in
               sops.age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
             }
           )
-        ]
-        ++ (config.hmModules.all or [ ]);
+        ];
 
         # Per-user configurations
         users = hmUsersConfig;

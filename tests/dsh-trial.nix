@@ -21,6 +21,7 @@ let
       system = "x86_64-linux";
       specialArgs = { inherit inputs lib; };
       modules = [
+        (inputs.home-manager + "/nixos")
         ../modules/tools/direnv/common.nix
         ../modules/services/agent-workspace/main.nix
         ../modules/cli/secretspec/main.nix
@@ -34,7 +35,7 @@ let
               ../modules/services/docker-registry/nas.nix
             ];
         }
-        ({ lib, ... }: {
+        ({ config, lib, ... }: {
           options.hostSpec = lib.mkOption { type = lib.types.attrs; };
           options.hostSpecs = lib.mkOption { type = lib.types.attrs; };
           options.custom.ports = lib.mkOption {
@@ -42,11 +43,7 @@ let
             default = { };
           };
           options.hm = lib.mkOption {
-            type = lib.types.attrsOf lib.types.anything;
-            default = { };
-          };
-          options.hmModules = lib.mkOption {
-            type = lib.types.attrsOf (lib.types.listOf lib.types.anything);
+            type = lib.types.attrsOf lib.types.deferredModule;
             default = { };
           };
           options.sops.useSystemdActivation = lib.mkEnableOption "synthetic secrets activation";
@@ -83,6 +80,13 @@ let
             );
           };
           config = {
+            home-manager = {
+              useGlobalPkgs = true;
+              users.operator = {
+                imports = [ config.hm.primary ];
+                home.stateVersion = "26.05";
+              };
+            };
             hostSpec = {
               username = "operator";
               home = "/home/operator";
@@ -155,13 +159,6 @@ let
   laptop = evaluate "laptop" false;
   sc = grill.systemd.services.dsh-agent.serviceConfig;
   folder = grill.services.syncthing.settings.folders.agent-workspace;
-  # Exercise the same TOML merge boundary as Home Manager's direnv module.
-  direnvPrefixes = c: (lib.evalModules {
-    modules = [
-      { options.programs.direnv.config = lib.mkOption { type = ((import nixpkgs { system = "x86_64-linux"; }).formats.toml { }).type; }; }
-      { programs.direnv.config = c.hm.primary.programs.direnv.config; }
-    ] ++ c.hmModules.primary;
-  }).config.programs.direnv.config.whitelist.prefix;
   passed =
     c:
     let
@@ -278,13 +275,13 @@ assert lib.all
   (
     c:
     lib.elem "d /agent 2770 operator agent-workspace - -" c.systemd.tmpfiles.rules
-    && lib.sort builtins.lessThan (direnvPrefixes c) == [
+    && lib.sort builtins.lessThan c.home-manager.users.operator.programs.direnv.config.whitelist.prefix == [
       "/agent/"
       "/home/operator/collab"
       "/home/operator/documents"
       "/home/operator/monash"
     ]
-    && c.hm.primary.xdg.configFile."git/config".text == ''
+    && c.home-manager.users.operator.xdg.configFile."git/config".text == ''
       [safe]
         directory = /agent/*
     ''
@@ -304,7 +301,7 @@ assert !(lib.elem "(?d)**/.git" folder.ignorePatterns);
 assert !(lib.elem "(?d)**/*.sync-conflict-*" folder.ignorePatterns);
 assert lib.elem "t480" folder.devices && lib.elem "server" folder.devices;
 assert
-  grill.hm.primary.home.sessionVariables.SECRETSPEC_PROVIDER == "bw://?server=https://pw.bepis.lol";
+  grill.home-manager.users.operator.home.sessionVariables.SECRETSPEC_PROVIDER == "bw://?server=https://pw.bepis.lol";
 {
   status = "passed";
   package = grill.services.dshTrial.package.version;

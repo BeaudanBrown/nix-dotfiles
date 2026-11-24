@@ -1,6 +1,6 @@
 { ... }:
 {
-  hmModules.primary = [
+  hm.primary.imports = [
     (
       { config, lib, ... }:
       {

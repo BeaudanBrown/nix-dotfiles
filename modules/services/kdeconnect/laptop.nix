@@ -3,7 +3,7 @@ let
   secretName = "kdeconnect/${config.networking.hostName}";
 in
 {
-  hmModules.primary = [
+  hm.primary.imports = [
     (
       { config, ... }:
       {
