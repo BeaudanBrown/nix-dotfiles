@@ -41,6 +41,7 @@ let
   state = "/var/lib/dsh-agent";
   home = "${state}/home";
   dshHome = "${state}/dsh";
+  runtimeDirectory = "dsh-agent";
   mockCli = pkgs.writeShellScriptBin "secretspec" ''
     exec ${pkgs.python3}/bin/python3 ${../../cli/secretspec/agent_provider.py} \
       ${tools.secretspec}/bin/secretspec "$@"
@@ -80,7 +81,7 @@ let
     mkdir -p "$out/etc/dsh-documents/deepseek-harness"
     ln -s /agent "$out/etc/dsh-documents/deepseek-harness/default-workspace"
     # Mount targets must exist: this tree itself lives in the read-only store.
-    mkdir -p "$out/run/systemd/resolve" "$out/run/dsh-git-agent" "$out/etc/ssh"
+    mkdir -p "$out/run/systemd/resolve" "$out/run/dsh-git-agent" "$out/run/${runtimeDirectory}" "$out/etc/ssh"
     touch "$out"/etc/ssh/{ssh_config,ssh_known_hosts}
     ln -s /run/systemd/resolve/stub-resolv.conf "$out/etc/resolv.conf"
     touch "$out"/etc/{hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
@@ -238,6 +239,7 @@ in
       ];
       environment = {
         HOME = home;
+        XDG_RUNTIME_DIR = "/run/${runtimeDirectory}";
         # Web terminals use SHELL before falling back to the system user's nologin.
         SHELL = "/bin/bash";
         DSH_HOME = dshHome;
@@ -258,6 +260,9 @@ in
         Group = "dsh-agent";
         UMask = "0007";
         RootDirectory = runtimeRoot;
+        # systemd creates this directory and mounts it writable inside RootDirectory.
+        RuntimeDirectory = runtimeDirectory;
+        RuntimeDirectoryMode = "0700";
         MountAPIVFS = true;
         WorkingDirectory = home;
         ExecStart = "${cfg.package}/bin/dsh --profile web --patch /etc/dsh-policy.patch.yml --patch /etc/dsh-host.patch.yml --no-open --host ${cfg.listenAddress} --port ${toString cfg.port} --public-url https://${cfg.hostname}/ --trusted-host ${cfg.hostname}";
@@ -282,7 +287,8 @@ in
         ProtectKernelModules = true;
         ProtectKernelLogs = true;
         ProtectControlGroups = true;
-        RestrictSUIDSGID = true;
+        # Build tools may preserve setgid on shared workspace directories.
+        RestrictSUIDSGID = false;
         RestrictRealtime = true;
         RestrictNamespaces = true;
         RestrictAddressFamilies = [

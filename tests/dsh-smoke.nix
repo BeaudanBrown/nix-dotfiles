@@ -30,6 +30,9 @@ pkgs.testers.runNixOSTest {
       pkgs.writeShellScript "check-dsh-policy" ''
         set -eu
         test "$(pwd)" = "$HOME"
+        test "$XDG_RUNTIME_DIR" = /run/dsh-agent
+        test "$(stat -c %a:%u:%g "$XDG_RUNTIME_DIR")" = "700:$(id -u):$(id -g)"
+        test -w "$XDG_RUNTIME_DIR"
         # Exercise libc DNS inside the restricted unit, without Internet access.
         grep -Eq '^nameserver[[:space:]]+127\.0\.0\.53$' /etc/resolv.conf
         ${pkgs.glibc.bin}/bin/getent -s dns ahostsv4 _localdnsstub. | grep -q '^127\.0\.0\.53 '
@@ -74,6 +77,11 @@ pkgs.testers.runNixOSTest {
                 f"test -s /proc/{pid}/root{path} || "
                 f"{{ echo '{phase}: MainPID {pid} sees {path} missing or empty' >&2; exit 1; }}"
             )
+        runtime_path = "/run/dsh-agent"
+        assert "rw" in mounts.get(runtime_path, "").split(","), (
+            f"{phase}: MainPID {pid} lacks a writable runtime directory mount"
+        )
+        assert machine.succeed(f"stat -Lc %a:%U:%G /proc/{pid}/root{runtime_path}").strip() == "700:dsh-agent:dsh-agent"
         # Keep the live bind targets off the store filesystem: store optimisation
         # must not be able to replace the mount targets beneath this process.
         configured_root = machine.succeed(
