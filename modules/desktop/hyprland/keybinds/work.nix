@@ -5,9 +5,34 @@
   ...
 }:
 let
-  dynamicStreaming = config.hostSpec.hostName == "grill" && !config.custom.sunshine.fixedStream;
+  isGrill = config.hostSpec.hostName == "grill";
+  dynamicStreaming = isGrill && !config.custom.sunshine.fixedStream;
   navigation =
     action: fallback: if dynamicStreaming then "exec, stream-session nav ${action}" else fallback;
+
+  focusLocalMonitor = pkgs.writeShellApplication {
+    name = "focus-local-monitor";
+    runtimeInputs = [
+      config.programs.hyprland.package
+      pkgs.jq
+    ];
+    text = ''
+      monitors="$(hyprctl -j monitors)"
+      target="$(jq -r '
+        (map(select(.focused == true))[0].name) as $current
+        | (map(select(.name != "STREAM")) | sort_by(.id) | map(.name)) as $local
+        | ($local | index($current)) as $index
+        | (if $index == null then $local[0] else ($local[$index + 1] // $local[0]) end)
+        | select(. != null and . != $current)
+      ' <<< "$monitors")"
+      if [[ -n "$target" ]]; then
+        hyprctl dispatch focusmonitor "$target" >/dev/null
+      fi
+    '';
+  };
+  monitorNavigation = navigation "monitor" (
+    if isGrill then "exec, ${lib.getExe focusLocalMonitor}" else "focusmonitor, +1"
+  );
 
   # Build the hyprland_show_app command and 3 binds for each launcher
   launchProgram =
@@ -257,7 +282,7 @@ let
     "SUPER, comma, exec, playerctl previous"
 
     # Monitor switching
-    "SUPER, h, ${navigation "monitor" "focusmonitor, +1"}"
+    "SUPER, h, ${monitorNavigation}"
     "SUPERSHIFT, h, ${navigation "window" "movewindow, mon:+1"}"
     "SUPERALT, h, ${navigation "workspace-monitor" "moveworkspacetomonitor, e+0 +1"}"
 
