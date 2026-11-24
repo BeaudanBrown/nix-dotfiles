@@ -28,6 +28,9 @@
   ]
   ++ (import ../../generated/imports/nas.nix);
 
+  # Pause the public proxy without removing its reusable module.
+  disabledModules = [ ../../modules/services/tailscale-proxy/nas.nix ];
+
   # Enable emulation for cross-compilation
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 

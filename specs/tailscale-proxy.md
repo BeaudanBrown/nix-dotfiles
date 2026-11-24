@@ -2,7 +2,14 @@
 
 ## Scope and status
 
-NAS hosts an authenticated NaiveProxy-compatible sing-box inbound at
+The proxy is paused on both hosts via `disabledModules` in their host entry
+points. Apply the t480 change first and verify native Tailscale over a known-good
+network. Then apply NAS from LAN or console access: removing the last
+passthrough listener moves TCP/443 back to native Nginx HTTPS, so plan a full
+Nginx restart in a maintenance window. To re-enable, remove the two exclusions
+and deploy NAS before t480.
+
+When enabled, NAS hosts an authenticated NaiveProxy-compatible sing-box inbound at
 `proxy.bepis.lol:443`. Only t480's `tailscaled` uses the local HTTP proxy;
 NAS's own Tailscale daemon and other hosts are unchanged. The Headscale login
 server remains `https://hs.bepis.lol`.

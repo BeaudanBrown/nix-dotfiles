@@ -23,6 +23,9 @@
   ]
   ++ (import ../../generated/imports/t480.nix);
 
+  # Restore direct Headscale and DERP connectivity while the proxy is paused.
+  disabledModules = [ ../../modules/services/tailscale-proxy/t480.nix ];
+
   thisHost = host;
 
   services.tlp = {
