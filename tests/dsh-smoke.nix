@@ -33,6 +33,9 @@ pkgs.testers.runNixOSTest {
         test "$XDG_RUNTIME_DIR" = /run/dsh-agent
         test "$(stat -c %a:%u:%g "$XDG_RUNTIME_DIR")" = "700:$(id -u):$(id -g)"
         test -w "$XDG_RUNTIME_DIR"
+        for skill in grilling grill-with-docs domain-modeling; do
+          test -r "$DSH_BUNDLED_SKILL_DIR/$skill/SKILL.md"
+        done
         # Exercise libc DNS inside the restricted unit, without Internet access.
         grep -Eq '^nameserver[[:space:]]+127\.0\.0\.53$' /etc/resolv.conf
         ${pkgs.glibc.bin}/bin/getent -s dns ahostsv4 _localdnsstub. | grep -q '^127\.0\.0\.53 '

@@ -243,6 +243,7 @@ in
         # Web terminals use SHELL before falling back to the system user's nologin.
         SHELL = "/bin/bash";
         DSH_HOME = dshHome;
+        DSH_BUNDLED_SKILL_DIR = "${inputs.agent-workshop.packages.${pkgs.stdenv.hostPlatform.system}.skills}";
         PATH = lib.mkForce "${runtime}/bin";
         DSH_PERMISSION_MODE = "danger-full-access";
         DSH_TELEMETRY_DISABLED = "1";
