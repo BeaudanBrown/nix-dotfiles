@@ -78,6 +78,13 @@ workspace may retain old modes/ACLs; the operator must normalize those files
 before expecting group collaboration. Restrictive application-created modes may
 also need repair. We deliberately do not recursively chmod arbitrary projects.
 
+The DSH service runs with primary group `agent-workspace`; the `dsh-agent`
+account still defaults to its private group outside the service. This preserves
+the shared group when DSH atomically replaces files through a staging directory
+that loses setgid. It does not change explicit file modes: a new `0600` file
+still requires a deliberate group-access change if it belongs in the shared
+checkout. The DSH state and runtime directories stay owner-only.
+
 On the four workspace hosts, the primary account gets `safe.directory = /agent/*`
 in its Home Manager XDG Git config, alongside any existing `~/.gitconfig`. DSH
 already has the same exception in its private Git config. This trusts Git

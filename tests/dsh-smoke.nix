@@ -12,12 +12,13 @@ pkgs.testers.runNixOSTest {
     services.dshTrial.enable = true;
     services.resolved.enable = true;
     users.groups.dsh-agent = { };
+    users.groups.agent-workspace = { };
     users.users.dsh-agent = {
       isSystemUser = true;
       group = "dsh-agent";
     };
     systemd.tmpfiles.rules = [
-      "d /agent 0770 dsh-agent dsh-agent - -"
+      "d /agent 2770 dsh-agent agent-workspace - -"
       "d /var/lib/agent-mocks 0700 dsh-agent dsh-agent - -"
     ];
     # Inspect the actual launcher's composed config AFTER its first boot, as
@@ -84,7 +85,7 @@ pkgs.testers.runNixOSTest {
         assert "rw" in mounts.get(runtime_path, "").split(","), (
             f"{phase}: MainPID {pid} lacks a writable runtime directory mount"
         )
-        assert machine.succeed(f"stat -Lc %a:%U:%G /proc/{pid}/root{runtime_path}").strip() == "700:dsh-agent:dsh-agent"
+        assert machine.succeed(f"stat -Lc %a:%U:%G /proc/{pid}/root{runtime_path}").strip() == "700:dsh-agent:agent-workspace"
         # Keep the live bind targets off the store filesystem: store optimisation
         # must not be able to replace the mount targets beneath this process.
         configured_root = machine.succeed(

@@ -254,7 +254,8 @@ assert lib.hasInfix "- id: plugin-manager\n  disabled: true" (
 assert
   (lib.findFirst (s: s.domain == "dsg.bepis.lol") { tailnet = false; } nas.hostedServices).tailnet;
 assert sc.User == "dsh-agent" && sc.NoNewPrivileges;
-assert sc.UMask == "0007";
+assert sc.Group == "agent-workspace" && grill.users.users.dsh-agent.group == "dsh-agent";
+assert sc.UMask == "0007" && sc.RuntimeDirectoryMode == "0700";
 assert grill.systemd.services.dsh-agent.environment.GIT_CONFIG_GLOBAL == "/etc/gitconfig";
 assert lib.hasInfix "directory = /agent/*" grill.environment.etc."dsh-agent/gitconfig".text;
 assert sc.MemoryHigh == "85%" && sc.MemoryMax == "90%" && sc.TasksMax == 4096;

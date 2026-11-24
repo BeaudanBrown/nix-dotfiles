@@ -166,7 +166,7 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = config.users.users ? dsh-agent;
+        assertion = config.users.users ? dsh-agent && config.users.groups ? agent-workspace;
         message = "DSH needs the main-root shared workspace identity.";
       }
       {
@@ -175,6 +175,7 @@ in
             "dsh-agent"
             "*"
             "@dsh-agent"
+            "@agent-workspace"
           ]
           ++ map (g: "@${g}") config.users.users.dsh-agent.extraGroups
         );
@@ -258,7 +259,9 @@ in
       serviceConfig = {
         Type = "simple";
         User = "dsh-agent";
-        Group = "dsh-agent";
+        # DSH atomic writes can clear setgid on their staging directory. Make
+        # the shared group the process default without changing the account.
+        Group = "agent-workspace";
         UMask = "0007";
         RootDirectory = runtimeRoot;
         # systemd creates this directory and mounts it writable inside RootDirectory.
