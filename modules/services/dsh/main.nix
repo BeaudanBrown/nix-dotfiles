@@ -7,6 +7,7 @@
 }:
 let
   cfg = config.services.dshTrial;
+  agentFontsConf = pkgs.makeFontsConf { fontDirectories = [ pkgs.dejavu_fonts ]; };
   tools = inputs.agent-tools-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   dsh = inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.dsh;
   oauthPlugin = import ./codex-oauth.nix {
@@ -33,7 +34,8 @@ let
       publicKeyFile = ./forgejo-host-key.pub;
     }
   ];
-  knownHost = entry: if entry.port == 22 then entry.host else "[${entry.host}]:${toString entry.port}";
+  knownHost =
+    entry: if entry.port == 22 then entry.host else "[${entry.host}]:${toString entry.port}";
   sshConfigFile = "dsh-agent/ssh/ssh_config";
   sshKnownHostsFile = "dsh-agent/ssh/known_hosts";
   # Share the immutable NixOS-generated file between DSH and the signer.
@@ -82,6 +84,8 @@ let
     ln -s /agent "$out/etc/dsh-documents/deepseek-harness/default-workspace"
     # Mount targets must exist: this tree itself lives in the read-only store.
     mkdir -p "$out/run/systemd/resolve" "$out/run/dsh-git-agent" "$out/run/${runtimeDirectory}" "$out/etc/ssh"
+    mkdir -p "$out/run/user" "$out/etc/fonts"
+    touch "$out/etc/fonts/fonts.conf"
     touch "$out"/etc/ssh/{ssh_config,ssh_known_hosts}
     ln -s /run/systemd/resolve/stub-resolv.conf "$out/etc/resolv.conf"
     touch "$out"/etc/{hosts,passwd,group,nsswitch.conf,gitconfig,dsh-host.patch.yml,dsh-policy.patch.yml}
@@ -220,6 +224,13 @@ in
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${pkgs.systemd}/bin/systemd-tmpfiles --create ${rootRules}";
+        # Resolve the system account's allocated UID at activation, not evaluation.
+        # Only the private root gets this alias; never bind the host login directory.
+        ExecStartPost = pkgs.writeShellScript "dsh-user-runtime-alias" ''
+          set -eu
+          uid="$(${pkgs.coreutils}/bin/id -u dsh-agent)"
+          ${pkgs.coreutils}/bin/ln -sfnT ../${runtimeDirectory} "${runtimeRoot}/run/user/$uid"
+        '';
       };
     };
     systemd.services.dsh-agent = {
@@ -244,7 +255,8 @@ in
         # Web terminals use SHELL before falling back to the system user's nologin.
         SHELL = "/bin/bash";
         DSH_HOME = dshHome;
-        DSH_BUNDLED_SKILL_DIR = "${inputs.agent-workshop.packages.${pkgs.stdenv.hostPlatform.system}.skills}";
+        DSH_BUNDLED_SKILL_DIR = "${inputs.agent-workshop.packages.${pkgs.stdenv.hostPlatform.system}.skills
+        }";
         PATH = lib.mkForce "${runtime}/bin";
         DSH_PERMISSION_MODE = "danger-full-access";
         DSH_TELEMETRY_DISABLED = "1";
@@ -286,7 +298,8 @@ in
         PrivateTmp = true;
         PrivateDevices = true;
         ProtectProc = "invisible";
-        ProcSubset = "pid";
+        # LibreOffice probes /proc/version; keep other users' processes hidden.
+        ProcSubset = "all";
         ProtectKernelTunables = true;
         ProtectKernelModules = true;
         ProtectKernelLogs = true;
@@ -321,6 +334,7 @@ in
           "-/dev/dri/renderD129"
         ];
         BindReadOnlyPaths = [
+          "${agentFontsConf}:/etc/fonts/fonts.conf"
           "${config.environment.etc.${sshConfigFile}.source}:/etc/ssh/ssh_config"
           "${gitKnownHosts}:/etc/ssh/ssh_known_hosts"
           "/nix/store"

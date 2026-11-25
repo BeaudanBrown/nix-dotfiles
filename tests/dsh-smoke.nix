@@ -34,6 +34,10 @@ pkgs.testers.runNixOSTest {
         test "$XDG_RUNTIME_DIR" = /run/dsh-agent
         test "$(stat -c %a:%u:%g "$XDG_RUNTIME_DIR")" = "700:$(id -u):$(id -g)"
         test -w "$XDG_RUNTIME_DIR"
+        test "/run/user/$(id -u)" -ef "$XDG_RUNTIME_DIR"
+        test ! -w /run/user
+        test -r /proc/version
+        test "$(env -u FONTCONFIG_FILE ${pkgs.fontconfig.bin}/bin/fc-match -f '%{family}' sans-serif)" = 'DejaVu Sans'
         for skill in grilling grill-with-docs domain-modeling; do
           test -r "$DSH_BUNDLED_SKILL_DIR/$skill/SKILL.md"
         done
@@ -69,6 +73,7 @@ pkgs.testers.runNixOSTest {
             "/etc/group",
             "/etc/nsswitch.conf",
             "/etc/gitconfig",
+            "/etc/fonts/fonts.conf",
             "/etc/ssl/certs/ca-certificates.crt",
             "/etc/ssh/ssh_config",
             "/etc/ssh/ssh_known_hosts",
