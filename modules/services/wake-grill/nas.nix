@@ -45,7 +45,7 @@ in
         "${pkgs.openssh}/bin/ssh"
         grill.tailIP
         (toString grill.sshPort)
-        grill.username
+        (lib.head grill.users).username
         "${knownHosts}"
       ];
       LoadCredential = [
