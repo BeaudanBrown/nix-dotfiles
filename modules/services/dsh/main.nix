@@ -299,7 +299,12 @@ in
         CapabilityBoundingSet = "";
         AmbientCapabilities = "";
         ProtectSystem = "strict";
-        ProtectHome = true;
+        # ProtectHome also masks the private /run/user alias needed by LibreOffice.
+        ProtectHome = false;
+        InaccessiblePaths = [
+          "-/home"
+          "-/root"
+        ];
         PrivateTmp = true;
         PrivateDevices = true;
         ProtectProc = "invisible";

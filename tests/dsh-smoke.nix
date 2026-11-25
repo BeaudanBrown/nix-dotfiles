@@ -37,6 +37,8 @@ pkgs.testers.runNixOSTest {
         test -w "$XDG_RUNTIME_DIR"
         test "/run/user/$(id -u)" -ef "$XDG_RUNTIME_DIR"
         test ! -w /run/user
+        test ! -x /home
+        test ! -x /root
         test -r /proc/version
         test "$(env -u FONTCONFIG_FILE ${pkgs.fontconfig.bin}/bin/fc-match -f '%{family}' sans-serif)" = 'DejaVu Sans'
         for skill in grilling grill-with-docs domain-modeling; do
