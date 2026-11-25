@@ -9,6 +9,7 @@
   imports = [
     ./hardware.nix
     ../../modules/services/agent-sandbox/trial.nix
+    ../../modules/services/wake-grill/ssh-unlock.nix
 
     inputs.sops-nix.nixosModules.sops
     inputs.nixvim.nixosModules.nixvim

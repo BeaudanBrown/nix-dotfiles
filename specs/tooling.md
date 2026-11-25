@@ -52,6 +52,27 @@ normally, leave AC connected, and test `wake-grill` after 10 minutes. Repeat
 with the phone shortcut over mobile data with the tailnet connected. Also verify
 that the endpoint is unreachable from outside the tailnet.
 
+### Unlock Grill from a phone
+
+Create a second shortcut: `POST https://wake.bepis.lol/grill/unlock` with no body
+and `Authorization: Bearer <token>`. Keep the token out of URLs and logs. The
+existing wake shortcut is unchanged. The unlock route releases the actual
+Grill desktop lock, including the physical displays.
+
+NAS uses two SOPS fields in `secrets/nas.yaml`: `wake-grill/unlock-token` and
+`wake-grill/ssh-private-key`. It connects to Grill's existing OpenSSH port over
+the tailnet, pins Grill's host key, and sends one command, `unlock`. The
+corresponding public key on Grill is restricted to that command and NAS's
+tailnet address. Boot, idle, and manual lock are unchanged.
+
+Deploy Grill first, then NAS after updating the `sopsSecrets` input in a trusted
+checkout. From the tailnet, verify a missing or wrong token is rejected, then
+lock Grill manually and run the shortcut. `202` means the unlock signal was
+sent, not that the lock has visibly cleared. `503` means the action could not
+be confirmed (for example, Grill is still booting or no locker is ready).
+Nothing is queued. Finally, test from a cold boot and verify off-tailnet access
+cannot unlock Grill.
+
 ### Grill Local LLM
 
 Network hosts install a `local-llm` lifecycle command for the Tailnet-only
