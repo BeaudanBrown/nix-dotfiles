@@ -102,8 +102,10 @@ let
   # A file bind attached to the old entry in a private namespace then disappears
   # from path lookup. Never use the store template itself as the live mount tree.
   runtimeRoot = "/run/dsh-agent-roots/${builtins.baseNameOf (toString root)}";
+  userAliasDir = "/run/dsh-agent-user-alias";
   rootRules = pkgs.writeText "dsh-root.conf" ''
     d /run/dsh-agent-roots 0755 root root - -
+    d ${userAliasDir} 0755 root root - -
     C ${runtimeRoot} 0555 root root - ${root}
   '';
   configFiles = {
@@ -232,7 +234,7 @@ in
         ExecStartPost = pkgs.writeShellScript "dsh-user-runtime-alias" ''
           set -eu
           uid="$(${pkgs.coreutils}/bin/id -u dsh-agent)"
-          ${pkgs.coreutils}/bin/ln -sfnT ../${runtimeDirectory} "${runtimeRoot}/run/user/$uid"
+          ${pkgs.coreutils}/bin/ln -sfnT ../${runtimeDirectory} "${userAliasDir}/$uid"
         '';
       };
     };
@@ -337,8 +339,8 @@ in
           "-/dev/dri/renderD129"
         ];
         BindReadOnlyPaths = [
-          # The private /run mount hides the alias prepared in the root tree.
-          "${runtimeRoot}/run/user:/run/user"
+          # Keep the source outside RootDirectory: its own /run/user is masked.
+          "${userAliasDir}:/run/user"
           "${agentFontsConf}:/etc/fonts/fonts.conf"
           "${config.environment.etc.${sshConfigFile}.source}:/etc/ssh/ssh_config"
           "${gitKnownHosts}:/etc/ssh/ssh_known_hosts"
