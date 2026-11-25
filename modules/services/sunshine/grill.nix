@@ -37,6 +37,17 @@ let
     // lib.optionalAttrs steam { detached = [ "${command} launch" ]; };
   fixedMode = config.custom.sunshine.fixedStream;
   fixedMonitorRule = "STREAM,1920x1080@60,10000x10000,1";
+  steamBigPicture = pkgs.writeShellApplication {
+    name = "sunshine-steam-big-picture";
+    runtimeInputs = [
+      config.programs.hyprland.package
+      pkgs.coreutils
+      pkgs.jq
+      pkgs.steam
+      pkgs.systemd
+    ];
+    text = builtins.readFile ./steam-big-picture.sh;
+  };
   setupFixedOutput = pkgs.writeShellApplication {
     name = "sunshine-fixed-output";
     runtimeInputs = [
@@ -115,6 +126,16 @@ in
             {
               name = "Streaming Desktop";
               image-path = "desktop.png";
+            }
+            {
+              name = "Steam Big Picture";
+              image-path = "steam.png";
+              prep-cmd = [
+                {
+                  do = "${lib.getExe steamBigPicture}";
+                  undo = "";
+                }
+              ];
             }
           ]
         else

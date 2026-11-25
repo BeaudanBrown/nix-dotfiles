@@ -6,7 +6,11 @@ With `custom.sunshine.fixedStream = true`, Sunshine's user service creates one
 1080p60 headless output named `STREAM` before starting in the Hyprland session.
 No physical monitor or `WOL-FALLBACK` is required. The **Streaming Desktop**
 entry has no prep or cleanup hooks, so quitting does not resize the output.
-Launch Steam manually if needed. Pairings and Hyprlock are unchanged.
+The **Steam Big Picture** entry waits for Big Picture, moves its window to
+`streaming` on `STREAM`, and verifies true fullscreen before starting the stream.
+If the window never appears or placement fails, the tile fails instead of
+opening the bare desktop. Quitting the stream leaves Steam running. Pairings
+and Hyprlock are unchanged; unlock Grill before launching the tile.
 
 To test over SSH without rebooting, save and close anything on `STREAM`, stop
 both old user services, then activate with `sudo nixos-rebuild test --flake .#grill`.
@@ -15,8 +19,8 @@ output with `hyprctl -i 0 output remove STREAM` before starting Sunshine again.
 Do not remove an output with unsaved work. Verify `STREAM` stays at 1080p60 after
 quitting a Moonlight stream and launching it again.
 
-Set `custom.sunshine.fixedStream = false` to restore the dynamic controller and
-Steam Big Picture entry. The rest of this document describes that dynamic mode.
+Set `custom.sunshine.fixedStream = false` to restore the dynamic controller.
+The rest of this document describes that dynamic mode.
 
 ## Scope and agreed behavior
 
