@@ -33,6 +33,7 @@ pkgs.testers.runNixOSTest {
         test "$(pwd)" = "$HOME"
         test "$XDG_RUNTIME_DIR" = /run/dsh-agent
         test "$(stat -c %a:%u:%g "$XDG_RUNTIME_DIR")" = "700:$(id -u):$(id -g)"
+        for cmd in cmp ps flock; do command -v "$cmd" >/dev/null; done
         test -w "$XDG_RUNTIME_DIR"
         test "/run/user/$(id -u)" -ef "$XDG_RUNTIME_DIR"
         test ! -w /run/user
@@ -86,6 +87,8 @@ pkgs.testers.runNixOSTest {
                 f"test -s /proc/{pid}/root{path} || "
                 f"{{ echo '{phase}: MainPID {pid} sees {path} missing or empty' >&2; exit 1; }}"
             )
+        assert "ro" in mounts.get("/run/user", "").split(","), f"{phase}: missing private alias mount"
+        machine.succeed(f"test /proc/{pid}/root/run/user/$(id -u dsh-agent) -ef /proc/{pid}/root/run/dsh-agent")
         runtime_path = "/run/dsh-agent"
         assert "rw" in mounts.get(runtime_path, "").split(","), (
             f"{phase}: MainPID {pid} lacks a writable runtime directory mount"

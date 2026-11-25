@@ -54,6 +54,9 @@ let
       mockCli
       pkgs.bashInteractive
       pkgs.coreutils
+      pkgs.diffutils
+      pkgs.procps
+      pkgs.util-linux
       pkgs.findutils
       pkgs.gnugrep
       pkgs.gnused
@@ -334,6 +337,8 @@ in
           "-/dev/dri/renderD129"
         ];
         BindReadOnlyPaths = [
+          # The private /run mount hides the alias prepared in the root tree.
+          "${runtimeRoot}/run/user:/run/user"
           "${agentFontsConf}:/etc/fonts/fonts.conf"
           "${config.environment.etc.${sshConfigFile}.source}:/etc/ssh/ssh_config"
           "${gitKnownHosts}:/etc/ssh/ssh_known_hosts"
