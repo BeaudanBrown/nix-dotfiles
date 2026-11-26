@@ -43,17 +43,17 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1795673575,
-        "narHash": "sha256-eVCzGhr3e77z1fZC6m4F5JcW1ccnmQMS3sBaLQuB+cE=",
+        "lastModified": 1795676065,
+        "narHash": "sha256-NpNQLuqw20sugRyUGD5FZj+7kntZoyX9IwjnZmjfdTs=",
         "owner": "BeaudanBrown",
         "repo": "agent-workshop",
-        "rev": "c712c5a7fff3ef92dac86b969842a0618cbdcac2",
+        "rev": "41ea6e6054764f983ace71642442e49bb1d520c9",
         "type": "github"
       },
       "original": {
         "owner": "BeaudanBrown",
         "repo": "agent-workshop",
-        "rev": "c712c5a7fff3ef92dac86b969842a0618cbdcac2",
+        "rev": "41ea6e6054764f983ace71642442e49bb1d520c9",
         "type": "github"
       }
     },
