@@ -25,15 +25,14 @@ Adding books and chapters needs no rebuild. On nas,
 
 ## First deployment
 
-1. Push agent-workshop's `abrec` branch and merge it into `main`.
-2. Set `inputs.agent-workshop.url` in `flake.nix` to that commit and run
-   `nix flake lock`. Until then, nas fails to evaluate on this branch because
-   the pinned agent-workshop has no `nixosModules.abrec`.
-3. Rebuild nas.
-4. Check `systemctl status abrec`, both ACME certificates, and that
+1. `inputs.agent-workshop` is pinned to the commit `7ddd89c` on agent-workshop's
+   `abrec` branch, the first with `nixosModules.abrec`. Once that branch is merged
+   into agent-workshop `main`, re-pin to the merged commit.
+2. Rebuild nas.
+3. Check `systemctl status abrec`, both ACME certificates, and that
    `audiobooks.bepis.lol` resolves publicly while `abrec.bepis.lol` resolves
    only on the tailnet.
-5. Upload a book from the admin site, then on an iPhone check: following by
+4. Upload a book from the admin site, then on an iPhone check: following by
    the book page's link, chapter order, continuing to the next chapter while
    locked, the sleep timer, and how the library feed's seasons look.
 
