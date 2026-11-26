@@ -11,7 +11,7 @@ let
   tools = inputs.agent-tools-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   dsh = inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.dsh;
   workshop = inputs.agent-workshop.packages.${pkgs.stdenv.hostPlatform.system};
-  mediaPage = import ../../cli/media-page/settings.nix;
+  agentPage = import ../../cli/agent-page/settings.nix;
   oauthPlugin = import ./codex-oauth.nix {
     inherit pkgs;
     dsh = cfg.package;
@@ -66,7 +66,7 @@ let
       pkgs.openssh
       pkgs.ripgrep
       pkgs.nix
-      workshop.media-page
+      workshop.agent-page
     ];
   };
   connectionPatch = pkgs.writeText "dsh-host.patch.yml" (
@@ -79,9 +79,9 @@ let
         };
       }
       {
-        # The sidebar reads HTML previews whole; match the media-page cap.
+        # The sidebar reads HTML previews whole; match the agent-page cap.
         id = "workspace-files";
-        config.maxFileBytes = mediaPage.maxBytes;
+        config.maxFileBytes = agentPage.maxBytes;
       }
     ]
   );
@@ -271,8 +271,8 @@ in
         DSH_BUNDLED_SKILL_DIR = "${workshop.skills}";
         PATH = lib.mkForce "${runtime}/bin";
         DSH_PERMISSION_MODE = "danger-full-access";
-        MEDIA_PAGE_OUT_DIR = mediaPage.outDir;
-        MEDIA_PAGE_MAX_BYTES = toString mediaPage.maxBytes;
+        AGENT_PAGE_OUT_DIR = agentPage.outDir;
+        AGENT_PAGE_MAX_BYTES = toString agentPage.maxBytes;
         DSH_TELEMETRY_DISABLED = "1";
         DSH_TELEMETRY_MODE = "DISABLED";
         NIX_REMOTE = "daemon";

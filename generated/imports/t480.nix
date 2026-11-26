@@ -52,7 +52,7 @@
   ../../modules/apps/ghostty/client.nix
   ../../modules/services/tailscale/client.nix
   ../../modules/cli/atuin/main.nix
-  ../../modules/cli/media-page/main.nix
+  ../../modules/cli/agent-page/main.nix
   ../../modules/cli/pi-harness/main.nix
   ../../modules/cli/sec/main.nix
   ../../modules/cli/secretspec/main.nix
