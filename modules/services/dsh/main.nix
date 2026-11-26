@@ -10,6 +10,8 @@ let
   agentFontsConf = pkgs.makeFontsConf { fontDirectories = [ pkgs.dejavu_fonts ]; };
   tools = inputs.agent-tools-nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   dsh = inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.dsh;
+  workshop = inputs.agent-workshop.packages.${pkgs.stdenv.hostPlatform.system};
+  mediaPage = import ../../cli/media-page/settings.nix;
   oauthPlugin = import ./codex-oauth.nix {
     inherit pkgs;
     dsh = cfg.package;
@@ -64,6 +66,7 @@ let
       pkgs.openssh
       pkgs.ripgrep
       pkgs.nix
+      workshop.media-page
     ];
   };
   connectionPatch = pkgs.writeText "dsh-host.patch.yml" (
@@ -74,6 +77,11 @@ let
           trustedHosts = [ cfg.hostname ];
           cookieMaxAgeDays = 400;
         };
+      }
+      {
+        # The sidebar reads HTML previews whole; match the media-page cap.
+        id = "workspace-files";
+        config.maxFileBytes = mediaPage.maxBytes;
       }
     ]
   );
@@ -260,10 +268,11 @@ in
         # Web terminals use SHELL before falling back to the system user's nologin.
         SHELL = "/bin/bash";
         DSH_HOME = dshHome;
-        DSH_BUNDLED_SKILL_DIR = "${inputs.agent-workshop.packages.${pkgs.stdenv.hostPlatform.system}.skills
-        }";
+        DSH_BUNDLED_SKILL_DIR = "${workshop.skills}";
         PATH = lib.mkForce "${runtime}/bin";
         DSH_PERMISSION_MODE = "danger-full-access";
+        MEDIA_PAGE_OUT_DIR = mediaPage.outDir;
+        MEDIA_PAGE_MAX_BYTES = toString mediaPage.maxBytes;
         DSH_TELEMETRY_DISABLED = "1";
         DSH_TELEMETRY_MODE = "DISABLED";
         NIX_REMOTE = "daemon";

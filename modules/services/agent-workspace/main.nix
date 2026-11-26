@@ -78,6 +78,8 @@ in
       "(?d)**/.pytest_cache"
       "(?d)**/.mypy_cache"
       "(?d)**/.ruff_cache"
+      # Throwaway media-page output; each host keeps its own.
+      "(?d)/.media-pages"
     ];
   };
 
