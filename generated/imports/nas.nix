@@ -6,6 +6,7 @@
   ../../modules/cli/pi-harness/nas.nix
   ../../modules/cli/starship/nas.nix
   ../../modules/cli/tmux/nas.nix
+  ../../modules/hosted-services/abrec/nas.nix
   ../../modules/hosted-services/art-domain/nas.nix
   ../../modules/hosted-services/dump/nas.nix
   ../../modules/hosted-services/forgejo/nas.nix

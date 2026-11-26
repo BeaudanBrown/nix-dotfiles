@@ -12,6 +12,7 @@
     inputs.stylix.nixosModules.stylix
     inputs.disko.nixosModules.disko
     inputs.authentik-nix.nixosModules.default
+    inputs.agent-workshop.nixosModules.abrec
     inputs.art-domain.nixosModules.default
     inputs.copyparty.nixosModules.default
     inputs.home-manager.nixosModules.home-manager
