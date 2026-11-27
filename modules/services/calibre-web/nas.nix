@@ -37,15 +37,22 @@ in
     before = [ "calibre-web.service" ];
     serviceConfig = {
       Type = "oneshot";
+      StateDirectory = "calibre-web";
+      StateDirectoryMode = "0700";
       User = "calibre-web";
       Group = "calibre-web";
       RemainAfterExit = true;
     };
     script = ''
-      ${pkgs.coreutils}/bin/install -d -m 0750 ${libraryDir}
+      export CALIBRE_CONFIG_DIRECTORY=${dataDir}/calibre-config
+      ${pkgs.coreutils}/bin/install -d -m 0750 "$CALIBRE_CONFIG_DIRECTORY" ${libraryDir}
       if [ ! -e ${libraryDir}/metadata.db ]; then
         ${config.services.calibre-web.calibrePackage}/bin/calibredb \
-          --with-library ${libraryDir} restore_database --really-do-it
+          --with-library ${libraryDir} list >/dev/null
+        test -f ${libraryDir}/metadata.db || {
+          echo "Calibre did not create ${libraryDir}/metadata.db" >&2
+          exit 1
+        }
       fi
     '';
   };
