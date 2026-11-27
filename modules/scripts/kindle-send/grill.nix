@@ -25,7 +25,7 @@ let
         exit 2
       fi
 
-      host="''${KINDLE_HOST:-root@192.168.68.111}"
+      host="''${KINDLE_HOST:-kindle}"
       flake="${config.hostSpec.dotfiles}"
       installable="$flake#legacyPackages.${pkgs.stdenv.hostPlatform.system}.kindle.$package^out"
 
