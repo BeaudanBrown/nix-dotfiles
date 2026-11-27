@@ -6,7 +6,6 @@
 {
   imports = [
     ./hardware.nix
-    ../../modules/scripts/kindle-send/nas.nix
 
     inputs.sops-nix.nixosModules.sops
     inputs.nixvim.nixosModules.nixvim

@@ -18,12 +18,14 @@
   ../../modules/hosted-services/vikunja/nas.nix
   ../../modules/nix/nas.nix
   ../../modules/scripts/fleet-installer/nas.nix
+  ../../modules/scripts/kindle-send/nas.nix
   ../../modules/services/agent-nfs/nas.nix
   ../../modules/services/attic/nas.nix
   ../../modules/services/atuin/nas.nix
   ../../modules/services/authentik/nas.nix
   ../../modules/services/bookkeeping/nas.nix
   ../../modules/services/bookstack/nas.nix
+  ../../modules/services/calibre-web/nas.nix
   ../../modules/services/chhoto-url/nas.nix
   ../../modules/services/container-registry-auth/nas.nix
   ../../modules/services/coordinator-vm/nas.nix
