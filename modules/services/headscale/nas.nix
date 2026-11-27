@@ -36,6 +36,10 @@ in
       };
       tls_cert_path = null;
       tls_key_path = null;
+      policy = {
+        mode = "file";
+        path = ./policy.hujson;
+      };
       derp = {
         auto_update_enabled = false;
 

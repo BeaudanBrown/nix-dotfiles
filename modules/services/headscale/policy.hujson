@@ -1,0 +1,20 @@
+{
+  // Preserve the tailnet's current unrestricted network connectivity.
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["*:*"]
+    }
+  ],
+
+  // Beau may use Tailscale SSH as root on nodes owned by Beau that enable it.
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["beau@"],
+      "dst": ["autogroup:self"],
+      "users": ["root"]
+    }
+  ]
+}
