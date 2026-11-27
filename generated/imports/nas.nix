@@ -99,8 +99,8 @@
   ../../modules/nix/builders/network.nix
   ../../modules/services/local-llm/network.nix
   ../../modules/system/networking/network.nix
-  ../../modules/cli/atuin/main.nix
   ../../modules/cli/agent-page/main.nix
+  ../../modules/cli/atuin/main.nix
   ../../modules/cli/pi-harness/main.nix
   ../../modules/cli/sec/main.nix
   ../../modules/cli/secretspec/main.nix
