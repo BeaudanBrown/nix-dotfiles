@@ -11,6 +11,7 @@
   ../../modules/desktop/hyprland/keybinds/grill.nix
   ../../modules/hosted-services/dump/grill.nix
   ../../modules/hosted-services/vikunja/grill.nix
+  ../../modules/scripts/kindle-send/grill.nix
   ../../modules/services/attic/grill.nix
   ../../modules/services/deskflow/grill.nix
   ../../modules/services/dsh/grill.nix
@@ -62,8 +63,8 @@
   ../../modules/system/networking/network.nix
   ../../modules/apps/ghostty/client.nix
   ../../modules/services/tailscale/client.nix
-  ../../modules/cli/atuin/main.nix
   ../../modules/cli/agent-page/main.nix
+  ../../modules/cli/atuin/main.nix
   ../../modules/cli/pi-harness/main.nix
   ../../modules/cli/sec/main.nix
   ../../modules/cli/secretspec/main.nix

@@ -29,6 +29,7 @@
       in
       {
         formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
+        legacyPackages.kindle = pkgs.pkgsCross.armv7l-hf-multiplatform;
         packages = {
           disko = inputs.disko.packages.${system}.disko;
           fleet-installer = fleetInstaller;
