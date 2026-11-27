@@ -34,6 +34,9 @@
     enable = true;
     enableDefaultConfig = false;
     settings = {
+      kindle = {
+        User = "root";
+      };
       t480 = {
         User = "beau";
       };
@@ -66,7 +69,6 @@
       pizero = {
         HostName = "192.168.1.103";
         User = "pi";
-        Port = 22;
       };
       dad = {
         HostName = "steve-pc";
